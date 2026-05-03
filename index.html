@@ -1,1 +1,1901 @@
+<!DOCTYPE html>
+<!--
+M.U.R App — FICHIER COMPLET VÉRIFIÉ
+Ce fichier contient toute l’application :
+1. Page d’accueil / présentation avec grand cercle M.U.R
+2. Page de navigation
+3. Respiration guidée complète
+4. Tests NeuroFlex : ki.S + Ici & Maintenant
+5. Statistiques complètes
+6. Sauvegarde / import des statistiques
+7. Paramètres / profil
+-->
 
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="M.U.R">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b1220">
+<link rel="apple-touch-icon" href="https://nbertrandmacadamtonic-create.github.io/Respire-mur/apple-touch-icon.png?v=60">
+<link rel="icon" type="image/png" href="https://nbertrandmacadamtonic-create.github.io/Respire-mur/apple-touch-icon.png?v=60">
+<title>M.U.R App</title>
+<style>
+:root{--bg:#0b1220;--card:rgba(255,255,255,.12);--line:rgba(255,255,255,.20);--text:#f8fafc;--muted:rgba(248,250,252,.70);--accent:#22c55e;--blue:#3b82f6;--green:#22c55e;--orange:#f59e0b;--red:#ef4444}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-height:100%;overflow-x:hidden;overscroll-behavior-y:none;-webkit-overflow-scrolling:touch}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Arial,sans-serif;color:var(--text);background:radial-gradient(circle at top left,rgba(59,130,246,.36),transparent 32%),radial-gradient(circle at top right,rgba(239,68,68,.24),transparent 32%),radial-gradient(circle at bottom,rgba(34,197,94,.20),transparent 38%),var(--bg)}
+button,input,select,textarea{font:inherit}button{cursor:pointer}.app{width:100%;max-width:430px;min-height:100svh;margin:auto;padding:calc(6px + env(safe-area-inset-top)) 10px calc(68px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:18px}.logo{width:42px;height:42px;border-radius:15px;background:linear-gradient(135deg,transparent 0 35%,rgba(255,255,255,.9) 36% 40%,transparent 41%),conic-gradient(from 220deg,var(--blue),var(--green),var(--orange),var(--red),var(--blue));box-shadow:0 14px 40px rgba(0,0,0,.34);flex:0 0 auto}
+h1{margin:0;font-size:29px;letter-spacing:-.05em;line-height:.95}h1 span{font-size:16px;letter-spacing:-.02em;font-weight:800;opacity:.82;margin-left:3px}.baseline{margin-top:3px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}h2{margin:0;font-size:18px;line-height:1.15;letter-spacing:-.03em}p{margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px;margin-bottom:7px;box-shadow:0 12px 36px rgba(0,0,0,.24);backdrop-filter:blur(22px)}.page{display:none}.page.active{display:block}.help{margin-top:4px;color:var(--muted);line-height:1.25;font-size:11.5px}.status{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}.zone{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid var(--accent);font-weight:900;white-space:nowrap;font-size:11px;color:white}.dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.profile-warning{border-color:rgba(245,158,11,.55);background:rgba(245,158,11,.12);cursor:pointer}.profile-warning .zone{border-color:rgba(245,158,11,.75)}.profile-warning .dot{background:#f59e0b}
+.running-badge{position:fixed;left:50%;bottom:calc(64px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;width:min(390px,calc(100% - 28px));display:none;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(34,197,94,.55);background:rgba(11,18,32,.92);color:white;border-radius:18px;padding:8px 11px;box-shadow:0 18px 45px rgba(0,0,0,.42);backdrop-filter:blur(20px)}.running-badge.active{display:flex}.running-left{display:flex;align-items:center;gap:8px;min-width:0}.running-pulse{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(34,197,94,.75);animation:pulse 1.2s infinite}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.75)}70%{box-shadow:0 0 0 10px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}.running-badge strong{display:block;font-size:12px;line-height:1.1}.running-badge small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.running-badge button{border:1px solid var(--line);background:rgba(255,255,255,.12);color:white;border-radius:12px;padding:7px 9px;font-size:11px;font-weight:900}
+.hero{min-height:118px;display:flex;justify-content:center;align-items:center;text-align:center;position:relative;overflow:hidden;padding-top:7px;padding-bottom:7px}.hero::before{content:"";position:absolute;width:130px;height:130px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(34,197,94,.30),rgba(59,130,246,.14),transparent 70%)}.hero-content{position:relative;z-index:2}.home-orb{width:62px;height:62px;border-radius:50%;margin:0 auto 6px;display:grid;place-items:center;background:radial-gradient(circle at 36% 27%,rgba(255,255,255,.95),rgba(255,255,255,.20) 28%,transparent 48%),radial-gradient(circle,var(--accent),rgba(255,255,255,.12));box-shadow:0 0 26px var(--accent),inset 0 0 16px rgba(255,255,255,.32)}.home-orb span{font-size:14px;font-weight:950;max-width:54px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hero p{color:var(--muted);line-height:1.18;font-size:11.5px;margin-top:3px}
+.clickable-card{cursor:pointer}.choice-grid{display:grid;gap:7px}.home-large-grid{margin-bottom:7px}.home-choice{width:100%;border:1px solid var(--line);border-radius:19px;padding:12px;color:white;text-align:left;background:rgba(255,255,255,.12);box-shadow:0 12px 30px rgba(0,0,0,.22);display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}.home-large-choice{min-height:96px;align-items:center;padding:12px;border-radius:19px}.home-choice.blue{background:linear-gradient(135deg,rgba(59,130,246,.30),rgba(255,255,255,.10))}.home-choice.green{background:linear-gradient(135deg,rgba(34,197,94,.28),rgba(255,255,255,.10))}.home-choice:active,.clickable-card:active{transform:scale(.985)}.choice-icon{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18)}.neuro-icon,.breath-icon{position:relative;overflow:hidden}.neuro-icon::before{content:"";width:34px;height:9px;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--green),var(--red));box-shadow:0 0 16px rgba(255,255,255,.20)}.neuro-icon span{position:absolute;width:14px;height:14px;border-radius:50%;background:white;border:3px solid #07111f;left:50%;top:50%;transform:translate(-50%,-50%)}.breath-icon::before{content:"";width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.85);box-shadow:0 0 16px var(--green)}.breath-icon span{position:absolute;width:27px;height:10px;border-radius:50%;border-top:3px solid white;left:50%;top:54%;transform:translate(-50%,-50%)}.home-choice strong{display:block;font-size:15.5px;line-height:1.1}.home-choice small{display:block;margin-top:3px;color:var(--muted);font-size:11.5px;line-height:1.2}.arrow{font-size:23px;font-weight:900;color:var(--muted)}
+.protocol-box{margin-top:10px}.protocol-label{display:block;color:var(--muted);font-size:11px;margin-bottom:5px}select{width:100%;border:1px solid var(--line);background:rgba(0,0,0,.22);color:white;border-radius:14px;padding:10px;outline:none;font-size:13px}.scale{margin-top:12px}.scale-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-bottom:6px}.scale-labels span:nth-child(2){text-align:center}.scale-labels span:nth-child(3){text-align:right}
+input[type=range]{appearance:none;-webkit-appearance:none;width:100%;height:18px;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--green),var(--red));outline:none}input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:34px;height:34px;border-radius:50%;background:white;border:5px solid var(--accent);box-shadow:0 8px 22px rgba(0,0,0,.34)}
+.compact-rhythm{margin-top:10px;display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:9px;border-radius:17px;background:rgba(0,0,0,.18);border:1px solid var(--line);text-align:center}.rhythm-number span{display:block;font-size:36px;line-height:.9;font-weight:950;letter-spacing:-.06em}.rhythm-number small{display:block;margin-top:4px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-size:10px}.slash{font-size:27px;font-weight:950;color:var(--muted)}.message{margin-top:8px;font-size:13px;line-height:1.32;color:var(--muted)}.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.quick button{border:1px solid var(--line);background:rgba(255,255,255,.12);color:white;border-radius:14px;padding:8px 5px;font-size:12px;font-weight:900}.quick button.active{background:white;color:#07111f}
+.breath-card{text-align:center;padding-top:10px}.mini-info{display:grid;grid-template-columns:1fr 1fr;gap:7px}.info-box{border-radius:14px;padding:8px;background:rgba(255,255,255,.10);border:1px solid var(--line)}.info-box small{color:var(--muted);font-size:11px}.info-box strong{display:block;margin-top:1px;font-size:17px}.stage{height:205px;display:grid;place-items:center;position:relative}.progress-ring{position:absolute;width:178px;height:178px;transform:rotate(-90deg)}.progress-bg,.progress-line{fill:none;stroke-width:8}.progress-bg{stroke:rgba(255,255,255,.12)}.progress-line{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .15s linear}.orb{width:124px;height:124px;border-radius:50%;display:grid;place-items:center;transform:scale(.80);transition:transform linear,background .25s,box-shadow .25s;background:radial-gradient(circle at 36% 27%,rgba(255,255,255,.95),rgba(255,255,255,.20) 28%,transparent 48%),radial-gradient(circle,var(--accent),rgba(255,255,255,.12));box-shadow:0 0 40px var(--accent),inset 0 0 18px rgba(255,255,255,.32);border:0;color:white;z-index:2}.orb span{font-size:17px;font-weight:950;line-height:1.08;padding:0 12px}.phase-hint{position:absolute;bottom:0;color:var(--muted);font-size:12px;padding:0 14px}
+.secondary{width:100%;margin-top:8px;border:1px solid var(--line);border-radius:16px;padding:11px;background:rgba(255,255,255,.15);color:white;font-size:14px;font-weight:900}.danger{border-color:rgba(239,68,68,.6)}
+.test-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:11px}.test-tabs button{border:1px solid var(--line);border-radius:14px;padding:9px 5px;background:rgba(255,255,255,.12);color:white;font-weight:900;font-size:12px}.test-tabs button.active{background:white;color:#07111f}.test-view{display:none}.test-view.active{display:block}.test-progress{height:8px;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden;margin:12px 0}.test-progress span{display:block;height:100%;width:0%;border-radius:999px;background:var(--accent)}.kis-question-title{font-size:16px;font-weight:900;margin-bottom:6px}.kis-question-text{color:var(--muted);font-size:13px;line-height:1.35;margin-bottom:10px}.kis-choice{width:100%;border:1px solid var(--line);background:rgba(255,255,255,.12);color:white;border-radius:14px;padding:11px;text-align:left;margin-top:7px}.kis-choice strong{display:block;font-size:14px}.kis-choice small{display:block;margin-top:3px;color:rgba(248,250,252,.68);font-size:11px;line-height:1.3}.kis-choice.selected{background:white;color:#07111f}.kis-choice.selected small{color:rgba(7,17,31,.68)}.kis-locked{padding:14px;border-radius:17px;background:rgba(0,0,0,.20);border:1px solid rgba(34,197,94,.42);color:var(--muted);font-size:13px;line-height:1.4}.kis-locked strong{color:white}.unlock-button{border-color:rgba(239,68,68,.55)}.unlocking{background:rgba(239,68,68,.35)!important}.test-nav{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.test-result-box{margin-top:12px;padding:12px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.4}.test-result-box strong{color:white}.kis-profile-graph{margin-top:12px;padding:12px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid var(--line)}.kis-profile-track{position:relative;height:16px;border-radius:999px;background:linear-gradient(90deg,#3b82f6 0%,#60a5fa 22%,#22c55e 50%,#f59e0b 72%,#ef4444 100%);box-shadow:inset 0 2px 8px rgba(0,0,0,.25)}.kis-profile-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:16px;height:30px;border-radius:999px;background:#fff;border:3px solid #07111f;box-shadow:0 8px 18px rgba(0,0,0,.35)}.kis-profile-labels{display:flex;justify-content:space-between;gap:6px;margin-top:8px;font-size:10px;color:var(--muted)}.kis-profile-labels span{flex:1;text-align:center;line-height:1.2}.kis-profile-score{margin-top:10px;text-align:center}.kis-profile-score strong{display:block;font-size:20px;line-height:1}.kis-profile-score small{color:var(--muted);font-size:12px}.moment-question{margin-top:14px}.moment-question label{display:block;color:white;font-size:14px;font-weight:900;margin-bottom:7px}.moment-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:4px}.neuro-gauge{margin-top:14px}.neuro-gauge-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:10px;margin-bottom:5px}.neuro-gauge-bar{height:18px;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--green),var(--orange),var(--red));position:relative;box-shadow:inset 0 2px 8px rgba(0,0,0,.28)}.neuro-marker{position:absolute;top:-7px;left:50%;width:14px;height:32px;border-radius:999px;background:white;border:3px solid var(--accent);transform:translateX(-50%);box-shadow:0 7px 18px rgba(0,0,0,.36)}.neuro-score{text-align:center;margin-top:14px}.neuro-score strong{display:block;font-size:44px;line-height:.95;letter-spacing:-.06em}.neuro-score small{color:var(--muted);font-weight:900}
+.period-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}.period-tabs button{border:1px solid var(--line);border-radius:12px;padding:7px 4px;background:rgba(255,255,255,.11);color:white;font-size:10px;font-weight:900}.period-tabs button.active{background:white;color:#07111f}.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.stats-mini{padding:8px 6px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.18);text-align:center;color:white}.stats-mini small{display:block;color:var(--muted);font-size:9px;line-height:1.1}.stats-mini strong{display:block;margin-top:3px;font-size:16px}.stats-detail{margin-top:7px;padding:8px;border-radius:13px;background:rgba(0,0,0,.18);border:1px solid var(--line);color:var(--muted);font-size:11px;line-height:1.28}.stats-detail strong{color:white}.last-neuro-box{border-color:rgba(34,197,94,.44);background:rgba(34,197,94,.10)}.compact-details{border:1px solid var(--line);border-radius:17px;background:rgba(255,255,255,.08);margin-bottom:7px;overflow:hidden}.compact-details summary{list-style:none;padding:10px;cursor:pointer;font-weight:950;display:flex;align-items:center;justify-content:space-between}.compact-details summary::-webkit-details-marker{display:none}.compact-details summary span{color:var(--muted);font-size:11px;font-weight:800}.compact-details summary::after{content:"＋";color:var(--muted);font-weight:950}.compact-details[open] summary::after{content:"−"}.compact-details-body{padding:0 10px 10px}.stats-list{display:grid;gap:7px;max-height:165px;overflow:auto;padding-right:2px}.stats-item{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:8px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.10)}.stats-item-dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}.stats-item strong{font-size:12px}.stats-item small{display:block;margin-top:2px;color:var(--muted);font-size:10.5px;line-height:1.2}
+.trend-graph{position:relative;margin-top:10px;height:205px;border-radius:19px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(90deg,rgba(59,130,246,.20),rgba(34,197,94,.10),rgba(239,68,68,.20)),linear-gradient(180deg,rgba(239,68,68,.14),transparent 48%,rgba(59,130,246,.14))}.trend-graph.home-mini{height:108px;margin-top:7px}.trend-graph::before,.trend-graph::after{content:"";position:absolute;background:rgba(255,255,255,.32);z-index:2}.trend-graph::before{width:1px;height:100%;left:50%;top:0}.trend-graph::after{height:1px;width:100%;top:50%;left:0}.trend-center{position:absolute;left:50%;top:50%;width:48px;height:48px;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(255,255,255,.32);background:rgba(34,197,94,.16);display:grid;place-items:center;z-index:3;font-size:8px;color:white;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.home-mini .trend-center{width:36px;height:36px;font-size:6.8px}.trend-point{position:absolute;width:22px;height:22px;border-radius:50%;background:white;border:5px solid var(--accent);transform:translate(-50%,-50%);box-shadow:0 8px 20px rgba(0,0,0,.42);z-index:4}.home-mini .trend-point{width:18px;height:18px;border-width:4px}.trend-label{position:absolute;z-index:3;font-size:9px;color:rgba(255,255,255,.78);font-weight:900;text-transform:uppercase;letter-spacing:.08em}.home-mini .trend-label{font-size:7px}.trend-label.top{top:8px;left:50%;transform:translateX(-50%)}.trend-label.bottom{bottom:8px;left:50%;transform:translateX(-50%)}.trend-label.left{left:8px;top:50%;transform:translateY(-50%) rotate(-90deg)}.trend-label.right{right:8px;top:50%;transform:translateY(-50%) rotate(90deg)}.trend-caption{margin-top:6px;color:var(--muted);font-size:10.5px;line-height:1.24}
+.evolution-chart{margin-top:8px;height:138px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.18);position:relative;overflow:hidden;padding:6px}.evolution-chart svg{width:100%;height:100%}.evolution-axis{stroke:rgba(255,255,255,.24);stroke-width:1}.evolution-zero{stroke:rgba(255,255,255,.42);stroke-width:1;stroke-dasharray:4 4}.evolution-line{fill:none;stroke:var(--accent);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.evolution-dot{fill:white;stroke:var(--accent);stroke-width:4;cursor:pointer}.evolution-label{fill:rgba(248,250,252,.72);font-size:10px;font-weight:800}.point-detail{margin-top:6px;padding:8px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--muted);font-size:11px;line-height:1.28}.point-detail strong{color:white}.empty-state{padding:10px;border-radius:14px;background:rgba(0,0,0,.18);border:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.3}.data-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.export-box{display:none;margin-top:8px;padding:9px;border-radius:15px;background:rgba(0,0,0,.20);border:1px solid var(--line)}.export-box textarea{width:100%;min-height:118px;margin-top:7px;border-radius:12px;border:1px solid var(--line);padding:9px;background:rgba(255,255,255,.10);color:white;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px}
+#pageSettings{position:relative;z-index:10}.settings-field{margin-top:12px;position:relative;z-index:10}.settings-field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.settings-field input{width:100%;border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(255,255,255,.16);color:white;outline:none;font-size:16px;position:relative;z-index:20;pointer-events:auto;-webkit-user-select:text;user-select:text;-webkit-appearance:none;appearance:none;touch-action:manipulation}.settings-field input::placeholder{color:rgba(255,255,255,.45)}.settings-field input:focus{border-color:var(--accent);background:rgba(255,255,255,.22)}.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.settings-note{margin-top:10px;font-size:12px;line-height:1.35;color:var(--muted)}
+.tabbar{position:fixed;left:50%;bottom:calc(7px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(410px,calc(100% - 18px));display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:5px;border-radius:18px;background:rgba(11,18,32,.84);border:1px solid var(--line);backdrop-filter:blur(22px);box-shadow:0 16px 42px rgba(0,0,0,.38);z-index:50}.tabbar button{border:0;border-radius:13px;padding:8px 3px;background:rgba(255,255,255,.10);color:white;font-size:10px;font-weight:950}.tabbar button.active{background:white;color:#07111f}
+
+/* ===== V3 ACCUEIL PREMIUM RÉALISTE ===== */
+.home-neo{
+  position:relative;
+  overflow:hidden;
+  padding:14px;
+  min-height:218px;
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 72% 30%,rgba(245,158,11,.28),transparent 30%),
+    radial-gradient(circle at 30% 72%,rgba(59,130,246,.28),transparent 35%),
+    linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.06));
+}
+
+.home-neo::before{
+  content:"";
+  position:absolute;
+  inset:-50px;
+  background:
+    radial-gradient(circle,rgba(255,255,255,.12) 0 1px,transparent 2px);
+  background-size:42px 42px;
+  opacity:.25;
+  animation:floatGrid 12s linear infinite;
+}
+
+@keyframes floatGrid{
+  from{transform:translateY(0)}
+  to{transform:translateY(42px)}
+}
+
+.home-neo-inner{
+  position:relative;
+  z-index:2;
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:10px;
+  align-items:center;
+}
+
+.home-wordmark{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.home-logo-img{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  object-fit:cover;
+  box-shadow:0 0 28px rgba(59,130,246,.32);
+  background:#07111f;
+}
+
+.home-wordmark strong{
+  display:block;
+  font-size:24px;
+  letter-spacing:.08em;
+  line-height:1;
+}
+
+.home-wordmark small{
+  display:block;
+  color:var(--muted);
+  font-size:9px;
+  margin-top:3px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+
+.home-title{
+  font-size:26px;
+  line-height:1.02;
+  letter-spacing:-.06em;
+  margin:0;
+}
+
+.home-title span{
+  color:#f59e0b;
+}
+
+.home-subtext{
+  margin-top:8px;
+  font-size:12px;
+  line-height:1.35;
+  color:var(--muted);
+}
+
+.home-dynamic-orb{
+  width:132px;
+  height:132px;
+  margin-left:auto;
+  border-radius:50%;
+  position:relative;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 40% 32%,rgba(255,255,255,.95),rgba(255,255,255,.18) 22%,transparent 42%),
+    conic-gradient(from 230deg,var(--blue),var(--green),var(--orange),var(--red),var(--blue));
+  box-shadow:
+    0 0 34px rgba(59,130,246,.35),
+    0 0 48px rgba(245,158,11,.25),
+    inset 0 0 28px rgba(255,255,255,.18);
+  animation:softPulse 3.8s ease-in-out infinite;
+}
+
+.home-dynamic-orb::before,
+.home-dynamic-orb::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.22);
+}
+
+.home-dynamic-orb::before{
+  width:158px;
+  height:158px;
+  animation:spinSlow 10s linear infinite;
+  border-top-color:rgba(245,158,11,.75);
+}
+
+.home-dynamic-orb::after{
+  width:112px;
+  height:112px;
+  border-bottom-color:rgba(59,130,246,.75);
+  animation:spinSlow 8s linear reverse infinite;
+}
+
+.home-dynamic-orb span{
+  z-index:3;
+  font-size:21px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-shadow:0 2px 12px rgba(0,0,0,.45);
+}
+
+@keyframes softPulse{
+  0%,100%{transform:scale(.97)}
+  50%{transform:scale(1.03)}
+}
+
+@keyframes spinSlow{
+  to{transform:rotate(360deg)}
+}
+
+.home-action-row{
+  position:relative;
+  z-index:2;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:13px;
+}
+
+.home-cta{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:11px 10px;
+  color:white;
+  font-weight:950;
+  font-size:12px;
+  background:rgba(255,255,255,.12);
+}
+
+.home-cta.primary{
+  background:linear-gradient(135deg,#f59e0b,#3b82f6);
+  border-color:rgba(255,255,255,.28);
+  box-shadow:0 14px 30px rgba(0,0,0,.22);
+}
+
+.home-kpi{
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:10px;
+  margin-top:8px;
+  padding:10px;
+  border-radius:18px;
+  background:rgba(0,0,0,.20);
+  border:1px solid var(--line);
+}
+
+.home-kpi-title{
+  font-weight:950;
+  font-size:14px;
+}
+
+.home-kpi-sub{
+  color:var(--muted);
+  font-size:11px;
+  margin-top:2px;
+}
+
+.home-kpi-score{
+  min-width:72px;
+  text-align:center;
+  border-radius:16px;
+  padding:8px;
+  background:rgba(255,255,255,.10);
+  border:1px solid var(--line);
+}
+
+.home-kpi-score strong{
+  display:block;
+  font-size:20px;
+  line-height:1;
+}
+
+.home-kpi-score small{
+  color:#f59e0b;
+  font-size:10px;
+  font-weight:900;
+}
+
+.home-neuro-bar{
+  grid-column:1 / -1;
+  height:9px;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--blue),var(--green),var(--orange),var(--red));
+  position:relative;
+  margin-top:2px;
+  overflow:visible;
+}
+
+.home-neuro-marker{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:white;
+  border:4px solid #07111f;
+  transform:translate(-50%,-50%);
+  box-shadow:0 8px 18px rgba(0,0,0,.34);
+  transition:left .45s ease;
+}
+
+.mur-pillar-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin-bottom:7px;
+}
+
+.mur-pillar{
+  min-height:132px;
+  padding:10px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:
+    radial-gradient(circle at 50% 25%,rgba(255,255,255,.12),transparent 42%),
+    rgba(255,255,255,.09);
+  position:relative;
+  overflow:hidden;
+  text-align:left;
+  color:white;
+}
+
+.mur-pillar::before{
+  content:"";
+  position:absolute;
+  width:84px;
+  height:84px;
+  right:-22px;
+  bottom:-22px;
+  border-radius:50%;
+  background:radial-gradient(circle,var(--accent),transparent 64%);
+  opacity:.22;
+}
+
+.mur-pillar h3{
+  margin:0;
+  font-size:14px;
+  line-height:1;
+}
+
+.mur-pillar small{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.25;
+  margin-top:7px;
+  position:relative;
+  z-index:2;
+}
+
+.pillar-icon{
+  width:34px;
+  height:34px;
+  border-radius:14px;
+  margin-bottom:9px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.12);
+  position:relative;
+}
+
+.pillar-icon.measure::before{
+  content:"";
+  width:21px;height:14px;
+  border-left:2px solid #fff;
+  border-bottom:2px solid #fff;
+  background:linear-gradient(90deg,transparent 20%,rgba(59,130,246,.9) 20% 35%,transparent 35% 50%,rgba(59,130,246,.9) 50% 65%,transparent 65% 80%,rgba(59,130,246,.9) 80%);
+}
+
+.pillar-icon.use::before{
+  content:"";
+  width:20px;height:20px;
+  border-radius:50%;
+  border:2px solid #fff;
+  box-shadow:0 0 12px rgba(245,158,11,.8);
+}
+
+.pillar-icon.regulate::before{
+  content:"";
+  width:22px;height:12px;
+  border-radius:50%;
+  border-top:2px solid white;
+  border-bottom:2px solid rgba(245,158,11,.9);
+}
+
+.quick-tools-v3{
+  display:grid;
+  gap:7px;
+}
+
+.quick-tool-v3{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:10px;
+  align-items:center;
+  padding:11px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.09);
+  color:white;
+}
+
+.quick-tool-v3 strong{
+  display:block;
+  font-size:13px;
+}
+
+.quick-tool-v3 small{
+  display:block;
+  color:var(--muted);
+  font-size:10.5px;
+  margin-top:2px;
+}
+
+.quick-bubble{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:rgba(59,130,246,.15);
+  border:1px solid rgba(59,130,246,.45);
+  box-shadow:0 0 18px rgba(59,130,246,.25);
+}
+
+.quick-bubble.orange{
+  background:rgba(245,158,11,.15);
+  border-color:rgba(245,158,11,.5);
+  box-shadow:0 0 18px rgba(245,158,11,.25);
+}
+
+.quick-play{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.12);
+  color:white;
+  font-weight:950;
+}
+
+@media(max-width:380px){
+  .home-title{font-size:22px}
+  .home-dynamic-orb{width:112px;height:112px}
+  .home-dynamic-orb::before{width:136px;height:136px}
+  .home-dynamic-orb span{font-size:18px}
+  .mur-pillar{min-height:122px;padding:9px}
+  .mur-pillar h3{font-size:13px}
+  .mur-pillar small{font-size:9.5px}
+}
+
+
+/* ===== V4 PREMIUM CORRIGÉE : INTRO + ACCUEIL ÉPURÉ, SANS TOUCHER TESTS/RESPIRATION/STATS ===== */
+
+.intro-mur{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(59,130,246,.20), transparent 26%),
+    radial-gradient(circle at 50% 66%, rgba(245,158,11,.16), transparent 28%),
+    linear-gradient(180deg,#050b16 0%, #0b1220 100%);
+  transition:opacity .65s ease, visibility .65s ease;
+}
+
+.intro-mur.hide{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.intro-box{
+  width:min(88vw,390px);
+  text-align:center;
+  position:relative;
+}
+
+.intro-mark{
+  font-size:35px;
+  font-weight:950;
+  letter-spacing:.15em;
+  margin-bottom:26px;
+}
+
+.intro-mark span:nth-child(1){color:#f59e0b}
+.intro-mark span:nth-child(2){color:#f8fafc}
+.intro-mark span:nth-child(3){color:#60a5fa}
+
+.intro-breath-circle{
+  width:245px;
+  height:245px;
+  border-radius:50%;
+  margin:0 auto;
+  position:relative;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 36% 28%, rgba(255,255,255,.92), rgba(255,255,255,.16) 20%, transparent 42%),
+    conic-gradient(from 230deg,#3b82f6,#22c55e,#f59e0b,#ef4444,#3b82f6);
+  box-shadow:
+    0 0 58px rgba(59,130,246,.25),
+    0 0 84px rgba(245,158,11,.16),
+    inset 0 0 34px rgba(255,255,255,.13);
+  animation:introBreathe 5.2s ease-in-out infinite;
+}
+
+.intro-breath-circle::before,
+.intro-breath-circle::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.18);
+}
+
+.intro-breath-circle::before{
+  inset:-20px;
+  border-top-color:rgba(245,158,11,.65);
+  animation:introRotate 13s linear infinite;
+}
+
+.intro-breath-circle::after{
+  inset:18px;
+  border-bottom-color:rgba(59,130,246,.70);
+  animation:introRotate 9s linear reverse infinite;
+}
+
+.intro-words{
+  position:relative;
+  z-index:2;
+  display:grid;
+  gap:9px;
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  font-size:14px;
+  font-weight:900;
+}
+
+.intro-words span{
+  color:rgba(255,255,255,.68);
+  animation:introWord 3.6s ease-in-out infinite;
+}
+
+.intro-words span:nth-child(2){animation-delay:.45s}
+.intro-words span:nth-child(3){animation-delay:.9s}
+
+.intro-skip{
+  margin-top:30px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);
+  color:white;
+  border-radius:999px;
+  padding:12px 20px;
+  font-size:13px;
+  font-weight:900;
+}
+
+@keyframes introBreathe{
+  0%,100%{transform:scale(.92)}
+  50%{transform:scale(1.045)}
+}
+
+@keyframes introRotate{
+  to{transform:rotate(360deg)}
+}
+
+@keyframes introWord{
+  0%,100%{opacity:.45; transform:translateY(0)}
+  50%{opacity:1; transform:translateY(-2px)}
+}
+
+/* Accueil plus épuré */
+.home-neo.v4-clean{
+  min-height:250px;
+  padding:15px;
+  border-radius:26px;
+}
+
+.home-neo.v4-clean .home-neo-inner{
+  grid-template-columns:1fr auto;
+}
+
+.home-neo.v4-clean .home-wordmark{
+  margin-bottom:14px;
+}
+
+.home-neo.v4-clean .home-title{
+  font-size:34px;
+  line-height:.95;
+  letter-spacing:.04em;
+}
+
+.home-neo.v4-clean .home-title span{
+  color:white;
+}
+
+.home-neo.v4-clean .home-subtext{
+  max-width:190px;
+  font-size:12px;
+  line-height:1.35;
+}
+
+.home-neo.v4-clean .home-dynamic-orb{
+  width:145px;
+  height:145px;
+}
+
+.home-neo.v4-clean .home-dynamic-orb::before{
+  width:174px;
+  height:174px;
+}
+
+.home-neo.v4-clean .home-dynamic-orb span{
+  font-size:17px;
+  letter-spacing:.13em;
+}
+
+.home-action-row.v4-actions{
+  grid-template-columns:1fr 1fr;
+  margin-top:18px;
+}
+
+.home-cta.v4-primary{
+  min-height:54px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:13px;
+}
+
+.home-kpi.v4-kpi{
+  padding:12px;
+}
+
+.home-kpi-title{
+  font-size:15px;
+}
+
+.mur-pillar-grid.v4-pillar-grid{
+  margin-top:0;
+}
+
+.v4-mini-title{
+  margin:0 0 7px;
+  color:var(--muted);
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  font-weight:900;
+}
+
+@media(max-width:380px){
+  .intro-breath-circle{width:220px;height:220px}
+  .home-neo.v4-clean .home-title{font-size:29px}
+  .home-neo.v4-clean .home-dynamic-orb{width:125px;height:125px}
+  .home-neo.v4-clean .home-dynamic-orb::before{width:152px;height:152px}
+}
+
+
+/* ===== V5 : PAGE DE PRÉSENTATION + ACCUEIL RACCROCHÉS À L'APP COMPLÈTE ===== */
+
+/* on masque l'ancienne intro si elle existe dans le fichier précédent */
+#introMur{
+  display:none!important;
+}
+
+/* PAGE DE PRÉSENTATION */
+.presentation-mur{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:grid;
+  place-items:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at center,rgba(255,255,255,.045),transparent 34%),
+    radial-gradient(circle at 50% 43%,rgba(59,130,246,.20),transparent 26%),
+    radial-gradient(circle at 50% 66%,rgba(245,158,11,.14),transparent 28%),
+    linear-gradient(180deg,#040914 0%,#07111f 100%);
+  transition:opacity .65s ease,visibility .65s ease;
+}
+
+.presentation-mur.hide{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.presentation-wrap{
+  width:min(92vw,420px);
+  text-align:center;
+}
+
+.presentation-logo{
+  font-size:40px;
+  font-weight:950;
+  letter-spacing:.17em;
+  margin-bottom:34px;
+  background:linear-gradient(90deg,#f59e0b 0%,#f8fafc 45%,#38bdf8 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+.presentation-circle{
+  width:265px;
+  height:265px;
+  margin:0 auto;
+  border-radius:50%;
+  position:relative;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 35% 28%,rgba(255,255,255,.90),rgba(255,255,255,.15) 18%,transparent 38%),
+    radial-gradient(circle at center,rgba(5,11,22,.85) 0%,rgba(5,11,22,.78) 44%,transparent 62%),
+    conic-gradient(from 225deg,#2563eb,#22d3ee,#22c55e,#f59e0b,#ef4444,#8b5cf6,#2563eb);
+  box-shadow:
+    0 0 44px rgba(59,130,246,.22),
+    0 0 74px rgba(245,158,11,.14),
+    inset 0 0 40px rgba(255,255,255,.10);
+  animation:presentationBreath 5.4s ease-in-out infinite;
+}
+
+.presentation-circle::before,
+.presentation-circle::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.15);
+  pointer-events:none;
+}
+
+.presentation-circle::before{
+  inset:-20px;
+  border-top-color:rgba(34,211,238,.68);
+  border-right-color:rgba(245,158,11,.55);
+  animation:presentationRotate 14s linear infinite;
+}
+
+.presentation-circle::after{
+  inset:18px;
+  border-left-color:rgba(139,92,246,.58);
+  border-bottom-color:rgba(239,68,68,.55);
+  animation:presentationRotate 10s linear reverse infinite;
+}
+
+.presentation-particles{
+  position:absolute;
+  inset:-38px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle,rgba(255,255,255,.35) 0 1px,transparent 2px);
+  background-size:34px 34px;
+  opacity:.18;
+  animation:presentationParticles 12s linear infinite;
+}
+
+.presentation-words{
+  position:relative;
+  z-index:3;
+  display:grid;
+  gap:16px;
+  text-transform:uppercase;
+  letter-spacing:.22em;
+  font-size:15px;
+  font-weight:850;
+}
+
+.presentation-words span{
+  color:rgba(255,255,255,.78);
+  text-shadow:0 0 18px rgba(255,255,255,.14);
+  animation:presentationWord 3.8s ease-in-out infinite;
+}
+
+.presentation-words span:nth-child(3){animation-delay:.5s}
+.presentation-words span:nth-child(5){animation-delay:1s}
+
+.presentation-line{
+  width:74px;
+  height:1px;
+  margin:auto;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.46),transparent);
+}
+
+.presentation-enter{
+  margin-top:42px;
+  width:190px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.075);
+  color:white;
+  border-radius:999px;
+  padding:14px 20px;
+  font-size:14px;
+  font-weight:850;
+  letter-spacing:.02em;
+  backdrop-filter:blur(18px);
+  box-shadow:0 18px 38px rgba(0,0,0,.24);
+}
+
+.presentation-enter span{
+  opacity:.65;
+  margin-left:18px;
+}
+
+.presentation-hint{
+  margin-top:18px;
+  font-size:11px;
+  color:rgba(248,250,252,.42);
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+@keyframes presentationBreath{
+  0%,100%{transform:scale(.93)}
+  50%{transform:scale(1.045)}
+}
+
+@keyframes presentationRotate{
+  to{transform:rotate(360deg)}
+}
+
+@keyframes presentationParticles{
+  from{transform:rotate(0deg) scale(1)}
+  to{transform:rotate(360deg) scale(1.04)}
+}
+
+@keyframes presentationWord{
+  0%,100%{opacity:.52; transform:translateY(0)}
+  50%{opacity:1; transform:translateY(-2px)}
+}
+
+/* ACCUEIL — maquette raccrochée */
+.home-mock{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  height:100%;
+  overflow:hidden;
+}
+
+.home-mock-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.home-mock-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.home-mock-brand img{
+  width:38px;
+  height:38px;
+  border-radius:13px;
+  object-fit:cover;
+  background:#07111f;
+  box-shadow:0 0 22px rgba(59,130,246,.22);
+}
+
+.home-mock-brand strong{
+  display:block;
+  font-size:24px;
+  font-weight:950;
+  letter-spacing:.14em;
+  line-height:1;
+  background:linear-gradient(90deg,#f59e0b,#f8fafc,#38bdf8);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+.home-mock-brand small{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:10px;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+
+.home-profile-btn{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.07);
+  display:grid;
+  place-items:center;
+  font-size:18px;
+  color:rgba(255,255,255,.75);
+}
+
+.home-hello{
+  padding:2px 2px 0;
+}
+
+.home-hello h2{
+  margin:0;
+  font-size:31px;
+  line-height:1;
+  letter-spacing:-.04em;
+  font-weight:700;
+}
+
+.home-hello p{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.home-circle-card-v5{
+  position:relative;
+  min-height:226px;
+  border-radius:28px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at center,rgba(255,255,255,.04),transparent 45%),
+    radial-gradient(circle at 30% 30%,rgba(59,130,246,.16),transparent 32%),
+    radial-gradient(circle at 75% 65%,rgba(245,158,11,.12),transparent 30%);
+}
+
+.home-circle-card-v5::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:28px;
+  border:1px solid var(--line);
+  pointer-events:none;
+}
+
+.home-circle-v5{
+  width:196px;
+  height:196px;
+  border-radius:50%;
+  position:relative;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 35% 28%,rgba(255,255,255,.92),rgba(255,255,255,.14) 17%,transparent 38%),
+    radial-gradient(circle at center,rgba(5,11,22,.90) 0%,rgba(5,11,22,.82) 50%,transparent 64%),
+    conic-gradient(from 225deg,#2563eb,#22d3ee,#22c55e,#f59e0b,#ef4444,#8b5cf6,#2563eb);
+  box-shadow:
+    0 0 34px rgba(59,130,246,.20),
+    0 0 56px rgba(245,158,11,.12);
+  animation:presentationBreath 5.2s ease-in-out infinite;
+}
+
+.home-circle-v5::before,
+.home-circle-v5::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.14);
+}
+
+.home-circle-v5::before{
+  inset:-16px;
+  border-top-color:rgba(34,211,238,.58);
+  border-right-color:rgba(245,158,11,.52);
+  animation:presentationRotate 15s linear infinite;
+}
+
+.home-circle-v5::after{
+  inset:18px;
+  border-bottom-color:rgba(239,68,68,.52);
+  border-left-color:rgba(139,92,246,.52);
+  animation:presentationRotate 11s linear reverse infinite;
+}
+
+.home-circle-text-v5{
+  z-index:2;
+  text-align:center;
+}
+
+.home-circle-text-v5 strong{
+  display:block;
+  font-size:23px;
+  font-weight:760;
+  letter-spacing:-.02em;
+}
+
+.home-circle-text-v5 span{
+  display:block;
+  margin-top:8px;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.home-dots-v5{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-top:16px;
+}
+
+.home-dots-v5 i{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:rgba(255,255,255,.20);
+}
+
+.home-dots-v5 i.active{
+  background:#38bdf8;
+  box-shadow:0 0 12px rgba(56,189,248,.7);
+}
+
+.home-actions-v5{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.home-action-v5{
+  min-height:104px;
+  border-radius:22px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.075);
+  padding:14px;
+  text-align:left;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  box-shadow:0 18px 42px rgba(0,0,0,.20);
+  backdrop-filter:blur(18px);
+}
+
+.home-action-icon-v5{
+  width:36px;
+  height:36px;
+  border-radius:15px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.08);
+  font-size:18px;
+}
+
+.home-action-v5 strong{
+  font-size:15px;
+  line-height:1.1;
+}
+
+.home-action-v5 small{
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:11px;
+}
+
+.home-arrow-v5{
+  align-self:flex-end;
+  color:rgba(255,255,255,.70);
+  font-size:20px;
+}
+
+.home-trend-v5{
+  border-radius:22px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.075);
+  padding:12px 14px;
+  backdrop-filter:blur(18px);
+}
+
+.home-trend-head-v5{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+
+.home-trend-head-v5 strong{
+  font-size:14px;
+  color:rgba(255,255,255,.88);
+}
+
+.home-trend-head-v5 span{
+  color:#63e6be;
+  font-size:13px;
+  font-weight:800;
+}
+
+.home-wave-v5{
+  margin-top:10px;
+  height:32px;
+  position:relative;
+}
+
+.home-wave-v5 svg{
+  width:100%;
+  height:100%;
+  overflow:visible;
+}
+
+.home-wave-v5 path{
+  fill:none;
+  stroke:url(#waveGradientV5);
+  stroke-width:4;
+  stroke-linecap:round;
+}
+
+.home-wave-marker-v5{
+  position:absolute;
+  top:11px;
+  left:50%;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:#ffd166;
+  box-shadow:0 0 18px rgba(255,209,102,.85);
+  transform:translate(-50%,-50%);
+}
+
+.home-mini-v5{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.home-mini-card-v5{
+  min-height:82px;
+  border-radius:20px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.065);
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  text-align:left;
+}
+
+.home-mini-card-v5 span{
+  font-size:20px;
+}
+
+.home-mini-card-v5 strong{
+  display:block;
+  font-size:13px;
+}
+
+.home-mini-card-v5 small{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:10px;
+}
+
+@media(max-width:380px){
+  .presentation-circle{width:235px;height:235px}
+  .home-circle-card-v5{min-height:204px}
+  .home-circle-v5{width:174px;height:174px}
+  .home-hello h2{font-size:27px}
+  .home-action-v5{min-height:94px}
+  .home-mini-card-v5{min-height:76px}
+}
+
+
+/* ===== V5.3 PAGE D’ACCUEIL : M / U / R typographie ===== */
+.presentation-circle,
+.mystic-circle{
+  cursor:pointer;
+}
+
+.presentation-words span,
+.intro-words span{
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:3px;
+}
+
+.presentation-words span b,
+.intro-words span b{
+  font-style:normal;
+  font-size:30px;
+  line-height:.8;
+  font-weight:950;
+  letter-spacing:.03em;
+  color:#ffffff;
+  text-shadow:
+    0 0 18px rgba(255,255,255,.28),
+    0 0 26px rgba(56,189,248,.18);
+}
+
+.presentation-words span em,
+.intro-words span em{
+  font-style:normal;
+  font-size:10px;
+  line-height:1;
+  font-weight:850;
+  letter-spacing:.16em;
+  color:rgba(255,255,255,.68);
+  text-transform:uppercase;
+}
+
+
+/* ===== V5.6 correction page navigation ===== */
+.home-mock-head{
+  display:none!important;
+}
+
+.app-top-fixed{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.top-left-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+.back-home-btn{
+  width:40px;
+  height:40px;
+  flex:0 0 auto;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.08);
+  color:rgba(255,255,255,.82);
+  display:grid;
+  place-items:center;
+  font-size:18px;
+  font-weight:900;
+  box-shadow:0 12px 30px rgba(0,0,0,.22);
+}
+
+.back-home-btn:active{
+  transform:scale(.96);
+}
+
+
+/* ===== V5.8 correction logo Utiliser ===== */
+.utiliser-card-v5 span{
+  color:#38bdf8;
+  text-shadow:
+    0 0 12px rgba(56,189,248,.75),
+    0 0 22px rgba(56,189,248,.35);
+  font-weight:950;
+  font-size:24px;
+}
+
+
+/* ===== V5.9 correction cercle navigation + logo Utiliser ===== */
+.home-circle-card-v5{
+  padding:18px;
+  overflow:hidden;
+}
+
+.home-circle-v5{
+  width:178px!important;
+  height:178px!important;
+}
+
+.home-circle-v5::before{
+  inset:-12px!important;
+}
+
+.home-circle-v5::after{
+  inset:16px!important;
+}
+
+.home-circle-text-v5 strong{
+  font-size:21px!important;
+}
+
+/* Logo Utiliser : retour à un pictogramme plus directement lié à l’application */
+.utiliser-card-v5 span{
+  color:#38bdf8;
+  text-shadow:
+    0 0 12px rgba(56,189,248,.72),
+    0 0 22px rgba(56,189,248,.34);
+  font-weight:950;
+  font-size:25px;
+}
+
+
+/* ===== V6.0 vrai logo d'application ===== */
+.app-logo-mini{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:block;
+  overflow:hidden;
+  box-shadow:
+    0 0 12px rgba(56,189,248,.62),
+    0 0 22px rgba(245,158,11,.22);
+}
+
+.app-logo-mini img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+
+.home-mock-brand img,
+.logo-img,
+.brand img{
+  object-fit:cover;
+}
+
+
+/* ===== V6.1 logo interne de l’application ===== */
+.logo-img-app{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  display:block;
+  object-fit:cover;
+  flex:0 0 auto;
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.34),
+    0 0 12px rgba(56,189,248,.22);
+}
+
+
+/* ===== V6.3 logo Utiliser différent du logo de la page ===== */
+.utiliser-card-v5 .utiliser-icon-v62{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:#66d9ff;
+  font-size:24px;
+  font-weight:900;
+  line-height:1;
+  border:1px solid rgba(102,217,255,.35);
+  background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.35), rgba(56,189,248,.10) 40%, rgba(0,0,0,.08) 70%);
+  box-shadow:
+    0 0 12px rgba(56,189,248,.45),
+    inset 0 0 12px rgba(255,255,255,.12);
+}
+
+</style>
+</head>
+<body>
+
+<div id="presentationMur" class="presentation-mur">
+  <div class="presentation-wrap">
+    <div class="presentation-logo">M.U.R.</div>
+
+    <div class="presentation-circle" onclick="enterPresentationMur()">
+      <div class="presentation-particles"></div>
+      <div class="presentation-words">
+        <span><b>M</b><em>esurer</em></span>
+        <div class="presentation-line"></div>
+        <span><b>U</b><em>tiliser</em></span>
+        <div class="presentation-line"></div>
+        <span><b>R</b><em>éguler</em></span>
+      </div>
+    </div>
+
+    <button class="presentation-enter" type="button" onclick="enterPresentationMur()">
+      Entrer <span>→</span>
+    </button>
+
+    <div class="presentation-hint">Reprenez le contrôle</div>
+  </div>
+</div>
+
+
+<div id="introMur" class="intro-mur" onclick="hideIntroMur()">
+  <div class="intro-box">
+    <div class="intro-mark"><span>M</span>.<span>U</span>.<span>R</span>.</div>
+
+    <div class="intro-breath-circle">
+      <div class="intro-words">
+        <span>Mesurer</span>
+        <span>Utiliser</span>
+        <span>Réguler</span>
+      </div>
+    </div>
+
+    <button class="intro-skip" type="button" onclick="hideIntroMur(); event.stopPropagation();">Entrer</button>
+  </div>
+</div>
+
+<div id="runningBadge" class="running-badge"><div class="running-left"><span class="running-pulse"></span><div><strong>Respiration en cours</strong><small id="runningBadgeText">00:00 restant</small></div></div><button type="button" onclick="showPage('pageBreath')">Voir</button></div>
+<main class="app">
+<header class="top app-top-fixed">
+  <div class="top-left-brand">
+    <img class="logo-img-app" src="https://nbertrandmacadamtonic-create.github.io/Respire-mur/apple-touch-icon.png?v=60" alt="M.U.R">
+    <div>
+      <h1>M.U.R <span>App</span></h1>
+      <div class="baseline">Mesurer · Utiliser · Réguler</div>
+    </div>
+  </div>
+  <button class="back-home-btn" type="button" onclick="openPresentationPage()" aria-label="Retour à la page d’accueil">⌾</button>
+</header>
+
+
+
+
+<section id="pageHome" class="page active">
+  <div class="home-mock">
+<div class="home-hello">
+      <h2 id="homeGreeting">Bonjour</h2>
+      <p>Prêt à vous recentrer&nbsp;?</p>
+    </div>
+
+    <section class="home-circle-card-v5">
+      <div class="home-circle-v5">
+        <div class="home-circle-text-v5">
+          <strong id="homeCircleMain">Mesurer</strong>
+          <div class="home-dots-v5">
+            <i id="homeDot0" class="active"></i>
+            <i id="homeDot1"></i>
+            <i id="homeDot2"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="profileWarningBox" class="card profile-warning" onclick="showPage('pageSettings')" style="margin-bottom:0;">
+      <div class="status">
+        <div>
+          <h2>Profil incomplet</h2>
+          <p class="help">Ajoutez votre prénom ou pseudo.</p>
+        </div>
+        <div class="zone">
+          <span class="dot"></span>
+          <span>Profil</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-actions-v5">
+      <button class="home-action-v5" type="button" onclick="showPage('pageTests')">
+        <div class="home-action-icon-v5">☷</div>
+        <div>
+          <strong>Tests NeuroFlex</strong>
+          <small>Évaluer votre équilibre</small>
+        </div>
+        <div class="home-arrow-v5">→</div>
+      </button>
+
+      <button class="home-action-v5" type="button" onclick="showPage('pageBreath')">
+        <div class="home-action-icon-v5">◎</div>
+        <div>
+          <strong>Respiration</strong>
+          <small>Démarrer une séance</small>
+        </div>
+        <div class="home-arrow-v5">→</div>
+      </button>
+    </section>
+
+    <section class="home-trend-v5" onclick="showPage('pageHistory')">
+      <div class="home-trend-head-v5">
+        <strong>Tendance actuelle</strong>
+        <span id="homeScoreText">—</span>
+      </div>
+
+      <div class="home-wave-v5">
+        <svg viewBox="0 0 320 48" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="waveGradientV5" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="45%" stop-color="#22c55e"/>
+              <stop offset="70%" stop-color="#f59e0b"/>
+              <stop offset="100%" stop-color="#ef4444"/>
+            </linearGradient>
+          </defs>
+          <path d="M4,30 C34,18 56,34 84,25 C118,13 150,32 184,24 C218,16 246,16 316,20"/>
+        </svg>
+        <div id="homeNeuroMarker" class="home-wave-marker-v5"></div>
+      </div>
+
+      <div id="homeTrendCaption" class="help" style="margin-top:5px;">
+        Réalisez un test complet.
+      </div>
+    </section>
+
+    <section class="home-mini-v5">
+      <button class="home-mini-card-v5" type="button" onclick="showPage('pageTests')">
+        <span>⌁</span>
+        <div>
+          <strong>Mesurer</strong>
+          <small>Comprendre</small>
+        </div>
+      </button>
+
+      <button class="home-mini-card-v5 utiliser-card-v5" type="button" onclick="showPage('pageHistory')">
+        <span class="utiliser-icon-v62">◎</span>
+        <div>
+          <strong>Utiliser</strong>
+          <small>Observer</small>
+        </div>
+      </button>
+
+      <button class="home-mini-card-v5" type="button" onclick="showPage('pageBreath')">
+        <span>⚖</span>
+        <div>
+          <strong>Réguler</strong>
+          <small>Équilibre</small>
+        </div>
+      </button>
+    </section>
+  </div>
+</section>
+
+
+<section id="pageTests" class="page">
+<section class="card"><div class="status"><div><h2>Tests NeuroFlex</h2><p class="help">Profil de fond ki.S, état du moment, puis points NeuroFlex.</p></div><button class="zone" type="button" onclick="showPage('pageHistory')"><span class="dot"></span><span>Stats</span></button></div><div class="test-tabs"><button id="tabKis" class="active" type="button" onclick="showTestTab('kis')">ki.S</button><button id="tabMoment" type="button" onclick="showTestTab('moment')">Ici</button><button id="tabResult" type="button" onclick="showTestTab('result')">Résultat</button></div></section>
+<section id="testKis" class="test-view active"><section class="card"><div class="status"><div><h2>Test ki.S</h2><p class="help">15 questions pour définir votre profil. À la 15e réponse, le profil se verrouille automatiquement.</p></div><div class="zone"><span class="dot"></span><span id="kisCounter">1 / 15</span></div></div><div class="test-progress"><span id="kisProgress"></span></div><div id="kisQuestionBox"></div><div class="test-nav"><button class="secondary" type="button" onclick="previousKisQuestion()">Précédent</button><button class="secondary" type="button" onclick="nextKisQuestion()">Suivant</button></div><button id="finishKisButton" class="secondary" type="button" onclick="finishKisTest()">Valider le test ki.S</button><div id="kisResultBox" class="test-result-box">Aucun résultat ki.S pour le moment.</div></section></section>
+<section id="testMoment" class="test-view"><section class="card"><h2>Ici & Maintenant</h2><p class="help">Ce test mesure l’état actuel de votre système sur une barre de -50 à +50.</p><div class="moment-question"><label>Mon énergie est...</label><input id="momentEnergy" type="range" min="0" max="4" step="1" value="2"><div class="moment-labels"><span>Très haute</span><span>Stable</span><span>Très basse</span></div></div><div class="moment-question"><label>Ma respiration est...</label><input id="momentBreath" type="range" min="0" max="4" step="1" value="2"><div class="moment-labels"><span>Très ample</span><span>Souple</span><span>Courte</span></div></div><div class="moment-question"><label>Mon mental est...</label><input id="momentMind" type="range" min="0" max="4" step="1" value="2"><div class="moment-labels"><span>Calme</span><span>Présent</span><span>Agité</span></div></div><div class="moment-question"><label>Mon corps est...</label><input id="momentBody" type="range" min="0" max="4" step="1" value="2"><div class="moment-labels"><span>Léger</span><span>Disponible</span><span>Lourd</span></div></div><button class="secondary" type="button" onclick="finishMomentTest()">Valider Ici & Maintenant</button><div id="momentResultBox" class="test-result-box">Aucun résultat Ici & Maintenant pour le moment.</div></section></section>
+<section id="testResult" class="test-view"><section class="card"><h2>Points NeuroFlex</h2><p class="help">Le score final combine l’état du moment avec la correction du profil de fond ki.S.</p><div class="neuro-gauge"><div class="neuro-gauge-labels"><span>-50</span><span>-25</span><span>0</span><span>+25</span><span>+50</span></div><div class="neuro-gauge-bar"><div id="neuroMarker" class="neuro-marker"></div></div></div><div class="neuro-score"><strong id="neuroScore">0</strong><small id="neuroZone">État non mesuré</small></div><div id="neuroResultBox" class="test-result-box">Réalisez le test ki.S puis le test Ici & Maintenant.</div><button class="secondary" type="button" onclick="applyNeuroRecommendation()">Utiliser la respiration recommandée</button><button class="secondary" type="button" onclick="showPage('pageHistory')">Voir mes statistiques NeuroFlex</button></section></section>
+</section>
+
+<section id="pageBreath" class="page">
+<section class="card"><div class="status"><div><h2>Respiration guidée</h2><p class="help">Choisissez votre zone : bleu, vert ou rouge.</p></div><div class="zone"><span class="dot"></span><span id="zoneName">Vert</span></div></div><div class="protocol-box"><label class="protocol-label" for="protocolSelect">Choisir une respiration</label><select id="protocolSelect" onchange="changeProtocol()"><option value="365">Respiration 365 — équilibre — 5 min</option><option value="coherence">Cohérence 5/5 — stabilité — 5 min</option><option value="carree">Respiration carrée 4/4/4/4 — recentrage — 3 min</option><option value="46">Respiration 4/6 — régulation — 3 min</option><option value="frein">Respiration frein 3/8 — redescente — 2 min</option><option value="boost">Respiration boost 5/2 — dynamisation — 1 min</option><option value="478">Respiration 4/7/8 — retour au calme — 2 min</option><option value="sleep">S’endormir — expiration longue — 7 min</option></select></div><div class="scale"><div class="scale-labels"><span>Bleu<br><small>dynamiser</small></span><span>Vert<br><small>équilibrer</small></span><span>Rouge<br><small>freiner</small></span></div><input id="slider" type="range" min="-3" max="3" step="1" value="0" oninput="changeSlider()"></div><div class="compact-rhythm"><div class="rhythm-number"><span id="inspire">5</span><small>inspire</small></div><div class="slash">/</div><div class="rhythm-number"><span id="expire">5</span><small>expire</small></div></div><p id="message" class="message">Équilibre : respiration 365, régulière et stable.</p><div class="quick"><button id="btnBleu" type="button" onclick="setSlider(-2)">Bleu<br><small>Boost</small></button><button id="btnVert" type="button" onclick="setSlider(0)" class="active">Vert<br><small>365</small></button><button id="btnRouge" type="button" onclick="setSlider(3)">Rouge<br><small>Frein</small></button></div></section>
+<section class="card breath-card"><div class="mini-info"><div class="info-box"><small>Temps restant</small><strong id="temps">05:00</strong></div><div class="info-box"><small>Cycle</small><strong id="cycle">5 / 5</strong></div></div><div class="stage"><svg class="progress-ring" viewBox="0 0 220 220"><circle class="progress-bg" cx="110" cy="110" r="98"></circle><circle id="progressCircle" class="progress-line" cx="110" cy="110" r="98"></circle></svg><button id="orb" class="orb" type="button" onclick="toggleBreathing()"><span id="phase">Êtes-vous prêt ?</span></button><div id="phaseHint" class="phase-hint">Touchez le cercle pour commencer.</div></div><button id="stopButton" class="secondary danger" type="button" onclick="stopBreathing()" hidden>Arrêter</button><button id="soundButton" class="secondary" type="button" onclick="toggleSound()">Son : activé</button></section>
+</section>
+
+<section id="pageHistory" class="page">
+<section class="card"><h2>Statistiques</h2><p class="help">L’application enregistre automatiquement. Vous pouvez sauvegarder ou importer vos statistiques.</p><div class="period-tabs"><button id="periodToday" class="active" type="button" onclick="setStatsPeriod('today')">Aujourd’hui</button><button id="periodWeek" type="button" onclick="setStatsPeriod('week')">Semaine</button><button id="periodMonth" type="button" onclick="setStatsPeriod('month')">Mois</button><button id="periodYear" type="button" onclick="setStatsPeriod('year')">Année</button></div><div class="stats-grid"><button class="stats-mini" type="button" onclick="showStatsDetail('breath')"><small>Respirations</small><strong id="statBreathCount">0</strong></button><button class="stats-mini" type="button" onclick="showStatsDetail('minutes')"><small>Minutes</small><strong id="statMinutesTotal">0</strong></button><button class="stats-mini" type="button" onclick="showStatsDetail('tests')"><small>Tests</small><strong id="statTestsTotal">0</strong></button></div><div id="statsDetail" class="stats-detail">Touchez une case pour obtenir le détail de la période.</div><div id="lastNeuroFlexBox" class="stats-detail last-neuro-box">Aucun bilan NeuroFlex enregistré pour le moment.</div><div class="data-actions"><button class="secondary" type="button" onclick="showBackupCode()">Sauvegarder les statistiques</button><button class="secondary" type="button" onclick="showRestoreBox()">Importer des statistiques</button></div><div id="exportBox" class="export-box"><p class="help">Copiez cette sauvegarde et gardez-la dans Notes, Mail ou Fichiers.</p><textarea id="exportText" readonly></textarea><div class="data-actions"><button class="secondary" type="button" onclick="copyBackupCode()">Copier la sauvegarde</button><button class="secondary" type="button" onclick="closeBackupBoxes()">Fermer</button></div></div><div id="restoreBox" class="export-box"><p class="help">Collez ici votre ancienne sauvegarde M.U.R, puis validez.</p><textarea id="restoreText" placeholder="Collez votre sauvegarde ici"></textarea><div class="data-actions"><button class="secondary" type="button" onclick="restoreBackupCode()">Importer</button><button class="secondary" type="button" onclick="closeBackupBoxes()">Fermer</button></div></div></section>
+<details class="compact-details" open><summary>Évolution NeuroFlex<span>courbe</span></summary><div class="compact-details-body"><div id="neuroEvolutionChart" class="evolution-chart"><div class="empty-state">Aucun test enregistré pour afficher une évolution.</div></div><div id="evolutionPointDetail" class="point-detail">Touchez un point du graphique pour voir le détail du test.</div></div></details>
+<details class="compact-details"><summary>Tendance actuelle<span>croix</span></summary><div class="compact-details-body"><div class="trend-graph"><div class="trend-label top">Activation</div><div class="trend-label bottom">Récupération</div><div class="trend-label left">Posé</div><div class="trend-label right">Fonceur</div><div class="trend-center">Équilibre</div><div id="trendPoint" class="trend-point"></div></div><p id="trendCaption" class="trend-caption">Réalisez un test complet pour afficher votre tendance.</p></div></details>
+<details class="compact-details"><summary>Respirations<span>séances</span></summary><div class="compact-details-body"><div id="breathStatsList" class="stats-list"><div class="empty-state">Aucune séance respiratoire enregistrée pour cette période.</div></div></div></details>
+<details class="compact-details"><summary>Résultats des tests<span>historique</span></summary><div class="compact-details-body"><div id="testStatsList" class="stats-list"><div class="empty-state">Aucun test NeuroFlex enregistré pour cette période.</div></div></div></details>
+</section>
+
+<section id="pageSettings" class="page">
+<section class="card"><h2>Paramètres</h2><p class="help">Personnalisez votre profil et vos réglages respiratoires.</p><div class="settings-field"><label for="userName">Prénom ou pseudo</label><input id="userName" type="text" placeholder="Votre prénom ou pseudo" autocomplete="nickname" autocapitalize="words" inputmode="text"></div><button class="secondary" type="button" onclick="saveUserSettings()">Enregistrer le profil</button><div id="settingsProfileResult" class="test-result-box">Aucun prénom ou pseudo enregistré.</div></section>
+<section class="card"><h2>Réglage respiratoire personnalisé</h2><p class="help">Vous pouvez choisir votre durée et votre cycle respiratoire.</p><div class="settings-grid"><div class="settings-field"><label for="customDuration">Durée en minutes</label><input id="customDuration" type="number" min="1" max="30" value="5"></div><div class="settings-field"><label for="customInspire">Inspiration en secondes</label><input id="customInspire" type="number" min="1" max="15" value="5"></div><div class="settings-field"><label for="customExpire">Expiration en secondes</label><input id="customExpire" type="number" min="1" max="20" value="5"></div></div><button class="secondary" type="button" onclick="applyCustomBreath()">Appliquer ce réglage</button><p class="settings-note">Le réglage personnalisé sera utilisé immédiatement dans l’onglet Respirer.</p></section>
+</section>
+</main>
+<nav class="tabbar"><button id="navHome" class="active" type="button" onclick="showPage('pageHome')">Accueil</button><button id="navBreath" type="button" onclick="showPage('pageBreath')">Respirer</button><button id="navTests" type="button" onclick="showPage('pageTests')">Tests</button><button id="navHistory" type="button" onclick="showPage('pageHistory')">Stats</button><button id="navSettings" type="button" onclick="showPage('pageSettings')">Param.</button></nav>
+
+<script>
+let currentPage="pageHome",running=false,stopRequested=false,remainingSeconds=300,totalSeconds=300,timerInterval=null,statsPeriod="today",soundEnabled=true,audioContext=null,masterGain=null,currentNoiseSource=null,currentKisQuestion=0,kisAnswers=Array(15).fill(null),kisResult=null,kisLocked=false,momentResult=null,neuroResult=null,unlockTimer=null;
+let breath={key:"365",name:"365",zone:"Vert",color:"#22c55e",inspire:5,expire:5,duration:300,slider:0,message:"Équilibre : respiration 365, régulière et stable."};
+const protocols={"365":{key:"365",name:"365",zone:"Vert",color:"#22c55e",inspire:5,expire:5,duration:300,slider:0,message:"Équilibre : respiration 365, régulière et stable."},coherence:{key:"coherence",name:"Cohérence",zone:"Vert",color:"#22c55e",inspire:5,expire:5,duration:300,slider:0,message:"Cohérence 5/5 : inspiration et expiration s’équilibrent."},carree:{key:"carree",name:"Carrée",zone:"Vert",color:"#22c55e",inspire:4,expire:4,duration:180,slider:0,message:"Respiration carrée : un cadre simple pour se recentrer."},"46":{key:"46",name:"4/6",zone:"Orange",color:"#f59e0b",inspire:4,expire:6,duration:180,slider:2,message:"Régulation : l’expiration prend un peu plus de place."},frein:{key:"frein",name:"Frein",zone:"Rouge",color:"#ef4444",inspire:3,expire:8,duration:120,slider:3,message:"Frein : expiration longue pour redescendre."},boost:{key:"boost",name:"Boost",zone:"Bleu",color:"#3b82f6",inspire:5,expire:2,duration:60,slider:-2,message:"Boost : inspiration dominante pour relancer."},"478":{key:"478",name:"4/7/8",zone:"Rouge",color:"#ef4444",inspire:4,expire:8,duration:120,slider:3,message:"4/7/8 : ralentir, tenir, puis relâcher longtemps."},sleep:{key:"sleep",name:"S’endormir",zone:"Bleu nuit",color:"#6366f1",inspire:3,expire:7,duration:420,slider:2,message:"S’endormir : inspiration courte, expiration longue, pour glisser vers le calme."}};
+const sliderMap={"-3":{key:"boost",name:"Boost +",zone:"Bleu profond",color:"#2563eb",inspire:6,expire:2,duration:60,slider:-3,message:"Bleu profond : l’inspiration domine nettement pour dynamiser."},"-2":protocols.boost,"-1":{key:"relance",name:"Relance",zone:"Bleu léger",color:"#38bdf8",inspire:4,expire:3,duration:120,slider:-1,message:"Bleu léger : relance douce, proche de l’équilibre."},"0":protocols["365"],"1":{key:"apaisement",name:"Apaisement",zone:"Orange léger",color:"#f59e0b",inspire:4,expire:5,duration:180,slider:1,message:"Orange léger : l’expiration prend un peu plus de place."},"2":protocols["46"],"3":protocols.frein};
+const kisQuestions=[{text:"Face à une difficulté, je réagis vite.",direction:1},{text:"Quand mon rythme s’accélère, j’ai du mal à ralentir.",direction:1},{text:"Je préfère anticiper plutôt que subir.",direction:0},{text:"Je peux rester calme même si les autres s’agitent.",direction:-1},{text:"Je sens rapidement les variations de mon corps.",direction:0},{text:"Je passe facilement de l’action au repos.",direction:-1},{text:"Je supporte mal l’attente ou l’imprévu.",direction:1},{text:"J’ai besoin de temps pour me mettre en route.",direction:-1},{text:"Je peux beaucoup donner avant de sentir la fatigue.",direction:1},{text:"Je cherche naturellement l’équilibre.",direction:-1},{text:"Je me sens parfois entre deux rythmes.",direction:0},{text:"Quand je suis lancé, je vais souvent trop loin.",direction:1},{text:"J’aime les repères réguliers.",direction:-1},{text:"Je m’adapte vite aux changements.",direction:1},{text:"Je récupère bien quand je m’accorde une pause.",direction:-1}];
+function showPage(pageId){currentPage=pageId;document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById(pageId).classList.add("active");document.querySelectorAll(".tabbar button").forEach(b=>b.classList.remove("active"));if(pageId==="pageHome"){navHome.classList.add("active");renderStats()}if(pageId==="pageBreath")navBreath.classList.add("active");if(pageId==="pageTests")navTests.classList.add("active");if(pageId==="pageHistory"){navHistory.classList.add("active");renderStats()}if(pageId==="pageSettings")navSettings.classList.add("active");updateRunningBadge();window.scrollTo(0,0)}
+function changeProtocol(){breath=protocols[protocolSelect.value];updateBreathDisplay(true)}function changeSlider(){breath=sliderMap[slider.value];updateBreathDisplay(false)}function setSlider(v){slider.value=v;breath=sliderMap[String(v)];updateBreathDisplay(false)}
+function updateBreathDisplay(updateSelect){document.documentElement.style.setProperty("--accent",breath.color);zoneName.textContent=breath.zone;inspire.textContent=breath.inspire;expire.textContent=breath.expire;cycle.textContent=breath.inspire+" / "+breath.expire;message.textContent=breath.message;temps.textContent=formatTime(breath.duration);slider.value=breath.slider;if(updateSelect&&protocols[breath.key])protocolSelect.value=breath.key;btnBleu.classList.toggle("active",breath.slider<0);btnVert.classList.toggle("active",breath.slider===0);btnRouge.classList.toggle("active",breath.slider>0);resetBreathingDisplay()}
+function toggleBreathing(){running?stopBreathing():startBreathing()}async function startBreathing(){if(running)return;initAudio();running=true;stopRequested=false;remainingSeconds=breath.duration;totalSeconds=breath.duration;stopButton.hidden=false;protocolSelect.disabled=true;slider.disabled=true;updateRunningBadge();timerInterval=setInterval(()=>{remainingSeconds--;temps.textContent=formatTime(remainingSeconds);setProgress(1-(remainingSeconds/totalSeconds));updateRunningBadge();if(remainingSeconds<=0)finishBreathing()},1000);while(running&&!stopRequested&&remainingSeconds>0){await runPhase("Inspirez",breath.inspire,1.34);await runPhase("Expirez",breath.expire,.68)}}
+function runPhase(label,seconds,scale){return new Promise(resolve=>{if(!running||stopRequested){resolve();return}phase.textContent=label;if(label==="Inspirez"){phaseHint.textContent="Le cercle s’ouvre : inspirez sans forcer.";playBreathSound("inspire",seconds)}else{phaseHint.textContent="Le cercle se referme : laissez sortir l’air.";playBreathSound("expire",seconds)}orb.style.transitionDuration=seconds+"s";orb.style.transform="scale("+scale+")";updateRunningBadge(label);setTimeout(resolve,seconds*1000)})}
+function stopBreathing(){stopRequested=true;running=false;clearInterval(timerInterval);stopCurrentBreathSound();stopButton.hidden=true;protocolSelect.disabled=false;slider.disabled=false;phase.textContent="Arrêté";phaseHint.textContent="Séance interrompue.";orb.style.transitionDuration=".5s";orb.style.transform="scale(.80)";updateRunningBadge()}
+function finishBreathing(){const finished={...breath};running=false;stopRequested=true;clearInterval(timerInterval);stopCurrentBreathSound();stopButton.hidden=true;protocolSelect.disabled=false;slider.disabled=false;phase.textContent="Terminé";phaseHint.textContent="Séance terminée.";orb.style.transitionDuration=".5s";orb.style.transform="scale(.80)";setProgress(1);recordBreathSession(finished);updateRunningBadge();setTimeout(resetBreathingDisplay,1800)}
+function resetBreathingDisplay(){running=false;stopRequested=false;clearInterval(timerInterval);stopCurrentBreathSound();stopButton.hidden=true;protocolSelect.disabled=false;slider.disabled=false;phase.textContent="Êtes-vous prêt ?";phaseHint.textContent="Touchez le cercle pour commencer.";orb.style.transitionDuration=".5s";orb.style.transform="scale(.80)";temps.textContent=formatTime(breath.duration);setProgress(0);updateRunningBadge()}
+function updateRunningBadge(label){if(running&&currentPage!=="pageBreath"){runningBadge.classList.add("active");runningBadgeText.textContent=(label?label+" — ":"")+formatTime(remainingSeconds)+" restant"}else runningBadge.classList.remove("active")}
+function setProgress(progress){const c=2*Math.PI*98;progressCircle.style.strokeDasharray=String(c);progressCircle.style.strokeDashoffset=String(c*(1-Math.max(0,Math.min(1,progress))))}function formatTime(seconds){seconds=Math.max(0,Math.ceil(seconds));const m=Math.floor(seconds/60),s=seconds%60;return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")}
+function toggleSound(){soundEnabled=!soundEnabled;if(soundEnabled){initAudio();soundButton.textContent="Son : activé";playSoftClick()}else{stopCurrentBreathSound();soundButton.textContent="Son : désactivé"}}function initAudio(){if(!audioContext){audioContext=new(window.AudioContext||window.webkitAudioContext)();masterGain=audioContext.createGain();masterGain.gain.value=.55;masterGain.connect(audioContext.destination)}if(audioContext.state==="suspended")audioContext.resume()}function makeNoiseBuffer(){const n=audioContext.sampleRate*2,b=audioContext.createBuffer(1,n,audioContext.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*.7;return b}function stopCurrentBreathSound(){if(currentNoiseSource){try{currentNoiseSource.stop()}catch(e){}currentNoiseSource=null}}function playSoftClick(){if(!soundEnabled||!audioContext)return;const o=audioContext.createOscillator(),g=audioContext.createGain();o.connect(g);g.connect(masterGain);o.type="sine";o.frequency.setValueAtTime(220,audioContext.currentTime);g.gain.setValueAtTime(.0001,audioContext.currentTime);g.gain.linearRampToValueAtTime(.08,audioContext.currentTime+.02);g.gain.linearRampToValueAtTime(.0001,audioContext.currentTime+.16);o.start();o.stop(audioContext.currentTime+.16)}function playBreathSound(type,duration){if(!soundEnabled)return;initAudio();stopCurrentBreathSound();const n=audioContext.createBufferSource();n.buffer=makeNoiseBuffer();n.loop=true;const f=audioContext.createBiquadFilter();f.type="bandpass";f.Q.value=.8;const g=audioContext.createGain();n.connect(f);f.connect(g);g.connect(masterGain);const now=audioContext.currentTime;if(type==="inspire"){f.frequency.setValueAtTime(520,now);f.frequency.linearRampToValueAtTime(900,now+duration)}else{f.frequency.setValueAtTime(760,now);f.frequency.linearRampToValueAtTime(360,now+duration)}g.gain.setValueAtTime(.0001,now);g.gain.linearRampToValueAtTime(.13,now+.35);g.gain.linearRampToValueAtTime(.0001,now+duration);n.start(now);n.stop(now+duration);currentNoiseSource=n}
+function showTestTab(tab){testKis.classList.toggle("active",tab==="kis");testMoment.classList.toggle("active",tab==="moment");testResult.classList.toggle("active",tab==="result");tabKis.classList.toggle("active",tab==="kis");tabMoment.classList.toggle("active",tab==="moment");tabResult.classList.toggle("active",tab==="result");renderTests()}
+function renderTests(){renderKisQuestion();renderKisResult();renderMomentResult();renderNeuroResult()}
+function renderKisQuestion(){const finishButton=finishKisButton;if(kisLocked&&kisResult){kisQuestionBox.innerHTML=`<div class="kis-locked"><strong>Test ki.S verrouillé.</strong><br>Profil conservé : <strong>${kisResult.profile}</strong><br>Score ki.S : <strong>${formatNeuroScore(kisResult.score)}</strong><br>Pour refaire le test, maintenez le bouton de déverrouillage.</div>`;kisCounter.textContent="Verrouillé";kisProgress.style.width="100%";finishButton.textContent="Maintenir pour déverrouiller";finishButton.classList.add("unlock-button");finishButton.onclick=null;finishButton.onpointerdown=startUnlockKis;finishButton.onpointerup=cancelUnlockKis;finishButton.onpointerleave=cancelUnlockKis;finishButton.ontouchend=cancelUnlockKis;return}finishButton.textContent="Valider le test ki.S";finishButton.classList.remove("unlock-button","unlocking");finishButton.onclick=finishKisTest;finishButton.onpointerdown=null;finishButton.onpointerup=null;finishButton.onpointerleave=null;finishButton.ontouchend=null;const a=kisAnswers[currentKisQuestion],q=kisQuestions[currentKisQuestion];kisQuestionBox.innerHTML=`<div class="kis-question-title">Question ${currentKisQuestion+1}</div><div class="kis-question-text">${q.text}</div><button class="kis-choice ${a===1?"selected":""}" type="button" onclick="answerKis(1)"><strong>Plutôt oui</strong><small>Cela me correspond souvent.</small></button><button class="kis-choice ${a===0?"selected":""}" type="button" onclick="answerKis(0)"><strong>Ça dépend</strong><small>Cela varie selon les situations.</small></button><button class="kis-choice ${a===-1?"selected":""}" type="button" onclick="answerKis(-1)"><strong>Plutôt non</strong><small>Cela me correspond rarement.</small></button>`;const done=kisAnswers.filter(v=>v!==null).length;kisCounter.textContent=(currentKisQuestion+1)+" / 15";kisProgress.style.width=((done/15)*100)+"%"}
+function answerKis(value){if(kisLocked)return;kisAnswers[currentKisQuestion]=value;if(currentKisQuestion<14){currentKisQuestion++;renderKisQuestion();return}finishKisTest()}function previousKisQuestion(){if(kisLocked)return;if(currentKisQuestion>0)currentKisQuestion--;renderKisQuestion()}function nextKisQuestion(){if(kisLocked)return;if(currentKisQuestion<14)currentKisQuestion++;renderKisQuestion()}
+function finishKisTest(){if(kisLocked)return;const done=kisAnswers.filter(v=>v!==null).length;if(done<15){alert("Complétez les 15 questions du test ki.S.");return}let score=0;for(let i=0;i<kisQuestions.length;i++)score+=kisAnswers[i]*kisQuestions[i].direction;const p=getKisProfile(score);kisResult={score:score,profile:p.profile,short:p.short,tendency:p.tendency,answers:kisAnswers.slice(),lockedAt:new Date().toISOString()};kisLocked=true;saveKisResult();calculateNeuroResult();renderTests();showTestTab("kis")}
+function getKisProfile(score){if(score>=8)return{profile:"Fonceur",short:"fonceur",tendency:"Profil très moteur"};if(score<=-8)return{profile:"Posé",short:"pose",tendency:"Profil très stabilisateur"};if(score>=3&&score<=7)return{profile:"Équilibriste à tendance Fonceur",short:"equilibriste_fonceur",tendency:"Équilibriste avec dominante Fonceur"};if(score>=-7&&score<=-3)return{profile:"Équilibriste à tendance Posé",short:"equilibriste_pose",tendency:"Équilibriste avec dominante Posé"};return{profile:"Équilibriste",short:"equilibriste",tendency:"Équilibre central"}}
+function renderKisResult(){if(!kisResult){kisResultBox.innerHTML="Aucun résultat ki.S pour le moment.";return}const score=kisResult.score,marker=Math.max(0,Math.min(100,((score+15)/30)*100)),formatted=formatNeuroScore(score);kisResultBox.innerHTML=`<strong>Résultat du test ki.S</strong><br>Profil : <strong>${kisResult.profile}</strong><br>Score : <strong>${formatted}</strong> sur une échelle de -15 à +15<br>Tendance : <strong>${kisResult.tendency}</strong><br><br>Ce résultat décrit votre tendance de fond. Il sera conservé pour interpréter ensuite le test <strong>Ici & Maintenant</strong>.<div class="kis-profile-graph"><div class="kis-profile-track"><div class="kis-profile-marker" style="left:${marker}%"></div></div><div class="kis-profile-labels"><span>Posé</span><span>Équilibriste<br>tendance Posé</span><span>Équilibriste</span><span>Équilibriste<br>tendance Fonceur</span><span>Fonceur</span></div><div class="kis-profile-score"><strong>${formatted}</strong><small>Position sur la barre de tendance</small></div></div><button class="secondary" type="button" onclick="continueToMoment()">Continuer vers Ici & Maintenant</button>`}
+function continueToMoment(){showTestTab("moment")}function startUnlockKis(){finishKisButton.classList.add("unlocking");finishKisButton.textContent="Déverrouillage...";unlockTimer=setTimeout(unlockKisTest,1800)}function cancelUnlockKis(){if(unlockTimer){clearTimeout(unlockTimer);unlockTimer=null}if(kisLocked){finishKisButton.classList.remove("unlocking");finishKisButton.textContent="Maintenir pour déverrouiller"}}function unlockKisTest(){const ok=confirm("Déverrouiller le test ki.S et refaire les 15 questions ?");if(!ok){cancelUnlockKis();return}localStorage.removeItem("murKisResult");kisLocked=false;kisResult=null;kisAnswers=Array(15).fill(null);currentKisQuestion=0;renderTests()}function saveKisResult(){if(kisResult)localStorage.setItem("murKisResult",JSON.stringify(kisResult))}function loadKisResult(){const saved=localStorage.getItem("murKisResult");if(!saved)return;try{kisResult=JSON.parse(saved);kisLocked=true;if(kisResult.answers&&Array.isArray(kisResult.answers))kisAnswers=kisResult.answers.slice(0,15)}catch(e){localStorage.removeItem("murKisResult")}}
+function finishMomentTest(){const energy=Number(momentEnergy.value),breathing=Number(momentBreath.value),mind=Number(momentMind.value),body=Number(momentBody.value),map=[-2,-1,0,1,2];let score=Math.round(((map[energy]+map[breathing]+map[mind]+map[body])/8)*50);score=Math.max(-50,Math.min(50,score));const zone=getMomentZone(score);momentResult={score:score,zone:zone.zone,family:zone.family,color:zone.color,program:zone.program};calculateNeuroResult();recordTestResult();renderTests();renderStats();showTestTab("result")}
+function getMomentZone(score){if(score<=-22)return{zone:"BLEUE",family:"Activer",color:"#3b82f6",program:"boost"};if(score>=28)return{zone:"ROUGE",family:"Freiner",color:"#ef4444",program:"frein"};if(score>=10)return{zone:"ORANGE",family:"Réguler",color:"#f59e0b",program:"46"};return{zone:"VERTE",family:"Entretenir",color:"#22c55e",program:"365"}}function renderMomentResult(){momentResultBox.innerHTML=momentResult?`État actuel : <strong>${formatNeuroScore(momentResult.score)}</strong><br>Zone : <strong>${momentResult.zone}</strong><br>Famille : <strong>${momentResult.family}</strong>`:"Aucun résultat Ici & Maintenant pour le moment."}
+function calculateNeuroResult(){if(!kisResult||!momentResult){neuroResult=null;return}const scoreMoment=momentResult.score,correction=Math.round(kisResult.score*1.2);let score=Math.max(-50,Math.min(50,scoreMoment+correction));const z=getMomentZone(score);let reflex=z.family,program=z.program,title="Votre système est dans une zone de disponibilité.",text="Le conseil NeuroFlex est d’entretenir cet équilibre.";if(score<=-22){reflex="Activer progressivement";program="boost";title="Votre système manque d’élan.";text="Le réflexe NeuroFlex est de remettre un peu d’énergie, sans forcer, par une respiration dynamisante douce."}else if(score>=28){reflex="Freiner franchement";program="frein";title="Votre système est en suractivation.";text="Le réflexe NeuroFlex est de redonner la priorité à l’expiration pour faire redescendre l’activation."}else if(score>=10){reflex="Réguler";program="46";title="Votre système monte en tension.";text="Le réflexe NeuroFlex est de réguler progressivement, avec une expiration un peu plus longue que l’inspiration."}if(kisResult.short.includes("fonceur")&&score>=10){title="Votre profil moteur amplifie la montée.";text="Votre tendance Fonceur peut accélérer la réponse du système. Le bon réflexe est de freiner avant d’ajouter de l’action."}if(kisResult.short.includes("pose")&&score<=-22){title="Votre profil stable peut rester trop bas.";text="Votre tendance Posé peut parfois ralentir la remise en mouvement. Le bon réflexe est d’activer progressivement."}neuroResult={kisProfile:kisResult.profile,kisScore:kisResult.score,momentScore:momentResult.score,correctionKis:correction,neuroScore:score,momentZone:momentResult.zone,neuroZone:z.zone,neuroFamily:z.family,reflex:reflex,program:program,title:title,text:text,color:z.color}}
+function renderNeuroResult(){if(!neuroResult){neuroMarker.style.left="50%";neuroMarker.style.borderColor="var(--accent)";neuroScore.textContent="0";neuroZone.textContent="État non mesuré";neuroResultBox.innerHTML="Réalisez le test ki.S puis le test Ici & Maintenant.";return}const percent=((neuroResult.neuroScore+50)/100)*100;neuroMarker.style.left=percent+"%";neuroMarker.style.borderColor=neuroResult.color;neuroScore.textContent=formatNeuroScore(neuroResult.neuroScore);neuroZone.textContent="Zone "+neuroResult.neuroZone+" — "+neuroResult.neuroFamily;neuroResultBox.innerHTML=`Profil ki.S : <strong>${neuroResult.kisProfile}</strong><br>Score ki.S : <strong>${formatNeuroScore(neuroResult.kisScore)}</strong><br>État Ici & Maintenant : <strong>${formatNeuroScore(neuroResult.momentScore)}</strong><br>Correction ki.S : <strong>${formatNeuroScore(neuroResult.correctionKis)}</strong><br><br>Points NeuroFlex : <strong>${formatNeuroScore(neuroResult.neuroScore)}</strong><br>Zone finale : <strong>${neuroResult.neuroZone}</strong><br>Réflexe conseillé : <strong>${neuroResult.reflex}</strong><br><br><strong>${neuroResult.title}</strong><br>${neuroResult.text}`}
+function applyNeuroRecommendation(){if(!neuroResult){alert("Le bilan NeuroFlex est incomplet.");return}breath=protocols[neuroResult.program];updateBreathDisplay(true);message.textContent=neuroResult.reflex+" — "+neuroResult.text;showPage("pageBreath")}function formatNeuroScore(score){return score>0?"+"+score:String(score)}
+function getBreathHistory(){return JSON.parse(localStorage.getItem("murBreathHistory")||"[]")}function saveBreathHistory(items){localStorage.setItem("murBreathHistory",JSON.stringify(items))}function getTestHistory(){return JSON.parse(localStorage.getItem("murTestHistory")||"[]")}function saveTestHistory(items){localStorage.setItem("murTestHistory",JSON.stringify(items))}
+function recordBreathSession(s){const now=new Date(),item={id:Date.now(),timestamp:now.getTime(),date:now.toISOString().slice(0,10),time:now.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),name:s.name,zone:s.zone,color:s.color,inspire:s.inspire,expire:s.expire,duration:Math.round(s.duration/60)};const h=getBreathHistory();h.unshift(item);saveBreathHistory(h.slice(0,300));renderStats()}
+
+function recordTestResult(){
+  if(!kisResult || !momentResult){
+    return;
+  }
+
+  if(!neuroResult){
+    calculateNeuroResult();
+  }
+
+  if(!neuroResult){
+    return;
+  }
+
+  const now = new Date();
+
+  const item = {
+    id: Date.now(),
+    timestamp: now.getTime(),
+    date: now.toISOString().slice(0,10),
+    time: now.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"}),
+    kisProfile: kisResult.profile || "—",
+    kisScore: Number(kisResult.score || 0),
+    momentScore: Number(momentResult.score || 0),
+    neuroScore: Number(neuroResult.neuroScore || 0),
+    neuroZone: neuroResult.neuroZone || "—",
+    reflex: neuroResult.reflex || "—",
+    color: neuroResult.color || "var(--accent)"
+  };
+
+  const h = getTestHistory();
+  h.unshift(item);
+  saveTestHistory(h.slice(0,300));
+
+  try{
+    renderStats();
+  }catch(e){
+    console.warn("renderStats après test :", e);
+  }
+}
+
+function setStatsPeriod(period){statsPeriod=period;periodToday.classList.toggle("active",period==="today");periodWeek.classList.toggle("active",period==="week");periodMonth.classList.toggle("active",period==="month");periodYear.classList.toggle("active",period==="year");renderStats();showStatsDetail("breath")}function getPeriodStart(){const d=new Date();d.setHours(0,0,0,0);if(statsPeriod==="today")return d.getTime();if(statsPeriod==="week"){const day=d.getDay()||7;d.setDate(d.getDate()-day+1);return d.getTime()}if(statsPeriod==="month"){d.setDate(1);return d.getTime()}if(statsPeriod==="year"){d.setMonth(0,1);return d.getTime()}return d.getTime()}function getPeriodLabel(){return statsPeriod==="today"?"aujourd’hui":statsPeriod==="week"?"cette semaine":statsPeriod==="month"?"ce mois-ci":statsPeriod==="year"?"cette année":"sur la période"}function getFilteredBreaths(){const start=getPeriodStart();return getBreathHistory().filter(i=>i.timestamp>=start)}function getFilteredTests(){const start=getPeriodStart();return getTestHistory().filter(i=>i.timestamp>=start)}
+function renderStats(){renderStatsSummary();renderTrendGraph();renderNeuroEvolution();renderBreathStatsList();renderTestStatsList();renderLastNeuroFlex()}function renderStatsSummary(){const b=getFilteredBreaths(),t=getFilteredTests(),m=b.reduce((s,i)=>s+i.duration,0);if(statBreathCount)statBreathCount.textContent=b.length;if(statMinutesTotal)statMinutesTotal.textContent=m;if(statTestsTotal)statTestsTotal.textContent=t.length}
+function renderLastNeuroFlex(){if(!lastNeuroFlexBox)return;const tests=getTestHistory();if(!tests.length){lastNeuroFlexBox.innerHTML="Aucun bilan NeuroFlex enregistré pour le moment.";return}const l=tests[0];lastNeuroFlexBox.innerHTML=`<strong>Dernier bilan NeuroFlex</strong><br>Réalisé le <strong>${formatShortDate(l.timestamp)}</strong> à <strong>${l.time}</strong><br>Ici & Maintenant : <strong>${formatNeuroScore(l.momentScore)}</strong><br>Points NeuroFlex : <strong>${formatNeuroScore(l.neuroScore)}</strong><br>Profil ki.S : <strong>${l.kisProfile}</strong><br>Réflexe conseillé : <strong>${l.reflex}</strong>`}
+function showStatsDetail(type){const b=getFilteredBreaths(),t=getFilteredTests(),m=b.reduce((s,i)=>s+i.duration,0),label=getPeriodLabel();if(type==="breath"){statsDetail.innerHTML=`<strong>${b.length}</strong> respiration(s) réalisées ${label}.<br>Respiration la plus utilisée : <strong>${getMostUsedBreath(b)}</strong>.`}if(type==="minutes"){const avg=b.length?Math.round(m/b.length):0;statsDetail.innerHTML=`<strong>${m}</strong> minute(s) de respiration ${label}.<br>Moyenne par séance : <strong>${avg}</strong> min.`}if(type==="tests"){const l=t[0];statsDetail.innerHTML=t.length?`<strong>${t.length}</strong> test(s) NeuroFlex ${label}.<br>Dernier score : <strong>${formatNeuroScore(l.neuroScore)}</strong>.`:`Aucun test NeuroFlex ${label}.`}}
+function getMostUsedBreath(items){if(!items.length)return"—";const map={};items.forEach(i=>map[i.name]=(map[i.name]||0)+1);return Object.entries(map).sort((a,b)=>b[1]-a[1])[0][0]}
+function renderTrendGraph(){
+  const tests = getTestHistory();
+
+  const p = document.getElementById("trendPoint");
+  const c = document.getElementById("trendCaption");
+
+  const oldHomePoint = document.getElementById("homeTrendPoint");
+  const oldHomeCaption = document.getElementById("homeTrendCaption");
+
+  const homeScore = document.getElementById("homeScoreText");
+  const homeMarker = document.getElementById("homeNeuroMarker");
+
+  if(!tests.length){
+    updateTrendPoint(p, "50%", "50%", "var(--accent)");
+    updateTrendPoint(oldHomePoint, "50%", "50%", "var(--accent)");
+
+    if(c) c.textContent = "Réalisez un test complet pour afficher votre tendance.";
+    if(oldHomeCaption) oldHomeCaption.textContent = "Réalisez un test complet pour afficher votre tendance.";
+    if(homeScore) homeScore.textContent = "—";
+    if(homeMarker) homeMarker.style.left = "50%";
+
+    return;
+  }
+
+  const l = tests[0];
+
+  const kis = Number(l.kisScore || 0);
+  const moment = Number(l.momentScore || 0);
+  const neuro = Number(l.neuroScore || 0);
+
+  const x = Math.max(0, Math.min(100, ((kis + 15) / 30) * 100));
+  const y = Math.max(0, Math.min(100, 100 - ((moment + 50) / 100) * 100));
+  const neuroPercent = Math.max(0, Math.min(100, ((neuro + 50) / 100) * 100));
+
+  updateTrendPoint(p, x + "%", y + "%", l.color || "var(--accent)");
+  updateTrendPoint(oldHomePoint, x + "%", y + "%", l.color || "var(--accent)");
+
+  if(c){
+    c.innerHTML =
+      "Dernière tendance : <strong>" + (l.kisProfile || "—") + "</strong>, " +
+      "état du moment <strong>" + formatNeuroScore(moment) + "</strong>, " +
+      "points NeuroFlex <strong>" + formatNeuroScore(neuro) + "</strong>.";
+  }
+
+  if(oldHomeCaption){
+    oldHomeCaption.textContent =
+      "Dernière tendance : " + (l.kisProfile || "—") +
+      ", état " + formatNeuroScore(moment) +
+      ", NeuroFlex " + formatNeuroScore(neuro) + ".";
+  }
+
+  if(homeScore){
+    homeScore.textContent = formatNeuroScore(neuro);
+  }
+
+  if(homeMarker){
+    homeMarker.style.left = neuroPercent + "%";
+  }
+}
+
+function updateTrendPoint(point,left,top,color){if(!point)return;point.style.left=left;point.style.top=top;point.style.borderColor=color}
+
+function renderNeuroEvolution(){
+  const chart = document.getElementById("neuroEvolutionChart");
+  const detail = document.getElementById("evolutionPointDetail");
+
+  if(!chart) return;
+
+  const items = getFilteredTests()
+    .filter(i => i && typeof i.neuroScore !== "undefined" && !isNaN(Number(i.neuroScore)))
+    .slice(0,12)
+    .reverse();
+
+  if(!items.length){
+    chart.innerHTML = `<div class="empty-state">Aucun test enregistré pour afficher une évolution.</div>`;
+    if(detail) detail.innerHTML = "Touchez un point du graphique pour voir le détail du test.";
+    return;
+  }
+
+  const w = 360;
+  const h = 140;
+  const pad = 22;
+  const innerW = w - pad * 2;
+  const innerH = h - pad * 2;
+
+  const pts = items.map((item,index) => {
+    const score = Number(item.neuroScore || 0);
+    const x = items.length === 1 ? w / 2 : pad + (index / (items.length - 1)) * innerW;
+    const y = pad + ((50 - score) / 100) * innerH;
+    return {x,y,item,index};
+  });
+
+  const path = pts.map((p,i) => (i === 0 ? "M" : "L") + p.x + " " + p.y).join(" ");
+
+  chart.innerHTML =
+    `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+      <line class="evolution-axis" x1="${pad}" y1="${pad}" x2="${pad}" y2="${h-pad}"></line>
+      <line class="evolution-axis" x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}"></line>
+      <line class="evolution-zero" x1="${pad}" y1="${pad+innerH/2}" x2="${w-pad}" y2="${pad+innerH/2}"></line>
+      <text class="evolution-label" x="${pad}" y="13">+50</text>
+      <text class="evolution-label" x="${pad}" y="${pad+innerH/2-5}">0</text>
+      <text class="evolution-label" x="${pad}" y="${h-5}">-50</text>
+      <path class="evolution-line" d="${path}"></path>
+      ${pts.map(p => `<circle class="evolution-dot" cx="${p.x}" cy="${p.y}" r="6" onclick="showEvolutionDetail(${p.index})"></circle>`).join("")}
+    </svg>`;
+
+  showEvolutionDetail(pts.length - 1);
+}
+
+
+function showEvolutionDetail(index){
+  const items = getFilteredTests()
+    .filter(i => i && typeof i.neuroScore !== "undefined" && !isNaN(Number(i.neuroScore)))
+    .slice(0,12)
+    .reverse();
+
+  const i = items[index];
+  const detail = document.getElementById("evolutionPointDetail");
+
+  if(!i || !detail) return;
+
+  detail.innerHTML =
+    `<strong>${formatShortDate(i.timestamp)} à ${i.time}</strong><br>
+    Profil : <strong>${i.kisProfile || "—"}</strong><br>
+    ki.S : <strong>${formatNeuroScore(Number(i.kisScore || 0))}</strong> —
+    Ici : <strong>${formatNeuroScore(Number(i.momentScore || 0))}</strong> —
+    NeuroFlex : <strong>${formatNeuroScore(Number(i.neuroScore || 0))}</strong><br>
+    Réflexe : <strong>${i.reflex || "—"}</strong>`;
+}
+
+function renderBreathStatsList(){const items=getFilteredBreaths();if(!items.length){breathStatsList.innerHTML=`<div class="empty-state">Aucune séance respiratoire enregistrée pour cette période.</div>`;return}breathStatsList.innerHTML=items.slice(0,30).map(i=>`<div class="stats-item"><span class="stats-item-dot" style="background:${i.color}"></span><div><strong>${i.name}</strong><small>${formatShortDate(i.timestamp)} à ${i.time} — ${i.duration} min — cycle ${i.inspire}/${i.expire}</small></div><small>${i.zone}</small></div>`).join("")}
+function renderTestStatsList(){const items=getFilteredTests();if(!items.length){testStatsList.innerHTML=`<div class="empty-state">Aucun test NeuroFlex enregistré pour cette période.</div>`;return}testStatsList.innerHTML=items.slice(0,30).map(i=>`<div class="stats-item"><span class="stats-item-dot" style="background:${i.color}"></span><div><strong>${i.kisProfile}</strong><small>${formatShortDate(i.timestamp)} à ${i.time} — ki.S ${formatNeuroScore(i.kisScore)} — Ici ${formatNeuroScore(i.momentScore)}</small></div><small>${formatNeuroScore(i.neuroScore)}</small></div>`).join("")}function formatShortDate(ts){return new Date(ts).toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit"})}
+function buildMurExport(){return{version:"MUR-HTML-6.3",exportedAt:new Date().toISOString(),userName:localStorage.getItem("murUserName")||"",kisResult:JSON.parse(localStorage.getItem("murKisResult")||"null"),breathHistory:getBreathHistory(),testHistory:getTestHistory()}}function utf8ToBase64(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function base64ToUtf8(str){
+  return decodeURIComponent(escape(atob(str)));
+}function showBackupCode(){const data=JSON.stringify(buildMurExport()),code=utf8ToBase64(data);restoreBox.style.display="none";exportBox.style.display="block";exportText.value=code;exportText.focus();exportText.select()}async function copyBackupCode(){const data=exportText.value;if(!data){alert("Aucune sauvegarde à copier.");return}try{await navigator.clipboard.writeText(data);alert("Sauvegarde copiée. Vous pouvez la coller dans Notes, Mail ou Fichiers.")}catch(e){exportText.focus();exportText.select();alert("Copie automatique impossible. Sélectionnez le texte puis copiez-le manuellement.")}}function showRestoreBox(){exportBox.style.display="none";restoreBox.style.display="block";restoreText.value="";restoreText.focus()}function closeBackupBoxes(){exportBox.style.display="none";restoreBox.style.display="none";exportText.value="";restoreText.value=""}
+function restoreBackupCode(){
+  const raw = restoreText.value.trim();
+
+  if(!raw){
+    alert("Collez d’abord une sauvegarde.");
+    return;
+  }
+
+  try{
+    let jsonText = raw;
+
+    try{
+      jsonText = base64ToUtf8(raw);
+    }catch(e){
+      jsonText = raw;
+    }
+
+    const data = JSON.parse(jsonText);
+
+    if(!data || typeof data !== "object"){
+      alert("Cette sauvegarde n’est pas reconnue.");
+      return;
+    }
+
+    if(data.userName !== undefined){
+      localStorage.setItem("murUserName", data.userName || "");
+    }
+
+    if(data.kisResult){
+      localStorage.setItem("murKisResult", JSON.stringify(data.kisResult));
+    }
+
+    if(Array.isArray(data.breathHistory)){
+      saveBreathHistory(data.breathHistory);
+    }
+
+    if(Array.isArray(data.testHistory)){
+      saveTestHistory(data.testHistory);
+    }
+
+    loadKisResult();
+    renderTests();
+    loadUserSettings();
+    renderStats();
+    showStatsDetail("breath");
+    closeBackupBoxes();
+
+    alert("Statistiques importées.");
+  }catch(e){
+    alert("Import impossible. Vérifiez que la sauvegarde a été copiée entièrement.");
+  }
+}
+
+
+function openPresentationPage(){
+  const presentation = document.getElementById("presentationMur");
+  const intro = document.getElementById("introMur");
+
+  if(presentation){
+    presentation.classList.remove("hide");
+    return;
+  }
+
+  if(intro){
+    intro.classList.remove("hide");
+  }
+}
+
+function enterPresentationMur(){
+  const presentation = document.getElementById("presentationMur");
+  if(presentation){
+    presentation.classList.add("hide");
+  }
+}
+
+setTimeout(enterPresentationMur, 4300);
+
+let homePhaseV5Index = 0;
+const homePhaseV5Words = ["Mesurer", "Utiliser", "Réguler"];
+
+function updateHomeCircleWord(){
+  const main = document.getElementById("homeCircleMain");
+  if(!main) return;
+
+  main.textContent = homePhaseV5Words[homePhaseV5Index];
+
+  for(let i = 0; i < 3; i++){
+    const dot = document.getElementById("homeDot" + i);
+    if(dot){
+      dot.classList.toggle("active", i === homePhaseV5Index);
+    }
+  }
+}
+
+setInterval(() => {
+  homePhaseV5Index = (homePhaseV5Index + 1) % homePhaseV5Words.length;
+  updateHomeCircleWord();
+}, 2600);
+
+function saveUserSettings(){const name=userName.value.trim();if(!name)localStorage.removeItem("murUserName");else localStorage.setItem("murUserName",name);loadUserSettings()}
+function loadUserSettings(){
+  const name = localStorage.getItem("murUserName") || "";
+
+  if(typeof userName !== "undefined" && userName){
+    userName.value = name;
+  }
+
+  if(typeof settingsProfileResult !== "undefined" && settingsProfileResult){
+    settingsProfileResult.innerHTML = name
+      ? "Profil enregistré : <strong>" + name + "</strong>"
+      : "Aucun prénom ou pseudo enregistré.";
+  }
+
+  const greeting = document.getElementById("homeGreeting");
+  if(greeting){
+    greeting.textContent = name ? "Bonjour " + name : "Bonjour";
+  }
+
+  const warning = document.getElementById("profileWarningBox");
+  if(warning){
+    warning.style.display = name ? "none" : "block";
+  }
+}
+
+function applyCustomBreath(){const durationMinutes=Number(customDuration.value),i=Number(customInspire.value),e=Number(customExpire.value);if(!durationMinutes||!i||!e){alert("Veuillez remplir la durée, l’inspiration et l’expiration.");return}breath={key:"custom",name:"Personnalisée",zone:e>i?"Personnalisée apaisante":"Personnalisée",color:e>i?"#f59e0b":"#22c55e",inspire:i,expire:e,duration:durationMinutes*60,slider:e>i?2:0,message:"Respiration personnalisée : "+i+" secondes d’inspiration, "+e+" secondes d’expiration."};updateBreathDisplay(false);showPage("pageBreath")}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  if(typeof userName !== "undefined" && userName){
+    userName.addEventListener("touchend",e=>{
+      e.stopPropagation();
+      userName.focus();
+    });
+
+    userName.addEventListener("click",e=>{
+      e.stopPropagation();
+      userName.focus();
+    });
+
+    userName.addEventListener("input",()=>{
+      const n = userName.value.trim();
+
+      const greeting = document.getElementById("homeGreeting");
+      if(greeting){
+        greeting.textContent = n ? "Bonjour " + n : "Bonjour";
+      }
+
+      const warning = document.getElementById("profileWarningBox");
+      if(warning){
+        warning.style.display = n ? "none" : "block";
+      }
+    });
+  }
+});
+
+loadKisResult();updateBreathDisplay(true);renderTests();loadUserSettings();renderStats();showStatsDetail("breath");updateRunningBadge();
+</script>
+</body>
+</html>
