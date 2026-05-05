@@ -2823,6 +2823,100 @@ input[type=range]{appearance:none;-webkit-appearance:none;width:100%;height:18px
   line-height:0!important;
 }
 
+
+/* ===== V9.9 correctif : barre du bas masquée pendant l'exercice ouvert ===== */
+body.exercise-open-v99 .tabbar{
+  display:none!important;
+}
+
+body.exercise-open-v99{
+  padding-bottom:0!important;
+}
+
+body.exercise-open-v99 #pageExercises{
+  padding-bottom:24px!important;
+}
+
+body.exercise-open-v99 .exercise-visual-wrap-v83{
+  margin-bottom:12px!important;
+}
+
+body.exercise-open-v99 .exercise-close-inline-v79{
+  position:sticky!important;
+  top:8px!important;
+  z-index:50!important;
+}
+
+
+/* ===== V10.0 halo audio autour de l’image + suppression de la deuxième flèche ===== */
+
+/* La flèche est déjà dans l’image : on masque la flèche ajoutée par le code */
+.exercise-image-play-v83{
+  display:none!important;
+}
+
+/* Halo vivant autour de l’image pendant la lecture */
+.exercise-visual-wrap-v83{
+  position:relative!important;
+}
+
+.exercise-visual-wrap-v83::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius:24px;
+  border:1px solid rgba(96,165,250,.18);
+  box-shadow:
+    0 0 0 rgba(56,189,248,0),
+    0 0 0 rgba(245,158,11,0);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease, box-shadow .10s linear, transform .10s linear;
+  z-index:1;
+}
+
+.exercise-visual-wrap-v83.audio-speaking-v100::before{
+  opacity:1;
+  transform:scale(var(--audioPulseV100, 1.01));
+  box-shadow:
+    0 0 calc(18px + var(--audioGlowV100, 0px)) rgba(56,189,248,.42),
+    0 0 calc(38px + var(--audioGlowV100, 0px)) rgba(245,158,11,.18),
+    inset 0 0 calc(12px + var(--audioGlowV100, 0px)) rgba(255,255,255,.08);
+}
+
+/* L’image reste au-dessus du halo, sans gêner le clic */
+.exercise-visual-wrap-v83 img{
+  position:relative;
+  z-index:2;
+}
+
+/* La légende reste lisible */
+.exercise-image-caption-v83{
+  z-index:3!important;
+}
+
+/* Petite respiration visuelle si l’analyse audio n’est pas disponible */
+.exercise-visual-wrap-v83.audio-speaking-v100.audio-fallback-v100::before{
+  animation:audioHaloFallbackV100 1.8s ease-in-out infinite;
+}
+
+@keyframes audioHaloFallbackV100{
+  0%,100%{
+    transform:scale(1.005);
+    box-shadow:
+      0 0 18px rgba(56,189,248,.34),
+      0 0 34px rgba(245,158,11,.14),
+      inset 0 0 10px rgba(255,255,255,.06);
+  }
+  50%{
+    transform:scale(1.018);
+    box-shadow:
+      0 0 34px rgba(56,189,248,.50),
+      0 0 58px rgba(245,158,11,.24),
+      inset 0 0 18px rgba(255,255,255,.10);
+  }
+}
+
 </style>
 </head>
 <body>
@@ -3459,7 +3553,7 @@ function showEvolutionDetail(index){
 
 function renderBreathStatsList(){const items=getFilteredBreaths();if(!items.length){breathStatsList.innerHTML=`<div class="empty-state">Aucune séance respiratoire enregistrée pour cette période.</div>`;return}breathStatsList.innerHTML=items.slice(0,30).map(i=>`<div class="stats-item"><span class="stats-item-dot" style="background:${i.color}"></span><div><strong>${i.name}</strong><small>${formatShortDate(i.timestamp)} à ${i.time} — ${i.duration} min — cycle ${i.inspire}/${i.expire}</small></div><small>${i.zone}</small></div>`).join("")}
 function renderTestStatsList(){const items=getFilteredTests();if(!items.length){testStatsList.innerHTML=`<div class="empty-state">Aucun test NeuroFlex enregistré pour cette période.</div>`;return}testStatsList.innerHTML=items.slice(0,30).map(i=>`<div class="stats-item"><span class="stats-item-dot" style="background:${i.color}"></span><div><strong>${i.kisProfile}</strong><small>${formatShortDate(i.timestamp)} à ${i.time} — ki.S ${formatNeuroScore(i.kisScore)} — Ici ${formatNeuroScore(i.momentScore)}</small></div><small>${formatNeuroScore(i.neuroScore)}</small></div>`).join("")}function formatShortDate(ts){return new Date(ts).toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit"})}
-function buildMurExport(){return{version:"MUR-HTML-9.8-light",exportedAt:new Date().toISOString(),userName:localStorage.getItem("murUserName")||"",kisResult:JSON.parse(localStorage.getItem("murKisResult")||"null"),breathHistory:getBreathHistory(),testHistory:getTestHistory()}}function utf8ToBase64(str){
+function buildMurExport(){return{version:"MUR-HTML-10.0-light",exportedAt:new Date().toISOString(),userName:localStorage.getItem("murUserName")||"",kisResult:JSON.parse(localStorage.getItem("murKisResult")||"null"),breathHistory:getBreathHistory(),testHistory:getTestHistory()}}function utf8ToBase64(str){
   return btoa(unescape(encodeURIComponent(str)));
 }
 function base64ToUtf8(str){
@@ -6091,6 +6185,225 @@ Vous pouvez reprendre, plus lentement, plus clairement.
   }else{
     runV98();
   }
+})();
+</script>
+
+
+<script>
+/* ===== V9.9 : éviter que la barre Accueil/Respirer/Tests/Stats/Exercices recouvre l'image ===== */
+(function(){
+  function isExerciseDetailOpenV99(){
+    const box = document.getElementById("emergencyDetailV65");
+    if(!box) return false;
+
+    const text = (box.textContent || "").toLowerCase();
+    const hasImage = !!box.querySelector(".exercise-visual-wrap-v83, .exercise-visual-v82, img");
+    const isChoiceScreen = text.includes("choisissez un réflexe");
+
+    return hasImage && !isChoiceScreen;
+  }
+
+  window.updateExerciseOpenStateV99 = function(){
+    document.body.classList.toggle("exercise-open-v99", isExerciseDetailOpenV99());
+  };
+
+  const previousStartEmergencyExerciseV99 = window.startEmergencyExercise;
+  window.startEmergencyExercise = function(kind){
+    if(typeof previousStartEmergencyExerciseV99 === "function"){
+      previousStartEmergencyExerciseV99(kind);
+    }
+
+    setTimeout(function(){
+      updateExerciseOpenStateV99();
+    }, 120);
+  };
+
+  const previousCloseEmergencyExerciseV83 = window.closeEmergencyExerciseV83;
+  window.closeEmergencyExerciseV83 = function(){
+    if(typeof previousCloseEmergencyExerciseV83 === "function"){
+      previousCloseEmergencyExerciseV83();
+    }
+
+    setTimeout(function(){
+      document.body.classList.remove("exercise-open-v99");
+    }, 80);
+  };
+
+  const previousCloseEmergencyExerciseV82 = window.closeEmergencyExerciseV82;
+  window.closeEmergencyExerciseV82 = function(){
+    if(typeof previousCloseEmergencyExerciseV82 === "function"){
+      previousCloseEmergencyExerciseV82();
+    }
+
+    setTimeout(function(){
+      document.body.classList.remove("exercise-open-v99");
+    }, 80);
+  };
+
+  const previousShowPageV99 = window.showPage;
+  window.showPage = function(pageId){
+    if(typeof previousShowPageV99 === "function"){
+      previousShowPageV99(pageId);
+    }
+
+    setTimeout(function(){
+      if(pageId !== "pageExercises"){
+        document.body.classList.remove("exercise-open-v99");
+      }else{
+        updateExerciseOpenStateV99();
+      }
+    }, 100);
+  };
+
+  document.addEventListener("click", function(){
+    setTimeout(updateExerciseOpenStateV99, 140);
+  }, true);
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", updateExerciseOpenStateV99);
+  }else{
+    updateExerciseOpenStateV99();
+  }
+})();
+</script>
+
+
+<script>
+/* ===== V10.0 halo synchronisé avec la voix / le son ===== */
+(function(){
+  let audioContextV100 = null;
+  let analyserV100 = null;
+  let sourceV100 = null;
+  let rafV100 = null;
+  let dataV100 = null;
+
+  function getWrapV100(){
+    return document.querySelector(".exercise-visual-wrap-v83");
+  }
+
+  function stopHaloV100(){
+    const wrap = getWrapV100();
+    if(wrap){
+      wrap.classList.remove("audio-speaking-v100");
+      wrap.classList.remove("audio-fallback-v100");
+      wrap.style.removeProperty("--audioPulseV100");
+      wrap.style.removeProperty("--audioGlowV100");
+    }
+
+    if(rafV100){
+      cancelAnimationFrame(rafV100);
+      rafV100 = null;
+    }
+  }
+
+  function startFallbackHaloV100(){
+    const wrap = getWrapV100();
+    if(wrap){
+      wrap.classList.add("audio-speaking-v100");
+      wrap.classList.add("audio-fallback-v100");
+    }
+  }
+
+  function startAnalyserHaloV100(audio){
+    const wrap = getWrapV100();
+    if(!audio || !wrap){
+      return;
+    }
+
+    try{
+      if(!audioContextV100){
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if(!Ctx){
+          startFallbackHaloV100();
+          return;
+        }
+        audioContextV100 = new Ctx();
+      }
+
+      if(audioContextV100.state === "suspended"){
+        audioContextV100.resume();
+      }
+
+      if(!sourceV100){
+        sourceV100 = audioContextV100.createMediaElementSource(audio);
+        analyserV100 = audioContextV100.createAnalyser();
+        analyserV100.fftSize = 256;
+        sourceV100.connect(analyserV100);
+        analyserV100.connect(audioContextV100.destination);
+        dataV100 = new Uint8Array(analyserV100.frequencyBinCount);
+      }
+
+      wrap.classList.add("audio-speaking-v100");
+      wrap.classList.remove("audio-fallback-v100");
+
+      function tick(){
+        if(!audio || audio.paused || audio.ended){
+          stopHaloV100();
+          return;
+        }
+
+        analyserV100.getByteFrequencyData(dataV100);
+
+        let sum = 0;
+        for(let i = 0; i < dataV100.length; i++){
+          sum += dataV100[i];
+        }
+
+        const avg = sum / dataV100.length;
+        const intensity = Math.min(1, Math.max(0, avg / 95));
+
+        const pulse = 1 + intensity * 0.020;
+        const glow = Math.round(intensity * 34);
+
+        wrap.style.setProperty("--audioPulseV100", pulse.toFixed(3));
+        wrap.style.setProperty("--audioGlowV100", glow + "px");
+
+        rafV100 = requestAnimationFrame(tick);
+      }
+
+      tick();
+    }catch(e){
+      startFallbackHaloV100();
+    }
+  }
+
+  const previousToggleExerciseAudioV83 = window.toggleExerciseAudioV83;
+  window.toggleExerciseAudioV83 = function(){
+    if(typeof previousToggleExerciseAudioV83 === "function"){
+      previousToggleExerciseAudioV83();
+    }
+
+    setTimeout(function(){
+      const audio = document.getElementById("exerciseAudioV83");
+      if(audio && !audio.paused){
+        startAnalyserHaloV100(audio);
+      }else{
+        stopHaloV100();
+      }
+    }, 180);
+  };
+
+  const previousStopExerciseAudioV83 = window.stopExerciseAudioV83;
+  window.stopExerciseAudioV83 = function(){
+    if(typeof previousStopExerciseAudioV83 === "function"){
+      previousStopExerciseAudioV83();
+    }
+    stopHaloV100();
+  };
+
+  const previousCloseEmergencyExerciseV83 = window.closeEmergencyExerciseV83;
+  window.closeEmergencyExerciseV83 = function(){
+    if(typeof previousCloseEmergencyExerciseV83 === "function"){
+      previousCloseEmergencyExerciseV83();
+    }
+    stopHaloV100();
+  };
+
+  document.addEventListener("ended", function(e){
+    if(e.target && e.target.id === "exerciseAudioV83"){
+      stopHaloV100();
+    }
+  }, true);
 })();
 </script>
 
