@@ -1,1 +1,2128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="M.U.R" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#07111f" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" type="image/png" href="apple-touch-icon.png" />
+<title>M.U.R App</title>
+
+<style>
+:root{
+  --bg:#07111f;
+  --bg2:#0b1220;
+  --card:rgba(255,255,255,.09);
+  --card2:rgba(255,255,255,.13);
+  --line:rgba(255,255,255,.16);
+  --text:#f8fafc;
+  --muted:rgba(248,250,252,.68);
+  --blue:#3b82f6;
+  --green:#22c55e;
+  --orange:#f59e0b;
+  --red:#ef4444;
+  --accent:#22c55e;
+  --shadow:0 18px 46px rgba(0,0,0,.30);
+}
+
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  width:100%;
+  min-height:100%;
+  background:
+    radial-gradient(circle at 15% 0%,rgba(59,130,246,.24),transparent 34%),
+    radial-gradient(circle at 86% 10%,rgba(245,158,11,.16),transparent 30%),
+    radial-gradient(circle at 50% 92%,rgba(34,197,94,.18),transparent 36%),
+    linear-gradient(180deg,#040914 0%,#07111f 100%);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Arial,sans-serif;
+  overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{
+  width:100%;
+  max-width:430px;
+  min-height:100svh;
+  margin:0 auto;
+  padding:calc(10px + env(safe-area-inset-top)) 12px calc(92px + env(safe-area-inset-bottom));
+}
+.top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.logo{
+  width:48px;
+  height:48px;
+  border-radius:16px;
+  object-fit:cover;
+  background:
+    radial-gradient(circle at 35% 28%,rgba(255,255,255,.95),rgba(255,255,255,.12) 26%,transparent 42%),
+    conic-gradient(from 220deg,var(--blue),var(--green),var(--orange),var(--red),var(--blue));
+  box-shadow:0 0 18px rgba(56,189,248,.22),0 12px 28px rgba(0,0,0,.35);
+}
+h1{margin:0;font-size:21px;line-height:1;letter-spacing:.06em}
+h1 span{font-size:13px;letter-spacing:0;color:var(--muted);font-weight:800}
+h2{margin:0;font-size:20px;line-height:1.08;letter-spacing:-.035em}
+h3{margin:0;font-size:16px}
+p{margin:0}
+.help{margin-top:5px;color:var(--muted);font-size:12.5px;line-height:1.35}
+.icon-btn{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.08);
+  color:white;
+  display:grid;
+  place-items:center;
+  box-shadow:0 12px 26px rgba(0,0,0,.22);
+}
+.card{
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.105),rgba(255,255,255,.055));
+  border-radius:22px;
+  padding:13px;
+  margin-bottom:10px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(18px);
+}
+.page{display:none}
+.page.active{display:block}
+.status{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:start;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid var(--accent);
+  color:white;
+  background:rgba(255,255,255,.08);
+  font-size:11px;
+  font-weight:950;
+  white-space:nowrap;
+}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block}
+.secondary{
+  width:100%;
+  min-height:44px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  color:white;
+  background:rgba(255,255,255,.10);
+  font-weight:950;
+}
+.secondary:active,.exercise-card:active,.home-action:active{transform:scale(.985)}
+.primary{
+  width:100%;
+  min-height:48px;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:17px;
+  color:#07111f;
+  background:white;
+  font-weight:950;
+}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Présentation */
+.presentation{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:grid;
+  place-items:center;
+  padding:26px;
+  background:
+    radial-gradient(circle at 50% 42%,rgba(56,189,248,.18),transparent 30%),
+    radial-gradient(circle at 50% 66%,rgba(245,158,11,.15),transparent 30%),
+    linear-gradient(180deg,#040914,#07111f);
+  transition:opacity .55s ease,visibility .55s ease;
+}
+.presentation.hide{opacity:0;visibility:hidden;pointer-events:none}
+.presentation-box{text-align:center;width:min(92vw,420px)}
+.presentation-logo{
+  font-size:40px;
+  font-weight:950;
+  letter-spacing:.17em;
+  margin-bottom:34px;
+  background:linear-gradient(90deg,#f59e0b,#f8fafc,#38bdf8);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.presentation-circle{
+  width:265px;
+  height:265px;
+  margin:0 auto;
+  border-radius:50%;
+  position:relative;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 35% 28%,rgba(255,255,255,.9),rgba(255,255,255,.12) 18%,transparent 38%),
+    radial-gradient(circle at center,rgba(5,11,22,.88) 0 44%,transparent 62%),
+    conic-gradient(from 225deg,#2563eb,#22d3ee,#22c55e,#f59e0b,#ef4444,#8b5cf6,#2563eb);
+  box-shadow:0 0 44px rgba(59,130,246,.22),0 0 74px rgba(245,158,11,.14),inset 0 0 40px rgba(255,255,255,.10);
+  animation:pulse 5.4s ease-in-out infinite;
+}
+.presentation-circle::before,
+.presentation-circle::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.16);
+}
+.presentation-circle::before{
+  inset:-20px;
+  border-top-color:rgba(34,211,238,.68);
+  border-right-color:rgba(245,158,11,.55);
+  animation:spin 14s linear infinite;
+}
+.presentation-circle::after{
+  inset:18px;
+  border-left-color:rgba(139,92,246,.58);
+  border-bottom-color:rgba(239,68,68,.55);
+  animation:spin 10s linear reverse infinite;
+}
+.presentation-words{
+  position:relative;
+  z-index:2;
+  display:grid;
+  gap:13px;
+  text-transform:uppercase;
+  letter-spacing:.18em;
+  font-weight:850;
+}
+.presentation-words span{display:flex;justify-content:center;align-items:baseline;gap:3px;color:rgba(255,255,255,.75)}
+.presentation-words b{font-size:30px;color:white}
+.presentation-words em{font-style:normal;font-size:10px;color:rgba(255,255,255,.66)}
+.presentation-line{
+  width:72px;
+  height:1px;
+  margin:auto;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent);
+}
+.presentation-enter{
+  margin-top:42px;
+  width:190px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);
+  color:white;
+  border-radius:999px;
+  padding:14px 20px;
+  font-weight:900;
+}
+@keyframes pulse{0%,100%{transform:scale(.93)}50%{transform:scale(1.045)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Accueil */
+.home-hello{margin-bottom:10px}
+.home-hello h2{font-size:21px}
+.home-circle-card{
+  min-height:245px;
+  display:grid;
+  place-items:center;
+  position:relative;
+  overflow:visible;
+}
+.home-circle{
+  width:184px;
+  height:184px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  position:relative;
+  background:
+    radial-gradient(circle at 38% 28%,rgba(255,255,255,.17),transparent 18%),
+    radial-gradient(circle at 50% 50%,rgba(7,17,31,.96) 0 53%,transparent 54%),
+    conic-gradient(from 210deg,#38bdf8,#3b82f6,#7c3aed,#ec4899,#ef4444,#f59e0b,#22c55e,#38bdf8);
+  box-shadow:0 0 18px rgba(56,189,248,.22),0 0 34px rgba(236,72,153,.10),inset 0 0 28px rgba(0,0,0,.60);
+  touch-action:none;
+  user-select:none;
+}
+.home-circle.ready{
+  background:
+    radial-gradient(circle at 38% 28%,rgba(255,255,255,.18),transparent 18%),
+    radial-gradient(circle at 50% 50%,rgba(7,17,31,.96) 0 53%,transparent 54%),
+    conic-gradient(from 210deg,var(--home-color,#22c55e),rgba(255,255,255,.12),var(--home-color,#22c55e),rgba(255,255,255,.12),var(--home-color,#22c55e));
+}
+.home-circle::before{
+  content:"";
+  position:absolute;
+  inset:-12px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.14);
+  border-top-color:var(--home-color,#22c55e);
+  animation:spin 16s linear infinite;
+}
+.home-circle-text{text-align:center;max-width:114px;z-index:2}
+.home-circle-text strong{display:block;font-size:17px;line-height:1.03;letter-spacing:-.035em}
+.home-circle-text small{display:block;margin-top:6px;color:rgba(248,250,252,.66);font-size:9px;line-height:1.15}
+.home-dots{display:grid;grid-template-columns:repeat(4,8px);gap:6px;justify-content:center;margin-top:10px}
+.home-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.22)}
+.home-dots i.active{background:var(--home-color,#22c55e);box-shadow:0 0 14px var(--home-color,#22c55e);transform:scale(1.35)}
+.home-cursor{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.92);
+  background:var(--home-color,#22c55e);
+  box-shadow:0 0 0 2px rgba(255,255,255,.10),0 0 12px var(--home-color,#22c55e);
+  transform:translate(-50%,-50%) rotate(var(--home-angle,0deg)) translateY(-92px);
+  z-index:5;
+  display:none;
+}
+.home-circle.ready .home-cursor{display:block}
+.home-hint{
+  position:absolute;
+  left:50%;
+  bottom:15px;
+  transform:translateX(-50%);
+  color:rgba(248,250,252,.72);
+  font-size:9px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.home-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.home-action{
+  min-height:104px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.075);
+  color:white;
+  border-radius:22px;
+  padding:14px;
+  text-align:left;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  box-shadow:var(--shadow);
+}
+.home-action span{font-size:21px}
+.home-action strong{display:block;font-size:15px}
+.home-action small{display:block;color:var(--muted);font-size:11px;margin-top:5px}
+.home-mini{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
+}
+.home-mini button{
+  min-height:82px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.065);
+  color:white;
+  border-radius:20px;
+  padding:9px 6px;
+  font-weight:900;
+}
+.home-mini small{display:block;margin-top:4px;color:var(--muted);font-size:9px}
+
+/* Respiration */
+.protocol-box{margin-top:11px}
+label.mini-label{display:block;color:var(--muted);font-size:11px;margin-bottom:6px}
+select,input[type=number]{
+  width:100%;
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.20);
+  color:white;
+  border-radius:14px;
+  padding:10px;
+  outline:none;
+}
+.scale{margin-top:12px}
+.scale-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-bottom:6px}
+input[type=range]{
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%;
+  height:18px;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--blue),var(--green),var(--orange),var(--red));
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:white;
+  border:5px solid var(--accent);
+  box-shadow:0 8px 22px rgba(0,0,0,.34);
+}
+.rhythm{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+  padding:8px;
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.17);
+  border-radius:17px;
+  text-align:center;
+}
+.rhythm div{
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.07);
+  border-radius:14px;
+  padding:8px 3px;
+}
+.rhythm span{display:block;font-size:24px;font-weight:950;line-height:1}
+.rhythm small{font-size:8px;color:var(--muted);text-transform:uppercase}
+.breath-stage{
+  height:250px;
+  display:grid;
+  place-items:center;
+  position:relative;
+}
+.ring{
+  position:absolute;
+  width:220px;
+  height:220px;
+  transform:rotate(-90deg);
+}
+.ring circle{fill:none;stroke-width:8}
+.ring .bg{stroke:rgba(255,255,255,.12)}
+.ring .line{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .15s linear}
+.orb{
+  width:166px;
+  height:166px;
+  border:0;
+  border-radius:50%;
+  color:white;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 36% 27%,rgba(255,255,255,.95),rgba(255,255,255,.20) 28%,transparent 48%),
+    radial-gradient(circle,var(--accent),rgba(255,255,255,.12));
+  box-shadow:0 0 40px var(--accent),inset 0 0 18px rgba(255,255,255,.32);
+  transform:scale(.80);
+  transition:transform linear;
+  z-index:2;
+}
+.orb span{font-size:18px;font-weight:950;padding:0 14px}
+.mini-info{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.info-box{border:1px solid var(--line);background:rgba(255,255,255,.08);border-radius:15px;padding:9px;text-align:center}
+.info-box small{color:var(--muted);font-size:11px}
+.info-box strong{display:block;font-size:18px;margin-top:2px}
+
+/* Tests */
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.tabs button{
+  min-height:48px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.10);
+  color:white;
+  border-radius:14px;
+  font-size:11px;
+  font-weight:950;
+}
+.tabs button.active{background:white;color:#07111f}
+.test-view{display:none}
+.test-view.active{display:block}
+.choice{
+  width:100%;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.10);
+  color:white;
+  border-radius:15px;
+  padding:12px;
+  text-align:left;
+  margin-top:8px;
+}
+.choice.selected{background:white;color:#07111f}
+.gauge{margin-top:14px}
+.gauge-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:10px;margin-bottom:5px}
+.gauge-bar{height:18px;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--green),var(--orange),var(--red));position:relative}
+.gauge-marker{position:absolute;top:-7px;width:14px;height:32px;border-radius:999px;background:white;border:3px solid var(--accent);transform:translateX(-50%)}
+
+/* Exercices */
+.zone-section{border-radius:24px;padding:13px;margin-bottom:11px;border:1px solid var(--line);background:rgba(255,255,255,.055)}
+.zone-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:9px}
+.zone-title strong{font-size:18px}
+.exercise-grid{display:grid;gap:8px}
+.exercise-card{
+  width:100%;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:12px;
+  padding:12px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.16);
+  background:linear-gradient(180deg,rgba(255,255,255,.105),rgba(255,255,255,.045));
+  color:white;
+  text-align:left;
+}
+.exercise-card .round{
+  width:38px;
+  height:38px;
+  border-radius:15px;
+  display:grid;
+  place-items:center;
+  border:1px solid currentColor;
+  box-shadow:0 0 14px currentColor;
+}
+.exercise-card strong{display:block;font-size:15px}
+.exercise-card small{display:block;color:var(--muted);font-size:11px;margin-top:3px;line-height:1.25}
+.visual-wrap{
+  position:relative;
+  border-radius:24px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.05);
+  box-shadow:var(--shadow);
+  margin:10px 0;
+}
+.visual-wrap.playing{
+  box-shadow:0 0 0 2px rgba(56,189,248,.40),0 0 30px rgba(56,189,248,.55),0 0 70px rgba(245,158,11,.18);
+}
+.visual-wrap img{
+  width:100%;
+  display:block;
+  min-height:310px;
+  object-fit:cover;
+}
+.visual-caption{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:16px;
+  background:rgba(5,11,22,.62);
+  border:1px solid rgba(255,255,255,.12);
+  backdrop-filter:blur(8px);
+  font-size:11px;
+}
+.visual-caption strong{font-size:12px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.why{
+  display:none;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.07);
+  border-radius:17px;
+  padding:12px;
+  margin-top:9px;
+}
+.why.open{display:block}
+.why p{color:var(--muted);font-size:12.5px;line-height:1.38;margin-bottom:10px}
+.why p:last-child{margin-bottom:0}
+.hidden-audio{display:none}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}
+.stats-mini{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.08);
+  color:white;
+  border-radius:15px;
+  padding:9px 5px;
+  text-align:center;
+}
+.stats-mini small{display:block;color:var(--muted);font-size:9px}
+.stats-mini strong{display:block;font-size:18px;margin-top:3px}
+.history-list{display:grid;gap:7px;margin-top:10px}
+.history-line{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.07);
+  border-radius:14px;
+  padding:9px 10px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+}
+.history-line small{color:var(--muted)}
+
+/* Tabbar */
+.tabbar{
+  position:fixed;
+  left:50%;
+  bottom:calc(10px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  width:min(390px,calc(100vw - 28px));
+  height:64px;
+  z-index:9000;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:5px;
+  padding:5px;
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(11,18,32,.90);
+  backdrop-filter:blur(16px);
+  box-shadow:0 18px 42px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.06);
+}
+.tabbar button{
+  min-width:0;
+  height:52px;
+  border:0;
+  border-radius:17px;
+  background:transparent;
+  color:rgba(248,250,252,.72);
+  font-size:10px;
+  font-weight:950;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+}
+.tabbar button.active{background:white;color:#07111f}
+.tabbar span{font-size:16px}
+
+@media(max-width:380px){
+  .app{padding-left:10px;padding-right:10px}
+  .presentation-circle{width:235px;height:235px}
+  .home-circle{width:172px;height:172px}
+  .visual-wrap img{min-height:260px}
+  .tabbar{width:calc(100vw - 22px)}
+}
+</style>
+</head>
+
+<body>
+<div id="presentation" class="presentation">
+  <div class="presentation-box">
+    <div class="presentation-logo">M.U.R.</div>
+    <div class="presentation-circle" onclick="enterApp()">
+      <div class="presentation-words">
+        <span><b>M</b><em>esurer</em></span>
+        <div class="presentation-line"></div>
+        <span><b>U</b><em>tiliser</em></span>
+        <div class="presentation-line"></div>
+        <span><b>R</b><em>éguler</em></span>
+      </div>
+    </div>
+    <button class="presentation-enter" type="button" onclick="enterApp()">Entrer →</button>
+  </div>
+</div>
+
+<main class="app">
+  <header class="top">
+    <div class="brand" onclick="openPresentation()">
+      <img class="logo" src="apple-touch-icon.png" alt="M.U.R" onerror="this.style.display='none'">
+      <div>
+        <h1>M.U.R <span>App</span></h1>
+      </div>
+    </div>
+    <button class="icon-btn" type="button" onclick="showPage('settings')" aria-label="Profil">☷</button>
+  </header>
+
+  <section id="home" class="page active">
+    <div class="home-hello">
+      <h2 id="greeting">Bonjour</h2>
+      <p class="help">Prêt à vous recentrer&nbsp;?</p>
+    </div>
+
+    <section class="card home-circle-card">
+      <div id="homeCircle" class="home-circle" onclick="homeCircleOpen(event)">
+        <div class="home-cursor"></div>
+        <div class="home-circle-text">
+          <strong id="homeMain">Mesurer</strong>
+          <small id="homeSub">Découvrez votre tendance</small>
+          <div class="home-dots">
+            <i id="homeDot0" class="active"></i>
+            <i id="homeDot1"></i>
+            <i id="homeDot2"></i>
+            <i id="homeDot3"></i>
+          </div>
+        </div>
+      </div>
+      <div id="homeHint" class="home-hint">Touchez pour commencer</div>
+    </section>
+
+    <section class="home-actions">
+      <button class="home-action" type="button" onclick="showPage('tests')">
+        <span>☷</span>
+        <div><strong>Tests NeuroFlex</strong><small>Évaluer votre équilibre</small></div>
+        <b>→</b>
+      </button>
+      <button class="home-action" type="button" onclick="showPage('breath')">
+        <span>◎</span>
+        <div><strong>Respiration</strong><small>Démarrer une séance</small></div>
+        <b>→</b>
+      </button>
+    </section>
+
+    <section class="card" onclick="showPage('stats')">
+      <div class="status">
+        <div>
+          <h2>Tendance actuelle</h2>
+          <p id="homeTrend" class="help">Réalisez un test complet.</p>
+        </div>
+        <div class="badge"><span class="dot"></span><span id="homeScore">—</span></div>
+      </div>
+    </section>
+
+    <section class="home-mini">
+      <button type="button" onclick="showPage('tests')">Mesurer<small>Comprendre</small></button>
+      <button type="button" onclick="showPage('tools')">Utiliser<small>Outils</small></button>
+      <button type="button" onclick="showPage('breath')">Réguler<small>Respirer</small></button>
+      <button type="button" onclick="showPage('exercises')">Exercices<small>16 cartes</small></button>
+    </section>
+  </section>
+
+  <section id="breath" class="page">
+    <section class="card">
+      <div class="status">
+        <div>
+          <h2>Respiration guidée</h2>
+          <p class="help">Choisissez votre zone : bleu, vert, orange ou rouge.</p>
+        </div>
+        <div class="badge"><span class="dot"></span><span id="breathZone">Vert</span></div>
+      </div>
+
+      <div class="protocol-box">
+        <label class="mini-label" for="protocolSelect">Choisir une respiration</label>
+        <select id="protocolSelect" onchange="changeProtocol()">
+          <option value="boost">Bleu — Relance douce 4 / 0 / 3 / 0 — 2 min</option>
+          <option value="365" selected>Vert — Respiration 365 5 / 0 / 5 / 0 — 5 min</option>
+          <option value="coherence">Vert — Cohérence 5 / 0 / 5 / 0 — 5 min</option>
+          <option value="square">Vert — Respiration carrée 4 / 4 / 4 / 4 — 3 min</option>
+          <option value="regulate">Orange — Régulation douce 4 / 0 / 6 / 0 — 3 min</option>
+          <option value="frein">Rouge — Frein 3 / 0 / 8 / 0 — 2 min</option>
+          <option value="478">Rouge — 4 / 7 / 8 / 0 — 2 min</option>
+          <option value="sleep">Sommeil — 3 / 0 / 7 / 0 — 7 min</option>
+        </select>
+      </div>
+
+      <div class="scale">
+        <div class="scale-labels">
+          <span>Bleu<br><small>dynamiser</small></span>
+          <span>Vert<br><small>équilibrer</small></span>
+          <span>Rouge<br><small>freiner</small></span>
+        </div>
+        <input id="breathSlider" type="range" min="-2" max="3" step="1" value="0" oninput="changeSlider()">
+      </div>
+
+      <div class="rhythm">
+        <div><span id="rIn">5</span><small>inspire</small></div>
+        <div><span id="rHoldIn">0</span><small>pause</small></div>
+        <div><span id="rOut">5</span><small>expire</small></div>
+        <div><span id="rHoldOut">0</span><small>pause</small></div>
+      </div>
+
+      <p id="breathMessage" class="help">Vert : respiration régulière, stable et facile à tenir.</p>
+    </section>
+
+    <section class="card">
+      <div class="mini-info">
+        <div class="info-box"><small>Temps restant</small><strong id="timeLeft">05:00</strong></div>
+        <div class="info-box"><small>Cycle</small><strong id="cycleLabel">5 / 0 / 5 / 0</strong></div>
+      </div>
+
+      <div class="breath-stage">
+        <svg class="ring" viewBox="0 0 220 220">
+          <circle class="bg" cx="110" cy="110" r="98"></circle>
+          <circle id="progressCircle" class="line" cx="110" cy="110" r="98"></circle>
+        </svg>
+        <button id="orb" class="orb" type="button" onclick="toggleBreathing()"><span id="phaseText">Êtes-vous prêt ?</span></button>
+      </div>
+
+      <p id="phaseHint" class="help" style="text-align:center">Touchez le cercle pour commencer.</p>
+      <div class="row">
+        <button id="stopBreathBtn" class="secondary" type="button" onclick="stopBreathing()" hidden>Fermer</button>
+        <button class="secondary" type="button" onclick="toggleSound()" id="soundBtn">Son : activé</button>
+      </div>
+    </section>
+  </section>
+
+  <section id="tests" class="page">
+    <section class="card">
+      <div class="status">
+        <div>
+          <h2>Tests NeuroFlex</h2>
+          <p class="help">Profil de fond, état du moment, puis résultat.</p>
+        </div>
+        <div class="badge"><span class="dot"></span><span>Tests</span></div>
+      </div>
+      <div class="tabs">
+        <button id="tabKis" class="active" type="button" onclick="showTest('kis')">ki.S</button>
+        <button id="tabNow" type="button" onclick="showTest('now')">Ici</button>
+        <button id="tabResult" type="button" onclick="showTest('result')">Résultat</button>
+      </div>
+    </section>
+
+    <section id="testKis" class="test-view active">
+      <section class="card">
+        <div class="status">
+          <div><h2>Test ki.S</h2><p class="help">15 questions rapides.</p></div>
+          <div class="badge"><span class="dot"></span><span id="kisCount">1 / 15</span></div>
+        </div>
+        <div id="kisBox"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="secondary" type="button" onclick="prevKis()">Précédent</button>
+          <button class="secondary" type="button" onclick="nextKis()">Suivant</button>
+        </div>
+        <button class="secondary" type="button" onclick="finishKis()" style="margin-top:10px">Valider ki.S</button>
+        <div id="kisResult" class="help"></div>
+      </section>
+    </section>
+
+    <section id="testNow" class="test-view">
+      <section class="card">
+        <h2>Ici & Maintenant</h2>
+        <p class="help">Déplacez les curseurs selon votre état actuel.</p>
+
+        <div class="scale">
+          <label class="mini-label">Énergie</label>
+          <input id="nowEnergy" type="range" min="0" max="4" step="1" value="2">
+        </div>
+        <div class="scale">
+          <label class="mini-label">Respiration</label>
+          <input id="nowBreath" type="range" min="0" max="4" step="1" value="2">
+        </div>
+        <div class="scale">
+          <label class="mini-label">Mental</label>
+          <input id="nowMind" type="range" min="0" max="4" step="1" value="2">
+        </div>
+        <div class="scale">
+          <label class="mini-label">Corps</label>
+          <input id="nowBody" type="range" min="0" max="4" step="1" value="2">
+        </div>
+
+        <button class="secondary" type="button" onclick="finishNow()" style="margin-top:12px">Valider Ici & Maintenant</button>
+        <div id="nowResult" class="help"></div>
+      </section>
+    </section>
+
+    <section id="testResultView" class="test-view">
+      <section class="card">
+        <h2>Points NeuroFlex</h2>
+        <div class="gauge">
+          <div class="gauge-labels"><span>-50</span><span>0</span><span>+50</span></div>
+          <div class="gauge-bar"><div id="gaugeMarker" class="gauge-marker" style="left:50%"></div></div>
+        </div>
+        <div style="text-align:center;margin:15px 0">
+          <strong id="neuroScore" style="font-size:44px;line-height:1">0</strong>
+          <p id="neuroZone" class="help">État non mesuré</p>
+        </div>
+        <div id="neuroText" class="help">Réalisez les deux tests.</div>
+        <div class="row" style="margin-top:12px">
+          <button class="secondary" type="button" onclick="applyRecommendedBreath()">Respiration</button>
+          <button class="secondary" type="button" onclick="showPage('exercises')">Exercices</button>
+        </div>
+      </section>
+    </section>
+  </section>
+
+  <section id="tools" class="page">
+    <section class="card">
+      <div class="status">
+        <div>
+          <h2>Exercices</h2>
+          <p class="help">16 exercices audio classés par couleur.</p>
+        </div>
+        <button class="badge" type="button" onclick="showPage('exercises')"><span class="dot"></span><span>Voir tout</span></button>
+      </div>
+    </section>
+    <div id="toolsList"></div>
+  </section>
+
+  <section id="exercises" class="page">
+    <section class="card">
+      <div class="status">
+        <div>
+          <h2>Exercices M.U.R.</h2>
+          <p class="help">16 exercices audio classés par couleur.</p>
+        </div>
+        <button class="badge" type="button" onclick="showPage('home')"><span class="dot"></span><span>M.U.R</span></button>
+      </div>
+    </section>
+    <div id="exerciseList"></div>
+    <section id="exerciseDetail" class="card">
+      <h2>Choisissez un exercice</h2>
+      <p class="help">Touchez une carte pour ouvrir le guidage.</p>
+    </section>
+  </section>
+
+  <section id="stats" class="page">
+    <section class="card">
+      <h2>Statistiques</h2>
+      <p class="help">Les séances et exercices sont enregistrés sur ce téléphone.</p>
+      <div class="stats-grid">
+        <button class="stats-mini" type="button"><small>Respirations</small><strong id="statBreaths">0</strong></button>
+        <button class="stats-mini" type="button"><small>Minutes</small><strong id="statMinutes">0</strong></button>
+        <button class="stats-mini" type="button"><small>Tests</small><strong id="statTests">0</strong></button>
+        <button class="stats-mini" type="button"><small>Exercices</small><strong id="statExercises">0</strong></button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Historique récent</h2>
+      <div id="historyList" class="history-list"></div>
+    </section>
+
+    <section class="card">
+      <h2>Sauvegarde</h2>
+      <p class="help">Copiez vos données ou restaurez une ancienne sauvegarde.</p>
+      <div class="row" style="margin-top:10px">
+        <button class="secondary" type="button" onclick="exportData()">Sauvegarder</button>
+        <button class="secondary" type="button" onclick="importData()">Importer</button>
+      </div>
+      <textarea id="backupBox" style="display:none;width:100%;min-height:130px;margin-top:10px;border-radius:15px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:white;padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:11px"></textarea>
+    </section>
+  </section>
+
+  <section id="settings" class="page">
+    <section class="card">
+      <div class="status">
+        <div><h2>Paramètres</h2><p class="help">Personnalisez votre profil.</p></div>
+        <button class="icon-btn" type="button" onclick="showPage('home')">×</button>
+      </div>
+      <div style="margin-top:12px">
+        <label class="mini-label" for="userName">Prénom ou pseudo</label>
+        <input id="userName" type="text" placeholder="Votre prénom ou pseudo" autocomplete="nickname">
+      </div>
+      <button class="secondary" type="button" onclick="saveProfile()" style="margin-top:10px">Enregistrer le profil</button>
+    </section>
+
+    <section class="card">
+      <h2>Comment fonctionne M.U.R&nbsp;?</h2>
+      <p class="help"><strong>Mesurer</strong> pour comprendre. <strong>Utiliser</strong> pour agir. <strong>Réguler</strong> pour retrouver de la marge.</p>
+      <p class="help">Le but n’est pas d’être toujours calme. Le but est de retrouver de la souplesse : pouvoir ralentir, s’activer ou récupérer au bon moment.</p>
+    </section>
+
+    <section class="card">
+      <h2>Réinitialiser les tests</h2>
+      <p class="help">Revenir au début du parcours NeuroFlex.</p>
+      <button class="secondary" type="button" onclick="resetTests()">Reset · refaire ki.S</button>
+    </section>
+  </section>
+</main>
+
+<nav class="tabbar">
+  <button id="navHome" class="active" type="button" onclick="showPage('home')"><span>⌂</span>Accueil</button>
+  <button id="navBreath" type="button" onclick="showPage('breath')"><span>◎</span>Respirer</button>
+  <button id="navTests" type="button" onclick="showPage('tests')"><span>☷</span>Tests</button>
+  <button id="navStats" type="button" onclick="showPage('stats')"><span>⌁</span>Stats</button>
+  <button id="navExercises" type="button" onclick="showPage('tools')"><span>▧</span>Exercices</button>
+</nav>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const COLORS = {
+  bleu:"#3b82f6",
+  vert:"#22c55e",
+  orange:"#f59e0b",
+  rouge:"#ef4444"
+};
+
+const EXERCISES = {
+  pause:{
+    zone:"rouge",
+    title:"Pause vagale",
+    files:["pause-vagale.png","Pause vagale.png","pause vagale.png"],
+    sounds:["pause-vagale.mp3","Pause vagale.mp3","pause vagale.mp3"],
+    caption:"Ralentir • relâcher • revenir au calme",
+    why:[
+      "La Pause vagale utilise une règle simple : une expiration plus longue que l’inspiration envoie au corps un signal de ralentissement.",
+      "Le système neurovégétatif comprend très bien le rythme. Une expiration douce, lente et prolongée agit comme un frein naturel.",
+      "En relâchant la mâchoire, les épaules et le ventre, on diminue les messages de tension envoyés au cerveau."
+    ]
+  },
+  double:{
+    zone:"rouge",
+    title:"Double inspiration",
+    files:["Double inspiration.png","double-inspiration.png","double inspiration.png"],
+    sounds:["double-inspiration.mp3","Double inspiration.mp3","double inspiration.mp3"],
+    caption:"Relancer l’air • déverrouiller • souffler",
+    why:[
+      "La double inspiration relance un cycle respiratoire bloqué, court ou trop haut.",
+      "On inspire une première fois, puis on ajoute une petite deuxième inspiration sans forcer.",
+      "Ensuite, l’expiration longue permet au système de redescendre."
+    ]
+  },
+  merle:{
+    zone:"rouge",
+    title:"Chant du merle",
+    files:["chant-du-merle.png","Chant du merle.png","chant du merle.png"],
+    sounds:["chant-du-merle.mp3","Chant du merle.mp3","chant du merle.mp3"],
+    caption:"Écouter • respirer • se reconnecter",
+    why:[
+      "Le chant du merle agit comme un signal de sécurité. Un oiseau qui chante indique souvent un environnement non menaçant.",
+      "Le son naturel détourne doucement l’attention de la tension et crée un point d’appui extérieur.",
+      "Il ne s’agit pas de se calmer de force, mais de laisser le système entendre autre chose que l’alerte."
+    ]
+  },
+  ancrage:{
+    zone:"rouge",
+    title:"Ancrage",
+    files:["ancrage.png","Ancrage.png"],
+    sounds:["ancrage.mp3","Ancrage.mp3"],
+    caption:"Sentir ses appuis • stabiliser • revenir ici",
+    why:[
+      "L’ancrage ramène l’attention vers les appuis, le poids du corps et le contact avec le sol.",
+      "Quand le mental s’emballe, le corps peut redevenir une base simple et stable.",
+      "Le système reçoit une information concrète : je suis ici, je suis porté."
+    ]
+  },
+
+  vagues:{
+    zone:"orange",
+    title:"Pas de vagues",
+    files:["Pas de vagues.png","pas-de-vagues.png","pas de vagues.png"],
+    sounds:["pas-de-vagues.mp3","Pas de vagues.mp3","pas de vagues.mp3"],
+    caption:"Écouter • ralentir • se laisser porter",
+    why:[
+      "Le bruit régulier des vagues crée un repère sonore prévisible.",
+      "Cette répétition apaise l’attention, diminue la sensation d’alerte et aide le système neurovégétatif à se réguler.",
+      "Le rythme extérieur devient un support pour ralentir sans effort."
+    ]
+  },
+  fil:{
+    zone:"orange",
+    title:"Le fil du souffle",
+    files:["fil du souffle.png","Fil du souffle.png","fil-du-souffle.png"],
+    sounds:["fil-du-souffle.mp3","fil du souffle.mp3","Fil du souffle.mp3"],
+    caption:"Suivre • respirer • apaiser",
+    why:[
+      "Suivre mentalement un fil donne une direction simple à l’attention.",
+      "Le souffle devient plus régulier sans devoir être contrôlé fortement.",
+      "C’est une manière douce de reprendre la main quand la tension monte."
+    ]
+  },
+  regard:{
+    zone:"orange",
+    title:"Regard horizon",
+    files:["Regard horizon.png","regard-horizon.png","regard horizon.png"],
+    sounds:["regard-horizon.mp3","Regard horizon.mp3","regard horizon.mp3"],
+    caption:"Ouvrir • élargir • relâcher",
+    why:[
+      "Élargir le regard diminue la focalisation étroite liée à l’alerte.",
+      "Le champ visuel plus ouvert donne au cerveau une information de sécurité.",
+      "Le corps peut alors relâcher une partie de sa tension de surveillance."
+    ]
+  },
+  mains:{
+    zone:"orange",
+    title:"Mains apaisantes",
+    files:["Mains apaisantes.png","mains-apaisantes.png","mains apaisantes.png"],
+    sounds:["mains-apaisantes.mp3","Mains apaisantes.mp3","mains apaisantes.mp3"],
+    caption:"Toucher • calmer • sécuriser",
+    why:[
+      "Le contact des mains apporte une information corporelle directe.",
+      "La pression douce et stable aide à sécuriser le système.",
+      "L’attention revient au corps plutôt que de rester uniquement dans le mental."
+    ]
+  },
+
+  foret:{
+    zone:"vert",
+    title:"Promenade dans la forêt",
+    files:["Promenade dans la forêt.png","promenade dans la forêt.png","promenade-foret.png","Promenade foret.png"],
+    sounds:["promenade-foret.mp3","Promenade dans la forêt.mp3","promenade dans la forêt.mp3"],
+    caption:"Marcher assis • écouter • respirer",
+    why:[
+      "Même assis, l’univers sonore d’une forêt peut créer une sensation de déplacement doux.",
+      "Les sons naturels donnent au système un décor stable, vivant et non menaçant.",
+      "L’attention se promène, le souffle retrouve un rythme plus souple."
+    ]
+  },
+  lac:{
+    zone:"vert",
+    title:"Lac tranquille",
+    files:["Lac tranquille.png","lac-tranquille.png","lac tranquille.png"],
+    sounds:["lac-tranquille.mp3","Lac tranquille.mp3","lac tranquille.mp3"],
+    caption:"Stabiliser • poser • laisser revenir",
+    why:[
+      "L’évocation d’un lac calme favorise la stabilité attentionnelle.",
+      "Le corps reçoit une invitation à se poser plutôt qu’à réagir.",
+      "La régularité du paysage intérieur soutient le retour à l’équilibre."
+    ]
+  },
+  balancier:{
+    zone:"vert",
+    title:"Balancier du corps",
+    files:["Balancier du corps.png","balancier du corps.png","balancier-du-corps.png"],
+    sounds:["balancier-du-corps.mp3","Balancier du corps.mp3","balancier du corps.mp3"],
+    caption:"Osciller • relâcher • retrouver l’axe",
+    why:[
+      "Un mouvement de balancier très doux donne un rythme simple au corps.",
+      "L’oscillation aide à sortir d’une posture figée.",
+      "Le système retrouve progressivement un axe plus disponible."
+    ]
+  },
+  presence:{
+    zone:"vert",
+    title:"Présence corporelle",
+    files:["Présence corporelle.png","presence-corporelle.png","présence corporelle.png"],
+    sounds:["presence-corporelle.mp3","Présence corporelle.mp3","présence corporelle.mp3"],
+    caption:"Sentir • habiter • revenir ici",
+    why:[
+      "La présence corporelle ramène l’attention vers les sensations simples.",
+      "Elle diminue l’éparpillement mental en donnant des repères concrets.",
+      "Le corps redevient un lieu d’appui plutôt qu’un lieu de tension."
+    ]
+  },
+
+  bell:{
+    zone:"bleu",
+    title:"Bell Bell Bell",
+    files:["Bell Bell Bell.png","bell-bell-bell.png","bell bell bell.png"],
+    sounds:["bell-bell-bell.mp3","Bell Bell Bell.mp3","bell bell bell.mp3"],
+    caption:"Réveiller • éclaircir • remettre de l’énergie",
+    why:[
+      "Les sons de cloche attirent l’attention de façon nette et brève.",
+      "Ils peuvent créer une petite activation utile quand l’énergie est basse.",
+      "L’objectif est de réveiller sans agresser : remettre de la clarté et un peu d’élan."
+    ]
+  },
+  lumiere:{
+    zone:"bleu",
+    title:"Lumière du matin",
+    files:["Lumière du matin.png","lumiere-du-matin.png","lumière du matin.png"],
+    sounds:["lumiere-du-matin.mp3","Lumière du matin.mp3","lumière du matin.mp3"],
+    caption:"Éclairer • activer • commencer",
+    why:[
+      "La lumière du matin symbolise le démarrage progressif.",
+      "Elle aide à orienter l’attention vers l’éveil et la disponibilité.",
+      "Le système reçoit un signal d’activation douce, sans précipitation."
+    ]
+  },
+  etincelle:{
+    zone:"bleu",
+    title:"Étincelle",
+    files:["Étincelle.png","etincelle.png","étincelle.png"],
+    sounds:["etincelle.mp3","Étincelle.mp3","étincelle.mp3"],
+    caption:"Relancer • réveiller • allumer",
+    why:[
+      "L’étincelle représente une activation courte et précise.",
+      "Elle aide à sortir d’un état trop bas ou trop lourd.",
+      "On ne cherche pas à forcer, mais à rallumer juste assez d’énergie."
+    ]
+  },
+  elan:{
+    zone:"bleu",
+    title:"Élan vertical",
+    files:["Élan vertical.png","elan-vertical.png","élan vertical.png"],
+    sounds:["elan-vertical.mp3","Élan vertical.mp3","élan vertical.mp3"],
+    caption:"Se redresser • activer • repartir",
+    why:[
+      "Se redresser modifie immédiatement l’état corporel.",
+      "L’axe vertical favorise une sensation d’élan et de disponibilité.",
+      "Le système reçoit une information simple : je peux repartir."
+    ]
+  }
+};
+
+const ZONES = [
+  {key:"rouge", title:"Rouge · Freiner", subtitle:"Briser le mur", items:["pause","double","merle","ancrage"]},
+  {key:"orange", title:"Orange · Réguler", subtitle:"Réguler la montée", items:["vagues","fil","regard","mains"]},
+  {key:"vert", title:"Vert · Entretenir", subtitle:"Stabiliser", items:["foret","lac","balancier","presence"]},
+  {key:"bleu", title:"Bleu · Activer", subtitle:"Remettre de l’élan", items:["bell","lumiere","etincelle","elan"]}
+];
+
+const BREATHS = {
+  boost:{key:"boost",zone:"Bleu",color:COLORS.bleu,i:4,hi:0,e:3,ho:0,duration:120,msg:"Bleu : relance douce, remettre un peu d’élan sans brusquer le système."},
+  "365":{key:"365",zone:"Vert",color:COLORS.vert,i:5,hi:0,e:5,ho:0,duration:300,msg:"Vert : respiration régulière, stable et facile à tenir."},
+  coherence:{key:"coherence",zone:"Vert",color:COLORS.vert,i:5,hi:0,e:5,ho:0,duration:300,msg:"Cohérence 5/5 : inspiration et expiration s’équilibrent."},
+  square:{key:"square",zone:"Vert",color:COLORS.vert,i:4,hi:4,e:4,ho:4,duration:180,msg:"Respiration carrée : quatre temps égaux pour se recentrer."},
+  regulate:{key:"regulate",zone:"Orange",color:COLORS.orange,i:4,hi:0,e:6,ho:0,duration:180,msg:"Orange : l’expiration devient plus longue pour réguler la montée."},
+  frein:{key:"frein",zone:"Rouge",color:COLORS.red,i:3,hi:0,e:8,ho:0,duration:120,msg:"Rouge : expiration longue pour freiner franchement l’activation."},
+  "478":{key:"478",zone:"Rouge",color:COLORS.red,i:4,hi:7,e:8,ho:0,duration:120,msg:"4 / 7 / 8 : inspirer, suspendre, puis relâcher longtemps."},
+  sleep:{key:"sleep",zone:"Bleu nuit",color:"#6366f1",i:3,hi:0,e:7,ho:0,duration:420,msg:"Sommeil : inspiration courte, expiration longue, pour glisser vers le calme."}
+};
+
+const SLIDER_MAP = {"-2":"boost","-1":"boost","0":"365","1":"regulate","2":"regulate","3":"frein"};
+
+let currentPage = "home";
+let breath = {...BREATHS["365"]};
+let running = false;
+let stopRequested = false;
+let timer = null;
+let remaining = breath.duration;
+let total = breath.duration;
+let soundEnabled = true;
+let audioCtx = null;
+let masterGain = null;
+let currentSource = null;
+
+let kisIndex = 0;
+let kisAnswers = Array(15).fill(null);
+let kisResult = null;
+let nowResult = null;
+let neuroResult = null;
+
+const KIS_QUESTIONS = [
+  {text:"Face à une difficulté, je réagis vite.",dir:1},
+  {text:"Quand mon rythme s’accélère, j’ai du mal à ralentir.",dir:1},
+  {text:"Je préfère anticiper plutôt que subir.",dir:0},
+  {text:"Je peux rester calme même si les autres s’agitent.",dir:-1},
+  {text:"Je sens rapidement les variations de mon corps.",dir:0},
+  {text:"Je passe facilement de l’action au repos.",dir:-1},
+  {text:"Je supporte mal l’attente ou l’imprévu.",dir:1},
+  {text:"J’ai besoin de temps pour me mettre en route.",dir:-1},
+  {text:"Je peux beaucoup donner avant de sentir la fatigue.",dir:1},
+  {text:"Je cherche naturellement l’équilibre.",dir:-1},
+  {text:"Je me sens parfois entre deux rythmes.",dir:0},
+  {text:"Quand je suis lancé, je vais souvent trop loin.",dir:1},
+  {text:"J’aime les repères réguliers.",dir:-1},
+  {text:"Je m’adapte vite aux changements.",dir:1},
+  {text:"Je récupère bien quand je m’accorde une pause.",dir:-1}
+];
+
+function enterApp(){
+  $("presentation").classList.add("hide");
+}
+function openPresentation(){
+  $("presentation").classList.remove("hide");
+}
+setTimeout(enterApp,4300);
+
+function showPage(id){
+  currentPage = id;
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  $(id).classList.add("active");
+
+  document.querySelectorAll(".tabbar button").forEach(b=>b.classList.remove("active"));
+  const map = {home:"navHome",breath:"navBreath",tests:"navTests",stats:"navStats",tools:"navExercises",exercises:"navExercises",settings:"navHome"};
+  if($(map[id])) $(map[id]).classList.add("active");
+
+  if(id==="tools") renderTools();
+  if(id==="exercises") renderExerciseList();
+  if(id==="stats") renderStats();
+  if(id==="home") refreshHome();
+  window.scrollTo(0,0);
+}
+
+function setAccent(color){
+  document.documentElement.style.setProperty("--accent", color);
+  document.querySelectorAll(".dot").forEach(d=>d.style.background = color);
+}
+
+function formatTime(sec){
+  sec = Math.max(0,Math.ceil(sec));
+  const m = Math.floor(sec/60);
+  const s = sec%60;
+  return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+}
+
+function scoreText(n){ return n>0 ? "+"+n : String(n); }
+
+function getHistory(){
+  try{return JSON.parse(localStorage.getItem("murHistory")||"[]")}catch(e){return[]}
+}
+function saveHistory(h){
+  localStorage.setItem("murHistory",JSON.stringify(h.slice(0,400)));
+}
+function addHistory(item){
+  const now = new Date();
+  const h = getHistory();
+  h.unshift({
+    id:Date.now(),
+    timestamp:now.getTime(),
+    date:now.toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit"}),
+    time:now.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),
+    ...item
+  });
+  saveHistory(h);
+  renderStats();
+}
+
+function changeProtocol(){
+  breath = {...BREATHS[$("protocolSelect").value]};
+  updateBreath();
+}
+function changeSlider(){
+  const key = SLIDER_MAP[$("breathSlider").value] || "365";
+  $("protocolSelect").value = key;
+  breath = {...BREATHS[key]};
+  updateBreath();
+}
+function updateBreath(){
+  setAccent(breath.color);
+  $("breathZone").textContent = breath.zone;
+  $("rIn").textContent = breath.i;
+  $("rHoldIn").textContent = breath.hi;
+  $("rOut").textContent = breath.e;
+  $("rHoldOut").textContent = breath.ho;
+  $("cycleLabel").textContent = `${breath.i} / ${breath.hi} / ${breath.e} / ${breath.ho}`;
+  $("breathMessage").textContent = breath.msg;
+  $("timeLeft").textContent = formatTime(breath.duration);
+  $("phaseText").textContent = "Êtes-vous prêt ?";
+  $("phaseHint").textContent = "Touchez le cercle pour commencer.";
+  setProgress(0);
+}
+
+function setProgress(p){
+  const c = 2*Math.PI*98;
+  const line = $("progressCircle");
+  line.style.strokeDasharray = String(c);
+  line.style.strokeDashoffset = String(c*(1-Math.max(0,Math.min(1,p))));
+}
+
+function initAudio(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = .55;
+    masterGain.connect(audioCtx.destination);
+  }
+  if(audioCtx.state === "suspended") audioCtx.resume();
+}
+function stopSound(){
+  if(currentSource){
+    try{currentSource.stop()}catch(e){}
+    currentSource = null;
+  }
+}
+function noiseBuffer(level=.7){
+  const len = audioCtx.sampleRate*2;
+  const buffer = audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<len;i++) data[i] = (Math.random()*2-1)*level;
+  return buffer;
+}
+function playBreathSound(type,duration){
+  if(!soundEnabled || type==="pauseIn" || type==="pauseOut") return;
+  initAudio();
+  stopSound();
+
+  const n = audioCtx.createBufferSource();
+  n.buffer = noiseBuffer(.7);
+  n.loop = true;
+
+  const f = audioCtx.createBiquadFilter();
+  f.type = "bandpass";
+  f.Q.value = .8;
+
+  const g = audioCtx.createGain();
+
+  n.connect(f); f.connect(g); g.connect(masterGain);
+
+  const now = audioCtx.currentTime;
+  if(type==="inspire"){
+    f.frequency.setValueAtTime(520,now);
+    f.frequency.linearRampToValueAtTime(900,now+duration);
+  }else{
+    f.frequency.setValueAtTime(760,now);
+    f.frequency.linearRampToValueAtTime(360,now+duration);
+  }
+  g.gain.setValueAtTime(.0001,now);
+  g.gain.linearRampToValueAtTime(.13,now+.35);
+  g.gain.linearRampToValueAtTime(.0001,now+duration);
+
+  n.start(now);
+  n.stop(now+duration);
+  currentSource = n;
+}
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  $("soundBtn").textContent = soundEnabled ? "Son : activé" : "Son : désactivé";
+  if(!soundEnabled) stopSound();
+}
+function toggleBreathing(){
+  running ? stopBreathing() : startBreathing();
+}
+async function startBreathing(){
+  if(running) return;
+  initAudio();
+  running = true;
+  stopRequested = false;
+  remaining = breath.duration;
+  total = breath.duration;
+  $("stopBreathBtn").hidden = false;
+
+  clearInterval(timer);
+  timer = setInterval(()=>{
+    remaining--;
+    $("timeLeft").textContent = formatTime(remaining);
+    setProgress(1-(remaining/total));
+    if(remaining<=0) finishBreathing();
+  },1000);
+
+  while(running && !stopRequested && remaining>0){
+    await runPhase("Inspirez",breath.i,1.34,"inspire");
+    if(breath.hi>0) await runPhase("Gardez l’air",breath.hi,1.34,"pauseIn");
+    await runPhase("Expirez",breath.e,.68,"expire");
+    if(breath.ho>0) await runPhase("Restez vide",breath.ho,.68,"pauseOut");
+  }
+}
+function runPhase(label,sec,scale,type){
+  return new Promise(resolve=>{
+    if(!running || stopRequested || sec<=0){resolve();return}
+    $("phaseText").textContent = label;
+    $("phaseHint").textContent =
+      type==="inspire" ? "Le cercle s’ouvre : inspirez sans forcer." :
+      type==="expire" ? "Le cercle se referme : laissez sortir l’air." :
+      type==="pauseIn" ? "Gardez l’air, gorge souple, sans verrouiller." :
+      "Restez vide un instant, tranquillement.";
+    $("orb").style.transitionDuration = sec+"s";
+    $("orb").style.transform = "scale("+scale+")";
+    playBreathSound(type,sec);
+    setTimeout(resolve,sec*1000);
+  });
+}
+function stopBreathing(){
+  stopRequested = true;
+  running = false;
+  clearInterval(timer);
+  stopSound();
+  $("stopBreathBtn").hidden = true;
+  $("phaseText").textContent = "Arrêté";
+  $("phaseHint").textContent = "Séance interrompue.";
+  $("orb").style.transitionDuration = ".5s";
+  $("orb").style.transform = "scale(.80)";
+}
+function finishBreathing(){
+  const done = {...breath};
+  stopBreathing();
+  $("phaseText").textContent = "Terminé";
+  $("phaseHint").textContent = "Séance terminée.";
+  setProgress(1);
+  addHistory({type:"breath",title:"Respiration "+done.zone,detail:`${Math.round(done.duration/60)} min · ${done.i}/${done.hi}/${done.e}/${done.ho}`,minutes:Math.round(done.duration/60),color:done.color});
+  setTimeout(updateBreath,1400);
+}
+
+/* Tests */
+function showTest(name){
+  $("testKis").classList.toggle("active",name==="kis");
+  $("testNow").classList.toggle("active",name==="now");
+  $("testResultView").classList.toggle("active",name==="result");
+  $("tabKis").classList.toggle("active",name==="kis");
+  $("tabNow").classList.toggle("active",name==="now");
+  $("tabResult").classList.toggle("active",name==="result");
+}
+function renderKis(){
+  const q = KIS_QUESTIONS[kisIndex];
+  const a = kisAnswers[kisIndex];
+  $("kisCount").textContent = `${kisIndex+1} / 15`;
+  $("kisBox").innerHTML = `
+    <h3 style="margin-top:12px">Question ${kisIndex+1}</h3>
+    <p class="help">${q.text}</p>
+    <button class="choice ${a===1?'selected':''}" onclick="answerKis(1)"><strong>Plutôt oui</strong><br><small>Cela me correspond souvent.</small></button>
+    <button class="choice ${a===0?'selected':''}" onclick="answerKis(0)"><strong>Ça dépend</strong><br><small>Cela varie selon les situations.</small></button>
+    <button class="choice ${a===-1?'selected':''}" onclick="answerKis(-1)"><strong>Plutôt non</strong><br><small>Cela me correspond rarement.</small></button>
+  `;
+}
+function answerKis(v){
+  kisAnswers[kisIndex]=v;
+  if(kisIndex<14) kisIndex++;
+  renderKis();
+}
+function prevKis(){if(kisIndex>0) kisIndex--;renderKis()}
+function nextKis(){if(kisIndex<14) kisIndex++;renderKis()}
+function finishKis(){
+  if(kisAnswers.some(v=>v===null)){alert("Complétez les 15 questions.");return}
+  let score = 0;
+  KIS_QUESTIONS.forEach((q,i)=>score += kisAnswers[i]*q.dir);
+  let profile = "Funambule";
+  if(score>=8) profile = "Fonceur";
+  else if(score<=-8) profile = "Posé";
+  else if(score>=3) profile = "Funambule à tendance Fonceur";
+  else if(score<=-3) profile = "Funambule à tendance Posé";
+  kisResult = {score,profile};
+  localStorage.setItem("murKis",JSON.stringify(kisResult));
+  $("kisResult").innerHTML = `Profil : <strong>${profile}</strong><br>Score ki.S : <strong>${scoreText(score)}</strong>`;
+  showTest("now");
+}
+function finishNow(){
+  const map = [-2,-1,0,1,2];
+  const raw =
+    map[Number($("nowEnergy").value)] +
+    map[Number($("nowBreath").value)] +
+    map[Number($("nowMind").value)] +
+    map[Number($("nowBody").value)];
+  const score = Math.round((raw/8)*50);
+  const zone = getZone(score);
+  nowResult = {score,zone};
+  $("nowResult").innerHTML = `État actuel : <strong>${scoreText(score)}</strong><br>Zone : <strong>${zone.name}</strong>`;
+  calculateNeuro();
+  showTest("result");
+}
+function getZone(score){
+  if(score<=-22) return {name:"BLEUE",family:"Activer",color:COLORS.bleu,breath:"boost"};
+  if(score>=28) return {name:"ROUGE",family:"Freiner",color:COLORS.red,breath:"frein"};
+  if(score>=10) return {name:"ORANGE",family:"Réguler",color:COLORS.orange,breath:"regulate"};
+  return {name:"VERTE",family:"Entretenir",color:COLORS.vert,breath:"365"};
+}
+function calculateNeuro(){
+  if(!kisResult || !nowResult) return;
+  const correction = Math.round(kisResult.score*1.2);
+  const score = Math.max(-50,Math.min(50,nowResult.score+correction));
+  const zone = getZone(score);
+  neuroResult = {score,zone,kis:kisResult.profile,kisScore:kisResult.score,nowScore:nowResult.score};
+  localStorage.setItem("murLastNeuro",JSON.stringify(neuroResult));
+
+  $("gaugeMarker").style.left = ((score+50)/100*100)+"%";
+  $("gaugeMarker").style.borderColor = zone.color;
+  $("neuroScore").textContent = scoreText(score);
+  $("neuroZone").textContent = `Zone ${zone.name} — ${zone.family}`;
+  $("neuroText").innerHTML = `Profil : <strong>${kisResult.profile}</strong><br>Ici & Maintenant : <strong>${scoreText(nowResult.score)}</strong><br>Correction ki.S : <strong>${scoreText(correction)}</strong><br>Réflexe conseillé : <strong>${zone.family}</strong>`;
+  addHistory({type:"test",title:"Test NeuroFlex",detail:`${scoreText(score)} · ${zone.name}`,score,color:zone.color});
+  refreshHome();
+}
+function applyRecommendedBreath(){
+  if(!neuroResult){alert("Réalisez d’abord le test complet.");return}
+  breath = {...BREATHS[neuroResult.zone.breath]};
+  $("protocolSelect").value = breath.key;
+  updateBreath();
+  showPage("breath");
+}
+
+/* Exercices */
+function setAsset(el,list,index=0){
+  if(!el || !list || index>=list.length) return;
+  el.onerror = () => setAsset(el,list,index+1);
+  el.src = list[index];
+}
+function setSound(el,list,index=0){
+  if(!el || !list || index>=list.length) return;
+  el.onerror = () => setSound(el,list,index+1);
+  el.src = list[index];
+  el.load();
+}
+function exerciseCard(key){
+  const e = EXERCISES[key];
+  const c = COLORS[e.zone];
+  return `
+    <button class="exercise-card" type="button" onclick="openExercise('${key}')">
+      <span class="round" style="color:${c};">●</span>
+      <span><strong>${e.title}</strong><small>${e.caption}</small></span>
+      <b style="color:${c}">→</b>
+    </button>
+  `;
+}
+function zoneBlock(z){
+  const c = COLORS[z.key];
+  return `
+    <section class="zone-section" style="border-color:${c}55;background:linear-gradient(180deg,${c}16,rgba(255,255,255,.045));">
+      <div class="zone-title">
+        <div><strong>${z.title}</strong><p class="help">${z.subtitle}</p></div>
+        <div class="badge" style="border-color:${c};"><span class="dot" style="background:${c}"></span><span>${z.key}</span></div>
+      </div>
+      <div class="exercise-grid">${z.items.map(exerciseCard).join("")}</div>
+    </section>
+  `;
+}
+function renderExerciseList(){
+  $("exerciseList").innerHTML = ZONES.map(zoneBlock).join("");
+}
+function renderTools(){
+  $("toolsList").innerHTML = ZONES.map(z=>{
+    const c = COLORS[z.key];
+    return `
+      <section class="zone-section" style="border-color:${c}55;background:linear-gradient(180deg,${c}16,rgba(255,255,255,.045));">
+        <div class="zone-title">
+          <div><strong>${z.title}</strong><p class="help">${z.subtitle}</p></div>
+          <div class="badge" style="border-color:${c};"><span class="dot" style="background:${c}"></span><span>${z.key}</span></div>
+        </div>
+        <div class="exercise-grid">
+          ${z.items.map(k=>`<button class="exercise-card" type="button" onclick="showPage('exercises');setTimeout(()=>openExercise('${k}'),80)"><span><strong>${EXERCISES[k].title}</strong><small>${EXERCISES[k].caption}</small></span><b style="color:${c}">→</b></button>`).join("")}
+        </div>
+      </section>
+    `;
+  }).join("");
+}
+function stopExercise(){
+  const audio = $("exerciseAudio");
+  if(audio){audio.pause();audio.currentTime=0}
+  const wrap = $("visualWrap");
+  if(wrap) wrap.classList.remove("playing");
+  const status = $("audioStatus");
+  if(status) status.textContent = "Prêt";
+}
+function openExercise(key){
+  const e = EXERCISES[key];
+  if(!e) return;
+  const c = COLORS[e.zone];
+  stopExercise();
+
+  $("exerciseDetail").innerHTML = `
+    <h2>${e.title}</h2>
+    <p class="help">Zone ${e.zone.toUpperCase()} • exercice audio
+      <span class="badge" style="border-color:${c};margin-left:6px"><span class="dot" style="background:${c}"></span><span>${e.zone}</span></span>
+    </p>
+
+    <div id="visualWrap" class="visual-wrap" onclick="toggleExerciseAudio()">
+      <img id="visualAsset" alt="${e.title}" loading="lazy">
+      <div class="visual-caption">
+        <strong>${e.caption}</strong>
+        <span id="audioStatus">Prêt</span>
+      </div>
+    </div>
+
+    <audio id="exerciseAudio" class="hidden-audio" preload="auto"></audio>
+
+    <div class="actions">
+      <button class="secondary" type="button" onclick="toggleExerciseAudio()">Lancer l’audio</button>
+      <button class="secondary" type="button" onclick="closeExercise()">Fermer</button>
+    </div>
+
+    <button class="secondary" type="button" onclick="toggleWhy()" style="margin-top:10px">Pourquoi ça marche ?</button>
+
+    <div id="whyBox" class="why">
+      ${e.why.map(p=>`<p>${p}</p>`).join("")}
+    </div>
+  `;
+
+  setAsset($("visualAsset"),e.files);
+  setSound($("exerciseAudio"),e.sounds);
+
+  const audio = $("exerciseAudio");
+  audio.onended = ()=>{
+    $("visualWrap").classList.remove("playing");
+    $("audioStatus").textContent = "Terminé";
+  };
+
+  addHistory({type:"exercise",title:e.title,detail:`Zone ${e.zone}`,color:c});
+  $("exerciseDetail").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function toggleExerciseAudio(){
+  const audio = $("exerciseAudio");
+  if(!audio){alert("Lecteur audio introuvable.");return}
+  const wrap = $("visualWrap");
+  const status = $("audioStatus");
+
+  if(!audio.paused){
+    audio.pause();
+    if(wrap) wrap.classList.remove("playing");
+    if(status) status.textContent = "Pause";
+    return;
+  }
+
+  audio.play().then(()=>{
+    if(wrap) wrap.classList.add("playing");
+    if(status) status.textContent = "Lecture en cours";
+  }).catch(()=>{
+    if(status) status.textContent = "Touchez encore une fois";
+    alert("La lecture n’a pas démarré. Touchez à nouveau.");
+  });
+}
+function closeExercise(){
+  stopExercise();
+  $("exerciseDetail").innerHTML = `<h2>Choisissez un exercice</h2><p class="help">Touchez une carte pour ouvrir le guidage.</p>`;
+}
+function toggleWhy(){
+  $("whyBox").classList.toggle("open");
+}
+
+/* Accueil */
+const homeChoices = [
+  {main:"Exercices",sub:"Choisir un exercice adapté",page:"exercises",angle:0},
+  {main:"Respiration",sub:"Lancer le rythme conseillé",page:"breath",angle:90},
+  {main:"Statistiques",sub:"Voir votre évolution",page:"stats",angle:180},
+  {main:"Ici & Maintenant",sub:"Réévaluer votre état",page:"now",angle:270}
+];
+let homeChoice = Number(localStorage.getItem("murHomeChoice")||0);
+function latestNeuro(){
+  try{return JSON.parse(localStorage.getItem("murLastNeuro")||"null")}catch(e){return null}
+}
+function refreshHome(){
+  const name = localStorage.getItem("murName") || "";
+  $("greeting").textContent = name ? "Bonjour " + name : "Bonjour";
+
+  const last = latestNeuro();
+  const hasKis = !!localStorage.getItem("murKis");
+  const circle = $("homeCircle");
+
+  if(!hasKis){
+    circle.classList.remove("ready");
+    $("homeMain").textContent = "Découvrez votre tendance";
+    $("homeSub").textContent = "Commencer le test ki.S";
+    $("homeHint").textContent = "Touchez pour commencer";
+    $("homeScore").textContent = "—";
+    $("homeTrend").textContent = "Réalisez un test complet.";
+    return;
+  }
+  if(!last){
+    circle.classList.remove("ready");
+    $("homeMain").textContent = "Où en êtes-vous ?";
+    $("homeSub").textContent = "Faire Ici & Maintenant";
+    $("homeHint").textContent = "Touchez pour continuer";
+    return;
+  }
+
+  const c = last.zone.color;
+  circle.classList.add("ready");
+  circle.style.setProperty("--home-color",c);
+  $("homeScore").textContent = scoreText(last.score);
+  $("homeScore").style.color = c;
+  $("homeTrend").innerHTML = `Dernier résultat : <strong>${scoreText(last.score)}</strong> · ${last.zone.name}`;
+  applyHomeChoice(homeChoice);
+}
+function applyHomeChoice(i){
+  homeChoice = Math.max(0,Math.min(3,i));
+  localStorage.setItem("murHomeChoice",String(homeChoice));
+  const ch = homeChoices[homeChoice];
+  $("homeMain").textContent = ch.main;
+  $("homeSub").textContent = ch.sub;
+  $("homeCircle").style.setProperty("--home-angle",ch.angle+"deg");
+  for(let k=0;k<4;k++) $("homeDot"+k).classList.toggle("active",k===homeChoice);
+  $("homeHint").textContent = "Tourner pour sélectionner";
+}
+let draggingHome = false;
+function homeCircleOpen(ev){
+  if(!localStorage.getItem("murKis")){
+    showPage("tests");
+    showTest("kis");
+    return;
+  }
+  if(!latestNeuro()){
+    showPage("tests");
+    showTest("now");
+    return;
+  }
+  const ch = homeChoices[homeChoice];
+  if(ch.page==="now"){
+    showPage("tests");
+    showTest("now");
+  }else{
+    showPage(ch.page);
+  }
+}
+function bindHomeRotate(){
+  const circle = $("homeCircle");
+  if(!circle) return;
+
+  function pos(e){
+    const r = circle.getBoundingClientRect();
+    const x = e.clientX - (r.left+r.width/2);
+    const y = e.clientY - (r.top+r.height/2);
+    let deg = Math.atan2(y,x)*180/Math.PI+90;
+    deg = ((deg%360)+360)%360;
+    return deg;
+  }
+  function idx(deg){
+    if(deg>=315 || deg<45) return 0;
+    if(deg>=45 && deg<135) return 1;
+    if(deg>=135 && deg<225) return 2;
+    return 3;
+  }
+
+  circle.addEventListener("pointerdown",e=>{
+    if(!latestNeuro()) return;
+    draggingHome = true;
+    circle.setPointerCapture?.(e.pointerId);
+    applyHomeChoice(idx(pos(e)));
+    e.preventDefault();
+  });
+  circle.addEventListener("pointermove",e=>{
+    if(!draggingHome) return;
+    applyHomeChoice(idx(pos(e)));
+    e.preventDefault();
+  });
+  circle.addEventListener("pointerup",e=>{
+    draggingHome = false;
+  });
+}
+
+/* Stats + profil */
+function renderStats(){
+  const h = getHistory();
+  const breaths = h.filter(x=>x.type==="breath");
+  const tests = h.filter(x=>x.type==="test");
+  const exercises = h.filter(x=>x.type==="exercise");
+  $("statBreaths").textContent = breaths.length;
+  $("statMinutes").textContent = breaths.reduce((s,x)=>s+(x.minutes||0),0);
+  $("statTests").textContent = tests.length;
+  $("statExercises").textContent = exercises.length;
+
+  $("historyList").innerHTML = h.slice(0,30).map(x=>`
+    <div class="history-line">
+      <div><strong>${x.title}</strong><br><small>${x.date} à ${x.time} — ${x.detail||""}</small></div>
+      <span style="color:${x.color||"var(--accent)"}">●</span>
+    </div>
+  `).join("") || `<p class="help">Aucun historique pour le moment.</p>`;
+}
+function saveProfile(){
+  const name = $("userName").value.trim();
+  if(name) localStorage.setItem("murName",name);
+  else localStorage.removeItem("murName");
+  refreshHome();
+  alert("Profil enregistré.");
+}
+function loadProfile(){
+  $("userName").value = localStorage.getItem("murName") || "";
+  refreshHome();
+}
+function resetTests(){
+  if(!confirm("Réinitialiser les tests NeuroFlex ?")) return;
+  localStorage.removeItem("murKis");
+  localStorage.removeItem("murLastNeuro");
+  kisAnswers = Array(15).fill(null);
+  kisIndex = 0;
+  kisResult = null;
+  nowResult = null;
+  neuroResult = null;
+  renderKis();
+  refreshHome();
+  showPage("home");
+}
+function exportData(){
+  const data = {
+    name:localStorage.getItem("murName")||"",
+    history:getHistory(),
+    kis:localStorage.getItem("murKis")||"",
+    neuro:localStorage.getItem("murLastNeuro")||""
+  };
+  $("backupBox").style.display = "block";
+  $("backupBox").value = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  $("backupBox").select();
+}
+function importData(){
+  const box = $("backupBox");
+  box.style.display = "block";
+  if(!box.value.trim()){
+    box.placeholder = "Collez votre sauvegarde ici puis cliquez de nouveau sur Importer.";
+    box.focus();
+    return;
+  }
+  try{
+    const data = JSON.parse(decodeURIComponent(escape(atob(box.value.trim()))));
+    if(data.name) localStorage.setItem("murName",data.name);
+    if(Array.isArray(data.history)) saveHistory(data.history);
+    if(data.kis) localStorage.setItem("murKis",data.kis);
+    if(data.neuro) localStorage.setItem("murLastNeuro",data.neuro);
+    loadAll();
+    alert("Sauvegarde importée.");
+  }catch(e){
+    alert("Import impossible. Vérifiez la sauvegarde.");
+  }
+}
+function loadAll(){
+  try{kisResult = JSON.parse(localStorage.getItem("murKis")||"null")}catch(e){}
+  try{neuroResult = JSON.parse(localStorage.getItem("murLastNeuro")||"null")}catch(e){}
+  loadProfile();
+  renderKis();
+  updateBreath();
+  renderTools();
+  renderExerciseList();
+  renderStats();
+  if(neuroResult){
+    $("gaugeMarker").style.left = ((neuroResult.score+50)/100*100)+"%";
+    $("gaugeMarker").style.borderColor = neuroResult.zone.color;
+    $("neuroScore").textContent = scoreText(neuroResult.score);
+    $("neuroZone").textContent = `Zone ${neuroResult.zone.name} — ${neuroResult.zone.family}`;
+    $("neuroText").innerHTML = `Dernier résultat enregistré : <strong>${scoreText(neuroResult.score)}</strong>`;
+  }
+  bindHomeRotate();
+}
+
+document.addEventListener("DOMContentLoaded",loadAll);
+loadAll();
+</script>
+
+<style id="mur-v15-css">
+.running-badge-v15{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(390px,calc(100vw - 28px));z-index:9999;display:none;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;border:1px solid rgba(34,197,94,.55);background:rgba(7,17,31,.92);backdrop-filter:blur(18px);box-shadow:0 18px 45px rgba(0,0,0,.36);color:white}.running-badge-v15.show{display:flex}.running-badge-v15 div{flex:1}.running-badge-v15 strong{display:block;font-size:12px}.running-badge-v15 small{display:block;color:rgba(248,250,252,.68);font-size:10px;margin-top:2px}.running-badge-v15 button{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);color:white;border-radius:12px;padding:7px 10px;font-weight:900;font-size:11px}.pulse-v15{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(34,197,94,.75);animation:pulseV15 1.2s infinite}@keyframes pulseV15{70%{box-shadow:0 0 0 11px rgba(34,197,94,0)}}
+.period-tabs-v15{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.period-tabs-v15 button{border:1px solid var(--line);background:rgba(255,255,255,.08);color:white;border-radius:13px;padding:8px 4px;font-weight:900;font-size:11px}.period-tabs-v15 button.active{background:white;color:#07111f}.trend-graph-v15{position:relative;height:210px;margin-top:10px;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:linear-gradient(90deg,rgba(59,130,246,.18),rgba(34,197,94,.10),rgba(239,68,68,.18)),linear-gradient(180deg,rgba(239,68,68,.10),transparent 50%,rgba(59,130,246,.10))}.trend-graph-v15:before{content:"";position:absolute;left:50%;top:0;height:100%;width:1px;background:rgba(255,255,255,.28)}.trend-graph-v15:after{content:"";position:absolute;left:0;top:50%;width:100%;height:1px;background:rgba(255,255,255,.28)}.trend-point-v15{position:absolute;left:50%;top:50%;width:22px;height:22px;border-radius:50%;background:white;border:5px solid var(--accent);transform:translate(-50%,-50%);z-index:4;box-shadow:0 8px 20px rgba(0,0,0,.38)}.trend-center-v15{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;font-size:8px;text-transform:uppercase;color:rgba(255,255,255,.74);font-weight:900;z-index:2}.trend-label-v15{position:absolute;z-index:3;font-size:9px;color:rgba(255,255,255,.72);font-weight:900;text-transform:uppercase;letter-spacing:.08em}.trend-label-v15.top{top:8px;left:50%;transform:translateX(-50%)}.trend-label-v15.bottom{bottom:8px;left:50%;transform:translateX(-50%)}.trend-label-v15.left{left:8px;top:50%;transform:translateY(-50%) rotate(-90deg)}.trend-label-v15.right{right:8px;top:50%;transform:translateY(-50%) rotate(90deg)}.evolution-v15{height:105px;margin-top:8px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.18);padding:7px}.evolution-v15 svg{width:100%;height:100%}.evolution-v15 .zero{stroke:rgba(255,255,255,.28);stroke-dasharray:4 4}.evolution-v15 .line{fill:none;stroke:var(--accent);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.home-mini-trend-v15{height:10px;border-radius:999px;margin-top:9px;background:linear-gradient(90deg,var(--blue),var(--green),var(--orange),var(--red));position:relative}.home-mini-trend-v15 div{position:absolute;left:50%;top:50%;width:16px;height:16px;border-radius:50%;border:3px solid #07111f;background:var(--accent);transform:translate(-50%,-50%);box-shadow:0 6px 16px rgba(0,0,0,.28)}.mini-icon-v15{display:grid;place-items:center;width:28px;height:28px;border-radius:13px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);margin:0 auto 5px;font-size:15px}.home-mini button strong{display:block}.zone-closed-v15{padding:0;overflow:hidden}.zone-closed-v15 summary{list-style:none;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:13px;cursor:pointer}.zone-closed-v15 summary::-webkit-details-marker{display:none}.zone-closed-v15 summary:after{content:"+";font-weight:950;color:rgba(255,255,255,.7);margin-left:8px}.zone-closed-v15[open] summary:after{content:"−"}.zone-closed-v15 .exercise-grid{padding:0 13px 13px}.kis-result-v15{margin-top:10px;padding:12px;border-radius:16px;border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.08);line-height:1.45}.test-view .row button{transition:border-color .2s, background .2s, box-shadow .2s}
+</style>
+
+<script>
+/* ===== V15.0 CORRECTIF RÉEL : tendances, stats périodes, respiration en cours, logos, exercices repliés, ki.S Funambule ===== */
+(function(){
+  const $ = (id)=>document.getElementById(id);
+  const COLORS2 = {bleu:'#3b82f6', vert:'#22c55e', orange:'#f59e0b', red:'#ef4444'};
+  let statsPeriodV15 = localStorage.getItem('murStatsPeriodV15') || 'today';
+
+  function scoreTextV15(n){ n = Number(n||0); return n>0 ? '+'+n : String(n); }
+  function getHistoryV15(){ try{return JSON.parse(localStorage.getItem('murHistory')||'[]')}catch(e){return[]} }
+  function getLastNeuroV15(){ try{return JSON.parse(localStorage.getItem('murLastNeuro')||'null')}catch(e){return null} }
+  function colorFromScoreV15(score){
+    score = Number(score||0);
+    if(score<=-22) return COLORS2.bleu;
+    if(score>=28) return COLORS2.red;
+    if(score>=10) return COLORS2.orange;
+    return COLORS2.vert;
+  }
+  function periodStartV15(){
+    const d = new Date(); d.setHours(0,0,0,0);
+    if(statsPeriodV15==='today') return d.getTime();
+    if(statsPeriodV15==='week'){ const day=d.getDay()||7; d.setDate(d.getDate()-day+1); return d.getTime(); }
+    if(statsPeriodV15==='month'){ d.setDate(1); return d.getTime(); }
+    if(statsPeriodV15==='year'){ d.setMonth(0,1); return d.getTime(); }
+    return 0;
+  }
+  function periodLabelV15(){
+    return {today:"aujourd’hui",week:'cette semaine',month:'ce mois-ci',year:'cette année'}[statsPeriodV15] || 'sur la période';
+  }
+  function filteredHistoryV15(){
+    const start = periodStartV15();
+    return getHistoryV15().filter(x=>Number(x.timestamp||0)>=start);
+  }
+
+  function ensureRunningBadgeV15(){
+    if($('runningBadgeV15')) return;
+    const div = document.createElement('div');
+    div.id = 'runningBadgeV15';
+    div.className = 'running-badge-v15';
+    div.innerHTML = '<span class="pulse-v15"></span><div><strong>Respiration en cours</strong><small id="runningTextV15">—</small></div><button type="button" onclick="showPage(\'breath\')">Voir</button>';
+    document.body.appendChild(div);
+  }
+  function updateRunningBadgeV15(){
+    ensureRunningBadgeV15();
+    const badge = $('runningBadgeV15');
+    const text = $('runningTextV15');
+    const isBreathPage = document.querySelector('#breath.page.active');
+    const isRunning = (typeof running !== 'undefined' && running);
+    badge.classList.toggle('show', !!isRunning && !isBreathPage);
+    if(text && typeof remaining !== 'undefined' && typeof formatTime === 'function') text.textContent = formatTime(remaining) + ' restant';
+  }
+
+  function ensureStatsUIV15(){
+    const stats = $('stats'); if(!stats) return;
+    const firstCard = stats.querySelector('.card'); if(!firstCard) return;
+
+    if(!$('periodTabsV15')){
+      const tabs = document.createElement('div');
+      tabs.id = 'periodTabsV15';
+      tabs.className = 'period-tabs-v15';
+      tabs.innerHTML = `
+        <button id="periodTodayV15" type="button" onclick="setStatsPeriodV15('today')">Jour</button>
+        <button id="periodWeekV15" type="button" onclick="setStatsPeriodV15('week')">Semaine</button>
+        <button id="periodMonthV15" type="button" onclick="setStatsPeriodV15('month')">Mois</button>
+        <button id="periodYearV15" type="button" onclick="setStatsPeriodV15('year')">Année</button>`;
+      const grid = firstCard.querySelector('.stats-grid');
+      if(grid) grid.insertAdjacentElement('afterend', tabs);
+    }
+
+    if(!$('trendCardV15')){
+      const trend = document.createElement('section');
+      trend.id = 'trendCardV15';
+      trend.className = 'card';
+      trend.innerHTML = `
+        <h2>Tendance NeuroFlex</h2>
+        <p id="trendCaptionV15" class="help">Réalisez un test complet pour afficher votre tendance.</p>
+        <div class="trend-graph-v15">
+          <div class="trend-label-v15 top">Activation</div>
+          <div class="trend-label-v15 bottom">Récupération</div>
+          <div class="trend-label-v15 left">Posé</div>
+          <div class="trend-label-v15 right">Fonceur</div>
+          <div class="trend-center-v15">Équilibre</div>
+          <div id="trendPointV15" class="trend-point-v15"></div>
+        </div>
+        <h2 style="margin-top:14px">Évolution</h2>
+        <div id="evolutionChartV15" class="evolution-v15"></div>`;
+      firstCard.insertAdjacentElement('afterend', trend);
+    }
+  }
+
+  function ensureHomeTrendGraphV15(){
+    const p = $('homeTrend');
+    if(!p || $('homeMiniTrendV15')) return;
+    const mini = document.createElement('div');
+    mini.id = 'homeMiniTrendV15';
+    mini.className = 'home-mini-trend-v15';
+    mini.innerHTML = '<div id="homeMiniTrendMarkerV15"></div>';
+    p.insertAdjacentElement('afterend', mini);
+  }
+
+  function renderHomeTrendV15(last){
+    ensureHomeTrendGraphV15();
+    const marker = $('homeMiniTrendMarkerV15');
+    const score = $('homeScore');
+    const trend = $('homeTrend');
+    if(!last){
+      if(marker){ marker.style.left='50%'; marker.style.background='var(--accent)'; }
+      if(score) score.textContent='—';
+      if(trend) trend.textContent='Réalisez un test complet.';
+      return;
+    }
+    const s = Number(last.score||0), c = last.zone?.color || colorFromScoreV15(s);
+    if(marker){ marker.style.left = Math.max(0,Math.min(100,((s+50)/100)*100))+'%'; marker.style.background = c; }
+    if(score){ score.textContent=scoreTextV15(s); score.style.color=c; }
+    if(trend) trend.innerHTML = `Dernier résultat : <strong>${scoreTextV15(s)}</strong> · ${last.zone?.name||''}`;
+  }
+
+  function renderTrendV15(items){
+    const tests = items.filter(x=>x.type==='test');
+    const latest = getLastNeuroV15() || (tests[0] ? {score:tests[0].score, zone:{color:tests[0].color,name:tests[0].detail}} : null);
+    const p = $('trendPointV15');
+    const cap = $('trendCaptionV15');
+    if(!latest){
+      if(p){p.style.left='50%';p.style.top='50%';p.style.borderColor='var(--accent)';}
+      if(cap) cap.textContent='Réalisez un test complet pour afficher votre tendance.';
+      renderHomeTrendV15(null);
+      renderEvolutionV15(tests);
+      return;
+    }
+    const s = Number(latest.score||0), c = latest.zone?.color || colorFromScoreV15(s);
+    const kis = Number(latest.kisScore || 0);
+    const now = Number(latest.nowScore || 0);
+    if(p){
+      p.style.left = Math.max(0,Math.min(100,((kis+15)/30)*100))+'%';
+      p.style.top = Math.max(0,Math.min(100,100-((now+50)/100)*100))+'%';
+      p.style.borderColor = c;
+    }
+    if(cap) cap.innerHTML = `Dernière tendance : <strong>${latest.kis || 'Funambule'}</strong>, NeuroFlex <strong>${scoreTextV15(s)}</strong>.`;
+    renderHomeTrendV15(latest);
+    renderEvolutionV15(tests);
+  }
+
+  function renderEvolutionV15(tests){
+    const box = $('evolutionChartV15'); if(!box) return;
+    tests = tests.slice(0,12).reverse();
+    if(!tests.length){ box.innerHTML='<p class="help">Aucun test sur cette période.</p>'; return; }
+    const w=320,h=86,pad=14;
+    const pts = tests.map((t,i)=>{
+      const x = tests.length===1 ? w/2 : pad + i*(w-2*pad)/(tests.length-1);
+      const y = pad + (50-Number(t.score||0))*(h-2*pad)/100;
+      return {x,y,t};
+    });
+    const d = pts.map((p,i)=>(i?'L':'M')+p.x+','+p.y).join(' ');
+    box.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><line x1="${pad}" y1="${h/2}" x2="${w-pad}" y2="${h/2}" class="zero"/><path d="${d}" class="line"/>${pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" style="fill:white;stroke:${p.t.color||colorFromScoreV15(p.t.score)};stroke-width:3"/>`).join('')}</svg>`;
+  }
+
+  window.setStatsPeriodV15 = function(p){
+    statsPeriodV15 = p; localStorage.setItem('murStatsPeriodV15',p); renderStats();
+  };
+
+  function renderStatsV15(){
+    ensureStatsUIV15();
+    const h = filteredHistoryV15();
+    const breaths = h.filter(x=>x.type==='breath');
+    const tests = h.filter(x=>x.type==='test');
+    const exercises = h.filter(x=>x.type==='exercise');
+    if($('statBreaths')) $('statBreaths').textContent = breaths.length;
+    if($('statMinutes')) $('statMinutes').textContent = breaths.reduce((s,x)=>s+(x.minutes||0),0);
+    if($('statTests')) $('statTests').textContent = tests.length;
+    if($('statExercises')) $('statExercises').textContent = exercises.length;
+    ['today','week','month','year'].forEach(p=>{
+      const el = $('period'+p.charAt(0).toUpperCase()+p.slice(1)+'V15'); if(el) el.classList.toggle('active',p===statsPeriodV15);
+    });
+    const list = $('historyList');
+    if(list){
+      list.innerHTML = h.slice(0,30).map(x=>`<div class="history-line"><div><strong>${x.title}</strong><br><small>${x.date} à ${x.time} — ${x.detail||''}</small></div><span style="color:${x.color||'var(--accent)'}">●</span></div>`).join('') || `<p class="help">Aucun historique ${periodLabelV15()}.</p>`;
+    }
+    renderTrendV15(h);
+  }
+
+  function profileFromScoreV15(score){
+    if(score>=8) return 'Fonceur';
+    if(score<=-8) return 'Posé';
+    if(score>=3) return 'Funambule à tendance Fonceur';
+    if(score<=-3) return 'Funambule à tendance Posé';
+    return 'Funambule';
+  }
+
+  function patchKisV15(){
+    window.finishKis = function(){
+      if(kisAnswers.some(v=>v===null)){alert('Complétez les 15 questions.');return;}
+      let score = 0;
+      KIS_QUESTIONS.forEach((q,i)=>score += kisAnswers[i]*q.dir);
+      const profile = profileFromScoreV15(score);
+      kisResult = {score,profile};
+      localStorage.setItem('murKis',JSON.stringify(kisResult));
+      const zoneTxt = profile.includes('Fonceur') ? 'tendance d’action rapide' : profile.includes('Posé') ? 'tendance de stabilité' : 'tendance centrale';
+      $('kisResult').innerHTML = `<div class="kis-result-v15"><strong>Résultat ki.S</strong><br>Profil : <strong>${profile}</strong><br>Score ki.S : <strong>${scoreTextV15(score)}</strong><br>Tendance : <strong>${zoneTxt}</strong><br><button class="secondary" type="button" onclick="showTest('now')" style="margin-top:10px">Continuer vers Ici & Maintenant</button></div>`;
+      refreshHome();
+    };
+  }
+
+  function patchNeuroButtonsV15(){
+    const last = (typeof neuroResult!=='undefined' && neuroResult) ? neuroResult : getLastNeuroV15();
+    const c = last?.zone?.color || colorFromScoreV15(last?.score||0);
+    document.querySelectorAll('#testResultView .row button').forEach(btn=>{
+      btn.style.borderColor = c;
+      btn.style.background = `linear-gradient(135deg, ${c}44, rgba(255,255,255,.08))`;
+      btn.style.boxShadow = `0 0 18px ${c}33`;
+    });
+  }
+
+  function patchCalculateNeuroV15(){
+    const old = window.calculateNeuro;
+    window.calculateNeuro = function(){
+      if(!kisResult || !nowResult) return;
+      const correction = Math.round(kisResult.score*1.2);
+      const score = Math.max(-50,Math.min(50,nowResult.score+correction));
+      const zone = getZone(score);
+      neuroResult = {score,zone,kis:kisResult.profile,kisScore:kisResult.score,nowScore:nowResult.score};
+      localStorage.setItem('murLastNeuro',JSON.stringify(neuroResult));
+      if($('gaugeMarker')){ $('gaugeMarker').style.left=((score+50)/100*100)+'%'; $('gaugeMarker').style.borderColor=zone.color; }
+      if($('neuroScore')) $('neuroScore').textContent = scoreTextV15(score);
+      if($('neuroZone')) $('neuroZone').textContent = `Zone ${zone.name} — ${zone.family}`;
+      if($('neuroText')) $('neuroText').innerHTML = `Profil : <strong>${kisResult.profile}</strong><br>Ici & Maintenant : <strong>${scoreTextV15(nowResult.score)}</strong><br>Correction ki.S : <strong>${scoreTextV15(correction)}</strong><br>Réflexe conseillé : <strong>${zone.family}</strong>`;
+      addHistory({type:'test',title:'Test NeuroFlex',detail:`${scoreTextV15(score)} · ${zone.name}`,score,color:zone.color});
+      refreshHome(); renderStats(); patchNeuroButtonsV15();
+    };
+  }
+
+  function iconSpan(icon){return `<span class="mini-icon-v15">${icon}</span>`;}
+  function patchLogosV15(){
+    const mini = document.querySelector('.home-mini');
+    if(mini && mini.dataset.v15!=='1'){
+      mini.dataset.v15='1';
+      const data = [ ['☷','Mesurer','Comprendre'], ['◎','Utiliser','Outils'], ['⌁','Réguler','Respirer'], ['▧','Exercices','16 cartes'] ];
+      mini.querySelectorAll('button').forEach((b,i)=>{ if(data[i]) b.innerHTML = `${iconSpan(data[i][0])}<strong>${data[i][1]}</strong><small>${data[i][2]}</small>`; });
+    }
+    document.querySelectorAll('.home-action').forEach((b,i)=>{ b.classList.add('with-logo-v15'); });
+  }
+
+  function zoneBlockClosedV15(z){
+    const c = COLORS[z.key];
+    return `<details class="zone-section zone-closed-v15" style="border-color:${c}55;background:linear-gradient(180deg,${c}16,rgba(255,255,255,.045));">
+      <summary><div><strong>${z.title}</strong><p class="help">${z.subtitle}</p></div><div class="badge" style="border-color:${c};"><span class="dot" style="background:${c}"></span><span>${z.key}</span></div></summary>
+      <div class="exercise-grid">${z.items.map(exerciseCard).join('')}</div>
+    </details>`;
+  }
+  function renderExerciseListClosedV15(){
+    if($('exerciseList')) $('exerciseList').innerHTML = ZONES.map(zoneBlockClosedV15).join('');
+    if($('exerciseDetail')) $('exerciseDetail').innerHTML = '<h2>Choisissez un exercice</h2><p class="help">Ouvrez une couleur, puis touchez une carte pour afficher le guidage.</p>';
+  }
+  function renderToolsClosedV15(){
+    if($('toolsList')) $('toolsList').innerHTML = ZONES.map(zoneBlockClosedV15).join('');
+  }
+
+  function initV15(){
+    ensureRunningBadgeV15();
+    patchKisV15();
+    patchCalculateNeuroV15();
+    window.renderStats = renderStatsV15;
+    window.renderExerciseList = renderExerciseListClosedV15;
+    window.renderTools = renderToolsClosedV15;
+    patchLogosV15();
+    renderStatsV15();
+    renderHomeTrendV15(getLastNeuroV15());
+    patchNeuroButtonsV15();
+    if(document.querySelector('#exercises.page.active')) renderExerciseListClosedV15();
+    if(document.querySelector('#tools.page.active')) renderToolsClosedV15();
+  }
+
+  const oldShowPage = window.showPage;
+  window.showPage = function(id){
+    const out = oldShowPage ? oldShowPage.apply(this,arguments) : undefined;
+    setTimeout(()=>{ updateRunningBadgeV15(); patchLogosV15(); if(id==='stats') renderStatsV15(); if(id==='exercises') renderExerciseListClosedV15(); if(id==='tools') renderToolsClosedV15(); patchNeuroButtonsV15(); },40);
+    return out;
+  };
+  const oldStart = window.startBreathing;
+  window.startBreathing = function(){ const out = oldStart ? oldStart.apply(this,arguments) : undefined; setTimeout(updateRunningBadgeV15,100); return out; };
+  const oldStop = window.stopBreathing;
+  window.stopBreathing = function(){ const out = oldStop ? oldStop.apply(this,arguments) : undefined; setTimeout(updateRunningBadgeV15,100); return out; };
+
+  setInterval(updateRunningBadgeV15,800);
+  setInterval(patchNeuroButtonsV15,1500);
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initV15); else initV15();
+  setTimeout(initV15,300);
+})();
+
+</script>
+</body>
+</html>
 
