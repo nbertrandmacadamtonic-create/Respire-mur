@@ -1050,6 +1050,244 @@ button.stuck-clean,
   -webkit-touch-callout:default;
 }
 
+
+/* Suppression du scrolling : accueil + bilans/statistiques */
+#home.page.active,
+#stats.page.active{
+  height:calc(100dvh - 86px);
+  min-height:0;
+  overflow:hidden;
+}
+
+#home .home-hello{
+  margin-bottom:5px;
+}
+#home .home-hello h2{
+  font-size:18px;
+}
+#home .home-hello .help{
+  font-size:11px;
+  margin-top:2px;
+}
+
+#home .home-circle-card{
+  min-height:0!important;
+  height:calc(100dvh - 244px);
+  max-height:360px;
+  margin-bottom:7px;
+  padding:9px;
+}
+#home .home-circle{
+  width:min(198px,48dvh)!important;
+  height:min(198px,48dvh)!important;
+  margin:2px auto 0!important;
+}
+#home .home-cursor{
+  transform:translate(-50%,-50%) rotate(var(--home-angle,0deg)) translateY(calc(min(198px,48dvh) / -2))!important;
+}
+#home .home-circle-text strong{
+  font-size:17px;
+}
+#home .home-circle-text small{
+  font-size:9px;
+}
+#home .home-dots{
+  margin-top:8px;
+}
+#home .home-hint{
+  margin:4px 0 0;
+  font-size:9px;
+}
+#home .home-curve{
+  height:50px!important;
+  padding:5px 9px!important;
+}
+#home .home-curve svg{
+  height:28px!important;
+}
+#home .card:not(.home-circle-card){
+  padding:9px;
+  margin-bottom:0;
+}
+#home .card:not(.home-circle-card) h2{
+  font-size:17px;
+}
+#home .card:not(.home-circle-card) .help{
+  font-size:11px;
+  line-height:1.25;
+}
+
+/* Bilans / statistiques : tout tient dans l'écran */
+#stats.page.active{
+  display:grid;
+  grid-template-rows:auto auto auto auto;
+  gap:6px;
+}
+
+#stats .card{
+  margin-bottom:0;
+  padding:8px;
+  border-radius:17px;
+  box-shadow:0 10px 24px rgba(0,0,0,.22);
+}
+
+#stats .fold-head{
+  min-height:38px;
+  padding:9px 10px;
+  border-radius:14px;
+  font-size:13px;
+}
+
+#stats .help{
+  font-size:10.5px;
+  line-height:1.25;
+  margin-top:4px;
+}
+
+#stats .stats-periods{
+  margin-top:7px;
+  gap:5px;
+}
+#stats .stats-period-btn{
+  min-height:31px;
+  border-radius:12px;
+  font-size:9.5px;
+}
+#stats .stats-period-label{
+  margin-top:6px;
+  font-size:10px;
+}
+
+#stats .stats-grid{
+  gap:5px;
+  margin-top:7px;
+}
+#stats .stats-mini{
+  min-height:72px!important;
+  border-radius:14px;
+  padding:6px 4px;
+  gap:2px;
+}
+#stats .stats-mini .mini-ico{
+  width:23px;
+  height:23px;
+  border-radius:9px;
+}
+#stats .stats-mini .mini-ico svg{
+  width:12px;
+  height:12px;
+}
+#stats .stats-mini small{
+  font-size:8px;
+}
+#stats .stats-mini strong{
+  font-size:15px;
+}
+
+#stats #neuroFold .fold-body{
+  margin-top:6px;
+}
+#stats .neuro-chart{
+  margin-top:6px;
+  padding:6px;
+  border-radius:16px;
+}
+#stats .neuro-chart svg{
+  height:118px!important;
+}
+#stats .neuro-legend{
+  margin-top:4px;
+  font-size:8px;
+}
+#stats #statNeuroText{
+  display:none;
+}
+
+/* Historique et sauvegarde restent ouvrables, mais sans créer de scroll global */
+#stats #historyFold .fold-body,
+#stats #backupFold .fold-body{
+  max-height:116px;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-right:2px;
+}
+#stats .history-list{
+  gap:5px;
+  margin-top:6px;
+}
+#stats .history-line{
+  padding:7px 8px;
+  border-radius:12px;
+}
+#stats .history-line strong{
+  font-size:12px;
+}
+#stats .history-line small{
+  font-size:9.5px;
+}
+
+/* Très petits écrans */
+@media(max-height:760px){
+  #home.page.active,
+  #stats.page.active{
+    height:calc(100dvh - 78px);
+  }
+  #home .home-circle-card{
+    height:calc(100dvh - 220px);
+    max-height:314px;
+  }
+  #home .home-circle{
+    width:min(176px,44dvh)!important;
+    height:min(176px,44dvh)!important;
+  }
+  #home .home-cursor{
+    transform:translate(-50%,-50%) rotate(var(--home-angle,0deg)) translateY(calc(min(176px,44dvh) / -2))!important;
+  }
+  #stats .neuro-chart svg{
+    height:96px!important;
+  }
+  #stats .stats-mini{
+    min-height:64px!important;
+  }
+  #stats #historyFold .fold-body,
+  #stats #backupFold .fold-body{
+    max-height:92px;
+  }
+}
+
+@media(max-height:700px){
+  #home .home-circle-card{
+    height:calc(100dvh - 205px);
+    max-height:282px;
+  }
+  #home .home-circle{
+    width:min(156px,40dvh)!important;
+    height:min(156px,40dvh)!important;
+  }
+  #home .home-cursor{
+    transform:translate(-50%,-50%) rotate(var(--home-angle,0deg)) translateY(calc(min(156px,40dvh) / -2))!important;
+  }
+  #home .home-curve{
+    height:44px!important;
+  }
+  #home .home-curve svg{
+    height:24px!important;
+  }
+  #stats .neuro-chart svg{
+    height:78px!important;
+  }
+  #stats .stats-mini{
+    min-height:58px!important;
+  }
+  #stats .stats-mini .mini-ico{
+    display:none;
+  }
+  #stats #historyFold .fold-body,
+  #stats #backupFold .fold-body{
+    max-height:74px;
+  }
+}
+
 </style>
 </head>
 
@@ -1675,6 +1913,10 @@ function showPage(id){
   if(id==="stats") renderStats();
   if(id==="home") refreshHome();
   window.scrollTo(0,0);
+  if(id==="home" || id==="stats"){
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
 }
 
 function setAccent(color){
@@ -2341,4 +2583,3 @@ loadAll();
 </script>
 </body>
 </html>
-
