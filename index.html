@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="icon" type="image/png" href="apple-touch-icon.png" />
 <title>M.U.R App</title>
+<!-- Version sans accents dans le texte : evite les problemes d'encodage type PlutÃ´t / PrÃ©cÃ©dent dans CodePen ou GitHub. -->
 
 <style>
 :root{
@@ -28,23 +29,48 @@
   --shadow:0 18px 46px rgba(0,0,0,.30);
 }
 *{box-sizing:border-box}
-html,body{
-  margin:0;width:100%;min-height:100%;
+html{
+  margin:0;
+  width:100%;
+  min-height:100%;
+  min-height:100dvh;
+  background:#07111f;
+}
+body{
+  margin:0;
+  width:100%;
+  min-height:100vh;
+  min-height:100svh;
+  min-height:100dvh;
+  background:#07111f;
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Arial,sans-serif;
+  overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
   background:
     radial-gradient(circle at 15% 0%,rgba(59,130,246,.24),transparent 34%),
     radial-gradient(circle at 86% 10%,rgba(245,158,11,.16),transparent 30%),
     radial-gradient(circle at 50% 92%,rgba(34,197,94,.18),transparent 36%),
     linear-gradient(180deg,#040914 0%,#07111f 100%);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Arial,sans-serif;
-  overflow-x:hidden;
-  -webkit-tap-highlight-color:transparent;
 }
 button,input,select{font:inherit}
 button{cursor:pointer}
 .app{
-  width:100%;max-width:430px;min-height:100svh;margin:0 auto;
-  padding:calc(10px + env(safe-area-inset-top)) 12px calc(88px + env(safe-area-inset-bottom));
+  width:100%;
+  max-width:430px;
+  min-height:100vh;
+  min-height:100svh;
+  min-height:100dvh;
+  margin:0 auto;
+  padding:calc(10px + env(safe-area-inset-top)) 12px calc(104px + env(safe-area-inset-bottom));
 }
 .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 .brand{display:flex;align-items:center;gap:10px}
@@ -71,7 +97,10 @@ p{margin:0}
   background:linear-gradient(180deg,rgba(255,255,255,.105),rgba(255,255,255,.055));
   border-radius:22px;padding:13px;margin-bottom:10px;box-shadow:var(--shadow);backdrop-filter:blur(18px);
 }
-.page{display:none}
+.page{
+  display:none;
+  min-height:calc(100dvh - 128px);
+}
 .page.active{display:block}
 .status{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
 .badge{
@@ -100,21 +129,22 @@ p{margin:0}
 }
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-/* Information première utilisation */
+/* Information premiere utilisation */
 .info-btn{
   position:fixed;
-  right:18px;
+  right:68px;
   top:calc(14px + env(safe-area-inset-top));
   z-index:9500;
-  width:38px;
-  height:38px;
+  width:34px;
+  height:34px;
   border-radius:50%;
   border:1px solid rgba(255,255,255,.28);
   background:rgba(255,255,255,.12);
   color:white;
+  font-size:13px;
   font-weight:950;
   backdrop-filter:blur(14px);
-  box-shadow:0 12px 30px rgba(0,0,0,.28);
+  box-shadow:0 10px 24px rgba(0,0,0,.24);
 }
 .info-modal{
   position:fixed;
@@ -169,7 +199,7 @@ p{margin:0}
   font-weight:950;
 }
 
-/* Présentation */
+/* Presentation */
 .presentation{
   position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:26px;
   background:
@@ -267,6 +297,257 @@ p{margin:0}
   font-size:12px;font-weight:900;text-align:center;opacity:0;pointer-events:none;transition:opacity .24s ease,transform .24s ease;z-index:9100;
 }
 .nav-notice.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+
+/* Respiration guidee - choix par couleur */
+.breath-colors{
+  display:grid;
+  gap:10px;
+  margin-top:12px;
+}
+.breath-family{
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:20px;
+  padding:10px;
+  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+}
+.breath-family-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+.breath-family-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:950;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+}
+.breath-family-title i{
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  background:var(--family-color);
+  box-shadow:0 0 14px var(--family-color);
+  display:inline-block;
+}
+.breath-family-head small{
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+}
+.breath-options{
+  display:grid;
+  gap:7px;
+}
+.breath-choice{
+  width:100%;
+  min-height:50px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.07);
+  color:white;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:10px;
+  padding:9px 10px;
+  text-align:left;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+.breath-choice.active{
+  border-color:var(--family-color);
+  background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.055));
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--family-color) 48%, transparent),0 0 22px color-mix(in srgb, var(--family-color) 24%, transparent);
+}
+.breath-choice .breath-icon{
+  width:32px;
+  height:32px;
+  border-radius:13px;
+  display:grid;
+  place-items:center;
+  color:white;
+  border:1px solid rgba(255,255,255,.20);
+  background:
+    radial-gradient(circle at 30% 20%,rgba(255,255,255,.35),transparent 34%),
+    linear-gradient(145deg,var(--family-color),rgba(255,255,255,.08));
+  box-shadow:0 8px 16px rgba(0,0,0,.22);
+}
+.breath-choice .breath-icon svg{
+  width:16px;
+  height:16px;
+  stroke:white;
+  fill:none;
+  stroke-width:2.1;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.breath-choice strong{
+  display:block;
+  font-size:13px;
+  line-height:1.1;
+}
+.breath-choice small{
+  display:block;
+  color:rgba(248,250,252,.64);
+  font-size:10px;
+  margin-top:3px;
+}
+.breath-choice b{
+  color:var(--family-color);
+  font-size:11px;
+  white-space:nowrap;
+}
+.protocol-hidden{
+  display:none;
+}
+
+
+/* Respiration guidee - zones ouvrables */
+.breath-family{
+  overflow:hidden;
+}
+.breath-family-head{
+  cursor:pointer;
+  border:0;
+  width:100%;
+  color:white;
+  background:transparent;
+  padding:0;
+  text-align:left;
+}
+.breath-family-head .chev{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.72);
+  font-size:13px;
+  transition:transform .18s ease, background .18s ease;
+}
+.breath-family.open .breath-family-head .chev{
+  transform:rotate(180deg);
+  background:rgba(255,255,255,.10);
+}
+/* anciennes zones couleur supprimees */
+.breath-family.open{
+  border-color:color-mix(in srgb, var(--family-color) 50%, rgba(255,255,255,.14));
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--family-color) 22%, transparent),0 0 22px color-mix(in srgb, var(--family-color) 12%, transparent);
+}
+.breath-family:not(.open){
+  opacity:.82;
+}
+
+
+/* Respiration guidee - une seule case ouvrable */
+.breath-master{
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:22px;
+  margin-top:12px;
+  overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+}
+.breath-master-head{
+  width:100%;
+  min-height:58px;
+  border:0;
+  background:transparent;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px;
+  text-align:left;
+}
+.breath-master-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.breath-master-logo{
+  width:34px;
+  height:34px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 30% 20%,rgba(255,255,255,.35),transparent 34%),
+    conic-gradient(from 210deg,#3b82f6,#22c55e,#f59e0b,#ef4444,#6366f1,#3b82f6);
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 8px 16px rgba(0,0,0,.22);
+}
+.breath-master-logo svg{
+  width:17px;
+  height:17px;
+  stroke:white;
+  fill:none;
+  stroke-width:2.1;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.breath-master-title strong{
+  display:block;
+  font-size:14px;
+  line-height:1.05;
+}
+.breath-master-title small{
+  display:block;
+  margin-top:3px;
+  color:rgba(248,250,252,.62);
+  font-size:10px;
+  font-weight:850;
+}
+.breath-master-chev{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.72);
+  transition:transform .18s ease, background .18s ease;
+}
+.breath-master.open .breath-master-chev{
+  transform:rotate(180deg);
+  background:rgba(255,255,255,.10);
+}
+.breath-master-body{
+  display:none;
+  padding:0 10px 10px;
+}
+.breath-master.open .breath-master-body{
+  display:grid;
+  gap:8px;
+}
+.breath-choice{
+  --family-color:#22c55e;
+}
+.breath-choice .zone-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-top:4px;
+  color:var(--family-color);
+  font-size:9px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.breath-choice .zone-chip i{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--family-color);
+  box-shadow:0 0 8px var(--family-color);
+  display:inline-block;
+}
 
 /* Respiration */
 .protocol-box{margin-top:11px}
@@ -376,13 +657,31 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
 .test-view{display:none}
 .test-view.active{display:block}
 .choice{
-  width:100%;border:1px solid var(--line);background:rgba(255,255,255,.10);color:white;border-radius:15px;
-  padding:12px;text-align:left;margin-top:8px;transition:transform .16s, background .16s, border-color .16s, box-shadow .16s;
+  width:100%;
+  border:1px solid rgba(255,255,255,.44);
+  background:rgba(255,255,255,.16);
+  color:white;
+  border-radius:15px;
+  padding:12px;
+  text-align:left;
+  margin-top:8px;
+  transition:transform .16s, background .16s, border-color .16s, box-shadow .16s;
+}
+.choice small{
+  color:rgba(255,255,255,.80);
 }
 .choice.flash-yes{background:rgba(239,68,68,.28);border-color:#ef4444;box-shadow:0 0 0 2px rgba(239,68,68,.24)}
 .choice.flash-mid{background:rgba(245,158,11,.28);border-color:#f59e0b;box-shadow:0 0 0 2px rgba(245,158,11,.24)}
 .choice.flash-no{background:rgba(59,130,246,.28);border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.24)}
-.choice.selected{background:rgba(255,255,255,.10);color:white;border-color:white;box-shadow:0 0 0 2px rgba(255,255,255,.45)}
+.choice.selected{
+  background:rgba(255,255,255,.92);
+  color:#07111f;
+  border-color:white;
+  box-shadow:0 0 0 2px rgba(255,255,255,.62),0 0 22px rgba(255,255,255,.16);
+}
+.choice.selected small{
+  color:rgba(7,17,31,.66);
+}
 .validate-ready{border-color:white!important;box-shadow:0 0 0 2px rgba(255,255,255,.52),0 0 22px rgba(255,255,255,.20);background:rgba(255,255,255,.14)!important}
 .kis-locked{border-color:rgba(255,255,255,.32);background:rgba(255,255,255,.08)}
 .long-reset{margin-top:10px;user-select:none}
@@ -429,6 +728,36 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
 .hidden-audio{display:none}
 
 /* Stats */
+
+.stats-periods{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
+  margin-top:10px;
+}
+.stats-period-btn{
+  min-height:38px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.07);
+  color:rgba(248,250,252,.70);
+  font-size:10px;
+  font-weight:950;
+}
+.stats-period-btn.active{
+  background:white;
+  color:#07111f;
+  border-color:white;
+  box-shadow:0 8px 18px rgba(0,0,0,.18);
+}
+.stats-period-label{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:850;
+  text-align:center;
+}
+
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}
 .stats-mini{border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.055));color:white;border-radius:18px;padding:10px 6px 11px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:100px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 12px 22px rgba(0,0,0,.14)}
 .stats-mini small{display:block;color:var(--muted);font-size:9px;letter-spacing:.02em}
@@ -574,6 +903,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
 .tabbar button:active{transform:scale(.98)}
 
 @media(max-width:380px){
+  .info-btn{
+    right:62px;
+    width:32px;
+    height:32px;
+    top:calc(16px + env(safe-area-inset-top));
+  }
+
   .app{padding-left:10px;padding-right:10px}
   .presentation-circle{width:235px;height:235px}
   .home-circle{width:230px;height:230px}
@@ -581,6 +917,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
   .visual-wrap img{min-height:260px}
   .tabbar{width:calc(100vw - 22px)}
 }
+
+@supports (-webkit-touch-callout:none){
+  body{
+    min-height:-webkit-fill-available;
+  }
+  .app{
+    min-height:-webkit-fill-available;
+  }
+}
+
 </style>
 </head>
 
@@ -592,31 +938,31 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
     <h2>Bienvenue dans M.U.R.</h2>
 
     <p>
-      M.U.R. vous propose une nouvelle expérience&nbsp;: découvrir votre profil neurovégétatif
-      et apprendre à le rééquilibrer.
+      M.U.R. vous propose une nouvelle experience&nbsp;: decouvrir votre profil neurovegetatif
+      et apprendre a le reequilibrer.
     </p>
 
     <p>
-      Votre système neurovégétatif influence votre énergie, votre respiration, votre récupération,
-      votre concentration et votre capacité à faire face au stress.
+      Votre systeme neurovegetatif influence votre energie, votre respiration, votre recuperation,
+      votre concentration et votre capacite a faire face au stress.
     </p>
 
     <p>
-      Avec les tests NeuroFlex, vous mesurez votre tendance de fond, puis votre état du moment.
-      Vous découvrez ainsi votre niveau d’élasticité&nbsp;: votre capacité à ralentir, vous activer,
-      récupérer et vous adapter.
+      Avec les tests NeuroFlex, vous mesurez votre tendance de fond, puis votre etat du moment.
+      Vous decouvrez ainsi votre niveau d'elasticite&nbsp;: votre capacite a ralentir, vous activer,
+      recuperer et vous adapter.
     </p>
 
     <p>
-      Ensuite, l’application vous oriente vers une respiration et des exercices adaptés à votre état.
+      Ensuite, l'application vous oriente vers une respiration et des exercices adaptes a votre etat.
     </p>
 
     <p>
-      <strong>La vraie force ne vient pas du fait d’encaisser, mais de la capacité que nous avons à rester flexibles.</strong>
+      <strong>La vraie force ne vient pas du fait d'encaisser, mais de la capacite que nous avons a rester flexibles.</strong>
     </p>
 
     <p>
-      M.U.R. vous aide à retrouver cette souplesse.
+      M.U.R. vous aide a retrouver cette souplesse.
     </p>
 
     <div class="info-actions">
@@ -632,7 +978,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
       <div class="presentation-words">
         <span><b>M</b><em>esurer</em></span><div class="presentation-line"></div>
         <span><b>U</b><em>tiliser</em></span><div class="presentation-line"></div>
-        <span><b>R</b><em>éguler</em></span>
+        <span><b>R</b><em>eguler</em></span>
       </div>
     </div>
     <button class="presentation-enter" type="button" onclick="enterApp()">Entrer →</button>
@@ -662,7 +1008,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
         <div class="home-cursor"></div>
         <div class="home-circle-text">
           <strong id="homeMain">Mesurer</strong>
-          <small id="homeSub">Découvrez votre tendance</small>
+          <small id="homeSub">Decouvrez votre tendance</small>
           <div class="home-dots">
             <i id="homeDot0" class="active"></i><i id="homeDot1"></i><i id="homeDot2"></i><i id="homeDot3"></i>
           </div>
@@ -691,9 +1037,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
       <div class="status">
         <div>
           <h2>Tendance actuelle</h2>
-          <p id="homeTrend" class="help">Réalisez un test complet.</p>
+          <p id="homeTrend" class="help">Realisez un test complet.</p>
         </div>
-        <div class="badge"><span class="dot"></span><span id="homeScore">—</span></div>
+        <div class="badge"><span class="dot"></span><span id="homeScore">-</span></div>
       </div>
     </section>
   </section>
@@ -703,26 +1049,26 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
       <div class="status">
         <div>
           <h2>Tests NeuroFlex</h2>
-          <p class="help">Profil de fond, état du moment, puis résultat.</p>
+          <p class="help">Profil de fond, etat du moment, puis resultat.</p>
         </div>
         <div class="badge"><span class="dot"></span><span>Tests</span></div>
       </div>
       <div class="tabs">
         <button id="tabKis" class="active" type="button" onclick="showTest('kis')">ki.S</button>
         <button id="tabNow" type="button" onclick="showTest('now')">Ici & Maintenant</button>
-        <button id="tabResult" type="button" onclick="showTest('result')">Résultat</button>
+        <button id="tabResult" type="button" onclick="showTest('result')">Resultat</button>
       </div>
     </section>
 
     <section id="testKis" class="test-view active">
       <section class="card">
         <div class="status">
-          <div><h2>Test ki.S</h2><p class="help">15 questions rapides. Après validation, le test est verrouillé.</p></div>
+          <div><h2>Test ki.S</h2><p class="help">15 questions rapides. Apres validation, le test est verrouille.</p></div>
           <div class="badge"><span class="dot"></span><span id="kisCount">1 / 15</span></div>
         </div>
         <div id="kisBox"></div>
         <div class="row" style="margin-top:10px">
-          <button class="secondary" type="button" onclick="prevKis()">Précédent</button>
+          <button class="secondary" type="button" onclick="prevKis()">Precedent</button>
           <button class="secondary" type="button" onclick="nextKis()">Suivant</button>
         </div>
         <button id="kisValidateBtn" class="secondary" type="button" onclick="finishKis()" style="margin-top:10px">Valider ki.S</button>
@@ -733,8 +1079,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
     <section id="testNow" class="test-view">
       <section class="card">
         <h2>Ici & Maintenant</h2>
-        <p class="help">Déplacez les curseurs selon votre état actuel.</p>
-        <div class="scale"><label class="mini-label">Énergie</label><input id="nowEnergy" type="range" min="0" max="4" step="1" value="2"></div>
+        <p class="help">Deplacez les curseurs selon votre etat actuel.</p>
+        <div class="scale"><label class="mini-label">Energie</label><input id="nowEnergy" type="range" min="0" max="4" step="1" value="2"></div>
         <div class="scale"><label class="mini-label">Respiration</label><input id="nowBreath" type="range" min="0" max="4" step="1" value="2"></div>
         <div class="scale"><label class="mini-label">Mental</label><input id="nowMind" type="range" min="0" max="4" step="1" value="2"></div>
         <div class="scale"><label class="mini-label">Corps</label><input id="nowBody" type="range" min="0" max="4" step="1" value="2"></div>
@@ -752,12 +1098,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
         </div>
         <div style="text-align:center;margin:15px 0">
           <strong id="neuroScore" style="font-size:44px;line-height:1">0</strong>
-          <p id="neuroZone" class="help">État non mesuré</p>
+          <p id="neuroZone" class="help">Etat non mesure</p>
         </div>
-        <div id="neuroText" class="help">Réalisez les deux tests.</div>
+        <div id="neuroText" class="help">Realisez les deux tests.</div>
         <div class="row result-actions" style="margin-top:12px">
-          <button id="resultBreathBtn" class="secondary" type="button" onclick="applyRecommendedBreath()">Respiration conseillée</button>
-          <button id="resultExerciseBtn" class="secondary" type="button" onclick="openRecommendedExercises()">Exercices conseillés</button>
+          <button id="resultBreathBtn" class="secondary" type="button" onclick="applyRecommendedBreath()">Respiration conseillee</button>
+          <button id="resultExerciseBtn" class="secondary" type="button" onclick="openRecommendedExercises()">Exercices conseilles</button>
         </div>
       </section>
     </section>
@@ -767,28 +1113,94 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
     <section class="card">
       <div class="status">
         <div>
-          <h2>Respiration guidée</h2>
+          <h2>Respiration guidee</h2>
           <p class="help">Choisissez votre zone ou ouvrez le mode manuel.</p>
         </div>
         <div class="badge"><span class="dot"></span><span id="breathZone">Vert</span></div>
       </div>
 
       <div class="protocol-box">
-        <label class="mini-label" for="protocolSelect">Choisir une respiration</label>
-        <select id="protocolSelect" onchange="changeProtocol()">
-          <option value="boost">Bleu — Relance douce 4 / 0 / 3 / 0 — 2 min</option>
-          <option value="365" selected>Vert — Respiration 365 5 / 0 / 5 / 0 — 5 min</option>
-          <option value="coherence">Vert — Cohérence 5 / 0 / 5 / 0 — 5 min</option>
-          <option value="square">Vert — Respiration carrée 4 / 4 / 4 / 4 — 3 min</option>
-          <option value="regulate">Orange — Régulation douce 4 / 0 / 6 / 0 — 3 min</option>
-          <option value="frein">Rouge — Frein 3 / 0 / 8 / 0 — 2 min</option>
-          <option value="478">Rouge — 4 / 7 / 8 / 0 — 2 min</option>
-          <option value="sleep">Sommeil — 3 / 0 / 7 / 0 — 7 min</option>
+        <label class="mini-label">Choisir une respiration</label>
+
+        <select id="protocolSelect" class="protocol-hidden" onchange="changeProtocol()">
+          <option value="boost">Bleu - Relance douce 4 / 0 / 3 / 0 - 2 min</option>
+          <option value="365" selected>Vert - Respiration 365 5 / 0 / 5 / 0 - 5 min</option>
+          <option value="coherence">Vert - Coherence 5 / 0 / 5 / 0 - 5 min</option>
+          <option value="square">Vert - Respiration carree 4 / 4 / 4 / 4 - 3 min</option>
+          <option value="regulate">Orange - Regulation douce 4 / 0 / 6 / 0 - 3 min</option>
+          <option value="frein">Rouge - Frein 3 / 0 / 8 / 0 - 2 min</option>
+          <option value="478">Rouge - 4 / 7 / 8 / 0 - 2 min</option>
+          <option value="sleep">Nuit - Sommeil 3 / 0 / 7 / 0 - 7 min</option>
         </select>
+
+        <section id="breathMaster" class="breath-master open">
+          <button class="breath-master-head" type="button" onclick="toggleBreathMaster()">
+            <span class="breath-master-title">
+              <span class="breath-master-logo">
+                <svg viewBox="0 0 24 24"><path d="M5 12c2-4 12-4 14 0"/><path d="M5 12c2 4 12 4 14 0"/><path d="M12 5v14"/></svg>
+              </span>
+              <span>
+                <strong>Respirations guidees</strong>
+                <small>Toutes les respirations classees par couleur</small>
+              </span>
+            </span>
+            <span class="breath-master-chev">⌄</span>
+          </button>
+
+          <div class="breath-master-body">
+            <button id="breathCard_boost" class="breath-choice" style="--family-color:#3b82f6" type="button" onclick="selectBreath('boost')">
+              <span class="breath-icon"><svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M7 10l5-5 5 5"/></svg></span>
+              <span><strong>Relance douce</strong><small>4 / 0 / 3 / 0</small><span class="zone-chip"><i></i>Bleu · Activer</span></span>
+              <b>2 min</b>
+            </button>
+
+            <button id="breathCard_365" class="breath-choice active" style="--family-color:#22c55e" type="button" onclick="selectBreath('365')">
+              <span class="breath-icon"><svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M8 8c2.6 2.6 5.4 2.6 8 0"/><path d="M8 16c2.6-2.6 5.4-2.6 8 0"/></svg></span>
+              <span><strong>Respiration 365</strong><small>5 / 0 / 5 / 0</small><span class="zone-chip"><i></i>Vert · Equilibrer</span></span>
+              <b>5 min</b>
+            </button>
+
+            <button id="breathCard_coherence" class="breath-choice" style="--family-color:#22c55e" type="button" onclick="selectBreath('coherence')">
+              <span class="breath-icon"><svg viewBox="0 0 24 24"><path d="M6 12c2-4 10-4 12 0"/><path d="M6 12c2 4 10 4 12 0"/></svg></span>
+              <span><strong>Coherence</strong><small>5 / 0 / 5 / 0</small><span class="zone-chip"><i></i>Vert · Equilibrer</span></span>
+              <b>5 min</b>
+            </button>
+
+            <button id="breathCard_square" class="breath-choice" style="--family-color:#22c55e" type="button" onclick="selectBreath('square')">
+              <span class="breath-icon"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></span>
+              <span><strong>Respiration carree</strong><small>4 / 4 / 4 / 4</small><span class="zone-chip"><i></i>Vert · Equilibrer</span></span>
+              <b>3 min</b>
+            </button>
+
+            <button id="breathCard_regulate" class="breath-choice" style="--family-color:#f59e0b" type="button" onclick="selectBreath('regulate')">
+              <span class="breath-icon"><svg viewBox="0 0 24 24"><path d="M5 8h8"/><path d="M5 12h11"/><path d="M5 16h14"/></svg></span>
+              <span><strong>Regulation douce</strong><small>4 / 0 / 6 / 0</small><span class="zone-chip"><i></i>Orange · Reguler</span></span>
+              <b>3 min</b>
+            </button>
+
+            <button id="breathCard_frein" class="breath-choice" style="--family-color:#ef4444" type="button" onclick="selectBreath('frein')">
+              <span class="breath-icon"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M7 14l5 5 5-5"/></svg></span>
+              <span><strong>Frein</strong><small>3 / 0 / 8 / 0</small><span class="zone-chip"><i></i>Rouge · Freiner</span></span>
+              <b>2 min</b>
+            </button>
+
+            <button id="breathCard_478" class="breath-choice" style="--family-color:#ef4444" type="button" onclick="selectBreath('478')">
+              <span class="breath-icon"><svg viewBox="0 0 24 24"><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg></span>
+              <span><strong>4 / 7 / 8</strong><small>4 / 7 / 8 / 0</small><span class="zone-chip"><i></i>Rouge · Freiner</span></span>
+              <b>2 min</b>
+            </button>
+
+            <button id="breathCard_sleep" class="breath-choice" style="--family-color:#6366f1" type="button" onclick="selectBreath('sleep')">
+              <span class="breath-icon"><svg viewBox="0 0 24 24"><path d="M17 17.5A7 7 0 0 1 10.5 7c.4-1 .8-1.8 1.5-2.5A8 8 0 1 0 19.5 16c-.8.7-1.6 1.2-2.5 1.5Z"/></svg></span>
+              <span><strong>Sommeil</strong><small>3 / 0 / 7 / 0</small><span class="zone-chip"><i></i>Nuit · Sommeil</span></span>
+              <b>7 min</b>
+            </button>
+          </div>
+        </section>
       </div>
 
       <div class="scale">
-        <div class="scale-labels"><span>Bleu<br><small>dynamiser</small></span><span>Vert<br><small>équilibrer</small></span><span>Rouge<br><small>freiner</small></span></div>
+        <div class="scale-labels"><span>Bleu<br><small>dynamiser</small></span><span>Vert<br><small>equilibrer</small></span><span>Rouge<br><small>freiner</small></span></div>
         <input id="breathSlider" type="range" min="-2" max="3" step="1" value="0" oninput="changeSlider()">
       </div>
 
@@ -808,7 +1220,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
         </div>
       </div>
 
-      <p id="breathMessage" class="help">Vert : respiration régulière, stable et facile à tenir.</p>
+      <p id="breathMessage" class="help">Vert : respiration reguliere, stable et facile a tenir.</p>
     </section>
 
     <section class="card">
@@ -822,13 +1234,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
           <circle class="bg" cx="110" cy="110" r="98"></circle>
           <circle id="progressCircle" class="line" cx="110" cy="110" r="98"></circle>
         </svg>
-        <button id="orb" class="orb" type="button" onclick="toggleBreathing()"><span id="phaseText">Êtes-vous prêt ?</span></button>
+        <button id="orb" class="orb" type="button" onclick="toggleBreathing()"><span id="phaseText">Etes-vous pret ?</span></button>
       </div>
 
       <p id="phaseHint" class="help" style="text-align:center">Touchez le cercle pour commencer.</p>
       <div class="row">
         <button id="stopBreathBtn" class="secondary" type="button" onclick="stopBreathing()" hidden>Fermer</button>
-        <button class="secondary" type="button" onclick="toggleSound()" id="soundBtn">Son : activé</button>
+        <button class="secondary" type="button" onclick="toggleSound()" id="soundBtn">Son : active</button>
       </div>
     </section>
   </section>
@@ -838,7 +1250,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
       <div class="status">
         <div>
           <h2>Exercices M.U.R.</h2>
-          <p class="help">Les zones sont fermées au départ. Touchez une couleur pour l’ouvrir.</p>
+          <p class="help">Les zones sont fermees au depart. Touchez une couleur pour l'ouvrir.</p>
         </div>
         <button class="badge logo-badge" type="button" onclick="closeExercise()" aria-label="Fermer l'exercice">
           <span class="nav-ico close-panel">
@@ -861,10 +1273,17 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
   <section id="stats" class="page">
     <section class="card fold open" id="statsFold">
       <button class="fold-head" type="button" onclick="toggleFold('statsFold')">
-        <span>Statistiques générales</span><span>⌄</span>
+        <span>Statistiques generales</span><span>⌄</span>
       </button>
       <div class="fold-body">
-        <p class="help">Les séances et exercices sont enregistrés sur ce téléphone.</p>
+        <p class="help">Les seances et exercices sont enregistres sur ce telephone.</p>
+        <div class="stats-periods">
+          <button id="periodDay" class="stats-period-btn active" type="button" onclick="setStatsPeriod('day')">Jour</button>
+          <button id="periodWeek" class="stats-period-btn" type="button" onclick="setStatsPeriod('week')">Semaine</button>
+          <button id="periodMonth" class="stats-period-btn" type="button" onclick="setStatsPeriod('month')">Mois</button>
+          <button id="periodYear" class="stats-period-btn" type="button" onclick="setStatsPeriod('year')">Annee</button>
+        </div>
+        <div id="statsPeriodLabel" class="stats-period-label">Aujourd'hui</div>
         <div class="stats-grid">
           <button class="stats-mini resp" type="button">
             <span class="mini-ico" aria-hidden="true">
@@ -895,57 +1314,59 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:34px;heigh
     </section>
 
     <section class="card fold open" id="neuroFold">
-      <button class="fold-head" type="button" onclick="toggleFold('neuroFold')"><span>Évolution NeuroFlex</span><span>⌄</span></button>
+      <button class="fold-head" type="button" onclick="toggleFold('neuroFold')"><span>Evolution NeuroFlex</span><span>⌄</span></button>
       <div class="fold-body">
-        <p class="help">Chaque test NeuroFlex est enregistré comme un point. Vous pouvez en faire plusieurs par jour pour suivre l’évolution.</p>
+        <p class="help">Chaque test NeuroFlex est enregistre comme un point. Vous pouvez en faire plusieurs par jour pour suivre l'evolution.</p>
         <div id="neuroChartBox" class="neuro-chart">
-          <div class="neuro-empty">Aucun point pour le moment. Réalisez un test NeuroFlex complet pour commencer la courbe.</div>
+          <div class="neuro-empty">Aucun point pour le moment. Realisez un test NeuroFlex complet pour commencer la courbe.</div>
         </div>
         <div class="neuro-legend"><span>Bleu</span><span>Vert</span><span>Orange</span><span>Rouge</span></div>
-        <p id="statNeuroText" class="help">Aucun test complet enregistré.</p>
+        <p id="statNeuroText" class="help">Aucun test complet enregistre.</p>
       </div>
     </section>
 
     <section class="card fold" id="historyFold">
-      <button class="fold-head" type="button" onclick="toggleFold('historyFold')"><span>Historique récent</span><span>⌄</span></button>
+      <button class="fold-head" type="button" onclick="toggleFold('historyFold')"><span>Historique recent</span><span>⌄</span></button>
       <div class="fold-body">
         <div id="historyList" class="history-list"></div>
       </div>
     </section>
 
-    <section class="card">
-      <h2>Sauvegarde</h2>
-      <p class="help">Copiez vos données ou restaurez une ancienne sauvegarde.</p>
-      <div class="row" style="margin-top:10px">
-        <button class="secondary" type="button" onclick="exportData()">Sauvegarder</button>
-        <button class="secondary" type="button" onclick="importData()">Importer</button>
+    <section class="card fold" id="backupFold">
+      <button class="fold-head" type="button" onclick="toggleBackup()"><span>Sauvegarde</span><span>⌄</span></button>
+      <div id="backupBody" class="fold-body">
+        <p class="help">Copiez vos donnees ou restaurez une ancienne sauvegarde.</p>
+        <div class="row" style="margin-top:10px">
+          <button class="secondary" type="button" onclick="exportData()">Sauvegarder</button>
+          <button class="secondary" type="button" onclick="importData()">Importer</button>
+        </div>
+        <textarea id="backupBox" style="display:none;width:100%;min-height:130px;margin-top:10px;border-radius:15px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:white;padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:11px"></textarea>
       </div>
-      <textarea id="backupBox" style="display:none;width:100%;min-height:130px;margin-top:10px;border-radius:15px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:white;padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:11px"></textarea>
     </section>
   </section>
 
   <section id="settings" class="page">
     <section class="card">
       <div class="status">
-        <div><h2>Paramètres</h2><p class="help">Personnalisez votre profil.</p></div>
+        <div><h2>Parametres</h2><p class="help">Personnalisez votre profil.</p></div>
         <button class="icon-btn" type="button" onclick="showPage('home')">×</button>
       </div>
       <div style="margin-top:12px">
-        <label class="mini-label" for="userName">Prénom ou pseudo</label>
-        <input id="userName" type="text" placeholder="Votre prénom ou pseudo" autocomplete="nickname">
+        <label class="mini-label" for="userName">Prenom ou pseudo</label>
+        <input id="userName" type="text" placeholder="Votre prenom ou pseudo" autocomplete="nickname">
       </div>
       <button class="secondary" type="button" onclick="saveProfile()" style="margin-top:10px">Enregistrer le profil</button>
     </section>
 
     <section class="card">
       <h2>Comment fonctionne M.U.R&nbsp;?</h2>
-      <p class="help"><strong>Mesurer</strong> pour comprendre. <strong>Utiliser</strong> pour agir. <strong>Réguler</strong> pour retrouver de la marge.</p>
-      <p class="help">Le but n’est pas d’être toujours calme. Le but est de retrouver de la souplesse : pouvoir ralentir, s’activer ou récupérer au bon moment.</p>
+      <p class="help"><strong>Mesurer</strong> pour comprendre. <strong>Utiliser</strong> pour agir. <strong>Reguler</strong> pour retrouver de la marge.</p>
+      <p class="help">Le but n'est pas d'etre toujours calme. Le but est de retrouver de la souplesse : pouvoir ralentir, s'activer ou recuperer au bon moment.</p>
     </section>
 
     <section class="card">
-      <h2>Réinitialiser les tests</h2>
-      <p class="help">Revenir au début du parcours NeuroFlex.</p>
+      <h2>Reinitialiser les tests</h2>
+      <p class="help">Revenir au debut du parcours NeuroFlex.</p>
       <button class="secondary" type="button" onclick="resetTests()">Reset · refaire ki.S</button>
     </section>
   </section>
@@ -1014,42 +1435,42 @@ const $ = id => document.getElementById(id);
 const COLORS = {bleu:"#3b82f6", vert:"#22c55e", orange:"#f59e0b", rouge:"#ef4444"};
 
 const EXERCISES = {
-  pause:{zone:"rouge",title:"Pause vagale",files:["pause-vagale.png","Pause vagale.png","pause vagale.png"],sounds:["pause-vagale.mp3","Pause vagale.mp3","pause vagale.mp3"],caption:"Ralentir • relâcher • revenir au calme",why:["La Pause vagale utilise une règle simple : une expiration plus longue que l’inspiration envoie au corps un signal de ralentissement.","Le système neurovégétatif comprend très bien le rythme. Une expiration douce, lente et prolongée agit comme un frein naturel.","En relâchant la mâchoire, les épaules et le ventre, on diminue les messages de tension envoyés au cerveau."]},
-  double:{zone:"rouge",title:"Double inspiration",files:["Double inspiration.png","double-inspiration.png","double inspiration.png"],sounds:["double-inspiration.mp3","Double inspiration.mp3","double inspiration.mp3"],caption:"Relancer l’air • déverrouiller • souffler",why:["La double inspiration relance un cycle respiratoire bloqué, court ou trop haut.","On inspire une première fois, puis on ajoute une petite deuxième inspiration sans forcer.","Ensuite, l’expiration longue permet au système de redescendre."]},
-  merle:{zone:"rouge",title:"Chant du merle",files:["chant-du-merle.png","Chant du merle.png","chant du merle.png"],sounds:["chant-du-merle.mp3","Chant du merle.mp3","chant du merle.mp3"],caption:"Écouter • respirer • se reconnecter",why:["Le chant du merle agit comme un signal de sécurité.","Le son naturel détourne doucement l’attention de la tension et crée un point d’appui extérieur.","Il ne s’agit pas de se calmer de force, mais de laisser le système entendre autre chose que l’alerte."]},
-  ancrage:{zone:"rouge",title:"Ancrage",files:["ancrage.png","Ancrage.png"],sounds:["ancrage.mp3","Ancrage.mp3"],caption:"Sentir ses appuis • stabiliser • revenir ici",why:["L’ancrage ramène l’attention vers les appuis, le poids du corps et le contact avec le sol.","Quand le mental s’emballe, le corps peut redevenir une base simple et stable.","Le système reçoit une information concrète : je suis ici, je suis porté."]},
+  pause:{zone:"rouge",title:"Pause vagale",files:["pause-vagale.png","Pause vagale.png","pause vagale.png"],sounds:["pause-vagale.mp3","Pause vagale.mp3","pause vagale.mp3"],caption:"Ralentir • relacher • revenir au calme",why:["La Pause vagale utilise une regle simple : une expiration plus longue que l'inspiration envoie au corps un signal de ralentissement.","Le systeme neurovegetatif comprend tres bien le rythme. Une expiration douce, lente et prolongee agit comme un frein naturel.","En relachant la machoire, les epaules et le ventre, on diminue les messages de tension envoyes au cerveau."]},
+  double:{zone:"rouge",title:"Double inspiration",files:["Double inspiration.png","double-inspiration.png","double inspiration.png"],sounds:["double-inspiration.mp3","Double inspiration.mp3","double inspiration.mp3"],caption:"Relancer l'air • deverrouiller • souffler",why:["La double inspiration relance un cycle respiratoire bloque, court ou trop haut.","On inspire une premiere fois, puis on ajoute une petite deuxieme inspiration sans forcer.","Ensuite, l'expiration longue permet au systeme de redescendre."]},
+  merle:{zone:"rouge",title:"Chant du merle",files:["chant-du-merle.png","Chant du merle.png","chant du merle.png"],sounds:["chant-du-merle.mp3","Chant du merle.mp3","chant du merle.mp3"],caption:"Ecouter • respirer • se reconnecter",why:["Le chant du merle agit comme un signal de securite.","Le son naturel detourne doucement l'attention de la tension et cree un point d'appui exterieur.","Il ne s'agit pas de se calmer de force, mais de laisser le systeme entendre autre chose que l'alerte."]},
+  ancrage:{zone:"rouge",title:"Ancrage",files:["ancrage.png","Ancrage.png"],sounds:["ancrage.mp3","Ancrage.mp3"],caption:"Sentir ses appuis • stabiliser • revenir ici",why:["L'ancrage ramene l'attention vers les appuis, le poids du corps et le contact avec le sol.","Quand le mental s'emballe, le corps peut redevenir une base simple et stable.","Le systeme recoit une information concrete : je suis ici, je suis porte."]},
 
-  vagues:{zone:"orange",title:"Pas de vagues",files:["Pas de vagues.png","pas-de-vagues.png","pas de vagues.png"],sounds:["pas-de-vagues.mp3","Pas de vagues.mp3","pas de vagues.mp3"],caption:"Écouter • ralentir • se laisser porter",why:["Le bruit régulier des vagues crée un repère sonore prévisible.","Cette répétition apaise l’attention, diminue la sensation d’alerte et aide le système neurovégétatif à se réguler.","Le rythme extérieur devient un support pour ralentir sans effort."]},
-  fil:{zone:"orange",title:"Le fil du souffle",files:["fil du souffle.png","Fil du souffle.png","fil-du-souffle.png"],sounds:["fil-du-souffle.mp3","fil du souffle.mp3","Fil du souffle.mp3"],caption:"Suivre • respirer • apaiser",why:["Suivre mentalement un fil donne une direction simple à l’attention.","Le souffle devient plus régulier sans devoir être contrôlé fortement.","C’est une manière douce de reprendre la main quand la tension monte."]},
-  regard:{zone:"orange",title:"Regard horizon",files:["Regard horizon.png","regard-horizon.png","regard horizon.png"],sounds:["regard-horizon.mp3","Regard horizon.mp3","regard horizon.mp3"],caption:"Ouvrir • élargir • relâcher",why:["Élargir le regard diminue la focalisation étroite liée à l’alerte.","Le champ visuel plus ouvert donne au cerveau une information de sécurité.","Le corps peut alors relâcher une partie de sa tension de surveillance."]},
-  mains:{zone:"orange",title:"Mains apaisantes",files:["Mains apaisantes.png","mains-apaisantes.png","mains apaisantes.png"],sounds:["mains-apaisantes.mp3","Mains apaisantes.mp3","mains apaisantes.mp3"],caption:"Toucher • calmer • sécuriser",why:["Le contact des mains apporte une information corporelle directe.","La pression douce et stable aide à sécuriser le système.","L’attention revient au corps plutôt que de rester uniquement dans le mental."]},
+  vagues:{zone:"orange",title:"Pas de vagues",files:["Pas de vagues.png","pas-de-vagues.png","pas de vagues.png"],sounds:["pas-de-vagues.mp3","Pas de vagues.mp3","pas de vagues.mp3"],caption:"Ecouter • ralentir • se laisser porter",why:["Le bruit regulier des vagues cree un repere sonore previsible.","Cette repetition apaise l'attention, diminue la sensation d'alerte et aide le systeme neurovegetatif a se reguler.","Le rythme exterieur devient un support pour ralentir sans effort."]},
+  fil:{zone:"orange",title:"Le fil du souffle",files:["fil du souffle.png","Fil du souffle.png","fil-du-souffle.png"],sounds:["fil-du-souffle.mp3","fil du souffle.mp3","Fil du souffle.mp3"],caption:"Suivre • respirer • apaiser",why:["Suivre mentalement un fil donne une direction simple a l'attention.","Le souffle devient plus regulier sans devoir etre controle fortement.","C'est une maniere douce de reprendre la main quand la tension monte."]},
+  regard:{zone:"orange",title:"Regard horizon",files:["Regard horizon.png","regard-horizon.png","regard horizon.png"],sounds:["regard-horizon.mp3","Regard horizon.mp3","regard horizon.mp3"],caption:"Ouvrir • elargir • relacher",why:["Elargir le regard diminue la focalisation etroite liee a l'alerte.","Le champ visuel plus ouvert donne au cerveau une information de securite.","Le corps peut alors relacher une partie de sa tension de surveillance."]},
+  mains:{zone:"orange",title:"Mains apaisantes",files:["Mains apaisantes.png","mains-apaisantes.png","mains apaisantes.png"],sounds:["mains-apaisantes.mp3","Mains apaisantes.mp3","mains apaisantes.mp3"],caption:"Toucher • calmer • securiser",why:["Le contact des mains apporte une information corporelle directe.","La pression douce et stable aide a securiser le systeme.","L'attention revient au corps plutot que de rester uniquement dans le mental."]},
 
-  foret:{zone:"vert",title:"Promenade dans la forêt",files:["Promenade dans la forêt.png","promenade dans la forêt.png","promenade-foret.png","Promenade foret.png"],sounds:["promenade-foret.mp3","Promenade dans la forêt.mp3","promenade dans la forêt.mp3"],caption:"Marcher assis • écouter • respirer",why:["Même assis, l’univers sonore d’une forêt peut créer une sensation de déplacement doux.","Les sons naturels donnent au système un décor stable, vivant et non menaçant.","L’attention se promène, le souffle retrouve un rythme plus souple."]},
-  lac:{zone:"vert",title:"Lac tranquille",files:["Lac tranquille.png","lac-tranquille.png","lac tranquille.png"],sounds:["lac-tranquille.mp3","Lac tranquille.mp3","lac tranquille.mp3"],caption:"Stabiliser • poser • laisser revenir",why:["L’évocation d’un lac calme favorise la stabilité attentionnelle.","Le corps reçoit une invitation à se poser plutôt qu’à réagir.","La régularité du paysage intérieur soutient le retour à l’équilibre."]},
-  balancier:{zone:"vert",title:"Balancier du corps",files:["Balancier du corps.png","balancier du corps.png","balancier-du-corps.png"],sounds:["balancier-du-corps.mp3","Balancier du corps.mp3","balancier du corps.mp3"],caption:"Osciller • relâcher • retrouver l’axe",why:["Un mouvement de balancier très doux donne un rythme simple au corps.","L’oscillation aide à sortir d’une posture figée.","Le système retrouve progressivement un axe plus disponible."]},
-  presence:{zone:"vert",title:"Présence corporelle",files:["Présence corporelle.png","presence-corporelle.png","présence corporelle.png"],sounds:["presence-corporelle.mp3","Présence corporelle.mp3","présence corporelle.mp3"],caption:"Sentir • habiter • revenir ici",why:["La présence corporelle ramène l’attention vers les sensations simples.","Elle diminue l’éparpillement mental en donnant des repères concrets.","Le corps redevient un lieu d’appui plutôt qu’un lieu de tension."]},
+  foret:{zone:"vert",title:"Promenade dans la foret",files:["Promenade dans la foret.png","promenade dans la foret.png","promenade-foret.png","Promenade foret.png"],sounds:["promenade-foret.mp3","Promenade dans la foret.mp3","promenade dans la foret.mp3"],caption:"Marcher assis • ecouter • respirer",why:["Meme assis, l'univers sonore d'une foret peut creer une sensation de deplacement doux.","Les sons naturels donnent au systeme un decor stable, vivant et non menacant.","L'attention se promene, le souffle retrouve un rythme plus souple."]},
+  lac:{zone:"vert",title:"Lac tranquille",files:["Lac tranquille.png","lac-tranquille.png","lac tranquille.png"],sounds:["lac-tranquille.mp3","Lac tranquille.mp3","lac tranquille.mp3"],caption:"Stabiliser • poser • laisser revenir",why:["L'evocation d'un lac calme favorise la stabilite attentionnelle.","Le corps recoit une invitation a se poser plutot qu'a reagir.","La regularite du paysage interieur soutient le retour a l'equilibre."]},
+  balancier:{zone:"vert",title:"Balancier du corps",files:["Balancier du corps.png","balancier du corps.png","balancier-du-corps.png"],sounds:["balancier-du-corps.mp3","Balancier du corps.mp3","balancier du corps.mp3"],caption:"Osciller • relacher • retrouver l'axe",why:["Un mouvement de balancier tres doux donne un rythme simple au corps.","L'oscillation aide a sortir d'une posture figee.","Le systeme retrouve progressivement un axe plus disponible."]},
+  presence:{zone:"vert",title:"Presence corporelle",files:["Presence corporelle.png","presence-corporelle.png","presence corporelle.png"],sounds:["presence-corporelle.mp3","Presence corporelle.mp3","presence corporelle.mp3"],caption:"Sentir • habiter • revenir ici",why:["La presence corporelle ramene l'attention vers les sensations simples.","Elle diminue l'eparpillement mental en donnant des reperes concrets.","Le corps redevient un lieu d'appui plutot qu'un lieu de tension."]},
 
-  bell:{zone:"bleu",title:"Bell Bell Bell",files:["Bell Bell Bell.png","bell-bell-bell.png","bell bell bell.png"],sounds:["bell-bell-bell.mp3","Bell Bell Bell.mp3","bell bell bell.mp3"],caption:"Réveiller • éclaircir • remettre de l’énergie",why:["Les sons de cloche attirent l’attention de façon nette et brève.","Ils peuvent créer une petite activation utile quand l’énergie est basse.","L’objectif est de réveiller sans agresser : remettre de la clarté et un peu d’élan."]},
-  lumiere:{zone:"bleu",title:"Lumière du matin",files:["Lumière du matin.png","lumiere-du-matin.png","lumière du matin.png"],sounds:["lumiere-du-matin.mp3","Lumière du matin.mp3","lumière du matin.mp3"],caption:"Éclairer • activer • commencer",why:["La lumière du matin symbolise le démarrage progressif.","Elle aide à orienter l’attention vers l’éveil et la disponibilité.","Le système reçoit un signal d’activation douce, sans précipitation."]},
-  etincelle:{zone:"bleu",title:"Étincelle",files:["Étincelle.png","etincelle.png","étincelle.png"],sounds:["etincelle.mp3","Étincelle.mp3","étincelle.mp3"],caption:"Relancer • réveiller • allumer",why:["L’étincelle représente une activation courte et précise.","Elle aide à sortir d’un état trop bas ou trop lourd.","On ne cherche pas à forcer, mais à rallumer juste assez d’énergie."]},
-  elan:{zone:"bleu",title:"Élan vertical",files:["Élan vertical.png","elan-vertical.png","élan vertical.png"],sounds:["elan-vertical.mp3","Élan vertical.mp3","élan vertical.mp3"],caption:"Se redresser • activer • repartir",why:["Se redresser modifie immédiatement l’état corporel.","L’axe vertical favorise une sensation d’élan et de disponibilité.","Le système reçoit une information simple : je peux repartir."]}
+  bell:{zone:"bleu",title:"Bell Bell Bell",files:["Bell Bell Bell.png","bell-bell-bell.png","bell bell bell.png"],sounds:["bell-bell-bell.mp3","Bell Bell Bell.mp3","bell bell bell.mp3"],caption:"Reveiller • eclaircir • remettre de l'energie",why:["Les sons de cloche attirent l'attention de facon nette et breve.","Ils peuvent creer une petite activation utile quand l'energie est basse.","L'objectif est de reveiller sans agresser : remettre de la clarte et un peu d'elan."]},
+  lumiere:{zone:"bleu",title:"Lumiere du matin",files:["Lumiere du matin.png","lumiere-du-matin.png","lumiere du matin.png"],sounds:["lumiere-du-matin.mp3","Lumiere du matin.mp3","lumiere du matin.mp3"],caption:"Eclairer • activer • commencer",why:["La lumiere du matin symbolise le demarrage progressif.","Elle aide a orienter l'attention vers l'eveil et la disponibilite.","Le systeme recoit un signal d'activation douce, sans precipitation."]},
+  etincelle:{zone:"bleu",title:"Etincelle",files:["Etincelle.png","etincelle.png","etincelle.png"],sounds:["etincelle.mp3","Etincelle.mp3","etincelle.mp3"],caption:"Relancer • reveiller • allumer",why:["L'etincelle represente une activation courte et precise.","Elle aide a sortir d'un etat trop bas ou trop lourd.","On ne cherche pas a forcer, mais a rallumer juste assez d'energie."]},
+  elan:{zone:"bleu",title:"Elan vertical",files:["Elan vertical.png","elan-vertical.png","elan vertical.png"],sounds:["elan-vertical.mp3","Elan vertical.mp3","elan vertical.mp3"],caption:"Se redresser • activer • repartir",why:["Se redresser modifie immediatement l'etat corporel.","L'axe vertical favorise une sensation d'elan et de disponibilite.","Le systeme recoit une information simple : je peux repartir."]}
 };
 
 const ZONES = [
   {key:"rouge", title:"Rouge · Freiner", subtitle:"Briser le mur", items:["pause","double","merle","ancrage"]},
-  {key:"orange", title:"Orange · Réguler", subtitle:"Réguler la montée", items:["vagues","fil","regard","mains"]},
+  {key:"orange", title:"Orange · Reguler", subtitle:"Reguler la montee", items:["vagues","fil","regard","mains"]},
   {key:"vert", title:"Vert · Entretenir", subtitle:"Stabiliser", items:["foret","lac","balancier","presence"]},
-  {key:"bleu", title:"Bleu · Activer", subtitle:"Remettre de l’élan", items:["bell","lumiere","etincelle","elan"]}
+  {key:"bleu", title:"Bleu · Activer", subtitle:"Remettre de l'elan", items:["bell","lumiere","etincelle","elan"]}
 ];
 
 const BREATHS = {
-  boost:{key:"boost",zone:"Bleu",color:COLORS.bleu,i:4,hi:0,e:3,ho:0,duration:120,msg:"Bleu : relance douce, remettre un peu d’élan sans brusquer le système."},
-  "365":{key:"365",zone:"Vert",color:COLORS.vert,i:5,hi:0,e:5,ho:0,duration:300,msg:"Vert : respiration régulière, stable et facile à tenir."},
-  coherence:{key:"coherence",zone:"Vert",color:COLORS.vert,i:5,hi:0,e:5,ho:0,duration:300,msg:"Cohérence 5/5 : inspiration et expiration s’équilibrent."},
-  square:{key:"square",zone:"Vert",color:COLORS.vert,i:4,hi:4,e:4,ho:4,duration:180,msg:"Respiration carrée : quatre temps égaux pour se recentrer."},
-  regulate:{key:"regulate",zone:"Orange",color:COLORS.orange,i:4,hi:0,e:6,ho:0,duration:180,msg:"Orange : l’expiration devient plus longue pour réguler la montée."},
-  frein:{key:"frein",zone:"Rouge",color:COLORS.rouge,i:3,hi:0,e:8,ho:0,duration:120,msg:"Rouge : expiration longue pour freiner franchement l’activation."},
-  "478":{key:"478",zone:"Rouge",color:COLORS.rouge,i:4,hi:7,e:8,ho:0,duration:120,msg:"4 / 7 / 8 : inspirer, suspendre, puis relâcher longtemps."},
+  boost:{key:"boost",zone:"Bleu",color:COLORS.bleu,i:4,hi:0,e:3,ho:0,duration:120,msg:"Bleu : relance douce, remettre un peu d'elan sans brusquer le systeme."},
+  "365":{key:"365",zone:"Vert",color:COLORS.vert,i:5,hi:0,e:5,ho:0,duration:300,msg:"Vert : respiration reguliere, stable et facile a tenir."},
+  coherence:{key:"coherence",zone:"Vert",color:COLORS.vert,i:5,hi:0,e:5,ho:0,duration:300,msg:"Coherence 5/5 : inspiration et expiration s'equilibrent."},
+  square:{key:"square",zone:"Vert",color:COLORS.vert,i:4,hi:4,e:4,ho:4,duration:180,msg:"Respiration carree : quatre temps egaux pour se recentrer."},
+  regulate:{key:"regulate",zone:"Orange",color:COLORS.orange,i:4,hi:0,e:6,ho:0,duration:180,msg:"Orange : l'expiration devient plus longue pour reguler la montee."},
+  frein:{key:"frein",zone:"Rouge",color:COLORS.rouge,i:3,hi:0,e:8,ho:0,duration:120,msg:"Rouge : expiration longue pour freiner franchement l'activation."},
+  "478":{key:"478",zone:"Rouge",color:COLORS.rouge,i:4,hi:7,e:8,ho:0,duration:120,msg:"4 / 7 / 8 : inspirer, suspendre, puis relacher longtemps."},
   sleep:{key:"sleep",zone:"Bleu nuit",color:"#6366f1",i:3,hi:0,e:7,ho:0,duration:420,msg:"Sommeil : inspiration courte, expiration longue, pour glisser vers le calme."}
 };
 
@@ -1075,21 +1496,21 @@ let neuroResult = null;
 let longPressTimer = null;
 
 const KIS_QUESTIONS = [
-  {text:"Face à une difficulté, je réagis vite.",dir:1},
-  {text:"Quand mon rythme s’accélère, j’ai du mal à ralentir.",dir:1},
-  {text:"Je préfère anticiper plutôt que subir.",dir:0},
-  {text:"Je peux rester calme même si les autres s’agitent.",dir:-1},
+  {text:"Face a une difficulte, je reagis vite.",dir:1},
+  {text:"Quand mon rythme s'accelere, j'ai du mal a ralentir.",dir:1},
+  {text:"Je prefere anticiper plutot que subir.",dir:0},
+  {text:"Je peux rester calme meme si les autres s'agitent.",dir:-1},
   {text:"Je sens rapidement les variations de mon corps.",dir:0},
-  {text:"Je passe facilement de l’action au repos.",dir:-1},
-  {text:"Je supporte mal l’attente ou l’imprévu.",dir:1},
-  {text:"J’ai besoin de temps pour me mettre en route.",dir:-1},
+  {text:"Je passe facilement de l'action au repos.",dir:-1},
+  {text:"Je supporte mal l'attente ou l'imprevu.",dir:1},
+  {text:"J'ai besoin de temps pour me mettre en route.",dir:-1},
   {text:"Je peux beaucoup donner avant de sentir la fatigue.",dir:1},
-  {text:"Je cherche naturellement l’équilibre.",dir:-1},
+  {text:"Je cherche naturellement l'equilibre.",dir:-1},
   {text:"Je me sens parfois entre deux rythmes.",dir:0},
-  {text:"Quand je suis lancé, je vais souvent trop loin.",dir:1},
-  {text:"J’aime les repères réguliers.",dir:-1},
-  {text:"Je m’adapte vite aux changements.",dir:1},
-  {text:"Je récupère bien quand je m’accorde une pause.",dir:-1}
+  {text:"Quand je suis lance, je vais souvent trop loin.",dir:1},
+  {text:"J'aime les reperes reguliers.",dir:-1},
+  {text:"Je m'adapte vite aux changements.",dir:1},
+  {text:"Je recupere bien quand je m'accorde une pause.",dir:-1}
 ];
 
 function openInfoModal(){
@@ -1154,6 +1575,21 @@ function addHistory(item){
 }
 
 /* Respiration */
+function selectBreath(key){
+  const select = $("protocolSelect");
+  if(select) select.value = key;
+  breath = {...BREATHS[key]};
+  updateBreath();
+}
+function toggleBreathMaster(){
+  const box = $("breathMaster");
+  if(box) box.classList.toggle("open");
+}
+function refreshBreathCards(){
+  document.querySelectorAll(".breath-choice").forEach(btn=>btn.classList.remove("active"));
+  const active = $("breathCard_" + breath.key);
+  if(active) active.classList.add("active");
+}
 function changeProtocol(){ breath = {...BREATHS[$("protocolSelect").value]}; updateBreath(); }
 function changeSlider(){ const key = SLIDER_MAP[$("breathSlider").value] || "365"; $("protocolSelect").value = key; breath = {...BREATHS[key]}; updateBreath(); }
 function toggleManual(){
@@ -1169,7 +1605,7 @@ function adjustBreath(part,delta){
   breath[part] = Math.max(0, Math.min(12, Number(breath[part]||0)+delta));
   breath.key = "manual";
   breath.zone = "Manuel";
-  breath.msg = "Mode manuel : vous réglez directement le cycle respiratoire.";
+  breath.msg = "Mode manuel : vous reglez directement le cycle respiratoire.";
   updateBreath(false);
 }
 function updateBreath(resetTime=true){
@@ -1178,7 +1614,8 @@ function updateBreath(resetTime=true){
   $("rIn").textContent = breath.i; $("rHoldIn").textContent = breath.hi; $("rOut").textContent = breath.e; $("rHoldOut").textContent = breath.ho;
   $("cycleLabel").textContent = `${breath.i} / ${breath.hi} / ${breath.e} / ${breath.ho}`;
   $("breathMessage").textContent = breath.msg;
-  if(resetTime && !running){$("timeLeft").textContent = formatTime(breath.duration); $("phaseText").textContent = "Êtes-vous prêt ?"; $("phaseHint").textContent = "Touchez le cercle pour commencer."; setProgress(0);}
+  refreshBreathCards();
+  if(resetTime && !running){$("timeLeft").textContent = formatTime(breath.duration); $("phaseText").textContent = "Etes-vous pret ?"; $("phaseHint").textContent = "Touchez le cercle pour commencer."; setProgress(0);}
 }
 function setProgress(p){
   const c = 2*Math.PI*98, line = $("progressCircle");
@@ -1210,7 +1647,7 @@ function playBreathSound(type,duration){
   g.gain.setValueAtTime(.0001,now); g.gain.linearRampToValueAtTime(.13,now+.35); g.gain.linearRampToValueAtTime(.0001,now+duration);
   n.start(now); n.stop(now+duration); currentSource=n;
 }
-function toggleSound(){ soundEnabled=!soundEnabled; $("soundBtn").textContent=soundEnabled?"Son : activé":"Son : désactivé"; if(!soundEnabled) stopSound(); }
+function toggleSound(){ soundEnabled=!soundEnabled; $("soundBtn").textContent=soundEnabled?"Son : active":"Son : desactive"; if(!soundEnabled) stopSound(); }
 function toggleBreathing(){ running ? stopBreathing() : startBreathing(); }
 async function startBreathing(){
   if(running) return;
@@ -1220,7 +1657,7 @@ async function startBreathing(){
   timer=setInterval(()=>{remaining--; $("timeLeft").textContent=formatTime(remaining); setProgress(1-(remaining/total)); if(remaining<=0) finishBreathing();},1000);
   while(running && !stopRequested && remaining>0){
     await runPhase("Inspirez",breath.i,1.34,"inspire");
-    if(breath.hi>0) await runPhase("Gardez l’air",breath.hi,1.34,"pauseIn");
+    if(breath.hi>0) await runPhase("Gardez l'air",breath.hi,1.34,"pauseIn");
     await runPhase("Expirez",breath.e,.68,"expire");
     if(breath.ho>0) await runPhase("Restez vide",breath.ho,.68,"pauseOut");
   }
@@ -1229,7 +1666,7 @@ function runPhase(label,sec,scale,type){
   return new Promise(resolve=>{
     if(!running || stopRequested || sec<=0){resolve();return}
     $("phaseText").textContent=label;
-    $("phaseHint").textContent = type==="inspire" ? "Le cercle s’ouvre : inspirez sans forcer." : type==="expire" ? "Le cercle se referme : laissez sortir l’air." : type==="pauseIn" ? "Gardez l’air, gorge souple, sans verrouiller." : "Restez vide un instant, tranquillement.";
+    $("phaseHint").textContent = type==="inspire" ? "Le cercle s'ouvre : inspirez sans forcer." : type==="expire" ? "Le cercle se referme : laissez sortir l'air." : type==="pauseIn" ? "Gardez l'air, gorge souple, sans verrouiller." : "Restez vide un instant, tranquillement.";
     $("orb").style.transitionDuration=sec+"s"; $("orb").style.transform="scale("+scale+")";
     playBreathSound(type,sec);
     setTimeout(resolve,sec*1000);
@@ -1238,12 +1675,12 @@ function runPhase(label,sec,scale,type){
 function stopBreathing(){
   stopRequested=true; running=false; clearInterval(timer); stopSound();
   $("stopBreathBtn").hidden=true; $("runningPill").classList.remove("show"); $("homeCircle").classList.remove("breathing");
-  $("phaseText").textContent="Arrêté"; $("phaseHint").textContent="Séance interrompue.";
+  $("phaseText").textContent="Arrete"; $("phaseHint").textContent="Seance interrompue.";
   $("orb").style.transitionDuration=".5s"; $("orb").style.transform="scale(.80)";
 }
 function finishBreathing(){
   const done={...breath};
-  stopBreathing(); $("phaseText").textContent="Terminé"; $("phaseHint").textContent="Séance terminée."; setProgress(1);
+  stopBreathing(); $("phaseText").textContent="Termine"; $("phaseHint").textContent="Seance terminee."; setProgress(1);
   addHistory({type:"breath",title:"Respiration "+done.zone,detail:`${Math.round(done.duration/60)} min · ${done.i}/${done.hi}/${done.e}/${done.ho}`,minutes:Math.round(done.duration/60),color:done.color});
   setTimeout(updateBreath,1400);
 }
@@ -1264,9 +1701,9 @@ function renderKis(){
   $("kisBox").innerHTML=`
     <h3 style="margin-top:12px">Question ${kisIndex+1}</h3>
     <p class="help">${q.text}</p>
-    <button class="choice ${a===1?'selected':''}" onclick="answerKis(1)"><strong>Plutôt oui</strong><br><small>Cela me correspond souvent.</small></button>
-    <button class="choice ${a===0?'selected':''}" onclick="answerKis(0)"><strong>Ça dépend</strong><br><small>Cela varie selon les situations.</small></button>
-    <button class="choice ${a===-1?'selected':''}" onclick="answerKis(-1)"><strong>Plutôt non</strong><br><small>Cela me correspond rarement.</small></button>
+    <button class="choice ${a===1?'selected':''}" onclick="answerKis(1)"><strong>Plutot oui</strong><br><small>Cela me correspond souvent.</small></button>
+    <button class="choice ${a===0?'selected':''}" onclick="answerKis(0)"><strong>Ca depend</strong><br><small>Cela varie selon les situations.</small></button>
+    <button class="choice ${a===-1?'selected':''}" onclick="answerKis(-1)"><strong>Plutot non</strong><br><small>Cela me correspond rarement.</small></button>
   `;
   $("kisValidateBtn").style.display="block";
   updateKisValidateState();
@@ -1290,18 +1727,18 @@ function updateKisValidateState(){
 }
 
 function renderKisLocked(){
-  $("kisCount").textContent="Verrouillé";
+  $("kisCount").textContent="Verrouille";
   $("kisValidateBtn").style.display="none";
-  const profile = kisResult ? kisResult.profile : "—";
+  const profile = kisResult ? kisResult.profile : "-";
   const score = kisResult ? kisResult.score : 0;
   const color = score>=3 ? COLORS.rouge : score<=-3 ? COLORS.bleu : COLORS.vert;
   $("kisBox").innerHTML=`
     <div class="kis-locked card" style="margin-top:12px;border-color:${color}">
       <h2 style="color:${color}">${profile}</h2>
       <p class="help">Score ki.S : <strong>${scoreText(score)}</strong></p>
-      <p class="help">Le test de fond est verrouillé pour garder une base stable.</p>
+      <p class="help">Le test de fond est verrouille pour garder une base stable.</p>
       <button id="longResetBtn" class="secondary long-reset" type="button" onpointerdown="startLongReset()" onpointerup="cancelLongReset()" onpointerleave="cancelLongReset()">Appui long pour refaire ki.S</button>
-      <button class="secondary" type="button" onclick="showTest('now')" style="margin-top:10px;border-color:${color}">Passer à Ici & Maintenant →</button>
+      <button class="secondary" type="button" onclick="showTest('now')" style="margin-top:10px;border-color:${color}">Passer a Ici & Maintenant →</button>
     </div>
   `;
   $("kisResult").innerHTML="";
@@ -1318,14 +1755,14 @@ function resetKisOnly(){
 }
 function finishKis(){
   if(kisResult){renderKisLocked();return}
-  if(kisAnswers.some(v=>v===null)){alert("Complétez les 15 questions.");return}
+  if(kisAnswers.some(v=>v===null)){alert("Completez les 15 questions.");return}
   let score=0;
   KIS_QUESTIONS.forEach((q,i)=>score += kisAnswers[i]*q.dir);
   let profile="Funambule";
   if(score>=8) profile="Fonceur";
-  else if(score<=-8) profile="Posé";
-  else if(score>=3) profile="Funambule à tendance Fonceur";
-  else if(score<=-3) profile="Funambule à tendance Posé";
+  else if(score<=-8) profile="Pose";
+  else if(score>=3) profile="Funambule a tendance Fonceur";
+  else if(score<=-3) profile="Funambule a tendance Pose";
   kisResult={score,profile};
   localStorage.setItem("murKis",JSON.stringify(kisResult));
   const color = score>=3 ? COLORS.rouge : score<=-3 ? COLORS.bleu : COLORS.vert;
@@ -1338,13 +1775,13 @@ function finishNow(){
   const score=Math.round((raw/8)*50);
   const zone=getZone(score);
   nowResult={score,zone};
-  $("nowResult").innerHTML=`État actuel : <strong style="color:${zone.color}">${scoreText(score)}</strong><br>Zone : <strong style="color:${zone.color}">${zone.name}</strong>`;
+  $("nowResult").innerHTML=`Etat actuel : <strong style="color:${zone.color}">${scoreText(score)}</strong><br>Zone : <strong style="color:${zone.color}">${zone.name}</strong>`;
   calculateNeuro(); showTest("result");
 }
 function getZone(score){
   if(score<=-22) return {key:"bleu",name:"BLEUE",family:"Activer",color:COLORS.bleu,breath:"boost"};
   if(score>=28) return {key:"rouge",name:"ROUGE",family:"Freiner",color:COLORS.rouge,breath:"frein"};
-  if(score>=10) return {key:"orange",name:"ORANGE",family:"Réguler",color:COLORS.orange,breath:"regulate"};
+  if(score>=10) return {key:"orange",name:"ORANGE",family:"Reguler",color:COLORS.orange,breath:"regulate"};
   return {key:"vert",name:"VERTE",family:"Entretenir",color:COLORS.vert,breath:"365"};
 }
 function calculateNeuro(){
@@ -1358,20 +1795,20 @@ function calculateNeuro(){
   $("gaugeMarker").style.borderColor=zone.color;
   $("neuroScore").textContent=scoreText(score);
   $("neuroScore").style.color=zone.color;
-  $("neuroZone").textContent=`Zone ${zone.name} — ${zone.family}`;
-  $("neuroText").innerHTML=`Profil : <strong>${kisResult.profile}</strong><br>Ici & Maintenant : <strong>${scoreText(nowResult.score)}</strong><br>Correction ki.S : <strong>${scoreText(correction)}</strong><br>Réflexe conseillé : <strong style="color:${zone.color}">${zone.family}</strong>`;
+  $("neuroZone").textContent=`Zone ${zone.name} - ${zone.family}`;
+  $("neuroText").innerHTML=`Profil : <strong>${kisResult.profile}</strong><br>Ici & Maintenant : <strong>${scoreText(nowResult.score)}</strong><br>Correction ki.S : <strong>${scoreText(correction)}</strong><br>Reflexe conseille : <strong style="color:${zone.color}">${zone.family}</strong>`;
   $("resultBreathBtn").style.borderColor=zone.color;
   $("resultExerciseBtn").style.borderColor=zone.color;
   addHistory({type:"test",title:"Test NeuroFlex",detail:`${scoreText(score)} · ${zone.name}`,score,color:zone.color});
   setAccent(zone.color); updateNavLocks(); refreshHome();
 }
 function applyRecommendedBreath(){
-  if(!neuroResult){alert("Réalisez d’abord le test complet.");return}
+  if(!neuroResult){alert("Realisez d'abord le test complet.");return}
   breath={...BREATHS[neuroResult.zone.breath]};
   $("protocolSelect").value=breath.key; updateBreath(); showPage("breath");
 }
 function openRecommendedExercises(){
-  if(!neuroResult){alert("Réalisez d’abord le test complet.");return}
+  if(!neuroResult){alert("Realisez d'abord le test complet.");return}
   showPage("exercises");
   setTimeout(()=>toggleZone(neuroResult.zone.key,true),80);
 }
@@ -1413,7 +1850,7 @@ function stopExercise(){
   const audio=$("exerciseAudio");
   if(audio){audio.pause(); audio.currentTime=0;}
   const wrap=$("visualWrap"); if(wrap) wrap.classList.remove("playing");
-  const status=$("audioStatus"); if(status) status.textContent="Prêt";
+  const status=$("audioStatus"); if(status) status.textContent="Pret";
 }
 function openExercise(key){
   const e=EXERCISES[key]; if(!e) return;
@@ -1423,15 +1860,15 @@ function openExercise(key){
     <p class="help">Zone ${e.zone.toUpperCase()} • exercice audio <span class="badge" style="border-color:${c};margin-left:6px"><span class="dot" style="background:${c}"></span><span>${e.zone}</span></span></p>
     <div id="visualWrap" class="visual-wrap" onclick="toggleExerciseAudio()">
       <img id="visualAsset" alt="${e.title}" loading="lazy">
-      <div class="visual-caption"><strong>${e.caption}</strong><span id="audioStatus">Prêt</span></div>
+      <div class="visual-caption"><strong>${e.caption}</strong><span id="audioStatus">Pret</span></div>
     </div>
     <audio id="exerciseAudio" class="hidden-audio" preload="auto"></audio>
-    <div class="actions"><button class="secondary" type="button" onclick="toggleExerciseAudio()">Lancer l’audio</button><button class="secondary" type="button" onclick="closeExercise()">Fermer</button></div>
-    <button class="secondary" type="button" onclick="toggleWhy()" style="margin-top:10px">Pourquoi ça marche ?</button>
+    <div class="actions"><button class="secondary" type="button" onclick="toggleExerciseAudio()">Lancer l'audio</button><button class="secondary" type="button" onclick="closeExercise()">Fermer</button></div>
+    <button class="secondary" type="button" onclick="toggleWhy()" style="margin-top:10px">Pourquoi ca marche ?</button>
     <div id="whyBox" class="why">${e.why.map(p=>`<p>${p}</p>`).join("")}</div>`;
   setAsset($("visualAsset"),e.files); setSound($("exerciseAudio"),e.sounds);
   const audio=$("exerciseAudio");
-  audio.onended=()=>{$("visualWrap").classList.remove("playing"); $("audioStatus").textContent="Terminé";};
+  audio.onended=()=>{$("visualWrap").classList.remove("playing"); $("audioStatus").textContent="Termine";};
   addHistory({type:"exercise",title:e.title,detail:`Zone ${e.zone}`,color:c});
   $("exerciseDetail").scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -1442,7 +1879,7 @@ function toggleExerciseAudio(){
   if(!audio.paused){ audio.pause(); if(wrap) wrap.classList.remove("playing"); if(status) status.textContent="Pause"; return; }
   audio.play().then(()=>{ if(wrap) wrap.classList.add("playing"); if(status) status.textContent="Lecture en cours"; }).catch(()=>{
     if(status) status.textContent="Touchez encore une fois";
-    alert("La lecture n’a pas démarré. Touchez à nouveau.");
+    alert("La lecture n'a pas demarre. Touchez a nouveau.");
   });
 }
 function closeExercise(){ stopExercise(); $("exerciseDetail").innerHTML=`<h2>Choisissez un exercice</h2><p class="help">Touchez une carte pour ouvrir le guidage.</p>`; }
@@ -1450,10 +1887,10 @@ function toggleWhy(){ $("whyBox").classList.toggle("open"); }
 
 /* Accueil */
 const homeChoices=[
-  {main:"Exercices",sub:"Choisir un exercice adapté",page:"exercises",angle:0},
-  {main:"Respiration",sub:"Lancer le rythme conseillé",page:"breath",angle:90},
-  {main:"Statistiques",sub:"Voir votre évolution",page:"stats",angle:180},
-  {main:"Ici & Maintenant",sub:"Réévaluer votre état",page:"now",angle:270}
+  {main:"Exercices",sub:"Choisir un exercice adapte",page:"exercises",angle:0},
+  {main:"Respiration",sub:"Lancer le rythme conseille",page:"breath",angle:90},
+  {main:"Statistiques",sub:"Voir votre evolution",page:"stats",angle:180},
+  {main:"Ici & Maintenant",sub:"Reevaluer votre etat",page:"now",angle:270}
 ];
 let homeChoice=Number(localStorage.getItem("murHomeChoice")||0);
 function latestNeuro(){ try{return JSON.parse(localStorage.getItem("murLastNeuro")||"null")}catch(e){return null} }
@@ -1467,7 +1904,7 @@ function updateNavLocks(){
     if(!btn) return;
     btn.classList.toggle("locked", !unlocked);
     btn.setAttribute("aria-disabled", String(!unlocked));
-    btn.title = unlocked ? "" : "Réalisez d’abord les tests NeuroFlex";
+    btn.title = unlocked ? "" : "Realisez d'abord les tests NeuroFlex";
   });
 }
 let navNoticeTimer = null;
@@ -1485,16 +1922,16 @@ function refreshHome(){
   let c=COLORS.vert, score=0;
   if(!hasKis){
     circle.classList.remove("ready");
-    $("homeMain").textContent="Découvrez votre tendance";
+    $("homeMain").textContent="Decouvrez votre tendance";
     $("homeSub").textContent="Commencer le test ki.S";
     $("homeHint").textContent="Touchez pour commencer";
-    $("homeScore").textContent="—";
-    $("homeTrend").textContent="Réalisez un test complet.";
+    $("homeScore").textContent="-";
+    $("homeTrend").textContent="Realisez un test complet.";
     setHomePoint(0,c); return;
   }
   if(!last){
     circle.classList.remove("ready");
-    $("homeMain").textContent="Où en êtes-vous ?";
+    $("homeMain").textContent="Ou en etes-vous ?";
     $("homeSub").textContent="Faire Ici & Maintenant";
     $("homeHint").textContent="Touchez pour continuer";
     setHomePoint(0,c); return;
@@ -1502,7 +1939,7 @@ function refreshHome(){
   c=last.zone.color; score=last.score;
   circle.classList.add("ready"); circle.style.setProperty("--home-color",c);
   $("homeScore").textContent=scoreText(score); $("homeScore").style.color=c;
-  $("homeTrend").innerHTML=`Dernier résultat : <strong>${scoreText(score)}</strong> · ${last.zone.name}`;
+  $("homeTrend").innerHTML=`Dernier resultat : <strong>${scoreText(score)}</strong> · ${last.zone.name}`;
   setHomePoint(score,c);
   applyHomeChoice(homeChoice);
 }
@@ -1524,7 +1961,7 @@ function applyHomeChoice(i){
   $("homeMain").textContent=ch.main; $("homeSub").textContent=ch.sub;
   $("homeCircle").style.setProperty("--home-angle",ch.angle+"deg");
   for(let k=0;k<4;k++) $("homeDot"+k).classList.toggle("active",k===homeChoice);
-  $("homeHint").textContent="Tourner pour sélectionner";
+  $("homeHint").textContent="Tourner pour selectionner";
 }
 let draggingHome=false;
 function homeCircleOpen(ev){
@@ -1546,7 +1983,70 @@ function bindHomeRotate(){
 }
 
 /* Stats + profil */
+let statsPeriod = localStorage.getItem("murStatsPeriod") || "day";
+
+function getStartOfPeriod(period){
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(0,0,0,0);
+
+  if(period === "week"){
+    const day = start.getDay(); // dimanche = 0
+    const diff = day === 0 ? 6 : day - 1; // semaine lundi -> dimanche
+    start.setDate(start.getDate() - diff);
+  }
+  if(period === "month"){
+    start.setDate(1);
+  }
+  if(period === "year"){
+    start.setMonth(0,1);
+  }
+  return start.getTime();
+}
+
+function getStatsPeriodLabel(period){
+  if(period === "day") return "Aujourd'hui";
+  if(period === "week") return "Cette semaine";
+  if(period === "month") return "Ce mois";
+  if(period === "year") return "Cette annee";
+  return "Aujourd'hui";
+}
+
+function setStatsPeriod(period){
+  statsPeriod = period;
+  localStorage.setItem("murStatsPeriod", period);
+  renderStats();
+}
+
+function filterHistoryByPeriod(history, period){
+  const start = getStartOfPeriod(period);
+  return history.filter(x => Number(x.timestamp || 0) >= start);
+}
+
+function updateStatsPeriodButtons(){
+  const ids = {day:"periodDay", week:"periodWeek", month:"periodMonth", year:"periodYear"};
+  Object.keys(ids).forEach(key=>{
+    const btn = $(ids[key]);
+    if(btn) btn.classList.toggle("active", key === statsPeriod);
+  });
+  const label = $("statsPeriodLabel");
+  if(label) label.textContent = getStatsPeriodLabel(statsPeriod);
+}
+
 function toggleFold(id){ $(id).classList.toggle("open"); }
+function toggleBackup(){
+  const fold = $("backupFold");
+  const box = $("backupBox");
+  if(!fold) return;
+  fold.classList.toggle("open");
+  if(!fold.classList.contains("open") && box){
+    box.style.display = "none";
+  }
+}
+function openBackup(){
+  const fold = $("backupFold");
+  if(fold) fold.classList.add("open");
+}
 function zoneColorForScore(score){
   return getZone(score).color;
 }
@@ -1555,7 +2055,7 @@ function renderNeuroChart(points){
   if(!box) return;
 
   if(!points.length){
-    box.innerHTML = `<div class="neuro-empty">Aucun point pour le moment. Réalisez un test NeuroFlex complet pour commencer la courbe.</div>`;
+    box.innerHTML = `<div class="neuro-empty">Aucun point pour le moment. Realisez un test NeuroFlex complet pour commencer la courbe.</div>`;
     return;
   }
 
@@ -1606,36 +2106,47 @@ function renderNeuroChart(points){
   `;
 }
 function renderStats(){
-  const h=getHistory(), breaths=h.filter(x=>x.type==="breath"), tests=h.filter(x=>x.type==="test"), exercises=h.filter(x=>x.type==="exercise");
-  $("statBreaths").textContent=breaths.length; $("statMinutes").textContent=breaths.reduce((s,x)=>s+(x.minutes||0),0); $("statTests").textContent=tests.length; $("statExercises").textContent=exercises.length;
-  $("historyList").innerHTML=h.slice(0,30).map(x=>`<div class="history-line"><div><strong>${x.title}</strong><br><small>${x.date} à ${x.time} — ${x.detail||""}</small></div><span style="color:${x.color||"var(--accent)"}">●</span></div>`).join("") || `<p class="help">Aucun historique pour le moment.</p>`;
+  const h = getHistory();
+  updateStatsPeriodButtons();
 
-  renderNeuroChart(tests);
+  const periodHistory = filterHistoryByPeriod(h, statsPeriod);
+  const breaths = periodHistory.filter(x=>x.type==="breath");
+  const tests = periodHistory.filter(x=>x.type==="test");
+  const exercises = periodHistory.filter(x=>x.type==="exercise");
 
-  const last=latestNeuro();
+  $("statBreaths").textContent = breaths.length;
+  $("statMinutes").textContent = breaths.reduce((s,x)=>s+(x.minutes||0),0);
+  $("statTests").textContent = tests.length;
+  $("statExercises").textContent = exercises.length;
+
+  $("historyList").innerHTML = h.slice(0,30).map(x=>`<div class="history-line"><div><strong>${x.title}</strong><br><small>${x.date} a ${x.time} - ${x.detail||""}</small></div><span style="color:${x.color||"var(--accent)"}">●</span></div>`).join("") || `<p class="help">Aucun historique pour le moment.</p>`;
+
+  const last = latestNeuro();
   if(last){
-    $("statNeuroText").innerHTML=`Dernier résultat : <strong style="color:${last.zone.color}">${scoreText(last.score)}</strong> · Zone ${last.zone.name}<br>Profil ki.S : <strong>${last.kis}</strong><br>Nombre de points enregistrés : <strong>${tests.length}</strong>`;
+    $("statNeuroText").innerHTML = `Dernier resultat : <strong style="color:${last.zone.color}">${scoreText(last.score)}</strong> - Zone ${last.zone.name}<br>Profil ki.S : <strong>${last.kis}</strong>`;
   }else{
-    $("statNeuroText").textContent="Aucun test complet enregistré.";
+    $("statNeuroText").textContent = "Aucun test complet enregistre.";
   }
 }
 function saveProfile(){
   const name=$("userName").value.trim();
   if(name) localStorage.setItem("murName",name); else localStorage.removeItem("murName");
-  refreshHome(); alert("Profil enregistré.");
+  refreshHome(); alert("Profil enregistre.");
 }
 function loadProfile(){ $("userName").value=localStorage.getItem("murName")||""; refreshHome(); }
 function resetTests(){
-  if(!confirm("Réinitialiser les tests NeuroFlex ?")) return;
+  if(!confirm("Reinitialiser les tests NeuroFlex ?")) return;
   localStorage.removeItem("murKis"); localStorage.removeItem("murLastNeuro");
   kisAnswers=Array(15).fill(null); kisIndex=0; kisResult=null; nowResult=null; neuroResult=null;
   renderKis(); updateNavLocks(); refreshHome(); showPage("home");
 }
 function exportData(){
+  openBackup();
   const data={name:localStorage.getItem("murName")||"",history:getHistory(),kis:localStorage.getItem("murKis")||"",neuro:localStorage.getItem("murLastNeuro")||""};
   $("backupBox").style.display="block"; $("backupBox").value=btoa(unescape(encodeURIComponent(JSON.stringify(data)))); $("backupBox").select();
 }
 function importData(){
+  openBackup();
   const box=$("backupBox"); box.style.display="block";
   if(!box.value.trim()){box.placeholder="Collez votre sauvegarde ici puis cliquez de nouveau sur Importer.";box.focus();return}
   try{
@@ -1644,8 +2155,8 @@ function importData(){
     if(Array.isArray(data.history)) saveHistory(data.history);
     if(data.kis) localStorage.setItem("murKis",data.kis);
     if(data.neuro) localStorage.setItem("murLastNeuro",data.neuro);
-    loadAll(); alert("Sauvegarde importée.");
-  }catch(e){alert("Import impossible. Vérifiez la sauvegarde.")}
+    loadAll(); alert("Sauvegarde importee.");
+  }catch(e){alert("Import impossible. Verifiez la sauvegarde.")}
 }
 function loadAll(){
   try{kisResult=JSON.parse(localStorage.getItem("murKis")||"null")}catch(e){}
@@ -1656,8 +2167,8 @@ function loadAll(){
     $("gaugeMarker").style.borderColor=neuroResult.zone.color;
     $("neuroScore").textContent=scoreText(neuroResult.score);
     $("neuroScore").style.color=neuroResult.zone.color;
-    $("neuroZone").textContent=`Zone ${neuroResult.zone.name} — ${neuroResult.zone.family}`;
-    $("neuroText").innerHTML=`Dernier résultat enregistré : <strong>${scoreText(neuroResult.score)}</strong>`;
+    $("neuroZone").textContent=`Zone ${neuroResult.zone.name} - ${neuroResult.zone.family}`;
+    $("neuroText").innerHTML=`Dernier resultat enregistre : <strong>${scoreText(neuroResult.score)}</strong>`;
     $("resultBreathBtn").style.borderColor=neuroResult.zone.color;
     $("resultExerciseBtn").style.borderColor=neuroResult.zone.color;
   }
