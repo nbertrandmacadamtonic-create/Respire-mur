@@ -3467,7 +3467,7 @@ main.app{
 }
 
 
-/* Etat fermé par défaut des blocs statistiques */
+/* Etat fermer par défaut des blocs statistiques */
 #stats .fold:not(.open) .fold-body{
   display:none!important;
 }
@@ -3680,6 +3680,75 @@ main.app #home.page.active > section.home-trend-card.card{
    ========================================================= */
 .kis-score-pill{
   display:none!important;
+}
+
+
+
+
+
+
+/* =========================================================
+   EXERCICES SONORES : touche infinie, inactive au depart
+   ========================================================= */
+.sound-loop-btn{
+  width:38px;
+  height:38px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.12);
+  color:white;
+  display:grid;
+  place-items:center;
+  font-size:22px;
+  font-weight:950;
+  line-height:1;
+  box-shadow:0 10px 20px rgba(0,0,0,.22);
+}
+.sound-loop-btn.active{
+  border-color:var(--accent);
+  background:rgba(255,255,255,.92);
+  color:#07111f;
+  box-shadow:0 0 0 2px rgba(255,255,255,.30),0 0 24px var(--accent);
+}
+.sound-loop-btn:active{
+  transform:scale(.96);
+}
+
+
+/* =========================================================
+   EXERCICES : cadre lumineux synchronise avec la voix
+   Le halo suit le volume reel du fichier audio.
+   ========================================================= */
+.visual-wrap{
+  --voice-glow-color: 34, 197, 94;
+  --voice-glow-intensity: 0;
+  transition:
+    box-shadow .10s linear,
+    transform .10s linear,
+    filter .10s linear;
+}
+
+.visual-wrap.voice-glow{
+  box-shadow:
+    0 0 calc(8px + 30px * var(--voice-glow-intensity))
+      rgba(var(--voice-glow-color), calc(.16 + .54 * var(--voice-glow-intensity))),
+    0 0 calc(18px + 72px * var(--voice-glow-intensity))
+      rgba(var(--voice-glow-color), calc(.08 + .28 * var(--voice-glow-intensity))),
+    var(--shadow);
+  transform:scale(calc(1 + .006 * var(--voice-glow-intensity)));
+  filter:saturate(calc(1 + .18 * var(--voice-glow-intensity)));
+}
+
+.visual-wrap.voice-glow::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:24px;
+  pointer-events:none;
+  border:1px solid rgba(var(--voice-glow-color), calc(.22 + .48 * var(--voice-glow-intensity)));
+  box-shadow:inset 0 0 calc(8px + 28px * var(--voice-glow-intensity))
+    rgba(var(--voice-glow-color), calc(.10 + .30 * var(--voice-glow-intensity)));
+  opacity:calc(.28 + .72 * var(--voice-glow-intensity));
 }
 
 </style>
@@ -4273,6 +4342,7 @@ let soundEnabled = true;
 let audioCtx = null;
 let masterGain = null;
 let currentSource = null;
+let exerciseAudioLoopEnabled = false;
 
 let kisIndex = 0;
 let kisAnswers = Array(15).fill(null);
@@ -4437,7 +4507,10 @@ function showPage(id){
     if(kisResult) showTest("now");
     else showTest("kis");
   }
-  if(id==="exercises") renderExerciseList();
+  if(id==="exercises"){
+    renderExerciseList();
+    openRecommendedZoneInExercises();
+  }
   if(id==="breath"){
     closeBreathGuidedList();
     syncRespirationBarWithCurrentResult();
@@ -4647,7 +4720,7 @@ function stopBreathing(){
   $("runningPill").classList.remove("show");
   $("homeCircle").classList.remove("breathing");
   updateRunningPillVisibility();
-  $("phaseText").textContent="Arrete"; $("phaseHint").textContent="Seance interrompue.";
+  $("phaseText").textContent="Redemarrer"; $("phaseHint").textContent="Seance interrompue. Touchez le cercle pour redemarrer.";
   $("orb").style.transitionDuration=".5s"; $("orb").style.transform="scale(.80)";
 }
 function finishBreathing(){
@@ -5104,10 +5177,25 @@ function applyRecommendedBreath(){
   syncRespirationBarWithZone(neuroResult.zone, "NeuroFlex");
   showPage("breath");
 }
+function getRecommendedExerciseZoneKey(){
+  const last = latestNeuro();
+  if(neuroResult && neuroResult.zone && neuroResult.zone.key) return neuroResult.zone.key;
+  if(last && last.zone && last.zone.key) return last.zone.key;
+  if(nowResult && nowResult.zone && nowResult.zone.key) return nowResult.zone.key;
+  return null;
+}
+
+function openRecommendedZoneInExercises(){
+  const zoneKey = getRecommendedExerciseZoneKey();
+  if(!zoneKey) return;
+  setTimeout(()=>toggleZone(zoneKey,true),80);
+}
+
 function openRecommendedExercises(){
-  if(!neuroResult){alert("Realisez d'abord le test complet.");return}
+  const zoneKey = getRecommendedExerciseZoneKey();
+  if(!zoneKey){alert("Realisez d'abord le test complet.");return}
   showPage("exercises");
-  setTimeout(()=>toggleZone(neuroResult.zone.key,true),80);
+  setTimeout(()=>toggleZone(zoneKey,true),80);
 }
 
 /* Exercices */
@@ -5131,27 +5219,236 @@ function zoneBlock(z){
     <section id="zone_${z.key}" class="zone-section" style="border-color:${c}55;background:linear-gradient(180deg,${c}16,rgba(255,255,255,.045));">
       <button class="zone-title" type="button" onclick="toggleZone('${z.key}')">
         <div><strong>${z.title}</strong><p class="help">${z.subtitle}</p></div>
-        <div class="badge" style="border-color:${c};"><span class="dot" style="background:${c}"></span><span>ouvrir</span></div>
+        <div class="badge" style="border-color:${c};"><span class="dot" style="background:${c}"></span><span class="zone-state-label">Ouvrir</span></div>
       </button>
       <div class="zone-content"><div class="exercise-grid">${z.items.map(exerciseCard).join("")}</div></div>
     </section>`;
 }
-function renderExerciseList(){ $("exerciseList").innerHTML=ZONES.map(zoneBlock).join(""); }
+
+function isSoundLandscapeExercise(id){
+  return ["merle","vagues","foret","bell"].includes(id);
+}
+
+function updateExerciseLoopButton(){
+  const btn = $("soundLoopBtn");
+  if(!btn) return;
+  btn.classList.toggle("active", exerciseAudioLoopEnabled);
+  btn.setAttribute("aria-pressed", exerciseAudioLoopEnabled ? "true" : "false");
+  btn.title = exerciseAudioLoopEnabled ? "Arreter la boucle sonore" : "Lancer la boucle sonore continue";
+  btn.setAttribute("aria-label", exerciseAudioLoopEnabled ? "Arreter la boucle sonore" : "Lancer la boucle sonore continue");
+}
+
+function toggleExerciseAudioLoop(){
+  const audio = $("exerciseAudio");
+  if(!audio) return;
+
+  exerciseAudioLoopEnabled = !exerciseAudioLoopEnabled;
+  audio.loop = exerciseAudioLoopEnabled;
+
+  if(exerciseAudioLoopEnabled){
+    try{
+      audio.pause();
+      audio.currentTime = 0;
+      const playPromise = audio.play();
+      const currentExercise = EXERCISES[window.currentExerciseKey] || null;
+      startExerciseVoiceGlow(audio, currentExercise ? currentExercise.zone : "vert");
+      if(playPromise && typeof playPromise.catch === "function"){
+        playPromise.catch(()=>{});
+      }
+      const wrap = $("visualWrap");
+      const status = $("audioStatus");
+      if(wrap) wrap.classList.add("playing");
+      if(status) status.textContent = "Boucle active";
+    }catch(e){}
+  }else{
+    audio.loop = false;
+    audio.pause();
+    audio.currentTime = 0;
+    const wrap = $("visualWrap");
+    const status = $("audioStatus");
+    if(wrap) wrap.classList.remove("playing");
+    if(status) status.textContent = "Pret";
+  }
+
+  updateExerciseLoopButton();
+}
+
+/* =========================================================
+   EXERCICES : halo lumineux synchronise avec la voix
+   Analyse automatique du volume du fichier audio.
+   ========================================================= */
+
+let murExerciseVoiceGlow = {
+  audioContext:null,
+  analyser:null,
+  source:null,
+  dataArray:null,
+  animationFrame:null,
+  connectedAudio:null
+};
+
+function getExerciseZoneColorRGB(zone){
+  const map = {
+    rouge:"239, 68, 68",
+    orange:"245, 158, 11",
+    vert:"34, 197, 94",
+    bleu:"59, 130, 246"
+  };
+  return map[String(zone || "vert").toLowerCase()] || map.vert;
+}
+
+function setExerciseGlowColor(zone){
+  const wrap = $("visualWrap");
+  if(!wrap) return;
+  wrap.style.setProperty("--voice-glow-color", getExerciseZoneColorRGB(zone));
+}
+
+function prepareExerciseVoiceGlow(audio){
+  if(!audio) return;
+
+  try{
+    if(!murExerciseVoiceGlow.audioContext){
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      murExerciseVoiceGlow.audioContext = new AudioContextClass();
+      murExerciseVoiceGlow.analyser = murExerciseVoiceGlow.audioContext.createAnalyser();
+      murExerciseVoiceGlow.analyser.fftSize = 256;
+      murExerciseVoiceGlow.analyser.smoothingTimeConstant = .76;
+      murExerciseVoiceGlow.dataArray = new Uint8Array(murExerciseVoiceGlow.analyser.frequencyBinCount);
+    }
+
+    if(murExerciseVoiceGlow.connectedAudio !== audio){
+      if(murExerciseVoiceGlow.source){
+        try{ murExerciseVoiceGlow.source.disconnect(); }catch(e){}
+      }
+
+      murExerciseVoiceGlow.source = murExerciseVoiceGlow.audioContext.createMediaElementSource(audio);
+      murExerciseVoiceGlow.source.connect(murExerciseVoiceGlow.analyser);
+      murExerciseVoiceGlow.analyser.connect(murExerciseVoiceGlow.audioContext.destination);
+      murExerciseVoiceGlow.connectedAudio = audio;
+    }
+  }catch(e){
+    console.warn("Halo vocal exercice non initialise :", e);
+  }
+}
+
+function startExerciseVoiceGlow(audio, zone){
+  if(!audio) return;
+
+  prepareExerciseVoiceGlow(audio);
+  setExerciseGlowColor(zone);
+
+  if(
+    murExerciseVoiceGlow.audioContext &&
+    murExerciseVoiceGlow.audioContext.state === "suspended"
+  ){
+    murExerciseVoiceGlow.audioContext.resume();
+  }
+
+  const wrap = $("visualWrap");
+  if(wrap){
+    wrap.classList.add("voice-glow");
+  }
+
+  animateExerciseVoiceGlow(audio);
+}
+
+function stopExerciseVoiceGlow(){
+  if(murExerciseVoiceGlow.animationFrame){
+    cancelAnimationFrame(murExerciseVoiceGlow.animationFrame);
+    murExerciseVoiceGlow.animationFrame = null;
+  }
+
+  const wrap = $("visualWrap");
+  if(wrap){
+    wrap.style.setProperty("--voice-glow-intensity", "0");
+    wrap.classList.remove("voice-glow");
+  }
+}
+
+function animateExerciseVoiceGlow(audio){
+  if(!murExerciseVoiceGlow.analyser || !murExerciseVoiceGlow.dataArray) return;
+
+  murExerciseVoiceGlow.analyser.getByteFrequencyData(murExerciseVoiceGlow.dataArray);
+
+  let sum = 0;
+  for(let i=0;i<murExerciseVoiceGlow.dataArray.length;i++){
+    sum += murExerciseVoiceGlow.dataArray[i];
+  }
+
+  const average = sum / murExerciseVoiceGlow.dataArray.length;
+
+  /*
+    Sensibilite :
+    - 70 = halo plus reactif
+    - 95 = halo plus discret
+  */
+  let intensity = average / 82;
+  intensity = Math.max(0, Math.min(1, intensity));
+
+  if(intensity < .055){
+    intensity = 0;
+  }
+
+  const wrap = $("visualWrap");
+  if(wrap){
+    wrap.style.setProperty("--voice-glow-intensity", intensity.toFixed(3));
+  }
+
+  if(!audio.paused && !audio.ended){
+    murExerciseVoiceGlow.animationFrame = requestAnimationFrame(()=>{
+      animateExerciseVoiceGlow(audio);
+    });
+  }else{
+    stopExerciseVoiceGlow();
+  }
+}
+
+function renderExerciseList(){ $("exerciseList").innerHTML=ZONES.map(zoneBlock).join(""); refreshZoneOpenLabels(); }
+function updateZoneOpenLabel(key){
+  const el = $("zone_" + key);
+  if(!el) return;
+  const label = el.querySelector(".zone-state-label");
+  if(!label) return;
+  label.textContent = el.classList.contains("open") ? "Fermer" : "Ouvrir";
+}
+
+function refreshZoneOpenLabels(){
+  ZONES.forEach(z => updateZoneOpenLabel(z.key));
+}
+
 function toggleZone(key,forceOpen=false){
   const el=$("zone_"+key);
   if(!el) return;
   if(forceOpen){ el.classList.add("open"); }
   else el.classList.toggle("open");
+  updateZoneOpenLabel(key);
 }
 function stopExercise(){
+  stopExerciseVoiceGlow();
   const audio=$("exerciseAudio");
-  if(audio){audio.pause(); audio.currentTime=0;}
+  if(audio){
+    audio.loop=false;
+    audio.pause();
+    audio.currentTime=0;
+  }
+  exerciseAudioLoopEnabled = false;
+  updateExerciseLoopButton();
   const wrap=$("visualWrap"); if(wrap) wrap.classList.remove("playing");
   const status=$("audioStatus"); if(status) status.textContent="Pret";
 }
+
 function openExercise(key){
-  const e=EXERCISES[key]; if(!e) return;
-  const c=COLORS[e.zone]; stopExercise();
+  const e=EXERCISES[key];
+  window.currentExerciseKey = key;
+  setExerciseGlowColor(e.zone); if(!e) return;
+  const c=COLORS[e.zone];
+  exerciseAudioLoopEnabled = false;
+  stopExercise();
+
+  const loopButtonHTML = isSoundLandscapeExercise(key)
+    ? `<button id="soundLoopBtn" class="sound-loop-btn" type="button" onclick="toggleExerciseAudioLoop()" title="Lancer la boucle sonore continue" aria-label="Lancer la boucle sonore continue" aria-pressed="false">∞</button>`
+    : "";
+
   $("exerciseDetail").innerHTML=`
     <h2>${e.title}</h2>
     <p class="help">Zone ${e.zone.toUpperCase()} • exercice audio <span class="badge" style="border-color:${c};margin-left:6px"><span class="dot" style="background:${c}"></span><span>${e.zone}</span></span></p>
@@ -5160,26 +5457,68 @@ function openExercise(key){
       <div class="visual-caption"><strong>${e.caption}</strong><span id="audioStatus">Pret</span></div>
     </div>
     <audio id="exerciseAudio" class="hidden-audio" preload="auto"></audio>
-    <div class="actions"><button class="secondary" type="button" onclick="toggleExerciseAudio()">Lancer l'audio</button><button class="secondary" type="button" onclick="closeExercise()">Fermer</button></div>
+    <div class="actions">
+      <button class="secondary" type="button" onclick="toggleExerciseAudio()">Lancer l'audio</button>
+      ${loopButtonHTML}
+      <button class="secondary" type="button" onclick="closeExercise()">Fermer</button>
+    </div>
     <button class="secondary" type="button" onclick="toggleWhy()" style="margin-top:10px">Pourquoi ca marche ?</button>
     <div id="whyBox" class="why">${e.why.map(p=>`<p>${p}</p>`).join("")}</div>`;
   setAsset($("visualAsset"),e.files); setSound($("exerciseAudio"),e.sounds);
   const audio=$("exerciseAudio");
-  audio.onended=()=>{$("visualWrap").classList.remove("playing"); $("audioStatus").textContent="Termine";};
+  audio.loop = false;
+  audio.onended=()=>{
+    if(!exerciseAudioLoopEnabled){
+      $("visualWrap").classList.remove("playing");
+      $("audioStatus").textContent="Termine";
+    }
+  };
+  updateExerciseLoopButton();
   addHistory({type:"exercise",title:e.title,detail:`Zone ${e.zone}`,color:c});
   $("exerciseDetail").scrollIntoView({behavior:"smooth",block:"start"});
 }
+
 function toggleExerciseAudio(){
   const audio=$("exerciseAudio");
   if(!audio){alert("Lecteur audio introuvable.");return}
   const wrap=$("visualWrap"), status=$("audioStatus");
-  if(!audio.paused){ audio.pause(); if(wrap) wrap.classList.remove("playing"); if(status) status.textContent="Pause"; return; }
-  audio.play().then(()=>{ if(wrap) wrap.classList.add("playing"); if(status) status.textContent="Lecture en cours"; }).catch(()=>{
+
+  if(!audio.paused){
+    audio.pause();
+    stopExerciseVoiceGlow();
+    if(!exerciseAudioLoopEnabled){
+      if(wrap) wrap.classList.remove("playing");
+      if(status) status.textContent="Pause";
+    }
+    return;
+  }
+
+  audio.loop = exerciseAudioLoopEnabled;
+  audio.play().then(()=>{
+    const currentExercise = EXERCISES[window.currentExerciseKey] || null;
+    startExerciseVoiceGlow(audio, currentExercise ? currentExercise.zone : "vert");
+    if(wrap) wrap.classList.add("playing");
+    if(status) status.textContent = exerciseAudioLoopEnabled ? "Boucle active" : "Lecture en cours";
+  }).catch(()=>{
     if(status) status.textContent="Touchez encore une fois";
     alert("La lecture n'a pas demarre. Touchez a nouveau.");
   });
 }
-function closeExercise(){ stopExercise(); $("exerciseDetail").innerHTML=`<h2>Choisissez un exercice</h2><p class="help">Touchez une carte pour ouvrir le guidage.</p>`; }
+
+function closeExercise(){
+  stopExerciseVoiceGlow();
+  exerciseAudioLoopEnabled = false;
+  const audio = $("exerciseAudio");
+  if(audio){
+    audio.loop = false;
+    audio.pause();
+    audio.currentTime = 0;
+  }
+  updateExerciseLoopButton();
+  stopExercise();
+  $("exerciseDetail").innerHTML=`<h2>Choisissez un exercice</h2><p class="help">Touchez une carte pour ouvrir le guidage.</p>`;
+}
+
 function toggleWhy(){ $("whyBox").classList.toggle("open"); }
 
 /* Accueil */
@@ -5539,5 +5878,4 @@ loadAll();
 </script>
 </body>
 </html>
-
 
