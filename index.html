@@ -4419,6 +4419,23 @@ function showPage(id){
     document.body.scrollTop = 0;
   }
   document.body.style.overflow = id==="home" ? "hidden" : "";
+  updateRunningPillVisibility();
+}
+
+function updateRunningPillVisibility(){
+  const pill = $("runningPill");
+  if(!pill) return;
+
+  /*
+    Regle :
+    - page Respiration ouverte : jamais de bandeau "Respiration en cours"
+    - autres pages : bandeau visible seulement si une respiration tourne
+  */
+  if(running && currentPage !== "breath"){
+    pill.classList.add("show");
+  }else{
+    pill.classList.remove("show");
+  }
 }
 
 function setAccent(color){
@@ -4519,7 +4536,9 @@ function toggleBreathing(){ running ? stopBreathing() : startBreathing(); }
 async function startBreathing(){
   if(running) return;
   initAudio(); running=true; stopRequested=false; remaining=breath.duration; total=breath.duration;
-  $("stopBreathBtn").hidden=false; $("runningPill").classList.add("show"); $("homeCircle").classList.add("breathing");
+  $("stopBreathBtn").hidden=false;
+  $("homeCircle").classList.add("breathing");
+  updateRunningPillVisibility();
   clearInterval(timer);
   timer=setInterval(()=>{remaining--; $("timeLeft").textContent=formatTime(remaining); setProgress(1-(remaining/total)); if(remaining<=0) finishBreathing();},1000);
   while(running && !stopRequested && remaining>0){
@@ -4541,7 +4560,10 @@ function runPhase(label,sec,scale,type){
 }
 function stopBreathing(){
   stopRequested=true; running=false; clearInterval(timer); stopSound();
-  $("stopBreathBtn").hidden=true; $("runningPill").classList.remove("show"); $("homeCircle").classList.remove("breathing");
+  $("stopBreathBtn").hidden=true;
+  $("runningPill").classList.remove("show");
+  $("homeCircle").classList.remove("breathing");
+  updateRunningPillVisibility();
   $("phaseText").textContent="Arrete"; $("phaseHint").textContent="Seance interrompue.";
   $("orb").style.transitionDuration=".5s"; $("orb").style.transform="scale(.80)";
 }
@@ -5384,6 +5406,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   loadAll();
   showInfoFirstTime();
   installTouchCleanup();
+  updateRunningPillVisibility();
 });
 loadAll();
 </script>
