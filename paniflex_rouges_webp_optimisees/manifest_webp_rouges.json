@@ -1,0 +1,106 @@
+[
+  {
+    "source": "/mnt/data/ghostwriter_images/context/4327aa78-1f46-5965-9ded-fb0c0e6881b7.png",
+    "target": "images/paniflex/ancrage-verso.webp",
+    "original_px": [
+      941,
+      1672
+    ],
+    "webp_px": [
+      941,
+      1672
+    ],
+    "webp_kb": 117.2
+  },
+  {
+    "source": "/mnt/data/ghostwriter_images/context/d23c8eca-b286-589a-b91d-637e33d64fad.png",
+    "target": "images/paniflex/pause-vagale-verso.webp",
+    "original_px": [
+      941,
+      1672
+    ],
+    "webp_px": [
+      941,
+      1672
+    ],
+    "webp_kb": 115.8
+  },
+  {
+    "source": "/mnt/data/ghostwriter_images/context/a2dc3fe0-ec1f-5639-bda6-b8902ded281e.png",
+    "target": "images/paniflex/pause-vagale-recto.webp",
+    "original_px": [
+      941,
+      1672
+    ],
+    "webp_px": [
+      941,
+      1672
+    ],
+    "webp_kb": 87.4
+  },
+  {
+    "source": "/mnt/data/ghostwriter_images/context/fc2eb547-a1a8-5dc4-8fc9-7a17cdfa7092.png",
+    "target": "images/paniflex/double-inspiration-recto.webp",
+    "original_px": [
+      941,
+      1672
+    ],
+    "webp_px": [
+      941,
+      1672
+    ],
+    "webp_kb": 82.8
+  },
+  {
+    "source": "/mnt/data/ghostwriter_images/context/b7668cb7-99d0-5f24-878e-ce69f24808e2.png",
+    "target": "images/paniflex/ancrage-recto.webp",
+    "original_px": [
+      941,
+      1672
+    ],
+    "webp_px": [
+      941,
+      1672
+    ],
+    "webp_kb": 100.8
+  },
+  {
+    "source": "/mnt/data/ghostwriter_images/context/c5941513-4143-5fb1-92cc-4d02e7ca7696.png",
+    "target": "images/paniflex/chant-du-merle-verso.webp",
+    "original_px": [
+      941,
+      1672
+    ],
+    "webp_px": [
+      941,
+      1672
+    ],
+    "webp_kb": 117.7
+  },
+  {
+    "source": "/mnt/data/ghostwriter_images/context/df29c609-7c51-5ada-a00e-1b2613d0dabb.png",
+    "target": "images/paniflex/chant-du-merle-recto.webp",
+    "original_px": [
+      941,
+      1672
+    ],
+    "webp_px": [
+      941,
+      1672
+    ],
+    "webp_kb": 114.7
+  },
+  {
+    "source": "/mnt/data/ghostwriter_images/context/9637020b-5a06-5d2a-b987-1321a370d210.png",
+    "target": "images/paniflex/double-inspiration-verso.webp",
+    "original_px": [
+      941,
+      1672
+    ],
+    "webp_px": [
+      941,
+      1672
+    ],
+    "webp_kb": 109.6
+  }
+]
