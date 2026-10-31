@@ -1,14 +1,11 @@
 
 /*
- M.U.R. — Extensions
- Version : vidéo automatique + Commencer
-
- - Vidéo lancée automatiquement sans son
- - Dernière image conservée
+ M.U.R. — Version vidéo corrigée
+ - Lecture automatique et silencieuse
  - Bouton Commencer après la vidéo
- - Largeur réduite sur ordinateur
- - Appui long sur logo : back-office
- - Chargement des contenus du back-office
+ - Vidéo limitée à 680 px sur ordinateur
+ - Accès back-office par appui long
+ - Chargement des contenus
 */
 
 (() => {
@@ -19,56 +16,59 @@
 
   const ADMIN_URL = 'admin.html';
 
-  // ====================================
-  // 1. INTRODUCTION VIDEO
-  // ====================================
+  // =========================================
+  // INTRODUCTION
+  // =========================================
 
   function setupIntro() {
     const panel = document.getElementById('presentation');
 
-    if (!panel || panel.dataset.murIntroReady === '1') {
+    if (!panel || panel.dataset.murFixedIntro === '1') {
       return;
     }
 
-    panel.dataset.murIntroReady = '1';
+    panel.dataset.murFixedIntro = '1';
 
-    // Supprime l'ancien lecteur et ses boutons.
-    // Le nouveau lecteur possède un identifiant différent
-    // pour éviter la fermeture automatique de index.html.
+    // On supprime le lecteur original.
+    // L'ancien code ne peut donc plus fermer
+    // automatiquement cette nouvelle vidéo.
     panel.replaceChildren();
 
     panel.classList.remove('hide');
-    panel.classList.add('mur-video-presentation');
 
     Object.assign(panel.style, {
+      position: 'fixed',
+      inset: '0',
+      zIndex: '99999',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      flexDirection: 'column',
-      padding: '20px',
-      background: '#040914',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      padding: '20px 15px',
+      background: '#040914'
     });
 
-    // Bloc vidéo plus étroit sur ordinateur
+    // Conteneur de la vidéo
     const frame = document.createElement('div');
 
     Object.assign(frame.style, {
       position: 'relative',
       width: '100%',
-      maxWidth: '720px',
-      maxHeight: '82dvh',
+      maxWidth: '680px',
+      maxHeight: '78dvh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
-      borderRadius: '18px',
+      borderRadius: '16px',
       background: '#040914'
     });
 
+    // Nouveau lecteur sans conflit avec index.html
     const video = document.createElement('video');
 
-    video.id = 'murWelcomeVideo';
+    video.id = 'murNewIntroVideo';
     video.src = VIDEO;
     video.autoplay = true;
     video.muted = true;
@@ -80,84 +80,120 @@
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
 
-    video.setAttribute(
-      'aria-label',
-      'Animation de présentation M.U.R.'
-    );
-
     Object.assign(video.style, {
       display: 'block',
       width: '100%',
+      maxWidth: '680px',
       height: 'auto',
-      maxHeight: '82dvh',
+      maxHeight: '78dvh',
       objectFit: 'contain',
       background: '#040914'
     });
 
-    // Bouton Commencer
+    frame.appendChild(video);
+
+    // Bouton Commencer séparé du lecteur
     const commencer = document.createElement('button');
 
     commencer.type = 'button';
+    commencer.id = 'murCommencer';
     commencer.textContent = 'Commencer';
-    commencer.className = 'mur-commencer';
 
     Object.assign(commencer.style, {
       position: 'absolute',
       left: '50%',
-      bottom: 'max(22px, 5%)',
+      bottom: 'calc(35px + env(safe-area-inset-bottom))',
       transform: 'translateX(-50%)',
-      zIndex: '100',
+      zIndex: '100000',
       display: 'none',
-      minWidth: '190px',
-      minHeight: '54px',
-      padding: '14px 30px',
-      border: '1px solid rgba(255,255,255,.7)',
+      visibility: 'visible',
+      opacity: '1',
+      minWidth: '200px',
+      minHeight: '56px',
+      padding: '15px 32px',
       borderRadius: '999px',
+      border: '1px solid #ffffff',
       background: '#ffffff',
       color: '#07111f',
-      font: '900 17px system-ui, sans-serif',
-      boxShadow: '0 0 35px rgba(255,255,255,.3)',
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '18px',
+      fontWeight: '900',
+      boxShadow: '0 0 36px rgba(255,255,255,.28)',
       cursor: 'pointer'
     });
 
-    // Secours en cas de blocage de lecture automatique
-    const replay = document.createElement('button');
+    // Bouton de secours si l'autoplay est bloqué
+    const relancer = document.createElement('button');
 
-    replay.type = 'button';
-    replay.textContent = '▶ Lire la vidéo';
+    relancer.type = 'button';
+    relancer.textContent = '▶ Lire la vidéo';
 
-    Object.assign(replay.style, {
+    Object.assign(relancer.style, {
       position: 'absolute',
       left: '50%',
-      bottom: 'max(22px, 5%)',
+      bottom: 'calc(35px + env(safe-area-inset-bottom))',
       transform: 'translateX(-50%)',
-      zIndex: '101',
+      zIndex: '100001',
       display: 'none',
-      minWidth: '190px',
-      minHeight: '52px',
-      padding: '13px 25px',
-      border: '1px solid #ffffff70',
+      minWidth: '200px',
+      minHeight: '54px',
+      padding: '14px 25px',
       borderRadius: '999px',
-      background: '#142740',
-      color: 'white',
-      font: '800 15px system-ui, sans-serif',
+      border: '1px solid #ffffff80',
+      background: '#173450',
+      color: '#ffffff',
+      fontSize: '16px',
+      fontWeight: '800',
       cursor: 'pointer'
     });
 
-    frame.append(video, commencer, replay);
-    panel.appendChild(frame);
+    // Indication pour les lecteurs d'écran
+    commencer.setAttribute(
+      'aria-label',
+      'Commencer et ouvrir l’application M.U.R.'
+    );
+
+    panel.append(frame, commencer, relancer);
+
+    let completed = false;
+    let playbackGeneration = 0;
 
     function showCommencer() {
+      if (completed) return;
+
+      completed = true;
       video.pause();
-      replay.style.display = 'none';
+
+      // Rester sur la dernière image
+      if (
+        Number.isFinite(video.duration) &&
+        video.duration > 0
+      ) {
+        try {
+          video.currentTime = Math.max(
+            0,
+            video.duration - 0.04
+          );
+        } catch (e) {}
+      }
+
+      relancer.style.display = 'none';
       commencer.style.display = 'block';
+
+      commencer.hidden = false;
+      panel.classList.remove('hide');
     }
 
-    function startVideo() {
+    function playIntro() {
+      playbackGeneration++;
+      const generation = playbackGeneration;
+
+      completed = false;
+
       panel.classList.remove('hide');
 
       commencer.style.display = 'none';
-      replay.style.display = 'none';
+      relancer.style.display = 'none';
 
       video.pause();
       video.muted = true;
@@ -166,30 +202,45 @@
         video.currentTime = 0;
       } catch (e) {}
 
-      const p = video.play();
+      const promise = video.play();
 
-      if (p && typeof p.catch === 'function') {
-        p.catch(() => {
-          replay.style.display = 'block';
+      if (promise && typeof promise.catch === 'function') {
+        promise.catch(() => {
+          if (
+            generation !== playbackGeneration ||
+            completed
+          ) return;
+
+          relancer.style.display = 'block';
         });
       }
     }
 
-    // Le nouveau lecteur n'a pas les anciens
-    // gestionnaires de fermeture automatique.
+    // Fin normale
     video.addEventListener('ended', showCommencer);
 
-    video.addEventListener('error', () => {
-      // En cas d'erreur, l'utilisateur peut entrer.
-      showCommencer();
+    // Sécurité : certains navigateurs ne déclenchent
+    // pas immédiatement l'événement ended.
+    video.addEventListener('timeupdate', () => {
+      if (
+        !completed &&
+        Number.isFinite(video.duration) &&
+        video.duration > 0 &&
+        video.currentTime >= video.duration - 0.08
+      ) {
+        showCommencer();
+      }
     });
 
-    replay.addEventListener('click', startVideo);
+    // Ne pas bloquer l'accès si la vidéo est absente
+    video.addEventListener('error', showCommencer);
 
+    relancer.addEventListener('click', playIntro);
+
+    // Entrer seulement lorsqu'on appuie sur Commencer
     commencer.addEventListener('click', () => {
       video.pause();
 
-      // Appel du mécanisme d'accueil original.
       if (typeof window.enterApp === 'function') {
         window.enterApp();
       } else {
@@ -197,26 +248,23 @@
       }
     });
 
-    // Appui court sur le petit logo :
-    // revoir toute l'introduction.
-    window.openPresentation = startVideo;
+    // Petit logo : relancer la vidéo
+    window.openPresentation = playIntro;
 
-    // Démarrage immédiat
-    startVideo();
+    // Lecture initiale
+    playIntro();
   }
 
-  // ====================================
-  // 2. ACCES AU BACK-OFFICE
-  // ====================================
+  // =========================================
+  // ACCES AU BACK-OFFICE
+  // =========================================
 
   function setupAdmin() {
     const brand = document.querySelector('.top .brand');
 
-    if (!brand || brand.dataset.adminReady === '1') {
-      return;
-    }
+    if (!brand || brand.dataset.murAdminV3) return;
 
-    brand.dataset.adminReady = '1';
+    brand.dataset.murAdminV3 = '1';
 
     let timer = null;
     let triggered = false;
@@ -266,19 +314,17 @@
       }
     });
 
-    [
-      'pointerup',
-      'pointercancel',
-      'pointerleave'
-    ].forEach(name => {
-      brand.addEventListener(name, cancel);
-    });
+    ['pointerup','pointercancel','pointerleave']
+      .forEach(name => {
+        brand.addEventListener(name, cancel);
+      });
 
     brand.addEventListener('click', e => {
       if (!triggered) return;
 
       e.preventDefault();
       e.stopImmediatePropagation();
+
       triggered = false;
     }, true);
 
@@ -287,18 +333,19 @@
     });
   }
 
-  // ====================================
-  // 3. CONTENUS DU BACK-OFFICE
-  // ====================================
+  // =========================================
+  // CONTENUS DU BACK-OFFICE
+  // =========================================
 
   async function applyContent() {
     try {
-      const response = await fetch('mur-content.json', {
-        cache: 'no-store'
-      });
+      const response = await fetch(
+        'mur-content.json',
+        { cache: 'no-store' }
+      );
 
       if (!response.ok) {
-        throw new Error('Fichier absent');
+        throw new Error('Contenu absent');
       }
 
       const data = await response.json();
@@ -310,7 +357,7 @@
         typeof KIS_QUESTIONS !== 'undefined'
       ) {
         const valid = data.questions.every(q =>
-          ['text', 'a', 'f', 'p'].every(k =>
+          ['text','a','f','p'].every(k =>
             typeof q[k] === 'string' &&
             q[k].trim().length > 0
           )
@@ -325,7 +372,7 @@
         }
       }
 
-      // Exercices et médias
+      // Exercices
       if (
         data.exercises &&
         typeof EXERCISES !== 'undefined'
@@ -336,16 +383,16 @@
 
           if (!source || !target) return;
 
-          ['title', 'caption'].forEach(prop => {
+          ['title','caption'].forEach(prop => {
             if (typeof source[prop] === 'string') {
               target[prop] = source[prop];
             }
           });
 
-          ['files', 'sounds', 'why'].forEach(prop => {
+          ['files','sounds','why'].forEach(prop => {
             if (Array.isArray(source[prop])) {
               target[prop] = source[prop].filter(
-                v => typeof v === 'string'
+                value => typeof value === 'string'
               );
             }
           });
@@ -363,7 +410,7 @@
 
           if (!source || !target) return;
 
-          ['i', 'hi', 'e', 'ho', 'duration'].forEach(prop => {
+          ['i','hi','e','ho','duration'].forEach(prop => {
             if (
               Number.isFinite(source[prop]) &&
               source[prop] >= 0
@@ -390,9 +437,9 @@
     }
   }
 
-  // ====================================
-  // 4. DEMARRAGE
-  // ====================================
+  // =========================================
+  // INITIALISATION
+  // =========================================
 
   function init() {
     setupIntro();
