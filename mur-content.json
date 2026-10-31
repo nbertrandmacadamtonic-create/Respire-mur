@@ -1,528 +1,203 @@
-{
-  "version": 1,
-  "questions": [
-    {
-      "text": "Quand quelque chose se complique, votre premier mouvement est plutot...",
-      "a": "agir vite, chercher une solution immediate",
-      "f": "observer un instant puis ajuster",
-      "p": "prendre du recul avant d'agir"
-    },
-    {
-      "text": "Dans une journee chargee, vous avez tendance a...",
-      "a": "accelerer encore pour tout faire",
-      "f": "alterner entre effort et pauses courtes",
-      "p": "ralentir pour garder une marge"
-    },
-    {
-      "text": "Face a l'imprevu, vous etes plutot...",
-      "a": "reactif, parfois trop rapide",
-      "f": "adaptable, selon le contexte",
-      "p": "prudent, vous avez besoin de temps"
-    },
-    {
-      "text": "Quand votre corps envoie un signal de fatigue, vous avez tendance a...",
-      "a": "continuer malgre tout",
-      "f": "hesiter entre continuer et lever le pied",
-      "p": "ecouter le signal et vous poser"
-    },
-    {
-      "text": "Votre rythme naturel ressemble plutot a...",
-      "a": "un moteur qui demarre vite",
-      "f": "un equilibre qui varie selon les jours",
-      "p": "un tempo plus lent mais regulier"
-    },
-    {
-      "text": "Dans un groupe, vous etes souvent celui ou celle qui...",
-      "a": "lance le mouvement",
-      "f": "s'adapte au rythme des autres",
-      "p": "temporise et stabilise"
-    },
-    {
-      "text": "Quand la pression monte, vous avez tendance a...",
-      "a": "vous tendre et accelerer",
-      "f": "osciller entre tension et controle",
-      "p": "chercher a vous calmer ou a vous isoler"
-    },
-    {
-      "text": "Pour recuperer, vous avez surtout besoin de...",
-      "a": "bouger ou faire quelque chose",
-      "f": "changer d'activite",
-      "p": "calme, silence ou repos"
-    },
-    {
-      "text": "Votre attention est plutot...",
-      "a": "rapide, orientee vers l'action",
-      "f": "variable, selon votre etat",
-      "p": "posee, orientee vers l'observation"
-    },
-    {
-      "text": "Quand vous etes lance, vous pouvez...",
-      "a": "aller trop loin sans vous en rendre compte",
-      "f": "vous ajuster si vous y pensez",
-      "p": "vous arreter assez facilement"
-    },
-    {
-      "text": "Dans le stress, votre respiration devient plutot...",
-      "a": "courte ou haute",
-      "f": "changeante",
-      "p": "plus lente ou contenue"
-    },
-    {
-      "text": "Votre maniere de prendre une decision est plutot...",
-      "a": "rapide, instinctive",
-      "f": "intermediaire, selon l'enjeu",
-      "p": "reflechie, progressive"
-    },
-    {
-      "text": "Votre energie du matin est souvent...",
-      "a": "vite disponible",
-      "f": "variable",
-      "p": "lente a installer"
-    },
-    {
-      "text": "Quand on vous demande d'en faire plus, vous avez tendance a...",
-      "a": "dire oui et encaisser",
-      "f": "negocier selon votre etat",
-      "p": "poser une limite plus facilement"
-    },
-    {
-      "text": "Globalement, votre systeme fonctionne plutot comme...",
-      "a": "un accelerateur puissant",
-      "f": "un funambule qui cherche l'equilibre",
-      "p": "un frein naturel qui securise"
-    }
-  ],
-  "exercises": {
-    "pause": {
-      "zone": "rouge",
-      "title": "Pause vagale",
-      "files": [
-        "images/exercices/06-pause-vagale.webp",
-        "pause-vagale.png",
-        "Pause vagale.png",
-        "pause vagale.png"
-      ],
-      "sounds": [
-        "pause-vagale.mp3",
-        "pause vagale.mp3",
-        "Pause vagale.mp3"
-      ],
-      "caption": "Ralentir  -  relacher  -  revenir au calme",
-      "why": [
-        "La Pause vagale utilise une regle simple : une expiration plus longue que l'inspiration envoie au corps un signal de ralentissement.",
-        "Le systeme neurovegetatif comprend tres bien le rythme. Une expiration douce, lente et prolongee agit comme un frein naturel.",
-        "En relachant la machoire, les epaules et le ventre, on diminue les messages de tension envoyes au cerveau."
-      ]
-    },
-    "double": {
-      "zone": "rouge",
-      "title": "Double inspiration",
-      "files": [
-        "images/exercices/12-double-inspiration.webp",
-        "Double inspiration.png",
-        "double-inspiration.png",
-        "double inspiration.png"
-      ],
-      "sounds": [
-        "double-inspiration.mp3",
-        "double inspiration.mp3",
-        "Double inspiration.mp3"
-      ],
-      "caption": "Relancer l'air  -  deverrouiller  -  souffler",
-      "why": [
-        "La double inspiration relance un cycle respiratoire bloque, court ou trop haut.",
-        "On inspire une premiere fois, puis on ajoute une petite deuxieme inspiration sans forcer.",
-        "Ensuite, l'expiration longue permet au systeme de redescendre."
-      ]
-    },
-    "merle": {
-      "zone": "rouge",
-      "title": "Chant du merle",
-      "files": [
-        "images/exercices/15-chant-du-merle.webp",
-        "chant-du-merle.png",
-        "Chant du merle.png",
-        "chant du merle.png"
-      ],
-      "sounds": [
-        "chant-du-merle.mp3",
-        "chant du merle.mp3",
-        "Chant du merle.mp3"
-      ],
-      "caption": "Ecouter  -  respirer  -  se reconnecter",
-      "why": [
-        "Le chant du merle agit comme un signal de securite.",
-        "Le son naturel detourne doucement l'attention de la tension et cree un point d'appui exterieur.",
-        "Il ne s'agit pas de se calmer de force, mais de laisser le systeme entendre autre chose que l'alerte."
-      ]
-    },
-    "ancrage": {
-      "zone": "rouge",
-      "title": "Ancrage",
-      "files": [
-        "images/exercices/13-ancrage.webp",
-        "ancrage.png",
-        "Ancrage.png"
-      ],
-      "sounds": [
-        "ancrage.mp3",
-        "Ancrage.mp3"
-      ],
-      "caption": "Sentir ses appuis  -  stabiliser  -  revenir ici",
-      "why": [
-        "L'ancrage ramene l'attention vers les appuis, le poids du corps et le contact avec le sol.",
-        "Quand le mental s'emballe, le corps peut redevenir une base simple et stable.",
-        "Le systeme recoit une information concrete : je suis ici, je suis porte."
-      ]
-    },
-    "vagues": {
-      "zone": "orange",
-      "title": "Pas de vagues",
-      "files": [
-        "images/exercices/02-pas-de-vagues.webp",
-        "Pas de vagues.png",
-        "pas-de-vagues.png",
-        "pas de vagues.png"
-      ],
-      "sounds": [
-        "pas-de-vagues.mp3",
-        "pas de vagues.mp3",
-        "Pas de vagues.mp3"
-      ],
-      "caption": "Ecouter  -  ralentir  -  se laisser porter",
-      "why": [
-        "Le bruit regulier des vagues cree un repere sonore previsible.",
-        "Cette repetition apaise l'attention, diminue la sensation d'alerte et aide le systeme neurovegetatif a se reguler.",
-        "Le rythme exterieur devient un support pour ralentir sans effort."
-      ]
-    },
-    "fil": {
-      "zone": "orange",
-      "title": "Le fil du souffle",
-      "files": [
-        "images/exercices/11-fil-du-souffle.webp",
-        "fil du souffle.png",
-        "Fil du souffle.png",
-        "fil-du-souffle.png"
-      ],
-      "sounds": [
-        "fil-du-souffle.mp3",
-        "fil du souffle.mp3",
-        "Fil du souffle.mp3"
-      ],
-      "caption": "Suivre  -  respirer  -  apaiser",
-      "why": [
-        "Suivre mentalement un fil donne une direction simple a l'attention.",
-        "Le souffle devient plus regulier sans devoir etre controle fortement.",
-        "C'est une maniere douce de reprendre la main quand la tension monte."
-      ]
-    },
-    "regard": {
-      "zone": "orange",
-      "title": "Regard horizon",
-      "files": [
-        "images/exercices/regard-horizon.webp",
-        "Regard horizon.png",
-        "regard-horizon.png",
-        "regard horizon.png"
-      ],
-      "sounds": [
-        "regard-horizon.mp3",
-        "regard horizon.mp3",
-        "Regard horizon.mp3"
-      ],
-      "caption": "Ouvrir  -  elargir  -  relacher",
-      "why": [
-        "Elargir le regard diminue la focalisation etroite liee a l'alerte.",
-        "Le champ visuel plus ouvert donne au cerveau une information de securite.",
-        "Le corps peut alors relacher une partie de sa tension de surveillance."
-      ]
-    },
-    "mains": {
-      "zone": "orange",
-      "title": "Mains apaisantes",
-      "files": [
-        "images/exercices/01-mains-apaisantes.webp",
-        "Mains apaisantes.png",
-        "mains-apaisantes.png",
-        "mains apaisantes.png"
-      ],
-      "sounds": [
-        "mains-apaisantes.mp3",
-        "mains apaisantes.mp3",
-        "Mains apaisantes.mp3"
-      ],
-      "caption": "Toucher  -  calmer  -  securiser",
-      "why": [
-        "Le contact des mains apporte une information corporelle directe.",
-        "La pression douce et stable aide a securiser le systeme.",
-        "L'attention revient au corps plutot que de rester uniquement dans le mental."
-      ]
-    },
-    "foret": {
-      "zone": "vert",
-      "title": "Promenade dans la foret",
-      "files": [
-        "images/exercices/10-promenade-foret.webp",
-        "Promenade dans la foret.png",
-        "promenade dans la foret.png",
-        "promenade-foret.png",
-        "Promenade foret.png"
-      ],
-      "sounds": [
-        "promenade-foret.mp3",
-        "promenade-dans-la-foret.mp3",
-        "promenade dans la foret.mp3",
-        "Promenade dans la foret.mp3",
-        "promenade dans la foret.mp3",
-        "Promenade dans la foret.mp3"
-      ],
-      "caption": "Marcher assis  -  ecouter  -  respirer",
-      "why": [
-        "Meme assis, l'univers sonore d'une foret peut creer une sensation de deplacement doux.",
-        "Les sons naturels donnent au systeme un decor stable, vivant et non menacant.",
-        "L'attention se promene, le souffle retrouve un rythme plus souple."
-      ]
-    },
-    "lac": {
-      "zone": "vert",
-      "title": "Lac tranquille",
-      "files": [
-        "images/exercices/04-lac-tranquille.webp",
-        "Lac tranquille.png",
-        "lac-tranquille.png",
-        "lac tranquille.png"
-      ],
-      "sounds": [
-        "lac-tranquille.mp3",
-        "lac tranquille.mp3",
-        "Lac tranquille.mp3"
-      ],
-      "caption": "Stabiliser  -  poser  -  laisser revenir",
-      "why": [
-        "L'evocation d'un lac calme favorise la stabilite attentionnelle.",
-        "Le corps recoit une invitation a se poser plutot qu'a reagir.",
-        "La regularite du paysage interieur soutient le retour a l'equilibre."
-      ]
-    },
-    "balancier": {
-      "zone": "vert",
-      "title": "Balancier du corps",
-      "files": [
-        "images/exercices/14-balancier-du-corps.webp",
-        "Balancier du corps.png",
-        "balancier du corps.png",
-        "balancier-du-corps.png"
-      ],
-      "sounds": [
-        "balancier-du-corps.mp3",
-        "balancier du corps.mp3",
-        "Balancier du corps.mp3"
-      ],
-      "caption": "Osciller  -  relacher  -  retrouver l'axe",
-      "why": [
-        "Un mouvement de balancier tres doux donne un rythme simple au corps.",
-        "L'oscillation aide a sortir d'une posture figee.",
-        "Le systeme retrouve progressivement un axe plus disponible."
-      ]
-    },
-    "presence": {
-      "zone": "vert",
-      "title": "Presence corporelle",
-      "files": [
-        "images/exercices/05-presence-corporelle.webp",
-        "Presence corporelle.png",
-        "presence-corporelle.png",
-        "presence corporelle.png"
-      ],
-      "sounds": [
-        "presence-corporelle.mp3",
-        "presence corporelle.mp3",
-        "Presence corporelle.mp3",
-        "presence corporelle.mp3"
-      ],
-      "caption": "Sentir  -  habiter  -  revenir ici",
-      "why": [
-        "La presence corporelle ramene l'attention vers les sensations simples.",
-        "Elle diminue l'eparpillement mental en donnant des reperes concrets.",
-        "Le corps redevient un lieu d'appui plutot qu'un lieu de tension."
-      ]
-    },
-    "bell": {
-      "zone": "bleu",
-      "title": "Bell Bell Bell",
-      "files": [
-        "images/exercices/03-bell-bell-bell.webp",
-        "Bell Bell Bell.png",
-        "bell-bell-bell.png",
-        "bell bell bell.png"
-      ],
-      "sounds": [
-        "bell-bell-bell.mp3",
-        "bell bell bell.mp3",
-        "Bell Bell Bell.mp3"
-      ],
-      "caption": "Reveiller  -  eclaircir  -  remettre de l'energie",
-      "why": [
-        "Les sons de cloche attirent l'attention de facon nette et breve.",
-        "Ils peuvent creer une petite activation utile quand l'energie est basse.",
-        "L'objectif est de reveiller sans agresser : remettre de la clarte et un peu d'elan."
-      ]
-    },
-    "lumiere": {
-      "zone": "bleu",
-      "title": "Lumiere du matin",
-      "files": [
-        "images/exercices/07-lumiere-du-matin.webp",
-        "Lumiere du matin.png",
-        "lumiere-du-matin.png",
-        "lumiere du matin.png"
-      ],
-      "sounds": [
-        "lumiere-du-matin.mp3",
-        "lumiere du matin.mp3",
-        "Lumiere du matin.mp3",
-        "lumiere du matin.mp3"
-      ],
-      "caption": "Eclairer  -  activer  -  commencer",
-      "why": [
-        "La lumiere du matin symbolise le demarrage progressif.",
-        "Elle aide a orienter l'attention vers l'eveil et la disponibilite.",
-        "Le systeme recoit un signal d'activation douce, sans precipitation."
-      ]
-    },
-    "etincelle": {
-      "zone": "bleu",
-      "title": "Etincelle",
-      "files": [
-        "images/exercices/09-etincelle.webp",
-        "Etincelle.png",
-        "etincelle.png",
-        "etincelle.png"
-      ],
-      "sounds": [
-        "etincelle.mp3",
-        "Etincelle.mp3",
-        "etincelle.mp3"
-      ],
-      "caption": "Relancer  -  reveiller  -  allumer",
-      "why": [
-        "L'etincelle represente une activation courte et precise.",
-        "Elle aide a sortir d'un etat trop bas ou trop lourd.",
-        "On ne cherche pas a forcer, mais a rallumer juste assez d'energie."
-      ]
-    },
-    "elan": {
-      "zone": "bleu",
-      "title": "Elan vertical",
-      "files": [
-        "images/exercices/16-elan-vertical.webp",
-        "Elan vertical.png",
-        "elan-vertical.png",
-        "elan vertical.png"
-      ],
-      "sounds": [
-        "elan-vertical.mp3",
-        "elan vertical.mp3",
-        "Elan vertical.mp3",
-        "elan vertical.mp3"
-      ],
-      "caption": "Se redresser  -  activer  -  repartir",
-      "why": [
-        "Se redresser modifie immediatement l'etat corporel.",
-        "L'axe vertical favorise une sensation d'elan et de disponibilite.",
-        "Le systeme recoit une information simple : je peux repartir."
-      ]
-    }
-  },
-  "breaths": {
-    "365": {
-      "key": "365",
-      "zone": "Vert",
-      "color": "#22c55e",
-      "i": 5,
-      "hi": 0,
-      "e": 5,
-      "ho": 0,
-      "duration": 300,
-      "msg": "Vert : respiration reguliere, stable et facile a tenir."
-    },
-    "478": {
-      "key": "478",
-      "zone": "Rouge",
-      "color": "#ef4444",
-      "i": 4,
-      "hi": 7,
-      "e": 8,
-      "ho": 0,
-      "duration": 120,
-      "msg": "4 / 7 / 8 : inspirer, suspendre, puis relacher longtemps."
-    },
-    "boost": {
-      "key": "boost",
-      "zone": "Bleu",
-      "color": "#3b82f6",
-      "i": 5,
-      "hi": 0,
-      "e": 3,
-      "ho": 0,
-      "duration": 120,
-      "msg": "Bleu : inspiration plus longue, pour remettre de l'elan sans brusquer le systeme."
-    },
-    "coherence": {
-      "key": "coherence",
-      "zone": "Vert",
-      "color": "#22c55e",
-      "i": 5,
-      "hi": 0,
-      "e": 5,
-      "ho": 0,
-      "duration": 300,
-      "msg": "Coherence 5/5 : inspiration et expiration s'equilibrent."
-    },
-    "square": {
-      "key": "square",
-      "zone": "Vert",
-      "color": "#22c55e",
-      "i": 4,
-      "hi": 4,
-      "e": 4,
-      "ho": 4,
-      "duration": 180,
-      "msg": "Respiration carree : quatre temps egaux pour se recentrer."
-    },
-    "regulate": {
-      "key": "regulate",
-      "zone": "Orange",
-      "color": "#f59e0b",
-      "i": 4,
-      "hi": 0,
-      "e": 6,
-      "ho": 0,
-      "duration": 180,
-      "msg": "Orange : l'expiration devient plus longue pour reguler la montee."
-    },
-    "frein": {
-      "key": "frein",
-      "zone": "Rouge",
-      "color": "#ef4444",
-      "i": 3,
-      "hi": 0,
-      "e": 8,
-      "ho": 0,
-      "duration": 120,
-      "msg": "Rouge : expiration longue pour freiner franchement l'activation."
-    },
-    "sleep": {
-      "key": "sleep",
-      "zone": "Bleu nuit",
-      "color": "#6366f1",
-      "i": 3,
-      "hi": 0,
-      "e": 7,
-      "ho": 0,
-      "duration": 420,
-      "msg": "Sommeil : inspiration courte, expiration longue, pour glisser vers le calme."
+
+/* M.U.R. — Extensions de l'application */
+(() => {
+  'use strict';
+
+  const VIDEO = 'Logo_character_comes_to_life_20261031152523.mp4';
+
+  // Introduction video
+  function intro() {
+    const old = document.getElementById('presentation');
+    if (!old || old.dataset.murVideoReady) return;
+
+    old.dataset.murVideoReady = '1';
+    old.innerHTML = '';
+    old.classList.remove('hide');
+    old.classList.add('mur-video-presentation');
+
+    const video = document.createElement('video');
+    video.src = VIDEO;
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'auto';
+    video.setAttribute('webkit-playsinline', '');
+    video.className = 'mur-video';
+
+    const skip = document.createElement('button');
+    skip.type = 'button';
+    skip.className = 'mur-video-skip';
+    skip.textContent = 'Passer ›';
+
+    const close = () => {
+      if (old.classList.contains('hide')) return;
+      video.pause();
+      if (typeof window.enterApp === 'function') {
+        window.enterApp();
+      } else {
+        old.classList.add('hide');
+      }
+    };
+
+    video.addEventListener('ended', close);
+    video.addEventListener('error', close);
+    skip.onclick = close;
+
+    old.append(video, skip);
+
+    const p = video.play();
+    if (p && p.catch) {
+      p.catch(() => {
+        skip.textContent = 'Entrer ›';
+      });
     }
   }
-}
+
+  // Chargement des contenus du back-office
+  async function applyContent() {
+    try {
+      const resp = await fetch('mur-content.json', {
+        cache: 'no-store'
+      });
+
+      if (!resp.ok) throw new Error('Contenu absent');
+      const data = await resp.json();
+
+      if (
+        Array.isArray(data.questions) &&
+        data.questions.length === 15 &&
+        typeof KIS_QUESTIONS !== 'undefined'
+      ) {
+        const valid = data.questions.every(q =>
+          ['text', 'a', 'f', 'p'].every(k =>
+            typeof q[k] === 'string' && q[k].trim()
+          )
+        );
+
+        if (valid) {
+          KIS_QUESTIONS.splice(
+            0,
+            KIS_QUESTIONS.length,
+            ...data.questions.map(q => ({ ...q }))
+          );
+        }
+      }
+
+      if (data.exercises && typeof EXERCISES !== 'undefined') {
+        Object.keys(EXERCISES).forEach(k => {
+          const v = data.exercises[k];
+          if (!v || typeof v.title !== 'string') return;
+
+          ['title', 'caption'].forEach(prop => {
+            if (typeof v[prop] === 'string') {
+              EXERCISES[k][prop] = v[prop];
+            }
+          });
+
+          ['files', 'sounds', 'why'].forEach(prop => {
+            if (Array.isArray(v[prop])) {
+              EXERCISES[k][prop] = v[prop].filter(
+                x => typeof x === 'string'
+              );
+            }
+          });
+        });
+      }
+
+      if (data.breaths && typeof BREATHS !== 'undefined') {
+        Object.keys(BREATHS).forEach(k => {
+          const v = data.breaths[k];
+          if (!v) return;
+
+          ['i', 'hi', 'e', 'ho', 'duration'].forEach(p => {
+            if (Number.isFinite(v[p]) && v[p] >= 0) {
+              BREATHS[k][p] = v[p];
+            }
+          });
+
+          if (typeof v.msg === 'string') {
+            BREATHS[k].msg = v.msg;
+          }
+        });
+      }
+
+      window.dispatchEvent(new Event('mur-content-loaded'));
+
+    } catch (e) {
+      console.info('M.U.R. : contenu par défaut conservé', e.message);
+    }
+  }
+
+  // Appui long sur le logo : accès back-office
+  function setupAdminLongPress() {
+    const logo = document.querySelector('.top .brand');
+    if (!logo) return;
+
+    let timer = null;
+    let longPressed = false;
+    let startX = 0;
+    let startY = 0;
+
+    const cancel = () => {
+      clearTimeout(timer);
+      timer = null;
+    };
+
+    logo.style.cursor = 'pointer';
+    logo.style.touchAction = 'manipulation';
+
+    logo.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+
+      cancel();
+      longPressed = false;
+      startX = e.clientX;
+      startY = e.clientY;
+
+      timer = setTimeout(() => {
+        timer = null;
+        longPressed = true;
+        window.location.href = 'admin.html';
+      }, 2000);
+    });
+
+    logo.addEventListener('pointermove', e => {
+      if (
+        Math.abs(e.clientX - startX) > 12 ||
+        Math.abs(e.clientY - startY) > 12
+      ) {
+        cancel();
+      }
+    });
+
+    logo.addEventListener('pointerup', cancel);
+    logo.addEventListener('pointercancel', cancel);
+    logo.addEventListener('pointerleave', cancel);
+
+    logo.addEventListener('click', e => {
+      if (longPressed) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        longPressed = false;
+      }
+    }, true);
+
+    logo.addEventListener('contextmenu', e => {
+      e.preventDefault();
+    });
+  }
+
+  // Initialisation
+  function init() {
+    intro();
+    applyContent();
+    setupAdminLongPress();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
