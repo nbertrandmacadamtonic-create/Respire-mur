@@ -285,63 +285,78 @@
     return box;
   }
 
-  // Un seul sélecteur de langue, déplacé entre l'introduction et l'app.
+  // Un seul sélecteur FR/EN par écran : caché durant la vidéo,
+  // visible dans l'application après « Commencer », et déplacé
+  // dans la page Réglages lorsqu'elle est ouverte.
   let languagePicker = null;
   let pickerObserver = null;
+  let settingsObserver = null;
 
   function installPickers() {
-    // Supprimer les anciens sélecteurs en double, le cas échéant.
     const existing = [...document.querySelectorAll('.mur-language-picker')];
     if (!languagePicker || !languagePicker.isConnected) {
       languagePicker = existing[0] || picker();
     }
-    for (const el of existing) {
-      if (el !== languagePicker) el.remove();
+    for (const element of existing) {
+      if (element !== languagePicker) element.remove();
     }
 
+    // Le back-office conserve son propre choix de langue.
     if (admin) {
       const aside = document.querySelector('.aside');
       if (!aside) return;
-      const menu = aside.querySelector('.menu');
       if (languagePicker.parentElement !== aside) {
-        aside.insertBefore(languagePicker, menu || null);
+        aside.insertBefore(languagePicker, aside.querySelector('.menu'));
       }
-      languagePicker.style.position = 'relative';
-      languagePicker.style.left = '';
-      languagePicker.style.top = '';
-      languagePicker.style.right = '';
-      languagePicker.style.margin = '12px 0';
+      Object.assign(languagePicker.style, {
+        display: 'flex', position: 'relative', top: '',
+        right: '', left: '', margin: '12px 0'
+      });
       return;
     }
 
-    const header = document.querySelector('.app .top');
     const panel = document.getElementById('presentation');
-    const introVisible = panel && !panel.classList.contains('hide');
-    const target = introVisible ? panel : header;
-    if (!target) return;
+    const introVisible = !!panel && !panel.classList.contains('hide');
+    const header = document.querySelector('.app .top');
+    const settings = document.getElementById('settings');
+    if (!header) return;
 
+    // Ajouter une vraie rubrique Langue dans Réglages, une seule fois.
+    let settingsCard = settings?.querySelector('.mur-language-settings-card');
+    if (settings && !settingsCard) {
+      settingsCard = document.createElement('section');
+      settingsCard.className = 'card mur-language-settings-card';
+      settingsCard.innerHTML =
+        '<h2>Langue / Language</h2>' +
+        '<p class="help">Choisissez la langue de l’application. / Choose the app language.</p>';
+      settings.insertBefore(settingsCard, settings.children[1] || null);
+    }
+
+    const settingsOpen = !!settings && settings.classList.contains('active');
+    const target = settingsOpen && settingsCard ? settingsCard : header;
     if (languagePicker.parentElement !== target) {
       target.appendChild(languagePicker);
     }
-    if (introVisible) {
-      languagePicker.style.position = 'absolute';
-      languagePicker.style.top = 'calc(16px + env(safe-area-inset-top))';
-      languagePicker.style.left = 'calc(16px + env(safe-area-inset-left))';
-      languagePicker.style.right = 'auto';
-      languagePicker.style.margin = '0';
-    } else {
-      languagePicker.style.position = 'relative';
-      languagePicker.style.top = '';
-      languagePicker.style.left = '';
-      languagePicker.style.right = '';
-      languagePicker.style.margin = '0 0 0 auto';
-    }
 
-    // Lors du clic sur « Commencer », le bouton change de place,
-    // il n'est jamais affiché deux fois.
+    Object.assign(languagePicker.style, {
+      // Aucun drapeau sur la vidéo d'introduction.
+      display: introVisible ? 'none' : 'flex',
+      position: 'relative', top: '', left: '', right: '',
+      margin: settingsOpen ? '12px 0 0' : '0 0 0 auto'
+    });
+
+    // Déplacer le sélecteur après « Commencer ».
     if (panel && !pickerObserver) {
-      pickerObserver = new MutationObserver(() => installPickers());
+      pickerObserver = new MutationObserver(installPickers);
       pickerObserver.observe(panel, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    }
+    // Le déplacer également lors de l'ouverture/fermeture de Réglages.
+    if (settings && !settingsObserver) {
+      settingsObserver = new MutationObserver(installPickers);
+      settingsObserver.observe(settings, {
         attributes: true,
         attributeFilter: ['class']
       });
