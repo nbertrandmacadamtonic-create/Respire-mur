@@ -5,6 +5,113 @@
  */
 (() => {
   'use strict';
+  // M.U.R. — Mise en page adaptative téléphone (app + back-office).
+  // Aucune modification de la vidéo, de la langue ou des scores.
+  const mobileStyle = document.createElement('style');
+  mobileStyle.id = 'mur-bilingual-mobile-layout';
+  mobileStyle.textContent = `
+@media (max-width: 720px) {
+  html, body { max-width: 100%; overflow-x: clip; }
+
+  /* Barre supérieure de l'application. */
+  .app { width: 100%; max-width: 430px; min-width: 0; }
+  .app .top {
+    display: flex; flex-wrap: nowrap; align-items: center;
+    justify-content: space-between; gap: 6px; min-width: 0;
+  }
+  .app .top .brand {
+    display: flex; flex: 1 1 auto; align-items: center;
+    gap: 6px; min-width: 0;
+  }
+  .app .top .brand .logo {
+    width: 36px; height: 36px; flex-shrink: 0;
+  }
+  .app .top .brand h1 {
+    font-size: clamp(15px, 4vw, 19px);
+    white-space: nowrap;
+  }
+  .app .top > .mur-language-picker {
+    flex: 0 0 auto; margin-left: auto !important;
+    padding: 3px !important; gap: 3px !important;
+    max-width: max-content; align-self: center;
+  }
+  .app .top > .mur-language-picker button {
+    min-width: 35px !important; min-height: 40px !important;
+    padding: 0 6px !important; font-size: 11px !important;
+    touch-action: manipulation;
+  }
+
+  /* Sélecteur sur la vidéo d'accueil : à gauche,
+     pour ne pas recouvrir « Activer le son » à droite. */
+  #presentation > .mur-language-picker {
+    position: absolute !important;
+    left: calc(10px + env(safe-area-inset-left)) !important;
+    right: auto !important;
+    top: calc(12px + env(safe-area-inset-top)) !important;
+    margin: 0 !important; padding: 3px !important;
+    gap: 3px !important; z-index: 100006 !important;
+  }
+  #presentation > .mur-language-picker button {
+    min-width: 38px !important; min-height: 42px !important;
+    padding: 0 7px !important;
+  }
+  #presentation #murWelcomeVideo2026 {
+    max-width: none !important; max-height: none !important;
+    object-fit: contain !important;
+  }
+
+  /* Les textes anglais peuvent être plus longs. */
+  .app .page, .app .card, .app .page-title,
+  .app .test-menu-card, .app .test-menu-content {
+    min-width: 0; overflow-wrap: anywhere;
+  }
+  .app button, .app .nav-ico { overflow-wrap: anywhere; }
+  .app .tabbar { max-width: calc(100vw - 18px); }
+  .app .tabbar .nav-ico { min-width: 0; }
+  .app .tabbar .nav-ico span { font-size: 10px; }
+
+  /* Back-office : sélecteur en haut à droite. */
+  .aside { position: relative; width: 100%; min-width: 0; }
+  .aside > .logo { padding-right: 110px; }
+  .aside > .mur-language-picker {
+    position: absolute !important;
+    top: 10px !important; right: 10px !important;
+    margin: 0 !important; padding: 3px !important;
+    gap: 3px !important;
+  }
+  .aside > .mur-language-picker button {
+    min-width: 35px !important; min-height: 40px !important;
+    padding: 0 5px !important;
+  }
+  .aside .menu {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .aside .nav {
+    min-width: 0; width: 100%; min-height: 50px;
+    padding: 8px 3px; white-space: normal;
+    font-size: 11px; line-height: 1.25; text-align: center;
+    overflow-wrap: anywhere;
+  }
+  .main { max-width: 100%; min-width: 0; }
+  .main .fields, .main .media {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .main .field, .main .media-side { min-width: 0; }
+  .main input, .main textarea, .main select {
+    max-width: 100%; font-size: 16px;
+  }
+  .main .card, .main h2, .main p { overflow-wrap: anywhere; }
+}
+@media (max-width: 355px) {
+  .app .top .brand .logo { width: 32px; height: 32px; }
+  .app .top .brand h1 { font-size: 15px; }
+  .aside .nav { font-size: 10px; }
+}
+`;
+  document.head.appendChild(mobileStyle);
+
   const STORAGE_KEY = 'mur-ui-language';
   const DRAFT_KEY = 'mur-admin-draft-v1';
   const uiDefaults = {"Commencer":"Start","Activer le son":"Enable sound","🔊 Activer le son":"🔊 Enable sound","▶ Lire la vidéo":"▶ Play video","Passer":"Skip","Retour à l’application":"Back to the app","← Retour à l’application":"← Back to the app","Tableau de bord":"Dashboard","Laissez-vous guider.":"Let us guide you.","Commencez par faire les tests NeuroFlex":"Start with the NeuroFlex tests","Respiration en cours - toucher pour revenir":"Breathing in progress — tap to return","Mesurer":"Measure","Utiliser":"Use","Reguler":"Regulate","Réguler":"Regulate","Decouvrez votre tendance":"Discover your tendency","Touchez pour commencer":"Tap to begin","Tendance actuelle":"Current trend","Commencez vos tests pour déterminer votre profil.":"Take the tests to discover your profile.","Votre profil NeuroFlex":"Your NeuroFlex profile","Comprendre votre tendance de fond, puis votre état du moment.":"Understand your baseline tendency, then your current state.","Votre tendance de fond":"Your baseline tendency","Votre état actuel":"Your current state","Votre réponse du moment":"Your current response","Tests NeuroFlex":"NeuroFlex tests","Tests":"Tests","Découvrez la personnalité et les performances de votre système neurovégétatif.":"Discover how your autonomic nervous system responds and adapts.","Ki.S":"Ki.S","A faire en premier":"Do this first","Verrouillé":"Locked","Étape 1":"Step 1","Étape 2":"Step 2","Étape 3":"Step 3","Resultat":"Result","Résultat":"Result","Test Ki.S":"Ki.S test","Votre tendance de fond.":"Your baseline tendency.","Precedent":"Previous","Précédent":"Previous","Suivant":"Next","Valider Ki.S":"Submit Ki.S","Energie":"Energy","Énergie":"Energy","Mental":"Mind","Corps":"Body","Valider Ici & Maintenant":"Submit Here & Now","Ici & Maintenant":"Here & Now","Résultat NeuroFlex":"NeuroFlex result","Profil Ki.S":"Ki.S profile","À faire":"To do","Commencez par Ki.S pour connaître votre profil de fond.":"Start with Ki.S to identify your baseline profile.","Posé":"Steady","Funambule":"Balancer","Fonceur":"Go-getter","Mesurez votre état actuel pour compléter cette partie.":"Measure your current state to complete this section.","Après les deux tests":"After both tests","Synthèse non disponible":"Summary unavailable","La synthèse sera disponible après les deux tests.":"The summary will appear after both tests.","Commencer Ki.S":"Start Ki.S","Il est temps de prendre l'air.":"Time to take a breath.","Choisir une respiration":"Choose a breathing exercise","Respirations guidees":"Guided breathing","Toutes les respirations classees par couleur":"All breathing exercises, grouped by colour","Relance douce":"Gentle boost","Respiration 365":"365 breathing","Coherence":"Coherence","Cohérence":"Coherence","Respiration carree":"Box breathing","Regulation douce":"Gentle regulation","Régulation douce":"Gentle regulation","Frein":"Brake","Sommeil":"Sleep","Nuit - Sommeil":"Night — Sleep","dynamiser":"energise","equilibrer":"balance","freiner":"slow down","Chaque respiration guidee a sa position propre sur la ligne.":"Each guided breathing exercise has its own position on the line.","Intro active":"Intro on","Mode manuel":"Manual mode","inspire":"inhale","expire":"exhale","Duree":"Duration","Durée":"Duration","Temps restant":"Time remaining","Cycle":"Cycle","Etes-vous pret ?":"Are you ready?","Êtes-vous prêt ?":"Are you ready?","Inspirez":"Inhale","Expirez":"Exhale","Pause":"Hold","Exercices":"Exercises","Exercices rouges - Freiner":"Red exercises — Slow down","Exercices orange - Reguler":"Orange exercises — Regulate","Exercices verts - Equilibrer":"Green exercises — Balance","Exercices bleus - Activer":"Blue exercises — Activate","Respirations":"Breathing","Respiration":"Breathing","Rouge":"Red","Orange":"Orange","Vert":"Green","Bleu":"Blue","Bleu nuit":"Night blue","Continuer les tests":"Continue the tests","Menu Tests":"Test menu","Synthèse NeuroFlex":"NeuroFlex summary","Respiration conseillée":"Recommended breathing","Voir les exercices conseillés":"See recommended exercises","Voir les exercices":"See exercises","Ouvrir":"Open","Fermer":"Close","En attente":"Pending","Aujourd'hui":"Today","Evolution NeuroFlex":"NeuroFlex trend","Historique":"History","Mon historique":"My history","Statistiques":"Statistics","Mon profil":"My profile","Profil":"Profile","Paramètres":"Settings","Réglages":"Settings","Réinitialiser":"Reset","Enregistrer":"Save","Continuer":"Continue","Retour":"Back","Compris":"Got it","Bienvenue dans M.U.R.":"Welcome to M.U.R.","Comprendre les tests NeuroFlex":"Understanding the NeuroFlex tests","La synthese":"The summary","La synthèse":"The summary","NeuroFlex":"NeuroFlex","Administration des contenus · images & audio":"Content management · images & audio","Vue générale":"Overview","Questions ki.S":"Ki.S questions","Exercices : images et audios":"Exercises: images and audio","Inscriptions":"Registrations","Publication":"Publishing","Tableau de bord M.U.R.":"M.U.R. dashboard","Gérez les fiches, visualisez les images et écoutez les audios associés à chaque exercice.":"Edit content, preview images and listen to the audio for each exercise.","Protocoles respiratoires":"Breathing protocols","Modifier les contenus":"Edit content","Voir images et audios":"View images and audio","Conservez le lien A / F / P pour le calcul des profils.":"Keep the A / F / P mapping for profile scoring.","Chaque fiche affiche son illustration, l'audio associé, les fichiers réellement chargés et les champs éditables. Vous pouvez écouter chaque correspondance.":"Each exercise shows its image, linked audio, loaded files and editable fields.","Toutes les familles":"All groups","Respiration guidée":"Guided breathing","Durées en secondes et message associé à chaque protocole.":"Phase durations in seconds and the message for each protocol.","Inscriptions et utilisateurs":"Registrations and users","Pas de base centralisée d'utilisateurs.":"No central user database.","Confidentialité":"Privacy","Publier les modifications":"Publish changes","Exporter mur-content.json":"Export mur-content.json","Importer un JSON":"Import JSON","Restaurer le contenu publié":"Restore published content","Image correspondante":"Linked image","Audio correspondant":"Linked audio","Recherche du fichier…":"Finding file…","Recherche du fichier audio…":"Finding audio file…","Autres noms de fichiers référencés":"Other referenced filenames","Images :":"Images:","Audios :":"Audio:","Image indisponible":"Image unavailable","Fichier image introuvable":"Image file not found","Audio introuvable dans le dépôt":"Audio not found in repository","✓ Audio disponible":"✓ Audio available","Brouillon enregistré localement":"Draft saved locally","Contenu importé":"Content imported","Fichier prêt à publier":"File ready to publish","Version publiée restaurée":"Published version restored","Question":"Question","Réponse A (Fonceur)":"Answer A (Go-getter)","Réponse F (Funambule)":"Answer F (Balancer)","Réponse P (Posé)":"Answer P (Steady)","Titre":"Title","Légende":"Caption","Image principale":"Main image","Audio principal":"Main audio","Explication":"Explanation","Inspiration":"Inhale","Pause après inspiration":"Hold after inhaling","Expiration":"Exhale","Pause après expiration":"Hold after exhaling","Durée totale (secondes)":"Total duration (seconds)","Description":"Description","Publication sur GitHub":"Publish on GitHub","Français":"French","Anglais":"English","Traductions":"Translations","Interface":"Interface","Fichiers images et audio partagés":"Shared image and audio files","M.U.R. vous propose une nouvelle experience : decouvrir votre profil neurovegetatif et apprendre a le reequilibrer.":"M.U.R. offers a new experience: discover your autonomic nervous system profile and learn how to restore balance.","Votre systeme neurovegetatif influence votre energie, votre respiration, votre recuperation, votre concentration et votre capacite a faire face au stress.":"Your autonomic nervous system influences your energy, breathing, recovery, focus and response to stress.","Ensuite, l'application vous oriente vers une respiration et des exercices adaptes a votre etat.":"The app then suggests breathing techniques and exercises suited to how you feel.","La vraie force ne vient pas du fait d'encaisser, mais de la capacite que nous avons a rester flexibles.":"Real strength is not about enduring everything, but about staying flexible.","M.U.R. vous aide a retrouver cette souplesse.":"M.U.R. helps you regain that flexibility.","Les tests NeuroFlex servent a mieux lire la maniere dont votre systeme neurovegetatif s'organise et s'adapte.":"NeuroFlex tests help you understand how your autonomic nervous system is organised and adapts.","observe votre tendance de fond. Il indique si votre systeme fonctionne plutot en mode pose, fonceur ou funambule.":"assesses your baseline tendency: whether you lean towards steady, go-getter or balancer.","mesure votre etat du moment : energie, souffle, mental et ressenti corporel. C'est une photographie instantanee.":"measures how you feel right now: energy, breathing, mind and body. It is a snapshot.","croise ces deux informations pour proposer une orientation simple : activer, entretenir, reguler ou freiner.":"combines these findings to suggest a simple direction: activate, maintain, regulate or slow down.","Ces tests ne remplacent pas un diagnostic medical. Ils servent de boussole pratique pour choisir une respiration ou un exercice adapte a l'instant.":"These tests do not replace a medical diagnosis. They are a practical guide to choosing a breathing exercise or activity suited to the moment.","Touchez le cercle pour commencer.":"Tap the circle to begin.","Le M.U.R d'exercices":"The M.U.R. exercise wall","Apprenez à briser le mur.":"Learn to break through the wall.","Collection":"Collection","Briser le mur":"Break through the wall","Reguler la montee":"Regulate rising tension","Exercices verts - Entretenir":"Green exercises — Maintain balance","Stabiliser":"Stabilise","Remettre de l'elan":"Restore momentum","Suivre":"Follow","Faites le point sur vos points.":"Review your points and progress.","Les seances et exercices sont enregistres sur ce telephone.":"Sessions and exercises are stored on this device.","Semaine":"Week","0 pratique":"No practices yet","Commencez par une respiration ou un exercice.":"Start with a breathing session or exercise.","Minutes":"Minutes","Chaque test NeuroFlex est enregistre comme un point. Vous pouvez en faire plusieurs par jour pour suivre l'evolution.":"Each NeuroFlex test is recorded as a point. Take several each day to track your progress.","Aucun point pour le moment. Realisez un test NeuroFlex complet pour commencer la courbe.":"No points yet. Complete a NeuroFlex test to start the graph.","Aucun test complet enregistre.":"No completed tests recorded.","Historique recent":"Recent history","Sauvegarde":"Backup","Copiez vos donnees ou restaurez une ancienne sauvegarde.":"Copy your data or restore an earlier backup.","Sauvegarder":"Back up","Importer":"Import","Personnalisez votre expérience.":"Personalise your experience.","Prenom ou pseudo":"First name or nickname","Enregistrer le profil":"Save profile","Comment fonctionne M.U.R ?":"How does M.U.R. work?","Comment fonctionne M.U.R ?":"How does M.U.R. work?","pour comprendre.":"to understand.","pour agir.":"to act.","pour retrouver de la marge.":"to regain flexibility.","Le but n'est pas d'etre toujours calme. Le but est de retrouver de la souplesse : pouvoir ralentir, s'activer ou recuperer au bon moment.":"The goal is not to stay calm all the time, but to become more flexible: to slow down, activate or recover when needed.","Reinitialiser les tests":"Reset the tests","Revenir au debut du parcours NeuroFlex.":"Return to the start of the NeuroFlex journey.","Reset - refaire Ki.S":"Reset — retake Ki.S","Accueil":"Home","Respirer":"Breathe","Paniflex":"Paniflex","Carte d'exercice":"Exercise card","Touchez la carte pour voir le verso.":"Tap the card to see the back.","Recto - touchez pour retourner":"Front — tap to flip","Point = detail du test.":"Point = test details.","Selectionnez un point sur la courbe.":"Select a point on the curve.","Touchez un point pour afficher ses statistiques.":"Tap a point to see its statistics.","Tres bas":"Very low","Bas":"Low","Stable":"Stable","Eleve":"High","Tres eleve":"Very high","Besoin d'activation douce":"Gentle activation needed","Relance progressive":"Gradual boost","Zone d'equilibre":"Balanced zone","Activation presente":"Active","Trop d'activation possible":"Possible overactivation","Tres lente":"Very slow","Lente":"Slow","Ralentissement marque":"Marked slowing","Respiration basse":"Slow breathing","Rythme disponible":"Flexible rhythm","Courte":"Short","Tension qui monte":"Tension rising","Tres courte":"Very short","Alerte respiratoire":"Breathing alert","Eteint":"Flat","Peu d'elan mental":"Low mental drive","Ralenti":"Slowed down","Attention basse":"Low focus","Clair":"Clear","Mental stable":"Steady mind","Charge":"Overloaded","Pensees rapides":"Racing thoughts","Sature":"Saturated","Trop de bruit interieur":"Mental overload","Lourd":"Heavy","Tonus bas":"Low muscle tone","Relache":"Relaxed","Corps calme":"Calm body","Disponible":"Ready","Bon appui corporel":"Good physical grounding","Tendu":"Tense","Tension presente":"Tension present","Crispe":"Tight","Alerte corporelle":"Physical alert","Nuit - Sommeil 3 / 0 / 7 / 0 - 7 min":"Night — Sleep 3 / 0 / 7 / 0 — 7 min","Bleu - Relance douce 5 / 0 / 3 / 0 - 2 min":"Blue — Gentle boost 5 / 0 / 3 / 0 — 2 min","Vert - Respiration 365 5 / 0 / 5 / 0 - 5 min":"Green — 365 breathing 5 / 0 / 5 / 0 — 5 min","Vert - Coherence 5 / 0 / 5 / 0 - 5 min":"Green — Coherence 5 / 0 / 5 / 0 — 5 min","Vert - Respiration carree 4 / 4 / 4 / 4 - 3 min":"Green — Box breathing 4 / 4 / 4 / 4 — 3 min","Orange - Regulation douce 4 / 0 / 6 / 0 - 3 min":"Orange — Gentle regulation 4 / 0 / 6 / 0 — 3 min","Rouge - Frein 3 / 0 / 8 / 0 - 2 min":"Red — Brake 3 / 0 / 8 / 0 — 2 min","Rouge - 4 / 7 / 8 / 0 - 2 min":"Red — 4 / 7 / 8 / 0 — 2 min","Vert - Equilibrer":"Green — Balance","Réguler la montée":"Regulate rising tension","Les changements sont sauvegardés localement dans ce navigateur, puis exportés. Ils ne sont pas envoyés automatiquement à GitHub.":"Changes are saved in this browser until you export them. Nothing is uploaded to GitHub automatically.","Le fichier enregistré contient les deux langues.":"The exported file contains both languages.","Traductions de l’interface / Interface translations":"Interface translations","Modifiez les textes anglais. Les textes français restent inchangés. Les traductions sont incluses lors de l’export du fichier mur-content.json.":"Edit the English text. French text is unchanged. Your translations will be included in the exported mur-content.json file.","Rechercher un libellé / Search for a label":"Search interface labels"};
