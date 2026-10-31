@@ -129,3 +129,102 @@
     overflow-wrap: anywhere;
   }
 }
+
+
+/* =========================================================
+   CORRECTIF V2 : choix de langue sur le DERNIER PLAN
+   puis dans Reglages, jamais sur le tableau de bord.
+   Le lecteur existant affiche #murCommencer une fois termine.
+   ========================================================= */
+
+/* Le drapeau reste invisible pendant la lecture. Il apparait
+   seulement lorsque le bouton Commencer est affiche. */
+body:has(#presentation:not(.hide) #murCommencer[style*="display: block"])
+  .app > .top > .mur-language-picker {
+  display: inline-flex !important;
+  position: fixed !important;
+  top: calc(15px + env(safe-area-inset-top)) !important;
+  left: calc(15px + env(safe-area-inset-left)) !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 100050 !important;
+  margin: 0 !important;
+  max-width: calc(100vw - 30px) !important;
+}
+
+/* Une fois Commencer clique, l'entete n'affiche plus
+   de drapeaux : on les retrouve uniquement dans Reglages. */
+body:not(:has(#presentation:not(.hide) #murCommencer[style*="display: block"]))
+  .app > .top > .mur-language-picker {
+  display: none !important;
+}
+
+/* Garantir que l'icone SVG soit visible sous Windows et mobile. */
+body .mur-language-picker button[data-language] {
+  font-size: 0 !important;
+  background-color: transparent;
+}
+body .mur-language-picker button[data-language][aria-pressed="true"] {
+  background-color: #dff8ff !important;
+}
+body .mur-language-picker button[data-language][aria-pressed="false"] {
+  background-color: rgba(13,28,47,.75) !important;
+}
+
+/* Format ordinateur : une petite coque de telephone bien marquee.
+   Aucune modification des dimensions sur telephone. */
+@media (min-width: 721px) {
+  /* Aligner les drapeaux sur la video verticale centree. */
+  body:has(#presentation:not(.hide) #murCommencer[style*="display: block"])
+    .app > .top > .mur-language-picker {
+    left: max(15px, calc(50vw - 210px)) !important;
+  }
+  html, body {
+    min-height: 100%;
+  }
+  body > main.app {
+    box-sizing: border-box !important;
+    width: 350px !important;
+    min-width: 350px !important;
+    max-width: 350px !important;
+    height: calc(100dvh - 48px) !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 48px) !important;
+    margin: 24px auto !important;
+    padding: 14px 10px 90px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    border: 5px solid #1b2d43 !important;
+    border-radius: 38px !important;
+    background: linear-gradient(160deg, #0a1d31, #07111f) !important;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.18),
+      0 25px 80px rgba(0,0,0,.58),
+      0 0 85px rgba(59,130,246,.10) !important;
+    scrollbar-width: none;
+    overscroll-behavior: contain;
+  }
+  body > main.app::-webkit-scrollbar {
+    display: none;
+  }
+  body > nav.tabbar {
+    width: 306px !important;
+    max-width: 306px !important;
+    left: 50% !important;
+    bottom: 41px !important;
+    transform: translateX(-50%) !important;
+    z-index: 9500 !important;
+  }
+}
+
+/* Fenetres plus basses : le telephone garde sa marge de securite. */
+@media (min-width: 721px) and (max-height: 600px) {
+  body > main.app {
+    height: calc(100dvh - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+    margin: 10px auto !important;
+  }
+  body > nav.tabbar {
+    bottom: 24px !important;
+  }
+}
