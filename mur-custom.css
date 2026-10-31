@@ -1,8 +1,10 @@
+/*
+ * M.U.R. — Apparence mobile sur ordinateur + drapeaux dans Réglages
+ * Un seul fichier à remplacer : mur-custom.css
+ * Aucune modification de la vidéo, des sons ou du back-office.
+ */
 
-/* M.U.R. — Drapeaux FR / EN */
-/* Accueil, Réglages et back-office uniquement */
-
-/* Vidéo : format original */
+/* Introduction : conserver la vidéo et son format. */
 #presentation.mur-video-presentation {
   position: fixed;
   inset: 0;
@@ -22,32 +24,25 @@
   background: #040914;
 }
 
-/* Aucun drapeau sur la vidéo */
-#presentation .mur-language-picker {
-  display: none !important;
-}
-
-/* Caché sur les pages ordinaires */
+/* Pas de drapeaux pendant la vidéo ni sur le tableau de bord. */
+#presentation .mur-language-picker,
 .app > .top > .mur-language-picker {
   display: none !important;
 }
 
-/* Visible sur l'accueil, après la vidéo */
-.app:has(#home.page.active)
-  > .top > .mur-language-picker {
-  display: flex !important;
-}
-
-/* Visible dans Réglages */
-#settings.active
-  .mur-language-settings-card
-  .mur-language-picker {
+/* Dans l'application, les drapeaux n'apparaissent que dans Réglages. */
+.app #settings.active .mur-language-settings-card .mur-language-picker {
   display: inline-flex !important;
   position: relative !important;
   margin: 10px 0 0 !important;
 }
 
-/* Présentation commune */
+/* Le back-office garde son sélecteur de langue. */
+.aside > .mur-language-picker {
+  display: flex !important;
+}
+
+/* Boutons de choix de langue. */
 .mur-language-picker {
   align-items: center !important;
   justify-content: center;
@@ -76,35 +71,60 @@
   touch-action: manipulation;
 }
 
-/* FRANCE */
-.mur-language-picker
-button[data-language="fr"] {
+/* Drapeau français, visible aussi sous Windows. */
+.mur-language-picker button[data-language="fr"] {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Crect width='20' height='40' fill='%230055A4'/%3E%3Crect x='20' width='20' height='40' fill='%23FFFFFF'/%3E%3Crect x='40' width='20' height='40' fill='%23EF4135'/%3E%3C/svg%3E") !important;
 }
 
-/* ROYAUME-UNI */
-.mur-language-picker
-button[data-language="en"] {
+/* Drapeau britannique pour l'anglais. */
+.mur-language-picker button[data-language="en"] {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 36'%3E%3Crect width='60' height='36' fill='%23012169'/%3E%3Cpath d='M0 0L60 36M60 0L0 36' stroke='%23FFFFFF' stroke-width='12'/%3E%3Cpath d='M0 0L60 36M60 0L0 36' stroke='%23C8102E' stroke-width='5'/%3E%3Cpath d='M30 0V36M0 18H60' stroke='%23FFFFFF' stroke-width='13'/%3E%3Cpath d='M30 0V36M0 18H60' stroke='%23C8102E' stroke-width='7'/%3E%3C/svg%3E") !important;
 }
 
-/* Adaptation téléphone */
-@media (max-width: 720px) {
-  .app > .top > .mur-language-picker {
-    flex: 0 0 auto;
-    margin-left: auto !important;
+/* ORDINATEUR : application étroite, centrée, esprit téléphone. */
+@media (min-width: 721px) {
+  main.app {
+    width: 370px !important;
+    max-width: 370px !important;
+    min-width: 0 !important;
+    min-height: calc(100dvh - 28px) !important;
+    margin: 14px auto !important;
+    padding: 17px 12px 95px !important;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 28px;
+    background: rgba(7,17,31,.78);
+    box-shadow: 0 22px 65px rgba(0,0,0,.4);
   }
 
-  .mur-language-picker
-  button[data-language] {
+  /* La barre inférieure suit la largeur de l'application. */
+  .tabbar {
+    width: 345px !important;
+    max-width: calc(100vw - 32px) !important;
+    bottom: 24px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
+/* TÉLÉPHONE : on garde les dimensions natives de l'application. */
+@media (max-width: 720px) {
+  main.app {
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .mur-language-picker button[data-language] {
     width: 43px !important;
     min-width: 43px !important;
     height: 43px !important;
     min-height: 43px !important;
   }
 
-  #settings.active
-  .mur-language-settings-card {
+  #settings.active .mur-language-settings-card {
     min-width: 0;
     overflow-wrap: anywhere;
   }
