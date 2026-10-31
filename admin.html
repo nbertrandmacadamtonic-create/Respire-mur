@@ -40,4 +40,5 @@ $('importBtn').onclick=()=>$('jsonFile').click();$('jsonFile').onchange=async e=
 $('resetBtn').onclick=()=>{if(!initial||!confirm('Effacer le brouillon local et revenir au fichier publié ?'))return;data=clone(initial);localStorage.removeItem('mur-admin-draft-v1');render();$('status').textContent='Version publiée restaurée'};
 function validate(x){if(!x||!Array.isArray(x.questions)||x.questions.length!==15||!x.exercises||!x.breaths||typeof x.exercises!=='object'||Object.keys(x.exercises).length===0)throw Error('Le JSON ne contient pas les données M.U.R. attendues')}
 (async()=>{try{const response=await fetch('mur-content.json',{cache:'no-store'});if(!response.ok)throw Error('mur-content.json indisponible');initial=await response.json();validate(initial);let draft=null;try{draft=JSON.parse(localStorage.getItem('mur-admin-draft-v1')||'null');if(draft)validate(draft)}catch(e){draft=null}data=draft||clone(initial);render();}catch(e){$('status').textContent='⚠ '+e.message+'. Il faut restaurer mur-content.json depuis son historique GitHub avant de pouvoir gérer les contenus.';}})();
-</script></body></html>
+</script><script src="mur-bilingual.js"></script>
+</body></html>
