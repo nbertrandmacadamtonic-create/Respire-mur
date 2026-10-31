@@ -1,7 +1,10 @@
-/* M.U.R. — Nouvelle introduction videointromur.mp4
-   Lecture automatique silencieuse, son activable,
-   bouton Commencer sur la dernière image.
-   Back-office et contenus conservés.
+/*
+ M.U.R. — Introduction videointromur.mp4
+ - Lecture automatique, son activable par clic
+ - Bouton « Passer » visible pendant le film
+ - Bouton « Commencer » sur la dernière image
+ - Back-office, tests et contenus conservés
+ - Compatible avec le module de traduction FR/EN
 */
 (() => {
   'use strict';
@@ -14,9 +17,8 @@
     if (!panel || panel.dataset.murIntro2026 === '1') return;
     panel.dataset.murIntro2026 = '1';
 
-    // Retirer l'ancien lecteur et ses boutons. Le script d'origine
-    // ne retrouvera plus murIntroVideo et ne pourra pas fermer
-    // automatiquement cette nouvelle introduction.
+    // Retirer l'ancien lecteur pour éviter que ses événements
+    // ne ferment cette nouvelle introduction automatiquement.
     const previous = panel.querySelector('video');
     if (previous) previous.pause();
     panel.replaceChildren();
@@ -61,10 +63,21 @@
         padding: '12px 18px', borderRadius: '999px',
         border: '1px solid rgba(255,255,255,.65)',
         font: '800 14px system-ui, sans-serif', cursor: 'pointer',
+        touchAction: 'manipulation',
         ...extra
       });
       return el;
     }
+
+    // En haut à gauche : permet d'ouvrir directement l'application.
+    const skip = button('Passer', {
+      top: 'calc(18px + env(safe-area-inset-top))',
+      left: 'calc(16px + env(safe-area-inset-left))',
+      zIndex: '5', minHeight: '44px', padding: '9px 18px',
+      background: 'rgba(8,17,30,.85)', color: '#fff'
+    });
+    skip.id = 'murIntroSkip';
+    skip.setAttribute('aria-label', "Passer la vidéo d'introduction");
 
     const sound = button('🔊 Activer le son', {
       top: 'calc(18px + env(safe-area-inset-top))',
@@ -87,14 +100,34 @@
       display: 'none', background: '#173450', color: '#fff'
     });
 
-    frame.append(video, sound, commencer, retry);
+    frame.append(video, skip, sound, commencer, retry);
     panel.appendChild(frame);
 
     let finished = false;
+    let dismissed = false;
     let generation = 0;
 
+    // Utilisé par « Passer » ET « Commencer ».
+    // Conserve le comportement historique : informations à la
+    // première utilisation, puis entrée normale dans M.U.R.
+    function enterApplication() {
+      if (dismissed) return;
+      dismissed = true;
+      ++generation;
+      video.pause();
+      skip.style.display = 'none';
+      sound.style.display = 'none';
+      retry.style.display = 'none';
+      commencer.style.display = 'none';
+      if (typeof window.enterApp === 'function') {
+        window.enterApp();
+      } else {
+        panel.classList.add('hide');
+      }
+    }
+
     function showCommencer() {
-      if (finished) return;
+      if (finished || dismissed) return;
       finished = true;
       video.pause();
       // Garder le visuel final, sans redémarrer la lecture.
@@ -102,6 +135,7 @@
         try { video.currentTime = Math.max(0, video.duration - 0.10); }
         catch (error) {}
       }
+      skip.style.display = 'none';
       sound.style.display = 'none';
       retry.style.display = 'none';
       commencer.style.display = 'block';
@@ -110,8 +144,10 @@
 
     function playIntro(withSound = false) {
       const token = ++generation;
+      dismissed = false;
       finished = false;
       panel.classList.remove('hide');
+      skip.style.display = 'block';
       commencer.style.display = 'none';
       retry.style.display = 'none';
       sound.style.display = withSound ? 'none' : 'block';
@@ -124,32 +160,24 @@
       const playing = video.play();
       if (playing && typeof playing.catch === 'function') {
         playing.catch(() => {
-          if (token === generation && !finished) {
+          if (token === generation && !finished && !dismissed) {
             retry.style.display = 'block';
           }
         });
       }
     }
 
-    // Le clic est nécessaire pour autoriser le son sur iOS/Android.
-    // La vidéo repart de 0 pour conserver toute la bande-son.
+    // Le navigateur autorise l'activation de la bande-son après clic.
     sound.addEventListener('click', () => playIntro(true));
     retry.addEventListener('click', () => playIntro(true));
+    skip.addEventListener('click', enterApplication);
+    commencer.addEventListener('click', enterApplication);
     video.addEventListener('ended', showCommencer);
     video.addEventListener('error', showCommencer);
     video.addEventListener('timeupdate', () => {
-      if (!finished && Number.isFinite(video.duration) &&
+      if (!finished && !dismissed && Number.isFinite(video.duration) &&
           video.duration > 0 && video.currentTime >= video.duration - 0.08) {
         showCommencer();
-      }
-    });
-
-    commencer.addEventListener('click', () => {
-      video.pause();
-      if (typeof window.enterApp === 'function') {
-        window.enterApp();
-      } else {
-        panel.classList.add('hide');
       }
     });
 
@@ -252,9 +280,10 @@
   // ne doit réattacher la nouvelle vidéo avant notre initialisation.
   if (document.getElementById('presentation')) init();
   else document.addEventListener('DOMContentLoaded', init, { once: true });
+
   // M.U.R. bilingual module loaded after the application.
-  const bilingualScript=document.createElement('script');
-  bilingualScript.src='mur-bilingual.js';
-  bilingualScript.defer=true;
+  const bilingualScript = document.createElement('script');
+  bilingualScript.src = 'mur-bilingual.js';
+  bilingualScript.defer = true;
   document.body.appendChild(bilingualScript);
 })();
