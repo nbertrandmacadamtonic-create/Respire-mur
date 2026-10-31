@@ -11,6 +11,8 @@
   mobileStyle.id = 'mur-bilingual-mobile-layout';
   mobileStyle.textContent = `
 @media (max-width: 720px) {
+  /* Deux drapeaux compacts, sans répétition FR/EN. */
+
   html, body { max-width: 100%; overflow-x: clip; }
 
   /* Barre supérieure de l'application. */
@@ -37,7 +39,7 @@
   }
   .app .top > .mur-language-picker button {
     min-width: 35px !important; min-height: 40px !important;
-    padding: 0 6px !important; font-size: 11px !important;
+    padding: 0 4px !important; font-size: 23px !important;
     touch-action: manipulation;
   }
 
@@ -53,7 +55,7 @@
   }
   #presentation > .mur-language-picker button {
     min-width: 38px !important; min-height: 42px !important;
-    padding: 0 7px !important;
+    padding: 0 4px !important; font-size: 23px !important;
   }
   #presentation #murWelcomeVideo2026 {
     max-width: none !important; max-height: none !important;
@@ -81,7 +83,7 @@
   }
   .aside > .mur-language-picker button {
     min-width: 35px !important; min-height: 40px !important;
-    padding: 0 5px !important;
+    padding: 0 4px !important; font-size: 23px !important;
   }
   .aside .menu {
     display: grid;
@@ -272,38 +274,77 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.dataset.language = l;
-      b.textContent = l.toUpperCase();
+      // Un drapeau par langue, sans répétition du nom ou du code.
+      b.textContent = l === 'fr' ? '🇫🇷' : '🇬🇧';
       b.title = l === 'fr' ? 'Français' : 'English';
-      b.style.cssText = 'min-width:42px;min-height:36px;border:0;border-radius:22px;font:800 12px system-ui;cursor:pointer;';
+      b.setAttribute('aria-label', l === 'fr' ? 'Passer en français' : 'Switch to English');
+      b.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:4px;border:0;border-radius:22px;font:normal 23px system-ui;line-height:1;cursor:pointer;touch-action:manipulation;';
       b.addEventListener('click',() => selectLanguage(l));
       box.appendChild(b);
     }
     return box;
   }
 
+  // Un seul sélecteur de langue, déplacé entre l'introduction et l'app.
+  let languagePicker = null;
+  let pickerObserver = null;
+
   function installPickers() {
+    // Supprimer les anciens sélecteurs en double, le cas échéant.
+    const existing = [...document.querySelectorAll('.mur-language-picker')];
+    if (!languagePicker || !languagePicker.isConnected) {
+      languagePicker = existing[0] || picker();
+    }
+    for (const el of existing) {
+      if (el !== languagePicker) el.remove();
+    }
+
     if (admin) {
       const aside = document.querySelector('.aside');
-      if (aside && !aside.querySelector('.mur-language-picker')) {
-        const p=picker();
-        p.style.margin='12px 0';
-        aside.insertBefore(p,aside.querySelector('.menu'));
+      if (!aside) return;
+      const menu = aside.querySelector('.menu');
+      if (languagePicker.parentElement !== aside) {
+        aside.insertBefore(languagePicker, menu || null);
       }
+      languagePicker.style.position = 'relative';
+      languagePicker.style.left = '';
+      languagePicker.style.top = '';
+      languagePicker.style.right = '';
+      languagePicker.style.margin = '12px 0';
+      return;
+    }
+
+    const header = document.querySelector('.app .top');
+    const panel = document.getElementById('presentation');
+    const introVisible = panel && !panel.classList.contains('hide');
+    const target = introVisible ? panel : header;
+    if (!target) return;
+
+    if (languagePicker.parentElement !== target) {
+      target.appendChild(languagePicker);
+    }
+    if (introVisible) {
+      languagePicker.style.position = 'absolute';
+      languagePicker.style.top = 'calc(16px + env(safe-area-inset-top))';
+      languagePicker.style.left = 'calc(16px + env(safe-area-inset-left))';
+      languagePicker.style.right = 'auto';
+      languagePicker.style.margin = '0';
     } else {
-      const header = document.querySelector('.top');
-      if (header && !header.querySelector('.mur-language-picker')) {
-        const p=picker();
-        p.style.marginLeft='auto';
-        header.appendChild(p);
-      }
-      const panel = $('presentation');
-      if (panel && !panel.querySelector('.mur-language-picker')) {
-        const p=picker();
-        p.style.position='absolute';
-        p.style.top='calc(16px + env(safe-area-inset-top))';
-        p.style.left='calc(16px + env(safe-area-inset-left))';
-        panel.appendChild(p);
-      }
+      languagePicker.style.position = 'relative';
+      languagePicker.style.top = '';
+      languagePicker.style.left = '';
+      languagePicker.style.right = '';
+      languagePicker.style.margin = '0 0 0 auto';
+    }
+
+    // Lors du clic sur « Commencer », le bouton change de place,
+    // il n'est jamais affiché deux fois.
+    if (panel && !pickerObserver) {
+      pickerObserver = new MutationObserver(() => installPickers());
+      pickerObserver.observe(panel, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
     }
   }
 
