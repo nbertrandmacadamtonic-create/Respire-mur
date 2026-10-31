@@ -520,11 +520,213 @@
     } catch(e) { console.warn('M.U.R.: audio sync',e); }
   }
 
+
+  // ======================================================
+  // INFORMATIONS (i) : contenus editables en FR / EN
+  // ======================================================
+  const informationDefaults = {"home":{"fr":{"title":"Bienvenue dans M.U.R.","paragraphs":["M.U.R. vous propose une nouvelle experience : decouvrir votre profil neurovegetatif et apprendre a le reequilibrer.","Votre systeme neurovegetatif influence votre energie, votre respiration, votre recuperation, votre concentration et votre capacite a faire face au stress.","Avec les tests NeuroFlex, vous mesurez votre tendance de fond, puis votre etat du moment. Vous decouvrez ainsi votre niveau d'elasticite : votre capacite a ralentir, vous activer, recuperer et vous adapter.","Ensuite, l'application vous oriente vers une respiration et des exercices adaptes a votre etat.","La vraie force ne vient pas du fait d'encaisser, mais de la capacite que nous avons a rester flexibles.","M.U.R. vous aide a retrouver cette souplesse."],"button":"Commencer"},"en":{"title":"Welcome to M.U.R.","paragraphs":["M.U.R. offers a new experience: discover your autonomic nervous system profile and learn how to restore balance.","Your autonomic nervous system influences your energy, breathing, recovery, concentration and ability to respond to stress.","With the NeuroFlex tests, you assess your baseline tendency and then how you feel right now. You discover your flexibility: your capacity to slow down, activate, recover and adapt.","The app then suggests breathing techniques and exercises suited to your current state.","Real strength does not come from enduring everything, but from our ability to remain flexible.","M.U.R. helps you regain that flexibility."],"button":"Start"}},"tests":{"fr":{"title":"Comprendre les tests NeuroFlex","paragraphs":["Les tests NeuroFlex servent a mieux lire la maniere dont votre systeme neurovegetatif s'organise et s'adapte.","Ki.S observe votre tendance de fond. Il indique si votre systeme fonctionne plutot en mode pose, fonceur ou funambule.","Ici & Maintenant mesure votre etat du moment : energie, souffle, mental et ressenti corporel. C'est une photographie instantanee.","La synthese NeuroFlex croise ces deux informations pour proposer une orientation simple : activer, entretenir, reguler ou freiner.","Ces tests ne remplacent pas un diagnostic medical. Ils servent de boussole pratique pour choisir une respiration ou un exercice adapte a l'instant."],"button":"Compris"},"en":{"title":"Understanding the NeuroFlex tests","paragraphs":["The NeuroFlex tests help you better understand how your autonomic nervous system is organised and adapts.","Ki.S assesses your baseline tendency. It indicates whether you lean towards a steady, go-getter or balancer profile.","Here & Now measures your current state: energy, breathing, mind and physical sensations. It is a snapshot of the moment.","The NeuroFlex summary combines these two findings to suggest a simple direction: activate, maintain balance, regulate or slow down.","These tests are not a substitute for a medical diagnosis. They provide practical guidance for choosing an appropriate breathing technique or exercise."],"button":"Got it"}}};
+  const informationNames = {
+    home: 'i · Tableau de bord / Home',
+    tests: 'i · Tests NeuroFlex'
+  };
+
+  function ensureInformation(model) {
+    if (!model || !model.questions) return;
+    if (!model.information || typeof model.information !== 'object') {
+      model.information = {};
+    }
+    for (const name of ['home', 'tests']) {
+      if (!model.information[name] || typeof model.information[name] !== 'object') {
+        model.information[name] = {};
+      }
+      for (const lang of ['fr', 'en']) {
+        const item = model.information[name][lang] ||= {};
+        const defaults = informationDefaults[name][lang];
+        if (typeof item.title !== 'string') item.title = defaults.title;
+        if (typeof item.button !== 'string') item.button = defaults.button;
+        if (!Array.isArray(item.paragraphs)) item.paragraphs = [...defaults.paragraphs];
+        for (let i = 0; i < defaults.paragraphs.length; i++) {
+          if (typeof item.paragraphs[i] !== 'string') {
+            item.paragraphs[i] = defaults.paragraphs[i];
+          }
+        }
+      }
+    }
+  }
+
+  function formatInfoParagraph(paragraph, key, position) {
+    const selected = paragraph.trim();
+    const emphasis = (key === 'home' && position === 4) ||
+      (key === 'tests' && [1, 2, 3].includes(position));
+    if (!emphasis) return document.createTextNode(selected);
+    const fragment = document.createDocumentFragment();
+    if (key === 'home') {
+      const strong = document.createElement('strong');
+      strong.textContent = selected;
+      fragment.appendChild(strong);
+      return fragment;
+    }
+    const leading = key === 'tests' && position === 1 ? 'Ki.S' :
+      position === 2 ? (language === 'en' ? 'Here & Now' : 'Ici & Maintenant') :
+      (language === 'en' ? 'The NeuroFlex summary' : 'La synthese NeuroFlex');
+    if (selected.startsWith(leading)) {
+      const strong = document.createElement('strong');
+      strong.textContent = leading;
+      fragment.appendChild(strong);
+      fragment.appendChild(document.createTextNode(selected.slice(leading.length)));
+      return fragment;
+    }
+    return document.createTextNode(selected);
+  }
+
+  function applyInformationToApp() {
+    if (admin || !content) return;
+    ensureInformation(content);
+    for (const [key, modalId] of [['home','infoModal'],['tests','testsInfoModal']]) {
+      const modal = $(modalId);
+      const card = modal?.querySelector('.info-card');
+      if (!card) continue;
+      const info = content.information[key]?.[language] || informationDefaults[key][language];
+      card.setAttribute('data-mur-no-translate', '');
+      let title = card.querySelector('h2');
+      if (title) title.textContent = info.title;
+      const currentParagraphs = [...card.querySelectorAll(':scope > p')];
+      const place = card.querySelector('.info-actions');
+      for (let i = 0; i < info.paragraphs.length; i++) {
+        const p = currentParagraphs[i] || document.createElement('p');
+        p.replaceChildren(formatInfoParagraph(info.paragraphs[i], key, i));
+        if (!currentParagraphs[i] && place) card.insertBefore(p, place);
+      }
+      for (let i = info.paragraphs.length; i < currentParagraphs.length; i++) {
+        currentParagraphs[i].remove();
+      }
+      const button = card.querySelector('.info-close');
+      if (button) button.textContent = info.button;
+    }
+  }
+
+  function makeInfoInput(label, path, value, multiline) {
+    const field = document.createElement('div');
+    field.className = 'field' + (multiline ? ' full' : '');
+    const caption = document.createElement('label');
+    caption.textContent = label;
+    const control = document.createElement(multiline ? 'textarea' : 'input');
+    control.value = value;
+    control.dataset.murInformationPath = path;
+    control.setAttribute('aria-label', label);
+    if (multiline) control.rows = 3;
+    field.append(caption,control);
+    return field;
+  }
+
+  let informationEditorCreated = false;
+  function buildInformationAdmin() {
+    if (!admin || informationEditorCreated) return;
+    const menu = document.querySelector('.aside .menu');
+    const main = document.querySelector('.main');
+    const model = adminData();
+    if (!menu || !main || !model) return;
+    ensureInformation(model);
+    content = model;
+    informationEditorCreated = true;
+
+    const css = document.createElement('style');
+    css.textContent = `
+      .mur-information-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+      .mur-information-col { min-width:0; padding:14px; background:#071525; border:1px solid #ffffff22; border-radius:13px; }
+      .mur-information-col h3 { font-size:15px; margin:0 0 12px; }
+      .mur-information-col .field { margin:0 0 11px; }
+      .mur-information-col textarea { min-height:90px; line-height:1.4; }
+      @media(max-width:850px){.mur-information-grid{grid-template-columns:minmax(0,1fr)}}
+    `;
+    document.head.appendChild(css);
+
+    const nav = document.createElement('button');
+    nav.type='button';
+    nav.className='nav';
+    nav.dataset.tab='murInformationSection';
+    nav.textContent='Informations (i)';
+    menu.appendChild(nav);
+
+    const section = document.createElement('section');
+    section.id = 'murInformationSection';
+    section.className='section';
+    const h1 = document.createElement('h1');
+    h1.textContent='Informations (i)';
+    const help = document.createElement('p');
+    help.className='hint';
+    help.textContent='Modifiez les fenêtres d’information affichées par les boutons « i » du tableau de bord et des tests. Les textes FR et EN sont enregistrés séparément et inclus dans l’export mur-content.json.';
+    section.append(h1,help);
+
+    for (const key of ['home','tests']) {
+      const card = document.createElement('article');
+      card.className='card';
+      const heading = document.createElement('h2');
+      heading.textContent=informationNames[key];
+      card.appendChild(heading);
+      const columns = document.createElement('div');
+      columns.className='mur-information-grid';
+      for (const lang of ['fr','en']) {
+        const col = document.createElement('div');
+        col.className='mur-information-col';
+        const name = document.createElement('h3');
+        name.textContent=lang==='fr'?'🇫🇷 Français':'🇬🇧 English';
+        col.appendChild(name);
+        const values = model.information[key][lang];
+        col.appendChild(makeInfoInput('Titre / Title',`information.${key}.${lang}.title`,values.title,false));
+        values.paragraphs.forEach((paragraph,i)=>{
+          col.appendChild(makeInfoInput(`Paragraphe ${i+1} / Paragraph ${i+1}`,`information.${key}.${lang}.paragraphs.${i}`,paragraph,true));
+        });
+        col.appendChild(makeInfoInput('Texte du bouton / Button',`information.${key}.${lang}.button`,values.button,false));
+        columns.appendChild(col);
+      }
+      card.appendChild(columns);
+      section.appendChild(card);
+    }
+    main.insertBefore(section,$('status'));
+
+    // Re-synchroniser les champs après import ou réinitialisation du JSON.
+    // Ces actions appellent la fonction render() d'origine du back-office.
+    if (typeof window.render === 'function' && !window.render.murInfoWrapped) {
+      const originalRender = window.render;
+      const wrapped = function (...args) {
+        const result = originalRender.apply(this, args);
+        const latest = adminData();
+        if (latest && document.getElementById('murInformationSection')) {
+          ensureInformation(latest);
+          document.querySelectorAll('[data-mur-information-path]').forEach(field => {
+            if (field === document.activeElement) return;
+            const value = getNested(latest, field.dataset.murInformationPath);
+            if (typeof value === 'string') field.value = value;
+          });
+        }
+        return result;
+      };
+      wrapped.murInfoWrapped = true;
+      window.render = wrapped;
+    }
+
+    section.addEventListener('input',e=>{
+      const path=e.target.dataset.murInformationPath;
+      if (!path) return;
+      // La fonction native du back-office assure la sauvegarde du brouillon.
+      if (typeof setPath === 'function') {
+        setPath(path,e.target.value);
+      } else {
+        const parts=path.split('.');
+        let cursor=model;
+        for(let i=0;i<parts.length-1;i++) cursor=cursor[parts[i]];
+        cursor[parts.at(-1)]=e.target.value;
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(model));
+      }
+    });
+  }
+
   function selectLanguage(next) {
     language=next === 'en' ? 'en' : 'fr';
     localStorage.setItem(STORAGE_KEY,language);
     if (admin) renderEditor();
-    else {syncAudio();refreshText();}
+    else {syncAudio();applyInformationToApp();refreshText();}
     installPickers();
     refreshText();
   }
@@ -532,7 +734,7 @@
   async function initialize() {
     try {
       const r=await fetch('mur-content.json',{cache:'no-store'});
-      if(r.ok){ content=await r.json();ensureTranslations(content); }
+      if(r.ok){ content=await r.json();ensureTranslations(content);ensureInformation(content); }
     } catch(e) { console.warn('M.U.R. i18n: content unavailable',e); }
     installPickers();
     if (admin) {
@@ -540,19 +742,20 @@
       let attempts=0;
       const waitForAdmin=()=>{
         const model=adminData();
-        if(model){ content=model;ensureTranslations(content);renderEditor(); }
+        if(model){ content=model;ensureTranslations(content);ensureInformation(content);buildInformationAdmin();renderEditor(); }
         else if(attempts++ < 300) requestAnimationFrame(waitForAdmin);
       };
       waitForAdmin();
     }
     syncAudio();
+    applyInformationToApp();
     refreshText();
     startObserver();
     window.addEventListener('mur-content-loaded',()=>{
       // The app's own content loader may complete after us.
       if(!admin){
         fetch('mur-content.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{
-          content=d;ensureTranslations(content);syncAudio();refreshText();
+          content=d;ensureTranslations(content);ensureInformation(content);syncAudio();applyInformationToApp();refreshText();
         }).catch(()=>{});
       }
     });
