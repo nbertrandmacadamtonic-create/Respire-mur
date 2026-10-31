@@ -1,4 +1,47 @@
-/* M.U.R. — introduction video */
-#presentation.mur-video-presentation{display:flex;align-items:center;justify-content:center;padding:0;background:#040914;overflow:hidden}
-#presentation .mur-video{display:block;width:100%;height:100%;object-fit:contain;background:#040914}
-#presentation .mur-video-skip{position:absolute;right:20px;bottom:calc(28px + env(safe-area-inset-bottom));z-index:2;border:1px solid #ffffff60;color:white;background:#07111fd9;border-radius:25px;padding:12px 20px;font-weight:800}
+
+/* M.U.R. — Présentation vidéo */
+
+#presentation {
+  background: #040914;
+}
+
+#presentation.mur-video-presentation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Nouveau lecteur vidéo */
+#presentation #murNewIntroVideo {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background: #040914;
+}
+
+/* ORDINATEUR : vidéo réduite et centrée */
+@media (min-width: 721px) {
+  #presentation #murNewIntroVideo {
+    width: 440px !important;
+    max-width: 440px !important;
+    max-height: 75vh !important;
+    margin: 0 auto;
+  }
+}
+
+/* TÉLÉPHONE : largeur adaptée */
+@media (max-width: 720px) {
+  #presentation #murNewIntroVideo {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 82dvh !important;
+  }
+}
+
+/* Bouton Commencer */
+#presentation #murCommencer {
+  z-index: 100000 !important;
+  visibility: visible;
+}
