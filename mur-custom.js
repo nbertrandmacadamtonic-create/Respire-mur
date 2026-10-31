@@ -1,161 +1,233 @@
 
-/* M.U.R. — Extensions de l'application
-   Video d'accueil avec son
-   Back-office par appui long
-   Gestion des contenus
+/*
+ M.U.R. — Extensions
+ Version : vidéo automatique + Commencer
+
+ - Vidéo lancée automatiquement sans son
+ - Dernière image conservée
+ - Bouton Commencer après la vidéo
+ - Largeur réduite sur ordinateur
+ - Appui long sur logo : back-office
+ - Chargement des contenus du back-office
 */
 
 (() => {
   'use strict';
 
-  const VIDEO = 'Logo_character_comes_to_life_20261031152523.mp4';
+  const VIDEO =
+    'Logo_character_comes_to_life_20261031152523.mp4';
+
   const ADMIN_URL = 'admin.html';
 
-  // VIDEO D'ACCUEIL
+  // ====================================
+  // 1. INTRODUCTION VIDEO
+  // ====================================
+
   function setupIntro() {
-    const presentation = document.getElementById('presentation');
-    if (!presentation || presentation.dataset.murVideoReady) return;
+    const panel = document.getElementById('presentation');
 
-    presentation.dataset.murVideoReady = '1';
-
-    // Reutilise le lecteur existant dans index.html.
-    // Cela evite deux videos concurrentes.
-    let video = document.getElementById('murIntroVideo');
-
-    if (!video) {
-      video = document.createElement('video');
-      video.id = 'murIntroVideo';
-      presentation.appendChild(video);
+    if (!panel || panel.dataset.murIntroReady === '1') {
+      return;
     }
 
+    panel.dataset.murIntroReady = '1';
+
+    // Supprime l'ancien lecteur et ses boutons.
+    // Le nouveau lecteur possède un identifiant différent
+    // pour éviter la fermeture automatique de index.html.
+    panel.replaceChildren();
+
+    panel.classList.remove('hide');
+    panel.classList.add('mur-video-presentation');
+
+    Object.assign(panel.style, {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      padding: '20px',
+      background: '#040914',
+      overflow: 'hidden'
+    });
+
+    // Bloc vidéo plus étroit sur ordinateur
+    const frame = document.createElement('div');
+
+    Object.assign(frame.style, {
+      position: 'relative',
+      width: '100%',
+      maxWidth: '720px',
+      maxHeight: '82dvh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+      borderRadius: '18px',
+      background: '#040914'
+    });
+
+    const video = document.createElement('video');
+
+    video.id = 'murWelcomeVideo';
     video.src = VIDEO;
-    video.autoplay = false;
+    video.autoplay = true;
     video.muted = true;
+    video.defaultMuted = true;
     video.playsInline = true;
     video.preload = 'auto';
+
+    video.setAttribute('muted', '');
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
 
-    video.style.width = '100%';
-    video.style.height = '100%';
-    video.style.objectFit = 'contain';
-    video.style.background = '#040914';
+    video.setAttribute(
+      'aria-label',
+      'Animation de présentation M.U.R.'
+    );
 
-    video.pause();
-    try { video.currentTime = 0; } catch (e) {}
+    Object.assign(video.style, {
+      display: 'block',
+      width: '100%',
+      height: 'auto',
+      maxHeight: '82dvh',
+      objectFit: 'contain',
+      background: '#040914'
+    });
 
-    presentation.classList.add('mur-video-presentation');
-    presentation.classList.remove('hide');
+    // Bouton Commencer
+    const commencer = document.createElement('button');
 
-    // Supprime uniquement les anciens boutons de video.
-    presentation.querySelectorAll(
-      '.mur-intro-skip, .mur-video-skip, .mur-sound-start'
-    ).forEach(el => el.remove());
+    commencer.type = 'button';
+    commencer.textContent = 'Commencer';
+    commencer.className = 'mur-commencer';
 
-    const start = document.createElement('button');
-    start.type = 'button';
-    start.className = 'mur-sound-start';
-    start.textContent = '▶ Lire avec le son';
-
-    Object.assign(start.style, {
+    Object.assign(commencer.style, {
       position: 'absolute',
       left: '50%',
-      bottom: '90px',
+      bottom: 'max(22px, 5%)',
       transform: 'translateX(-50%)',
-      zIndex: '15',
-      padding: '15px 22px',
-      borderRadius: '30px',
-      border: '1px solid rgba(255,255,255,.5)',
-      background: 'rgba(7,17,31,.90)',
-      color: 'white',
-      fontSize: '14px',
-      fontWeight: 'bold',
-      whiteSpace: 'nowrap',
+      zIndex: '100',
+      display: 'none',
+      minWidth: '190px',
+      minHeight: '54px',
+      padding: '14px 30px',
+      border: '1px solid rgba(255,255,255,.7)',
+      borderRadius: '999px',
+      background: '#ffffff',
+      color: '#07111f',
+      font: '900 17px system-ui, sans-serif',
+      boxShadow: '0 0 35px rgba(255,255,255,.3)',
       cursor: 'pointer'
     });
 
-    const skip = document.createElement('button');
-    skip.type = 'button';
-    skip.textContent = 'Passer ›';
+    // Secours en cas de blocage de lecture automatique
+    const replay = document.createElement('button');
 
-    Object.assign(skip.style, {
+    replay.type = 'button';
+    replay.textContent = '▶ Lire la vidéo';
+
+    Object.assign(replay.style, {
       position: 'absolute',
-      right: '20px',
-      bottom: '25px',
-      zIndex: '15',
-      padding: '10px 17px',
-      borderRadius: '25px',
-      border: '1px solid rgba(255,255,255,.3)',
-      background: 'rgba(7,17,31,.75)',
+      left: '50%',
+      bottom: 'max(22px, 5%)',
+      transform: 'translateX(-50%)',
+      zIndex: '101',
+      display: 'none',
+      minWidth: '190px',
+      minHeight: '52px',
+      padding: '13px 25px',
+      border: '1px solid #ffffff70',
+      borderRadius: '999px',
+      background: '#142740',
       color: 'white',
+      font: '800 15px system-ui, sans-serif',
       cursor: 'pointer'
     });
 
-    function closeIntro() {
-      video.pause();
-      presentation.classList.add('hide');
+    frame.append(video, commencer, replay);
+    panel.appendChild(frame);
 
-      if (typeof window.enterApp === 'function') {
-        window.enterApp();
+    function showCommencer() {
+      video.pause();
+      replay.style.display = 'none';
+      commencer.style.display = 'block';
+    }
+
+    function startVideo() {
+      panel.classList.remove('hide');
+
+      commencer.style.display = 'none';
+      replay.style.display = 'none';
+
+      video.pause();
+      video.muted = true;
+
+      try {
+        video.currentTime = 0;
+      } catch (e) {}
+
+      const p = video.play();
+
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => {
+          replay.style.display = 'block';
+        });
       }
     }
 
-    start.addEventListener('click', () => {
-      // L'interaction utilisateur autorise le son.
+    // Le nouveau lecteur n'a pas les anciens
+    // gestionnaires de fermeture automatique.
+    video.addEventListener('ended', showCommencer);
+
+    video.addEventListener('error', () => {
+      // En cas d'erreur, l'utilisateur peut entrer.
+      showCommencer();
+    });
+
+    replay.addEventListener('click', startVideo);
+
+    commencer.addEventListener('click', () => {
       video.pause();
-      video.muted = false;
-      video.volume = 1;
 
-      try { video.currentTime = 0; } catch (e) {}
-
-      const playback = video.play();
-
-      if (playback && playback.then) {
-        playback.then(() => {
-          start.style.display = 'none';
-        }).catch(() => {
-          start.textContent = '▶ Reessayer avec le son';
-        });
+      // Appel du mécanisme d'accueil original.
+      if (typeof window.enterApp === 'function') {
+        window.enterApp();
       } else {
-        start.style.display = 'none';
+        panel.classList.add('hide');
       }
     });
 
-    skip.addEventListener('click', closeIntro);
+    // Appui court sur le petit logo :
+    // revoir toute l'introduction.
+    window.openPresentation = startVideo;
 
-    video.addEventListener('ended', closeIntro);
-    video.addEventListener('error', () => {
-      start.textContent = 'Video indisponible — Passer';
-      start.onclick = closeIntro;
-    });
-
-    presentation.append(start, skip);
-
-    // Le logo peut relancer la presentation.
-    window.openPresentation = function() {
-      presentation.classList.remove('hide');
-      video.pause();
-      video.muted = true;
-      try { video.currentTime = 0; } catch (e) {}
-      start.style.display = '';
-      start.textContent = '▶ Lire avec le son';
-    };
+    // Démarrage immédiat
+    startVideo();
   }
 
-  // OUVERTURE DU BACK-OFFICE PAR APPUI LONG
+  // ====================================
+  // 2. ACCES AU BACK-OFFICE
+  // ====================================
+
   function setupAdmin() {
     const brand = document.querySelector('.top .brand');
-    if (!brand || brand.dataset.adminReady) return;
+
+    if (!brand || brand.dataset.adminReady === '1') {
+      return;
+    }
 
     brand.dataset.adminReady = '1';
 
     let timer = null;
     let triggered = false;
-    let x = 0;
-    let y = 0;
+    let startX = 0;
+    let startY = 0;
 
     brand.style.cursor = 'pointer';
     brand.style.touchAction = 'manipulation';
+    brand.style.userSelect = 'none';
+    brand.style.webkitUserSelect = 'none';
+    brand.style.webkitTouchCallout = 'none';
 
     function cancel() {
       if (timer !== null) {
@@ -170,15 +242,15 @@
       cancel();
       triggered = false;
 
-      x = e.clientX;
-      y = e.clientY;
+      startX = e.clientX;
+      startY = e.clientY;
 
       timer = setTimeout(() => {
         timer = null;
         triggered = true;
 
         if (navigator.vibrate) {
-          navigator.vibrate(50);
+          navigator.vibrate(40);
         }
 
         window.location.assign(ADMIN_URL);
@@ -187,8 +259,8 @@
 
     brand.addEventListener('pointermove', e => {
       if (
-        Math.abs(e.clientX - x) > 12 ||
-        Math.abs(e.clientY - y) > 12
+        Math.abs(e.clientX - startX) > 14 ||
+        Math.abs(e.clientY - startY) > 14
       ) {
         cancel();
       }
@@ -198,8 +270,8 @@
       'pointerup',
       'pointercancel',
       'pointerleave'
-    ].forEach(eventName => {
-      brand.addEventListener(eventName, cancel);
+    ].forEach(name => {
+      brand.addEventListener(name, cancel);
     });
 
     brand.addEventListener('click', e => {
@@ -215,7 +287,10 @@
     });
   }
 
-  // CHARGEMENT DES DONNEES DU BACK-OFFICE
+  // ====================================
+  // 3. CONTENUS DU BACK-OFFICE
+  // ====================================
+
   async function applyContent() {
     try {
       const response = await fetch('mur-content.json', {
@@ -223,12 +298,12 @@
       });
 
       if (!response.ok) {
-        throw new Error('Contenu absent');
+        throw new Error('Fichier absent');
       }
 
       const data = await response.json();
 
-      // QUESTIONNAIRE Ki.S
+      // Questions ki.S
       if (
         Array.isArray(data.questions) &&
         data.questions.length === 15 &&
@@ -250,58 +325,55 @@
         }
       }
 
-      // EXERCICES
+      // Exercices et médias
       if (
         data.exercises &&
         typeof EXERCISES !== 'undefined'
       ) {
         Object.keys(EXERCISES).forEach(key => {
-          const replacement = data.exercises[key];
-          const original = EXERCISES[key];
+          const source = data.exercises[key];
+          const target = EXERCISES[key];
 
-          if (
-            !replacement ||
-            !original ||
-            typeof replacement.title !== 'string'
-          ) return;
+          if (!source || !target) return;
 
-          ['title', 'caption'].forEach(property => {
-            if (typeof replacement[property] === 'string') {
-              original[property] = replacement[property];
+          ['title', 'caption'].forEach(prop => {
+            if (typeof source[prop] === 'string') {
+              target[prop] = source[prop];
             }
           });
 
-          ['files', 'sounds', 'why'].forEach(property => {
-            if (Array.isArray(replacement[property])) {
-              original[property] = replacement[property]
-                .filter(value => typeof value === 'string');
+          ['files', 'sounds', 'why'].forEach(prop => {
+            if (Array.isArray(source[prop])) {
+              target[prop] = source[prop].filter(
+                v => typeof v === 'string'
+              );
             }
           });
         });
       }
 
-      // PROTOCOLES RESPIRATOIRES
+      // Protocoles respiratoires
       if (
         data.breaths &&
         typeof BREATHS !== 'undefined'
       ) {
         Object.keys(BREATHS).forEach(key => {
-          const replacement = data.breaths[key];
-          const original = BREATHS[key];
+          const source = data.breaths[key];
+          const target = BREATHS[key];
 
-          if (!replacement || !original) return;
+          if (!source || !target) return;
 
-          ['i', 'hi', 'e', 'ho', 'duration'].forEach(property => {
+          ['i', 'hi', 'e', 'ho', 'duration'].forEach(prop => {
             if (
-              Number.isFinite(replacement[property]) &&
-              replacement[property] >= 0
+              Number.isFinite(source[prop]) &&
+              source[prop] >= 0
             ) {
-              original[property] = replacement[property];
+              target[prop] = source[prop];
             }
           });
 
-          if (typeof replacement.msg === 'string') {
-            original.msg = replacement.msg;
+          if (typeof source.msg === 'string') {
+            target.msg = source.msg;
           }
         });
       }
@@ -312,13 +384,16 @@
 
     } catch (error) {
       console.info(
-        'M.U.R. : contenu par defaut conserve',
+        'M.U.R. : contenu par défaut conservé',
         error.message
       );
     }
   }
 
-  // DEMARRAGE
+  // ====================================
+  // 4. DEMARRAGE
+  // ====================================
+
   function init() {
     setupIntro();
     setupAdmin();
