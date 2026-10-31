@@ -1,68 +1,148 @@
 
-/* M.U.R. — Extensions de l'application */
+/* M.U.R. — Extensions sans modifier index.html
+   - Video automatique sans son
+   - Bouton Commencer a la fin
+   - Appui long sur logo : back-office
+   - Gestion des contenus
+*/
+
 (() => {
   'use strict';
 
-  const VIDEO = 'Logo_character_comes_to_life_20261031152523.mp4';
+  const VIDEO =
+    'Logo_character_comes_to_life_20261031152523.mp4';
 
-  // Introduction video
+  // 1. VIDEO D'ACCUEIL
   function intro() {
-    const old = document.getElementById('presentation');
-    if (!old || old.dataset.murVideoReady) return;
+    const panel =
+      document.getElementById('presentation');
 
-    old.dataset.murVideoReady = '1';
-    old.innerHTML = '';
-    old.classList.remove('hide');
-    old.classList.add('mur-video-presentation');
+    const video =
+      document.getElementById('murIntroVideo');
 
-    const video = document.createElement('video');
-    video.src = VIDEO;
-    video.autoplay = true;
+    if (!panel || !video || panel.dataset.murIntroV2) {
+      return;
+    }
+
+    panel.dataset.murIntroV2 = '1';
+
+    // Un seul lecteur, celui de index.html
     video.muted = true;
+    video.autoplay = true;
     video.playsInline = true;
     video.preload = 'auto';
+    video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
-    video.className = 'mur-video';
 
-    const skip = document.createElement('button');
-    skip.type = 'button';
-    skip.className = 'mur-video-skip';
-    skip.textContent = 'Passer ›';
+    // Retirer les anciens boutons
+    panel.querySelectorAll(
+      '.mur-intro-skip,' +
+      '.mur-video-skip,' +
+      '.mur-sound-start,' +
+      '.mur-commencer'
+    ).forEach(el => el.remove());
 
-    const close = () => {
-      if (old.classList.contains('hide')) return;
+    // BOUTON COMMENCER
+    const commencer = document.createElement('button');
+
+    commencer.type = 'button';
+    commencer.className = 'mur-commencer';
+    commencer.textContent = 'Commencer';
+
+    commencer.style.cssText = `
+      position: absolute;
+      left: 50%;
+      bottom: calc(58px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      z-index: 100;
+      display: none;
+      min-width: 190px;
+      min-height: 54px;
+      padding: 14px 28px;
+      border: 1px solid rgba(255,255,255,.65);
+      border-radius: 999px;
+      background: #ffffff;
+      color: #07111f;
+      font: 900 17px system-ui, sans-serif;
+      box-shadow: 0 0 30px rgba(255,255,255,.24);
+      cursor: pointer;
+    `;
+
+    panel.appendChild(commencer);
+
+    // Afficher Commencer sur la derniere image
+    function showCommencer() {
       video.pause();
+      commencer.style.display = 'block';
+      panel.classList.remove('hide');
+    }
+
+    // Lecture automatique de la video
+    function startIntro() {
+      panel.classList.remove('hide');
+      commencer.style.display = 'none';
+
+      video.pause();
+      video.muted = true;
+
+      try {
+        video.currentTime = 0;
+      } catch (e) {}
+
+      const playback = video.play();
+
+      if (playback && playback.catch) {
+        playback.catch(showCommencer);
+      }
+    }
+
+    // Intercepter la fin AVANT l'ancien gestionnaire
+    // qui envoyait automatiquement vers l'accueil
+    video.addEventListener('ended', e => {
+      e.stopImmediatePropagation();
+      showCommencer();
+    }, true);
+
+    video.addEventListener('error', e => {
+      e.stopImmediatePropagation();
+      showCommencer();
+    }, true);
+
+    // Entrer dans l'application uniquement sur clic
+    commencer.addEventListener('click', () => {
       if (typeof window.enterApp === 'function') {
         window.enterApp();
       } else {
-        old.classList.add('hide');
+        panel.classList.add('hide');
       }
-    };
 
-    video.addEventListener('ended', close);
-    video.addEventListener('error', close);
-    skip.onclick = close;
+      if (typeof window.showPage === 'function') {
+        window.showPage('home');
+      }
+    });
 
-    old.append(video, skip);
+    // Appui court sur logo : revoir introduction
+    window.openPresentation = startIntro;
 
-    const p = video.play();
-    if (p && p.catch) {
-      p.catch(() => {
-        skip.textContent = 'Entrer ›';
-      });
-    }
+    // Lancement initial
+    startIntro();
   }
 
-  // Chargement des contenus du back-office
+  // 2. CHARGEMENT DU CONTENU DU BACK-OFFICE
   async function applyContent() {
     try {
-      const resp = await fetch('mur-content.json', {
-        cache: 'no-store'
-      });
+      const resp = await fetch(
+        'mur-content.json',
+        { cache: 'no-store' }
+      );
 
-      if (!resp.ok) throw new Error('Contenu absent');
+      if (!resp.ok) {
+        throw new Error('Fichier contenu absent');
+      }
+
       const data = await resp.json();
 
+      // Questions ki.S
       if (
         Array.isArray(data.questions) &&
         data.questions.length === 15 &&
@@ -83,7 +163,11 @@
         }
       }
 
-      if (data.exercises && typeof EXERCISES !== 'undefined') {
+      // Exercices
+      if (
+        data.exercises &&
+        typeof EXERCISES !== 'undefined'
+      ) {
         Object.keys(EXERCISES).forEach(k => {
           const v = data.exercises[k];
           if (!v || typeof v.title !== 'string') return;
@@ -104,13 +188,20 @@
         });
       }
 
-      if (data.breaths && typeof BREATHS !== 'undefined') {
+      // Respirations
+      if (
+        data.breaths &&
+        typeof BREATHS !== 'undefined'
+      ) {
         Object.keys(BREATHS).forEach(k => {
           const v = data.breaths[k];
           if (!v) return;
 
           ['i', 'hi', 'e', 'ho', 'duration'].forEach(p => {
-            if (Number.isFinite(v[p]) && v[p] >= 0) {
+            if (
+              Number.isFinite(v[p]) &&
+              v[p] >= 0
+            ) {
               BREATHS[k][p] = v[p];
             }
           });
@@ -121,77 +212,106 @@
         });
       }
 
-      window.dispatchEvent(new Event('mur-content-loaded'));
+      window.dispatchEvent(
+        new Event('mur-content-loaded')
+      );
 
     } catch (e) {
-      console.info('M.U.R. : contenu par défaut conservé', e.message);
+      console.info(
+        'M.U.R. : contenu par defaut conserve',
+        e.message
+      );
     }
   }
 
-  // Appui long sur le logo : accès back-office
-  function setupAdminLongPress() {
-    const logo = document.querySelector('.top .brand');
-    if (!logo) return;
+  // 3. APPUI LONG SUR LOGO : BACK-OFFICE
+  function installAdminLongPress() {
+    const brand =
+      document.querySelector('.top .brand');
+
+    if (!brand || brand.dataset.murAdminLongPress) {
+      return;
+    }
+
+    brand.dataset.murAdminLongPress = '1';
 
     let timer = null;
-    let longPressed = false;
-    let startX = 0;
-    let startY = 0;
+    let longTriggered = false;
+    let pointerStart = null;
 
-    const cancel = () => {
-      clearTimeout(timer);
-      timer = null;
+    const clear = () => {
+      if (timer !== null) {
+        clearTimeout(timer);
+        timer = null;
+      }
     };
 
-    logo.style.cursor = 'pointer';
-    logo.style.touchAction = 'manipulation';
+    brand.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || !e.isPrimary) return;
 
-    logo.addEventListener('pointerdown', e => {
-      if (e.button !== 0) return;
+      clear();
+      longTriggered = false;
 
-      cancel();
-      longPressed = false;
-      startX = e.clientX;
-      startY = e.clientY;
+      pointerStart = {
+        x: e.clientX,
+        y: e.clientY
+      };
 
       timer = setTimeout(() => {
         timer = null;
-        longPressed = true;
+        longTriggered = true;
+
+        if (navigator.vibrate) {
+          navigator.vibrate(40);
+        }
+
         window.location.href = 'admin.html';
       }, 2000);
     });
 
-    logo.addEventListener('pointermove', e => {
+    brand.addEventListener('pointermove', e => {
       if (
-        Math.abs(e.clientX - startX) > 12 ||
-        Math.abs(e.clientY - startY) > 12
+        pointerStart &&
+        Math.hypot(
+          e.clientX - pointerStart.x,
+          e.clientY - pointerStart.y
+        ) > 14
       ) {
-        cancel();
+        clear();
       }
     });
 
-    logo.addEventListener('pointerup', cancel);
-    logo.addEventListener('pointercancel', cancel);
-    logo.addEventListener('pointerleave', cancel);
+    [
+      'pointerup',
+      'pointercancel',
+      'pointerleave'
+    ].forEach(name => {
+      brand.addEventListener(name, () => {
+        clear();
+        pointerStart = null;
+      });
+    });
 
-    logo.addEventListener('click', e => {
-      if (longPressed) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        longPressed = false;
-      }
+    brand.addEventListener('click', e => {
+      if (!longTriggered) return;
+
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      longTriggered = false;
     }, true);
 
-    logo.addEventListener('contextmenu', e => {
-      e.preventDefault();
+    brand.addEventListener('contextmenu', e => {
+      if (timer !== null || longTriggered) {
+        e.preventDefault();
+      }
     });
   }
 
-  // Initialisation
+  // 4. INITIALISATION
   function init() {
     intro();
     applyContent();
-    setupAdminLongPress();
+    installAdminLongPress();
   }
 
   if (document.readyState === 'loading') {
@@ -199,5 +319,4 @@
   } else {
     init();
   }
-
 })();
