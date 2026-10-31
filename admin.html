@@ -3,375 +3,262 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>M.U.R. — Back-office</title>
-
 <style>
 :root {
   color-scheme: dark;
   --bg: #08111e;
-  --panel: #111e30;
+  --panel: #112034;
   --line: #ffffff22;
-  --txt: #f8fafc;
+  --text: #f8fafc;
   --muted: #aab8c9;
   --green: #32c991;
 }
-
 * { box-sizing: border-box; }
-
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at 10% 0%, #15365a, transparent 32%),
-    #08111e;
+  color: var(--text);
   font-family: system-ui, -apple-system, sans-serif;
-  color: var(--txt);
+  background: radial-gradient(circle at 10% 0%,#15365a,transparent 35%),var(--bg);
 }
-
 .layout {
   display: grid;
-  grid-template-columns: 238px minmax(0, 1fr);
-  min-height: 100vh;
+  grid-template-columns: 238px minmax(0,1fr);
+  min-height: 100dvh;
 }
-
 .aside {
   background: #0d1929;
   border-right: 1px solid var(--line);
-  padding: 24px 14px;
+  padding: 22px 14px;
 }
-
 .logo {
   font-size: 26px;
   font-weight: 900;
-  letter-spacing: .1em;
-  margin: 4px 12px;
+  letter-spacing: .08em;
 }
-
 .sub {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
-  margin: 0 12px 30px;
+  margin: 4px 0 22px;
 }
-
 .nav {
-  display: block;
   width: 100%;
-  text-align: left;
-  color: #d8e5f3;
-  background: none;
-  border: 0;
+  display: block;
   padding: 13px;
+  border: 0;
   border-radius: 12px;
-  cursor: pointer;
+  text-align: left;
+  background: transparent;
+  color: #d8e5f3;
   font-weight: 700;
+  cursor: pointer;
 }
-
-.nav.active {
-  background: #244062;
-  color: white;
-}
-
+.nav.active { background: #244062; color: white; }
 .main {
+  min-width: 0;
   max-width: 1100px;
   width: 100%;
-  min-width: 0;
-  padding: 26px 32px 70px;
+  padding: 26px 30px 70px;
 }
-
-h1 {
-  font-size: 26px;
-  margin: 0 0 6px;
-}
-
-h2 {
-  font-size: 18px;
-  margin: 0 0 10px;
-}
-
+h1 { font-size: 25px; margin: 0 0 8px; }
+h2 { font-size: 18px; margin: 0 0 10px; }
 .hint {
-  color: var(--muted);
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
+  color: var(--muted);
 }
-
+.section { display: none; }
+.section.active { display: block; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 12px;
+}
+.card {
+  margin: 14px 0;
+  padding: 18px;
+  min-width: 0;
+  background: #112034d9;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+.num { font-size: 30px; font-weight: 900; }
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 12px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 6px;
+}
+.field.full { grid-column: 1/-1; }
+label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbdbeb;
+}
+input,textarea,select {
+  width: 100%;
+  min-width: 0;
+  padding: 11px;
+  font: inherit;
+  background: #071425;
+  color: white;
+  border: 1px solid #ffffff35;
+  border-radius: 10px;
+}
+textarea { min-height: 85px; resize: vertical; }
+input:focus,textarea:focus {
+  outline: 2px solid #82c7f0;
+}
 .tools {
   display: flex;
   flex-wrap: wrap;
   gap: 9px;
-  margin: 20px 0;
+  margin: 18px 0;
 }
-
 .btn {
+  min-height: 44px;
+  padding: 10px 16px;
   background: #1c3351;
-  border: 1px solid #ffffff34;
-  color: white;
-  padding: 11px 16px;
+  border: 1px solid #ffffff38;
   border-radius: 11px;
+  color: white;
   font-weight: 700;
   cursor: pointer;
 }
-
-.btn.primary {
-  background: var(--green);
-  color: #052017;
-}
-
+.btn.primary { background: var(--green); color: #052017; }
 .btn.danger { background: #51303a; }
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.card {
-  padding: 18px;
-  border: 1px solid var(--line);
-  background: #112034cb;
-  border-radius: 18px;
-  margin: 14px 0;
-}
-
-.num {
-  font-size: 30px;
-  font-weight: 900;
-}
-
-.section { display: none; }
-.section.active { display: block; }
-
-.fields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
-}
-
-.field.full { grid-column: 1 / -1; }
-
-label {
-  font-weight: 700;
-  font-size: 12px;
-  color: #c8d7e7;
-}
-
-input, textarea, select {
-  width: 100%;
-  border: 1px solid #ffffff30;
-  background: #071425;
-  color: #fff;
-  border-radius: 10px;
-  padding: 10px;
-  font: inherit;
-}
-
-textarea {
-  min-height: 76px;
-  resize: vertical;
-}
-
 .itemtop {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   gap: 10px;
   margin-bottom: 13px;
 }
-
 .pill {
+  padding: 5px 10px;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 5px 9px;
+  border-radius: 30px;
   font-size: 11px;
-  color: #cce1ef;
 }
-
-.notice {
-  background: #2b293e;
-  border: 1px solid #fbbf2466;
-  padding: 15px;
+.family-rouge { border-left: 5px solid #f15e6a; }
+.family-orange { border-left: 5px solid #f5a653; }
+.family-vert { border-left: 5px solid #45c38d; }
+.family-bleu { border-left: 5px solid #64a8fb; }
+.media {
+  display: grid;
+  grid-template-columns: minmax(0,230px) minmax(0,1fr);
+  gap: 17px;
+  padding: 13px;
+  margin: 12px 0 16px;
+  background: #071525;
+  border: 1px solid var(--line);
   border-radius: 14px;
+}
+.preview {
+  min-height: 185px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #08111e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.preview img {
+  display: block;
+  width: 100%;
+  height: 220px;
+  object-fit: contain;
+}
+.media-side { min-width: 0; }
+.media-side audio {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  margin: 10px 0;
+}
+.media-label {
+  color: #9ebbd0;
+  font-size: 12px;
+  margin: 9px 0 5px;
+}
+.filename {
+  font-size: 12px;
+  color: #d8e5f3;
+  overflow-wrap: anywhere;
+}
+.asset-error {
+  font-size: 12px;
+  color: #ffd18e;
+}
+.notice {
+  padding: 15px;
   margin: 15px 0;
+  background: #2b293e;
+  border: 1px solid #fbbf2477;
+  border-radius: 14px;
   font-size: 13px;
   line-height: 1.5;
 }
-
 .notice strong { color: #ffda81; }
-.small { font-size: 12px; color: var(--muted); }
-.search { margin: 10px 0; }
-
-.footer {
-  margin-top: 25px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.status {
-  min-height: 20px;
-  color: #a7f3d0;
-  font-size: 13px;
-}
-
+.small,.footer { color: var(--muted); font-size: 12px; }
+.status { color: #a7f3d0; font-size: 13px; margin: 15px 0; }
+.search { margin: 10px 0 16px; }
 a { color: #83c7ff; }
+code { overflow-wrap: anywhere; }
 
-code {
-  background: #071425;
-  border-radius: 4px;
-  padding: 2px 5px;
-}
-
-/* AFFICHAGE TELEPHONE */
-@media(max-width: 720px) {
-  html, body {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-  }
-
-  .layout {
-    display: block;
-    min-height: 100dvh;
-  }
-
+@media(max-width:720px) {
+  html,body { width: 100%; overflow-x: hidden; }
+  .layout { display: block; }
   .aside {
-    width: 100%;
     border-right: 0;
     border-bottom: 1px solid var(--line);
-    padding: 14px 12px;
+    padding: 13px 12px;
   }
-
-  .logo {
-    font-size: 23px;
-    margin: 0 4px 4px;
-  }
-
-  .sub {
-    margin: 0 4px 13px;
-    font-size: 11px;
-  }
-
+  .logo { font-size: 23px; }
+  .sub { font-size: 11px; margin-bottom: 12px; }
   .menu {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3,minmax(0,1fr));
     gap: 7px;
   }
-
   .nav {
     min-width: 0;
-    min-height: 49px;
-    padding: 8px 4px;
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 13px;
+    min-height: 48px;
+    padding: 7px 3px;
     background: #182b43;
-    color: #e0ebf7;
+    border: 1px solid #ffffff1c;
+    text-align: center;
     font-size: 11px;
     line-height: 1.2;
-    text-align: center;
     white-space: normal;
   }
-
   .nav.active {
     background: #285a7f;
     border-color: #79c7ff;
   }
-
   .main {
-    width: 100%;
-    max-width: 100%;
-    padding: 18px 12px
-      calc(35px + env(safe-area-inset-bottom));
+    padding: 18px 12px calc(34px + env(safe-area-inset-bottom));
   }
-
-  h1 {
-    font-size: 22px;
-    line-height: 1.2;
-  }
-
+  h1 { font-size: 22px; }
   h2 { font-size: 16px; }
-
-  .hint {
-    font-size: 12px;
-    line-height: 1.5;
-  }
-
-  .grid, .fields {
-    grid-template-columns: minmax(0, 1fr);
+  .grid,.fields,.media {
+    grid-template-columns: minmax(0,1fr);
     gap: 11px;
   }
-
-  .card {
-    padding: 14px;
-    margin: 12px 0;
-    border-radius: 18px;
-    overflow-wrap: anywhere;
-  }
-
-  .itemtop {
-    flex-wrap: wrap;
-    align-items: flex-start;
-  }
-
-  .pill {
-    max-width: 100%;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
+  .card { padding: 13px; }
+  .itemtop { flex-wrap: wrap; }
   .field.full { grid-column: 1; }
-
-  input, textarea, select {
-    max-width: 100%;
-    min-width: 0;
-    font-size: 16px;
-    padding: 12px;
-    border-radius: 12px;
-  }
-
-  textarea {
-    min-height: 100px;
-    line-height: 1.45;
-  }
-
-  .tools {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 9px;
-  }
-
-  .btn {
-    width: 100%;
-    min-height: 48px;
-    padding: 12px;
-    font-size: 14px;
-  }
-
-  .notice {
-    padding: 13px;
-    overflow-wrap: anywhere;
-  }
-
-  .num { font-size: 26px; }
-  .footer { font-size: 11px; }
-}
-
-@media(max-width: 360px) {
-  .nav {
-    font-size: 10px;
-    padding: 7px 3px;
-  }
-
-  .main {
-    padding-left: 9px;
-    padding-right: 9px;
-  }
-
-  .card { padding: 11px; }
+  .media { padding: 10px; }
+  .preview img { height: 245px; }
+  .tools { display: grid; grid-template-columns: 1fr; }
+  .btn { width: 100%; min-height: 48px; }
+  input,textarea,select { font-size: 16px; }
 }
 </style>
 </head>
@@ -381,8 +268,7 @@ code {
 
 <aside class="aside">
   <div class="logo">M.U.R.</div>
-  <div class="sub">Administration des contenus · v1 mobile</div>
-
+  <div class="sub">Administration · Images et audio</div>
   <div class="menu">
     <button class="nav active" data-tab="dashboard">Vue générale</button>
     <button class="nav" data-tab="questions">Questions ki.S</button>
@@ -395,143 +281,76 @@ code {
 
 <main class="main">
 
-<section class="section active" id="dashboard">
+<section id="dashboard" class="section active">
   <h1>Tableau de bord M.U.R.</h1>
-  <p class="hint">
-    Gérez le contenu de l'application sans modifier index.html.
-  </p>
-
+  <p class="hint">Gérez les contenus, visualisez les illustrations et écoutez les audios correspondants.</p>
   <div class="grid">
-    <article class="card">
-      <div class="num" id="countQ">15</div>
-      <div>Questions ki.S</div>
-    </article>
-    <article class="card">
-      <div class="num" id="countE">16</div>
-      <div>Exercices</div>
-    </article>
-    <article class="card">
-      <div class="num" id="countB">8</div>
-      <div>Protocoles respiratoires</div>
-    </article>
+    <article class="card"><div class="num" id="countQ">—</div>Questions ki.S</article>
+    <article class="card"><div class="num" id="countE">—</div>Exercices</article>
+    <article class="card"><div class="num" id="countB">—</div>Protocoles respiratoires</article>
   </div>
-
   <div class="card">
-    <h2>Comment ça fonctionne</h2>
-    <p class="hint">
-      Modifiez les fiches puis exportez mur-content.json.
-      Remplacez ce fichier dans GitHub.
-      L'application chargera les nouveaux contenus.
-    </p>
+    <h2>Gestion des exercices</h2>
+    <p class="hint">Chaque exercice possède une image, un fichier audio et des explications modifiables.</p>
     <div class="tools">
-      <button class="btn primary" data-go="questions">Modifier les questions</button>
-      <button class="btn" data-go="exercises">Gérer les exercices</button>
+      <button class="btn primary" data-go="exercises">Voir les images et audios</button>
+      <button class="btn" data-go="questions">Modifier les questions</button>
     </div>
   </div>
 </section>
 
-<section class="section" id="questions">
+<section id="questions" class="section">
   <h1>Questionnaire ki.S</h1>
-  <p class="hint">
-    15 questions. Les réponses A / F / P doivent conserver
-    leur ordre pour respecter le calcul actuel.
-  </p>
+  <p class="hint">15 questions. Conservez l'ordre des réponses A / F / P.</p>
   <div id="questionList"></div>
 </section>
 
-<section class="section" id="exercises">
-  <h1>Bibliothèque d'exercices</h1>
-  <p class="hint">
-    Modifiez les titres, légendes, explications,
-    illustrations et sons.
-    Utilisez les noms exacts des fichiers GitHub.
-  </p>
-
-  <select class="search" id="zoneFilter">
+<section id="exercises" class="section">
+  <h1>Exercices — Images et audios</h1>
+  <p class="hint">Sélectionnez une famille. Chaque fiche affiche l'image, un lecteur audio et les noms de fichiers associés.</p>
+  <select id="zoneFilter" class="search">
     <option value="">Toutes les familles</option>
     <option value="rouge">Rouge</option>
     <option value="orange">Orange</option>
     <option value="vert">Vert</option>
     <option value="bleu">Bleu</option>
   </select>
-
   <div id="exerciseList"></div>
 </section>
 
-<section class="section" id="breaths">
+<section id="breaths" class="section">
   <h1>Respiration guidée</h1>
-  <p class="hint">
-    Réglez les différentes phases en secondes
-    et la durée totale des protocoles.
-  </p>
+  <p class="hint">Modifiez les durées de chaque phase respiratoire.</p>
   <div id="breathList"></div>
 </section>
 
-<section class="section" id="users">
+<section id="users" class="section">
   <h1>Inscriptions et utilisateurs</h1>
-
   <div class="notice">
-    <strong>Pas encore de base centralisée.</strong>
-    L'application conserve actuellement ses historiques
-    sur les appareils des utilisateurs.
-    GitHub Pages ne permet pas à lui seul
-    de gérer de véritables inscriptions.
-  </div>
-
-  <div class="card">
-    <h2>Activation des comptes</h2>
-    <p class="hint">
-      Une authentification et une base sécurisée
-      seront nécessaires pour administrer les inscriptions.
-      Les droits d'accès, la conservation des données
-      et la conformité RGPD devront être définis.
-    </p>
+    <strong>Base utilisateurs non connectée.</strong>
+    L'application conserve actuellement son historique localement.
+    La gestion des inscriptions exigera une base sécurisée,
+    une authentification et une politique RGPD adaptée.
   </div>
 </section>
 
-<section class="section" id="publish">
+<section id="publish" class="section">
   <h1>Publier les modifications</h1>
-  <p class="hint">
-    Les changements sont conservés dans ce navigateur
-    jusqu'à leur exportation.
-  </p>
-
+  <p class="hint">Les modifications sont enregistrées dans ce navigateur. Elles ne sont publiées qu'après exportation du JSON et mise à jour du dépôt GitHub.</p>
   <div class="tools">
-    <button class="btn primary" id="exportBtn">
-      Exporter mur-content.json
-    </button>
-    <button class="btn" id="importBtn">
-      Importer un fichier JSON
-    </button>
-    <button class="btn danger" id="resetBtn">
-      Restaurer la version initiale
-    </button>
-    <input type="file" id="jsonFile"
-      accept="application/json,.json" hidden>
+    <button class="btn primary" id="exportBtn">Exporter mur-content.json</button>
+    <button class="btn" id="importBtn">Importer un fichier JSON</button>
+    <button class="btn danger" id="resetBtn">Restaurer le contenu publié</button>
+    <input id="jsonFile" type="file" accept=".json,application/json" hidden>
   </div>
-
   <div class="card">
-    <h2>Publication sur GitHub</h2>
-    <ol class="hint">
-      <li>Exportez mur-content.json.</li>
-      <li>Ouvrez le dépôt Respire-mur.</li>
-      <li>Remplacez uniquement mur-content.json.</li>
-      <li>Confirmez avec Commit changes.</li>
-    </ol>
+    <h2>Publication</h2>
+    <p class="hint">Exportez le JSON, remplacez <code>mur-content.json</code> dans votre dépôt GitHub et validez avec Commit changes.</p>
   </div>
-
-  <p class="small">
-    Ne placez jamais de mots de passe,
-    jetons GitHub ou données personnelles dans
-    les fichiers publics.
-  </p>
 </section>
 
 <div id="status" class="status" aria-live="polite"></div>
-
-<p class="footer">
-  M.U.R. · Back-office de contenus · Version mobile
-</p>
+<p class="footer">M.U.R. · Back-office · Contenus et médias</p>
 
 </main>
 </div>
@@ -545,32 +364,69 @@ let initial = null;
 const $ = id => document.getElementById(id);
 const clone = x => JSON.parse(JSON.stringify(x));
 
-const esc = x => String(x ?? '').replace(
-  /[&<>"']/g,
-  c => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[c])
-);
+function esc(x) {
+  return String(x ?? '').replace(/[&<>"']/g,c => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[c]));
+}
 
-function field(label, val, path, kind = 'input') {
-  const id = 'f_' + path.replace(/[^\w]/g, '_');
-  const full = kind === 'textarea' ? 'full' : '';
-
+function field(label,value,path,kind='input') {
+  const id = 'f_' + path.replace(/[^\w]/g,'_');
   const control = kind === 'textarea'
-    ? `<textarea id="${id}" data-path="${esc(path)}">${esc(val)}</textarea>`
-    : `<input id="${id}" data-path="${esc(path)}"
-        value="${esc(val)}"
-        ${kind === 'number' ? 'type="number" min="0" step="1"' : 'type="text"'}>`;
+    ? `<textarea id="${id}" data-path="${esc(path)}">${esc(value)}</textarea>`
+    : `<input id="${id}" data-path="${esc(path)}" value="${esc(value)}"
+       type="${kind === 'number' ? 'number' : 'text'}"
+       ${kind === 'number' ? 'min="0" step="1"' : ''}>`;
 
+  return `<div class="field ${kind === 'textarea' ? 'full' : ''}">
+    <label for="${id}">${esc(label)}</label>
+    ${control}
+  </div>`;
+}
+
+function validate(x) {
+  if (!x ||
+      !Array.isArray(x.questions) ||
+      !x.exercises ||
+      !x.breaths ||
+      Array.isArray(x.exercises)) {
+    throw new Error('mur-content.json doit contenir questions, exercises et breaths');
+  }
+}
+
+function candidates(list) {
+  return [...new Set(
+    (Array.isArray(list) ? list : [])
+      .filter(x => typeof x === 'string' && x.trim())
+  )];
+}
+
+function assetURL(name) {
+  return name.split('/').map(encodeURIComponent).join('/');
+}
+
+function mediaBlock(key,e) {
   return `
-    <div class="field ${full}">
-      <label for="${id}">${esc(label)}</label>
-      ${control}
-    </div>`;
+  <div class="media" data-exercise="${esc(key)}">
+    <div class="preview">
+      <img data-image="${esc(key)}"
+        alt="Illustration de ${esc(e.title)}"
+        loading="lazy">
+    </div>
+    <div class="media-side">
+      <div class="media-label">Image correspondante</div>
+      <div class="filename" data-image-name="${esc(key)}">Recherche...</div>
+
+      <div class="media-label">Audio correspondant</div>
+      <audio controls preload="none"
+        data-audio="${esc(key)}"></audio>
+      <div class="filename" data-audio-name="${esc(key)}">Recherche...</div>
+    </div>
+  </div>`;
 }
 
 function render() {
@@ -580,52 +436,49 @@ function render() {
   $('countE').textContent = Object.keys(data.exercises).length;
   $('countB').textContent = Object.keys(data.breaths).length;
 
-  $('questionList').innerHTML = data.questions.map((q, i) => `
+  $('questionList').innerHTML = data.questions.map((q,i) => `
     <article class="card">
       <div class="itemtop">
-        <h2>Question ${i + 1}</h2>
+        <h2>Question ${i+1}</h2>
         <span class="pill">ki.S</span>
       </div>
       <div class="fields">
-        ${field('Question', q.text, `questions.${i}.text`, 'textarea')}
-        ${field('Réponse A (Fonceur)', q.a, `questions.${i}.a`, 'textarea')}
-        ${field('Réponse F (Funambule)', q.f, `questions.${i}.f`, 'textarea')}
-        ${field('Réponse P (Posé)', q.p, `questions.${i}.p`, 'textarea')}
+        ${field('Question',q.text,`questions.${i}.text`,'textarea')}
+        ${field('Réponse A (Fonceur)',q.a,`questions.${i}.a`,'textarea')}
+        ${field('Réponse F (Funambule)',q.f,`questions.${i}.f`,'textarea')}
+        ${field('Réponse P (Posé)',q.p,`questions.${i}.p`,'textarea')}
       </div>
     </article>
   `).join('');
 
-  const z = $('zoneFilter').value;
+  const zone = $('zoneFilter').value;
 
-  $('exerciseList').innerHTML = Object.entries(data.exercises)
-    .filter(([k, e]) => !z || e.zone === z)
-    .map(([k, e]) => `
-      <article class="card">
+  $('exerciseList').innerHTML =
+    Object.entries(data.exercises)
+    .filter(([k,e]) => !zone || e.zone === zone)
+    .map(([k,e]) => `
+      <article class="card family-${esc(e.zone)}">
         <div class="itemtop">
           <h2>${esc(e.title)}</h2>
-          <span class="pill">${esc(e.zone)} · ${esc(k)}</span>
+          <span class="pill">${esc(e.zone)}</span>
         </div>
+
+        ${mediaBlock(k,e)}
+
         <div class="fields">
-          ${field('Titre', e.title, `exercises.${k}.title`)}
-          ${field('Légende', e.caption, `exercises.${k}.caption`)}
-          ${field('Image principale',
-             e.files?.[0] || '',
-             `exercises.${k}.files.0`)}
-          ${field('Audio principal',
-             e.sounds?.[0] || '',
-             `exercises.${k}.sounds.0`)}
-          ${(e.why || []).map((v, i) =>
-            field('Explication ' + (i + 1),
-              v,
-              `exercises.${k}.why.${i}`,
-              'textarea')
+          ${field('Titre',e.title,`exercises.${k}.title`)}
+          ${field('Légende',e.caption,`exercises.${k}.caption`)}
+          ${field('Image principale',e.files?.[0] || '',`exercises.${k}.files.0`)}
+          ${field('Audio principal',e.sounds?.[0] || '',`exercises.${k}.sounds.0`)}
+          ${(e.why || []).map((v,i) =>
+            field('Explication '+(i+1),v,`exercises.${k}.why.${i}`,'textarea')
           ).join('')}
         </div>
       </article>
     `).join('');
 
-  $('breathList').innerHTML = Object.entries(data.breaths)
-    .map(([k, b]) => `
+  $('breathList').innerHTML =
+    Object.entries(data.breaths).map(([k,b]) => `
       <article class="card">
         <div class="itemtop">
           <h2>${esc(k)}</h2>
@@ -633,33 +486,105 @@ function render() {
         </div>
         <div class="fields">
           ${[
-            ['Inspiration', 'i'],
-            ['Pause après inspiration', 'hi'],
-            ['Expiration', 'e'],
-            ['Pause après expiration', 'ho'],
-            ['Durée totale (secondes)', 'duration']
-          ].map(([l, p]) =>
-            field(l, b[p], `breaths.${k}.${p}`, 'number')
+            ['Inspiration','i'],
+            ['Pause après inspiration','hi'],
+            ['Expiration','e'],
+            ['Pause après expiration','ho'],
+            ['Durée totale (secondes)','duration']
+          ].map(([label,p]) =>
+            field(label,b[p],`breaths.${k}.${p}`,'number')
           ).join('')}
-          ${field('Description', b.msg,
-            `breaths.${k}.msg`, 'textarea')}
+          ${field('Description',b.msg,`breaths.${k}.msg`,'textarea')}
         </div>
       </article>
     `).join('');
+
+  loadMedia();
 }
 
-function setPath(path, value) {
-  const parts = path.split('.');
-  let o = data;
+function testImage(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+}
 
-  for (let i = 0; i < parts.length - 1; i++) {
-    o = o[parts[i]];
+async function firstImage(list) {
+  for (const file of list) {
+    if (await testImage(assetURL(file))) {
+      return file;
+    }
+  }
+  return null;
+}
+
+async function firstAudio(list) {
+  for (const file of list) {
+    try {
+      const r = await fetch(assetURL(file), {
+        method: 'HEAD'
+      });
+      if (r.ok) return file;
+    } catch (e) {}
+  }
+  return null;
+}
+
+async function loadMedia() {
+  for (const [key,e] of Object.entries(data.exercises)) {
+    const img = document.querySelector(`[data-image="${key}"]`);
+    const audio = document.querySelector(`[data-audio="${key}"]`);
+
+    if (!img || !audio) continue;
+
+    const imageName = document.querySelector(`[data-image-name="${key}"]`);
+    const audioName = document.querySelector(`[data-audio-name="${key}"]`);
+
+    // Les noms alternatifs viennent du JSON.
+    const images = candidates(e.files);
+    const sounds = candidates(e.sounds);
+
+    const imageFile = await firstImage(images);
+    if (!img.isConnected) continue;
+
+    if (imageFile) {
+      img.src = assetURL(imageFile);
+      imageName.textContent = imageFile;
+    } else {
+      img.style.display = 'none';
+      imageName.textContent = 'Image introuvable';
+      imageName.classList.add('asset-error');
+    }
+
+    const audioFile = await firstAudio(sounds);
+    if (!audio.isConnected) continue;
+
+    if (audioFile) {
+      audio.src = assetURL(audioFile);
+      audioName.textContent = audioFile;
+    } else {
+      audio.style.display = 'none';
+      audioName.textContent = 'Audio introuvable';
+      audioName.classList.add('asset-error');
+    }
+  }
+}
+
+function setPath(path,value) {
+  const parts = path.split('.');
+  let target = data;
+
+  for (let i=0;i<parts.length-1;i++) {
+    target = target[parts[i]];
   }
 
-  const k = parts.at(-1);
+  const key = parts.at(-1);
 
-  o[k] = /^breaths\.[^.]+\.(i|hi|e|ho|duration)$/.test(path)
-    ? Math.max(0, Number(value) || 0)
+  target[key] =
+    /^breaths\.[^.]+\.(i|hi|e|ho|duration)$/.test(path)
+    ? Math.max(0,Number(value)||0)
     : value;
 
   localStorage.setItem(
@@ -671,73 +596,68 @@ function setPath(path, value) {
     'Brouillon enregistré dans ce navigateur';
 }
 
-document.addEventListener('input', e => {
+document.addEventListener('input',e => {
   if (e.target.matches('[data-path]')) {
-    setPath(e.target.dataset.path, e.target.value);
+    setPath(e.target.dataset.path,e.target.value);
   }
 });
 
-document.addEventListener('click', e => {
-  const b = e.target.closest('[data-tab],[data-go]');
-  if (!b) return;
+document.addEventListener('click',e => {
+  const btn = e.target.closest('[data-tab],[data-go]');
+  if (!btn) return;
 
-  const tab = b.dataset.tab || b.dataset.go;
+  const tab = btn.dataset.tab || btn.dataset.go;
 
   document.querySelectorAll('.section').forEach(s => {
-    s.classList.toggle('active', s.id === tab);
+    s.classList.toggle('active',s.id === tab);
   });
 
   document.querySelectorAll('.nav').forEach(n => {
-    n.classList.toggle('active', n.dataset.tab === tab);
+    n.classList.toggle('active',n.dataset.tab === tab);
   });
 
-  window.scrollTo(0, 0);
+  window.scrollTo(0,0);
 });
 
-$('zoneFilter').addEventListener('change', render);
+$('zoneFilter').addEventListener('change',render);
 
 $('exportBtn').onclick = () => {
-  if (
-    data.questions.length !== 15 ||
-    data.questions.some(q =>
-      !['text', 'a', 'f', 'p'].every(k => q[k]?.trim())
-    )
-  ) {
-    alert('Vérifiez les 15 questions : tous les champs sont requis.');
+  if (!data) return;
+
+  if (data.questions.length !== 15 ||
+      data.questions.some(q =>
+        !['text','a','f','p'].every(k => q[k]?.trim())
+      )) {
+    alert('Vérifiez les 15 questions ki.S.');
     return;
   }
 
   const blob = new Blob(
-    [JSON.stringify(data, null, 2)],
-    { type: 'application/json' }
+    [JSON.stringify(data,null,2)],
+    {type:'application/json'}
   );
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-
   a.href = url;
   a.download = 'mur-content.json';
   a.click();
 
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setTimeout(() => URL.revokeObjectURL(url),1000);
+
   $('status').textContent = 'Fichier prêt à publier';
 };
 
 $('importBtn').onclick = () => $('jsonFile').click();
 
 $('jsonFile').onchange = async e => {
-  const f = e.target.files[0];
-  if (!f) return;
+  const file = e.target.files[0];
+  if (!file) return;
 
   try {
-    const x = JSON.parse(await f.text());
-
-    if (!Array.isArray(x.questions) ||
-        !x.exercises || !x.breaths) {
-      throw Error('Format incorrect');
-    }
-
-    data = x;
+    const next = JSON.parse(await file.text());
+    validate(next);
+    data = next;
 
     localStorage.setItem(
       'mur-admin-draft-v1',
@@ -746,17 +666,18 @@ $('jsonFile').onchange = async e => {
 
     render();
     $('status').textContent = 'Contenu importé';
-
   } catch (err) {
-    alert('Import impossible : ' + err.message);
+    alert('Import impossible : '+err.message);
   }
 
   e.target.value = '';
 };
 
 $('resetBtn').onclick = () => {
+  if (!initial) return;
+
   if (!confirm(
-    'Restaurer le contenu initial ? Vos modifications locales seront perdues.'
+    'Restaurer le contenu publié ? Les changements locaux seront perdus.'
   )) return;
 
   data = clone(initial);
@@ -766,32 +687,35 @@ $('resetBtn').onclick = () => {
 
 (async () => {
   try {
-    const r = await fetch('mur-content.json', {
-      cache: 'no-store'
-    });
+    const response = await fetch(
+      'mur-content.json',
+      {cache:'no-store'}
+    );
 
-    if (!r.ok) {
-      throw Error('Fichier mur-content.json absent');
+    if (!response.ok) {
+      throw Error('mur-content.json indisponible');
     }
 
-    initial = await r.json();
+    initial = await response.json();
+    validate(initial);
 
+    let draft = null;
     try {
-      data = JSON.parse(
+      draft = JSON.parse(
         localStorage.getItem('mur-admin-draft-v1') || 'null'
       );
-    } catch (e) {}
-
-    if (!data || !data.questions) {
-      data = clone(initial);
+      if (draft) validate(draft);
+    } catch (e) {
+      draft = null;
     }
 
+    data = draft || clone(initial);
     render();
 
-  } catch (e) {
+  } catch (err) {
     $('status').textContent =
-      'Erreur : ouvrez ce back-office depuis GitHub Pages, ' +
-      'avec mur-content.json à côté. ' + e.message;
+      'Erreur : ' + err.message +
+      '. Restaurez le JSON depuis son historique GitHub.';
   }
 })();
 </script>
