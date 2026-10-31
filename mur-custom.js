@@ -1,74 +1,64 @@
 
 /*
- M.U.R. — Version vidéo corrigée
- - Lecture automatique et silencieuse
- - Bouton Commencer après la vidéo
- - Vidéo limitée à 680 px sur ordinateur
- - Accès back-office par appui long
- - Chargement des contenus
+ M.U.R. — Nouvelle introduction
+ Vidéo : videointromur.mp4
+ Lecture automatique, son activable,
+ Commencer à la fin.
 */
 
 (() => {
   'use strict';
 
-  const VIDEO =
-    'Logo_character_comes_to_life_20261031152523.mp4';
-
+  const VIDEO = 'videointromur.mp4';
   const ADMIN_URL = 'admin.html';
 
-  // =========================================
   // INTRODUCTION
-  // =========================================
-
   function setupIntro() {
-    const panel = document.getElementById('presentation');
+    const panel =
+      document.getElementById('presentation');
 
-    if (!panel || panel.dataset.murFixedIntro === '1') {
+    if (!panel || panel.dataset.murIntro2026 === '1') {
       return;
     }
 
-    panel.dataset.murFixedIntro = '1';
+    panel.dataset.murIntro2026 = '1';
 
-    // On supprime le lecteur original.
-    // L'ancien code ne peut donc plus fermer
-    // automatiquement cette nouvelle vidéo.
+    // Retirer l'ancien lecteur et ses événements.
+    const previous = panel.querySelector('video');
+
+    if (previous) previous.pause();
+
     panel.replaceChildren();
-
     panel.classList.remove('hide');
+    panel.classList.add('mur-video-presentation');
 
     Object.assign(panel.style, {
       position: 'fixed',
       inset: '0',
       zIndex: '99999',
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
+      padding: '0',
       overflow: 'hidden',
-      padding: '20px 15px',
       background: '#040914'
     });
 
-    // Conteneur de la vidéo
+    // Conserver les proportions de la vidéo.
     const frame = document.createElement('div');
 
     Object.assign(frame.style, {
       position: 'relative',
       width: '100%',
-      maxWidth: '680px',
-      maxHeight: '78dvh',
+      height: '100%',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-      borderRadius: '16px',
-      background: '#040914'
+      justifyContent: 'center'
     });
 
-    // Nouveau lecteur sans conflit avec index.html
     const video = document.createElement('video');
 
-    video.id = 'murNewIntroVideo';
+    video.id = 'murWelcomeVideo2026';
     video.src = VIDEO;
     video.autoplay = true;
     video.muted = true;
@@ -83,88 +73,81 @@
     Object.assign(video.style, {
       display: 'block',
       width: '100%',
-      maxWidth: '680px',
-      height: 'auto',
-      maxHeight: '78dvh',
+      height: '100%',
+      maxWidth: 'none',
+      maxHeight: 'none',
       objectFit: 'contain',
       background: '#040914'
     });
 
-    frame.appendChild(video);
+    function button(label, extra) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.textContent = label;
 
-    // Bouton Commencer séparé du lecteur
-    const commencer = document.createElement('button');
+      Object.assign(el.style, {
+        position: 'absolute',
+        zIndex: '3',
+        minHeight: '48px',
+        padding: '12px 18px',
+        borderRadius: '999px',
+        border: '1px solid rgba(255,255,255,.65)',
+        font: '800 14px system-ui, sans-serif',
+        cursor: 'pointer',
+        ...extra
+      });
 
-    commencer.type = 'button';
-    commencer.id = 'murCommencer';
-    commencer.textContent = 'Commencer';
+      return el;
+    }
 
-    Object.assign(commencer.style, {
-      position: 'absolute',
+    // ACTIVER LE SON
+    const sound = button('🔊 Activer le son', {
+      top: 'calc(18px + env(safe-area-inset-top))',
+      right: 'calc(16px + env(safe-area-inset-right))',
+      background: 'rgba(8,17,30,.82)',
+      color: '#fff'
+    });
+
+    // COMMENCER
+    const commencer = button('Commencer', {
       left: '50%',
-      bottom: 'calc(35px + env(safe-area-inset-bottom))',
+      bottom: 'calc(36px + env(safe-area-inset-bottom))',
       transform: 'translateX(-50%)',
-      zIndex: '100000',
       display: 'none',
-      visibility: 'visible',
-      opacity: '1',
+      zIndex: '4',
       minWidth: '200px',
       minHeight: '56px',
-      padding: '15px 32px',
-      borderRadius: '999px',
-      border: '1px solid #ffffff',
-      background: '#ffffff',
+      font: '900 18px system-ui, sans-serif',
+      background: '#fff',
       color: '#07111f',
-      fontFamily: 'system-ui, sans-serif',
-      fontSize: '18px',
-      fontWeight: '900',
-      boxShadow: '0 0 36px rgba(255,255,255,.28)',
-      cursor: 'pointer'
+      boxShadow: '0 0 32px rgba(255,255,255,.28)'
     });
 
-    // Bouton de secours si l'autoplay est bloqué
-    const relancer = document.createElement('button');
+    commencer.id = 'murCommencer';
 
-    relancer.type = 'button';
-    relancer.textContent = '▶ Lire la vidéo';
-
-    Object.assign(relancer.style, {
-      position: 'absolute',
+    // BOUTON DE SECOURS
+    const retry = button('▶ Lire la vidéo', {
       left: '50%',
-      bottom: 'calc(35px + env(safe-area-inset-bottom))',
-      transform: 'translateX(-50%)',
-      zIndex: '100001',
+      top: '50%',
+      transform: 'translate(-50%, -50%)',
       display: 'none',
-      minWidth: '200px',
-      minHeight: '54px',
-      padding: '14px 25px',
-      borderRadius: '999px',
-      border: '1px solid #ffffff80',
       background: '#173450',
-      color: '#ffffff',
-      fontSize: '16px',
-      fontWeight: '800',
-      cursor: 'pointer'
+      color: '#fff'
     });
 
-    // Indication pour les lecteurs d'écran
-    commencer.setAttribute(
-      'aria-label',
-      'Commencer et ouvrir l’application M.U.R.'
-    );
+    frame.append(video, sound, commencer, retry);
+    panel.appendChild(frame);
 
-    panel.append(frame, commencer, relancer);
-
-    let completed = false;
-    let playbackGeneration = 0;
+    let finished = false;
+    let generation = 0;
 
     function showCommencer() {
-      if (completed) return;
+      if (finished) return;
 
-      completed = true;
+      finished = true;
       video.pause();
 
-      // Rester sur la dernière image
+      // Garder la dernière image visible.
       if (
         Number.isFinite(video.duration) &&
         video.duration > 0
@@ -172,58 +155,72 @@
         try {
           video.currentTime = Math.max(
             0,
-            video.duration - 0.04
+            video.duration - 0.10
           );
-        } catch (e) {}
+        } catch (error) {}
       }
 
-      relancer.style.display = 'none';
+      sound.style.display = 'none';
+      retry.style.display = 'none';
       commencer.style.display = 'block';
 
-      commencer.hidden = false;
       panel.classList.remove('hide');
     }
 
-    function playIntro() {
-      playbackGeneration++;
-      const generation = playbackGeneration;
+    function playIntro(withSound = false) {
+      const token = ++generation;
 
-      completed = false;
-
+      finished = false;
       panel.classList.remove('hide');
 
       commencer.style.display = 'none';
-      relancer.style.display = 'none';
+      retry.style.display = 'none';
+      sound.style.display = withSound ? 'none' : 'block';
 
       video.pause();
-      video.muted = true;
+      video.muted = !withSound;
+
+      if (withSound) {
+        video.removeAttribute('muted');
+      } else {
+        video.setAttribute('muted', '');
+      }
+
+      video.volume = 1;
 
       try {
         video.currentTime = 0;
-      } catch (e) {}
+      } catch (error) {}
 
-      const promise = video.play();
+      const playing = video.play();
 
-      if (promise && typeof promise.catch === 'function') {
-        promise.catch(() => {
-          if (
-            generation !== playbackGeneration ||
-            completed
-          ) return;
-
-          relancer.style.display = 'block';
+      if (
+        playing &&
+        typeof playing.catch === 'function'
+      ) {
+        playing.catch(() => {
+          if (token === generation && !finished) {
+            retry.style.display = 'block';
+          }
         });
       }
     }
 
-    // Fin normale
-    video.addEventListener('ended', showCommencer);
+    // Un clic relance la vidéo avec toute sa bande-son.
+    sound.addEventListener('click', () => {
+      playIntro(true);
+    });
 
-    // Sécurité : certains navigateurs ne déclenchent
-    // pas immédiatement l'événement ended.
+    retry.addEventListener('click', () => {
+      playIntro(true);
+    });
+
+    video.addEventListener('ended', showCommencer);
+    video.addEventListener('error', showCommencer);
+
     video.addEventListener('timeupdate', () => {
       if (
-        !completed &&
+        !finished &&
         Number.isFinite(video.duration) &&
         video.duration > 0 &&
         video.currentTime >= video.duration - 0.08
@@ -232,12 +229,6 @@
       }
     });
 
-    // Ne pas bloquer l'accès si la vidéo est absente
-    video.addEventListener('error', showCommencer);
-
-    relancer.addEventListener('click', playIntro);
-
-    // Entrer seulement lorsqu'on appuie sur Commencer
     commencer.addEventListener('click', () => {
       video.pause();
 
@@ -248,23 +239,19 @@
       }
     });
 
-    // Petit logo : relancer la vidéo
-    window.openPresentation = playIntro;
+    // Un appui court sur le logo relance l'introduction.
+    window.openPresentation = () => playIntro(false);
 
-    // Lecture initiale
-    playIntro();
+    playIntro(false);
   }
 
-  // =========================================
-  // ACCES AU BACK-OFFICE
-  // =========================================
-
+  // ACCÈS AU BACK-OFFICE
   function setupAdmin() {
     const brand = document.querySelector('.top .brand');
 
-    if (!brand || brand.dataset.murAdminV3) return;
+    if (!brand || brand.dataset.murAdminReady) return;
 
-    brand.dataset.murAdminV3 = '1';
+    brand.dataset.murAdminReady = '1';
 
     let timer = null;
     let triggered = false;
@@ -289,7 +276,6 @@
 
       cancel();
       triggered = false;
-
       startX = e.clientX;
       startY = e.clientY;
 
@@ -314,17 +300,19 @@
       }
     });
 
-    ['pointerup','pointercancel','pointerleave']
-      .forEach(name => {
-        brand.addEventListener(name, cancel);
-      });
+    [
+      'pointerup',
+      'pointercancel',
+      'pointerleave'
+    ].forEach(name => {
+      brand.addEventListener(name, cancel);
+    });
 
     brand.addEventListener('click', e => {
       if (!triggered) return;
 
       e.preventDefault();
       e.stopImmediatePropagation();
-
       triggered = false;
     }, true);
 
@@ -333,10 +321,7 @@
     });
   }
 
-  // =========================================
   // CONTENUS DU BACK-OFFICE
-  // =========================================
-
   async function applyContent() {
     try {
       const response = await fetch(
@@ -357,7 +342,7 @@
         typeof KIS_QUESTIONS !== 'undefined'
       ) {
         const valid = data.questions.every(q =>
-          ['text','a','f','p'].every(k =>
+          ['text', 'a', 'f', 'p'].every(k =>
             typeof q[k] === 'string' &&
             q[k].trim().length > 0
           )
@@ -372,7 +357,7 @@
         }
       }
 
-      // Exercices
+      // Exercices, images et sons
       if (
         data.exercises &&
         typeof EXERCISES !== 'undefined'
@@ -383,13 +368,13 @@
 
           if (!source || !target) return;
 
-          ['title','caption'].forEach(prop => {
+          ['title', 'caption'].forEach(prop => {
             if (typeof source[prop] === 'string') {
               target[prop] = source[prop];
             }
           });
 
-          ['files','sounds','why'].forEach(prop => {
+          ['files', 'sounds', 'why'].forEach(prop => {
             if (Array.isArray(source[prop])) {
               target[prop] = source[prop].filter(
                 value => typeof value === 'string'
@@ -410,7 +395,7 @@
 
           if (!source || !target) return;
 
-          ['i','hi','e','ho','duration'].forEach(prop => {
+          ['i', 'hi', 'e', 'ho', 'duration'].forEach(prop => {
             if (
               Number.isFinite(source[prop]) &&
               source[prop] >= 0
@@ -437,20 +422,22 @@
     }
   }
 
-  // =========================================
   // INITIALISATION
-  // =========================================
-
   function init() {
     setupIntro();
     setupAdmin();
     applyContent();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
+  // Le script se charge à la fin de index.html.
+  if (document.getElementById('presentation')) {
     init();
+  } else {
+    document.addEventListener(
+      'DOMContentLoaded',
+      init,
+      { once: true }
+    );
   }
 
 })();
