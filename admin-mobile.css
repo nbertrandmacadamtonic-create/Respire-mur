@@ -1,1 +1,180 @@
 
+/* M.U.R. — Back-office mobile
+   Compatible iPhone et Android
+*/
+
+@media (max-width: 720px) {
+
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .layout {
+    display: block;
+    min-height: 100dvh;
+  }
+
+  .aside {
+    width: 100%;
+    padding: 14px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .logo {
+    font-size: 23px;
+    margin: 0 4px 4px;
+  }
+
+  .sub {
+    margin: 0 4px 13px;
+    font-size: 11px;
+  }
+
+  /* Navigation sur deux lignes */
+  .menu {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    overflow: visible;
+  }
+
+  .nav {
+    width: 100%;
+    min-width: 0;
+    min-height: 49px;
+    padding: 8px 4px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 13px;
+    background: #182b43;
+    color: #e0ebf7;
+    font-size: 11px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .nav.active {
+    background: #285a7f;
+    border-color: #79c7ff;
+    color: white;
+  }
+
+  .main {
+    width: 100%;
+    max-width: 100%;
+    padding: 18px 12px
+      calc(35px + env(safe-area-inset-bottom));
+  }
+
+  h1 {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: 16px;
+  }
+
+  .hint {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  /* Cartes et formulaires */
+  .grid,
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 11px;
+  }
+
+  .card {
+    padding: 14px;
+    margin: 12px 0;
+    border-radius: 18px;
+    overflow-wrap: anywhere;
+  }
+
+  .itemtop {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .pill {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .field,
+  .field.full {
+    min-width: 0;
+    grid-column: 1;
+  }
+
+  label {
+    font-size: 12px;
+  }
+
+  input,
+  textarea,
+  select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    font-size: 16px;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  textarea {
+    min-height: 100px;
+    line-height: 1.45;
+  }
+
+  /* Boutons faciles à toucher */
+  .tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .btn {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .notice {
+    padding: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  .num {
+    font-size: 26px;
+  }
+
+  .footer {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 360px) {
+  .nav {
+    font-size: 10px;
+  }
+
+  .main {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .card {
+    padding: 11px;
+  }
+}
+
