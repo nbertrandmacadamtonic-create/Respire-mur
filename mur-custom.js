@@ -359,6 +359,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 
   function stopDirectQuickBreathing() {
     if (quickBreathTimer) window.clearInterval(quickBreathTimer);
+    if (typeof window.stopSound === 'function') window.stopSound();
     quickBreathTimer = 0;
     quickBreathStartedAt = 0;
     quickBreathPhase = '';
@@ -447,6 +448,9 @@ if (typeof window.installPresentationFallback !== 'function') {
     try {
       stopDirectQuickBreathing();
       if (typeof window.stopBreathVoices === 'function') window.stopBreathVoices();
+      /* Initialisé pendant le toucher sur l'orbe : les navigateurs mobiles
+         autorisent ainsi les sons de souffle, sans lancer les voix. */
+      if (typeof window.initAudio === 'function') window.initAudio();
 
       const zoneKey = quickZoneKey();
       const profile = QUICK_BREATHS[zoneKey];
@@ -517,6 +521,9 @@ if (typeof window.installPresentationFallback !== 'function') {
           if (orb) {
             orb.style.transitionDuration = duration + 's';
             orb.style.transform = phase === 'inhale' ? 'scale(1.34)' : 'scale(.68)';
+          }
+          if (typeof window.playBreathSound === 'function') {
+            window.playBreathSound(phase === 'inhale' ? 'inspire' : 'expire', duration);
           }
         }
 
