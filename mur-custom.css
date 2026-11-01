@@ -69,6 +69,56 @@
   font-size: 20px !important;
 }
 
+/* En-tête contextuel : une orbe et le titre de la rubrique ouverte. */
+.app > .top .brand.mur-section-brand .logo {
+  display: none !important;
+}
+
+.mur-section-brand-orb {
+  --mur-section-color: #60a5fa;
+  position: relative;
+  display: inline-block;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(220,240,255,.72);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 29% 21%, rgba(255,255,255,.72), transparent 28%),
+    radial-gradient(circle at 61% 68%, color-mix(in srgb, var(--mur-section-color) 84%, #10243a), #07111f 73%);
+  box-shadow:
+    inset 0 2px 7px rgba(255,255,255,.25),
+    inset -5px -7px 11px rgba(0,3,15,.62),
+    0 0 15px color-mix(in srgb, var(--mur-section-color) 55%, transparent);
+  overflow: hidden;
+}
+
+.mur-section-brand-orb::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  background: conic-gradient(
+    transparent 0deg 250deg,
+    rgba(255,255,255,.88) 268deg,
+    var(--mur-section-color) 294deg,
+    transparent 317deg 360deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 1px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 1px));
+  animation: murSectionOrbLine 5s linear infinite;
+}
+
+.app > .top .brand.mur-section-brand h1 {
+  color: #f5f9ff;
+  letter-spacing: .01em;
+  text-shadow: 0 2px 10px rgba(0,0,0,.65);
+}
+
+@keyframes murSectionOrbLine {
+  to { transform: rotate(360deg); }
+}
+
 /* Le back-office garde son sélecteur de langue. */
 .aside > .mur-language-picker {
   display: flex !important;

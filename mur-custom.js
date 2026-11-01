@@ -288,6 +288,72 @@
   document.body.appendChild(bilingualScript);
 })();
 
+/* En-tête de rubrique : logo officiel sur l'accueil, orbe contextuelle ailleurs. */
+(() => {
+  const SECTIONS = {
+    tests:     { color: '#60a5fa', fr: 'Mesurer',   en: 'Measure' },
+    breath:    { color: '#34d399', fr: 'Respirer',  en: 'Breathe' },
+    exercises: { color: '#a78bfa', fr: 'Exercices', en: 'Exercises' },
+    stats:     { color: '#fb7185', fr: 'Stats',      en: 'Stats' }
+  };
+
+  function initSectionBrand() {
+    const brand = document.querySelector('.app > .top .brand');
+    const title = brand?.querySelector('h1');
+    if (!brand || !title || brand.dataset.murSectionBrandReady === '1') return;
+    brand.dataset.murSectionBrandReady = '1';
+
+    const originalTitle = title.innerHTML;
+    const orb = document.createElement('span');
+    orb.className = 'mur-section-brand-orb';
+    orb.setAttribute('aria-hidden', 'true');
+
+    function language() {
+      const stored = localStorage.getItem('murLanguage') || localStorage.getItem('murLang');
+      const value = String(stored || document.documentElement.lang || 'fr').toLowerCase();
+      return value.startsWith('en') ? 'en' : 'fr';
+    }
+
+    function refresh() {
+      const active = document.querySelector('.app > .page.active');
+      const section = active && SECTIONS[active.id];
+      if (!section) {
+        brand.classList.remove('mur-section-brand');
+        orb.remove();
+        title.innerHTML = originalTitle;
+        return;
+      }
+
+      orb.style.setProperty('--mur-section-color', section.color);
+      if (!orb.isConnected) brand.insertBefore(orb, brand.firstChild);
+      brand.classList.add('mur-section-brand');
+      title.textContent = section[language()];
+    }
+
+    document.querySelectorAll('.app > .page').forEach(page => {
+      new MutationObserver(refresh).observe(page, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    });
+    new MutationObserver(refresh).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['lang']
+    });
+    document.addEventListener('click', event => {
+      if (event.target.closest?.('[data-language]')) setTimeout(refresh, 0);
+    });
+    window.addEventListener('storage', refresh);
+    refresh();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSectionBrand, { once: true });
+  } else {
+    initSectionBrand();
+  }
+})();
+
 /* =============================================================
    M.U.R. — ETAPE B | ORBE RADIALE
    Tap : ouvre les quatre univers. Glissement : la rotation native
