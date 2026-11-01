@@ -29,6 +29,47 @@ if (typeof window.installPresentationFallback !== 'function') {
   };
 }
 
+/* Stabilise l'état visuel du cadre après chaque navigation. La version
+   actuelle de showPage ne retire pas toujours home-active en quittant
+   l'accueil, ce qui mélange les règles de plusieurs écrans. */
+(() => {
+  function syncStableNavigationFrame() {
+    const active = document.querySelector('.app > .page.active');
+    if (!active) return;
+    const isHome = active.id === 'home';
+    document.body.classList.toggle('home-active', isHome);
+    document.body.dataset.murActivePage = active.id;
+    document.body.style.overflow = isHome ? 'hidden' : '';
+  }
+
+  function installStableNavigationFrame() {
+    const pages = document.querySelectorAll('.app > .page');
+    if (!pages.length || document.body.dataset.murStableFrame === '1') return;
+    document.body.dataset.murStableFrame = '1';
+
+    const observer = new MutationObserver(() => requestAnimationFrame(syncStableNavigationFrame));
+    pages.forEach(page => observer.observe(page, {
+      attributes: true,
+      attributeFilter: ['class']
+    }));
+
+    document.addEventListener('click', event => {
+      if (event.target.closest?.('.tabbar button,.mur-orb-choice,.mur-section-brand-orb')) {
+        requestAnimationFrame(syncStableNavigationFrame);
+        setTimeout(syncStableNavigationFrame, 80);
+      }
+    });
+    window.addEventListener('pageshow', syncStableNavigationFrame);
+    syncStableNavigationFrame();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installStableNavigationFrame, { once: true });
+  } else {
+    installStableNavigationFrame();
+  }
+})();
+
 (() => {
   'use strict';
 

@@ -201,10 +201,16 @@
   main.app {
     width: 100%;
     max-width: 430px;
+    min-height: 100dvh;
     margin: 0 auto;
     border: none;
     border-radius: 0;
     box-shadow: none;
+  }
+
+  main.app > .page.active {
+    width: 100%;
+    min-width: 0;
   }
 
   .mur-language-picker button[data-language] {
@@ -218,6 +224,22 @@
     min-width: 0;
     overflow-wrap: anywhere;
   }
+}
+
+/* Toutes les rubriques utilisent exactement le même axe et la même largeur.
+   Leur contenu peut défiler sans redimensionner la coque de l'application. */
+body > main.app,
+body > main.app > .page,
+body > nav.tabbar {
+  box-sizing: border-box;
+}
+
+body > main.app > .page.active {
+  width: 100%;
+  min-width: 0;
+  margin-left: 0;
+  margin-right: 0;
+  overflow-x: hidden;
 }
 
 
