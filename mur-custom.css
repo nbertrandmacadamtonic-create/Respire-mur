@@ -523,11 +523,11 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
   position: absolute;
   left: 0;
   top: 0;
-  width: 122px;
-  height: 88px;
-  padding: 5px;
+  width: 98px;
+  height: 98px;
+  padding: 9px;
   border: 1px solid rgba(204, 235, 255, .72);
-  border-radius: 24px;
+  border-radius: 50%;
   background: radial-gradient(circle at 34% 23%, rgba(255,255,255,.24), rgba(6,20,36,.96) 72%);
   box-shadow:
     inset 0 2px 9px rgba(255,255,255,.20),
@@ -545,7 +545,7 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 18px;
+  border-radius: 50%;
 }
 
 .mur-orb-menu.is-open .mur-orb-official-logo {
