@@ -420,6 +420,10 @@
         if (pending && typeof pending.catch === 'function') {
           pending.catch(() => setQuickModeState(false));
         }
+        window.setTimeout(() => {
+          const stopButton = document.getElementById('stopBreathBtn');
+          if (quickModeActive && stopButton) stopButton.hidden = false;
+        }, 220);
       }
     } catch (error) {
       setQuickModeState(false);
@@ -445,9 +449,9 @@
     quickModeStarting = true;
     setQuickModeState(true);
     if (typeof window.showPage === 'function') window.showPage('breath');
-    /* showPage termine plusieurs remises à zéro jusqu'à 160 ms.
-       On démarre après celles-ci pour éviter le retour involontaire à 5 min. */
-    window.setTimeout(configureAndStartQuickBreathing, 320);
+    /* Démarrage dans le geste utilisateur : indispensable sur iPhone et
+       certains navigateurs pour autoriser immédiatement le son et l'animation. */
+    configureAndStartQuickBreathing();
   }
 
   function installQuickMode() {

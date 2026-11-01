@@ -860,10 +860,10 @@ body.mur-quick-mode-active .mur-quick-mode-pill { opacity: 1; transform: transla
   animation: murMiniOrbLine 4.8s linear calc(var(--mur-delay) + 180ms) infinite;
 }
 
-.mur-orb-choice:nth-of-type(1) { --mur-x: 0; --mur-y: -1; --mur-delay: 0ms; --mur-choice-color: #60a5fa; }
-.mur-orb-choice:nth-of-type(2) { --mur-x: 1; --mur-y: 0; --mur-delay: 35ms; --mur-choice-color: #34d399; }
-.mur-orb-choice:nth-of-type(3) { --mur-x: 0; --mur-y: 1; --mur-delay: 70ms; --mur-choice-color: #a78bfa; }
-.mur-orb-choice:nth-of-type(4) { --mur-x: -1; --mur-y: 0; --mur-delay: 105ms; --mur-choice-color: #fb7185; }
+.mur-orb-choice[data-index="0"] { --mur-x: 0; --mur-y: -1; --mur-delay: 0ms; --mur-choice-color: #60a5fa; }
+.mur-orb-choice[data-index="1"] { --mur-x: 1; --mur-y: 0; --mur-delay: 35ms; --mur-choice-color: #34d399; }
+.mur-orb-choice[data-index="2"] { --mur-x: 0; --mur-y: 1; --mur-delay: 70ms; --mur-choice-color: #a78bfa; }
+.mur-orb-choice[data-index="3"] { --mur-x: -1; --mur-y: 0; --mur-delay: 105ms; --mur-choice-color: #fb7185; }
 
 .mur-orb-choice:focus-visible {
   outline: 3px solid #fff;
