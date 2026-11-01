@@ -302,17 +302,7 @@
   }
 
   function refreshQuickModeLabels() {
-    const button = document.getElementById('murQuickModeButton');
-    if (!button) return;
     const en = isEnglish();
-    button.querySelector('strong').textContent = en ? 'Quick mode' : 'Mode rapide';
-    button.querySelector('small').textContent = en
-      ? '1 min 30 breathing + 1 exercise'
-      : '1 min 30 de respiration + 1 exercice';
-    button.setAttribute('aria-label', en
-      ? 'Start quick mode: 1 minute 30 breathing then one exercise'
-      : 'Démarrer le mode rapide : 1 minute 30 de respiration puis un exercice');
-
     const pill = document.getElementById('murQuickModePill');
     if (pill) pill.textContent = en ? 'QUICK MODE · STEP 1/2' : 'MODE RAPIDE · ÉTAPE 1/2';
   }
@@ -461,24 +451,7 @@
   }
 
   function installQuickMode() {
-    const home = document.getElementById('home');
-    if (!home || document.getElementById('murQuickModeButton')) return;
-
-    const button = document.createElement('button');
-    button.id = 'murQuickModeButton';
-    button.className = 'mur-quick-mode-button';
-    button.type = 'button';
-    button.innerHTML = `
-      <span class="mur-quick-mode-icon" aria-hidden="true">
-        <i></i><i></i><i></i>
-      </span>
-      <span class="mur-quick-mode-copy"><strong>Mode rapide</strong><small>1 min 30 de respiration + 1 exercice</small></span>
-      <span class="mur-quick-mode-arrow" aria-hidden="true">›</span>`;
-    button.addEventListener('click', startQuickMode);
-
-    const anchor = home.querySelector('.home-line-card');
-    if (anchor) anchor.insertAdjacentElement('beforebegin', button);
-    else home.appendChild(button);
+    if (document.getElementById('murQuickModePill')) return;
 
     const pill = document.createElement('div');
     pill.id = 'murQuickModePill';
@@ -528,6 +501,9 @@
     });
     refreshQuickModeLabels();
   }
+
+  /* Appelé par l'orbe centrale lorsque le menu radial est ouvert. */
+  window.murStartQuickMode = startQuickMode;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', installQuickMode, { once: true });
@@ -655,14 +631,13 @@
       <div class="mur-orbit-line"></div>
     `;
 
-    const officialLogo = document.createElement('div');
-    officialLogo.className = 'mur-orb-official-logo';
-    officialLogo.setAttribute('aria-hidden', 'true');
-    const logoImage = document.createElement('img');
-    logoImage.src = 'apple-touch-icon.png';
-    logoImage.alt = '';
-    officialLogo.appendChild(logoImage);
-    menu.append(connectors, officialLogo);
+    const quickCenter = document.createElement('button');
+    quickCenter.type = 'button';
+    quickCenter.className = 'mur-orb-official-logo mur-orb-quick-center';
+    quickCenter.setAttribute('role', 'menuitem');
+    quickCenter.innerHTML = '<strong>Mode rapide</strong><small>1:30 + exercice</small>';
+    quickCenter.tabIndex = -1;
+    menu.append(connectors, quickCenter);
 
     const buttons = ITEMS.map((item, index) => {
       const button = document.createElement('button');
@@ -695,6 +670,11 @@
       });
       backdrop.setAttribute('aria-label', lang === 'en' ? 'Close menu' : 'Fermer le menu');
       menu.setAttribute('aria-label', lang === 'en' ? 'M.U.R. sections' : 'Univers M.U.R.');
+      quickCenter.querySelector('strong').textContent = lang === 'en' ? 'Quick mode' : 'Mode rapide';
+      quickCenter.querySelector('small').textContent = lang === 'en' ? '1:30 + exercise' : '1:30 + exercice';
+      quickCenter.setAttribute('aria-label', lang === 'en'
+        ? 'Start quick mode: 1 minute 30 breathing and one exercise'
+        : 'Lancer le mode rapide : 1 minute 30 de respiration et un exercice');
       const trigger = circle.querySelector('.mur-orb-start-trigger');
       if (trigger) {
         trigger.textContent = lang === 'en' ? 'Tap to begin' : 'Appuyer pour commencer';
@@ -736,6 +716,7 @@
       menu.setAttribute('aria-hidden', 'false');
       circle.setAttribute('aria-expanded', 'true');
       buttons.forEach(button => { button.tabIndex = 0; });
+      quickCenter.tabIndex = 0;
       scheduleClose();
     }
 
@@ -748,6 +729,7 @@
       circle.classList.remove('mur-menu-open');
       menu.setAttribute('aria-hidden', 'true');
       circle.setAttribute('aria-expanded', 'false');
+      quickCenter.tabIndex = -1;
       buttons.forEach(button => {
         button.tabIndex = -1;
         button.classList.remove('is-activating');
@@ -775,6 +757,19 @@
       });
       button.addEventListener('pointerenter', scheduleClose);
       button.addEventListener('focus', scheduleClose);
+    });
+
+    quickCenter.addEventListener('pointerdown', event => event.stopPropagation());
+    quickCenter.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      stopCloseTimer();
+      quickCenter.classList.add('is-activating');
+      window.setTimeout(() => {
+        closeMenu();
+        quickCenter.classList.remove('is-activating');
+        window.murStartQuickMode?.();
+      }, 150);
     });
 
     backdrop.addEventListener('click', () => closeMenu());
