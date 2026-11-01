@@ -336,20 +336,57 @@
 
   function openQuickExercise() {
     if (!quickModeActive) return;
-    setQuickModeState(false);
+
+    let zoneKey = null;
+    if (typeof window.getRecommendedExerciseZoneKey === 'function') {
+      zoneKey = window.getRecommendedExerciseZoneKey();
+    }
+
+    let choices = [];
+    if (zoneKey && typeof ZONES !== 'undefined') {
+      const zone = ZONES.find(item => item.key === zoneKey);
+      if (zone && Array.isArray(zone.items)) choices = zone.items.slice();
+    }
+    if (!choices.length && zoneKey && typeof EXERCISES !== 'undefined') {
+      choices = Object.keys(EXERCISES).filter(key => EXERCISES[key]?.zone === zoneKey);
+    }
+
+    /* Évite de proposer deux fois de suite le même exercice dans une couleur. */
+    const memoryKey = 'murQuickLastExercise_' + (zoneKey || 'default');
+    const previous = localStorage.getItem(memoryKey);
+    const available = choices.length > 1 ? choices.filter(key => key !== previous) : choices;
+    const randomIndex = available.length
+      ? Math.floor(Math.random() * available.length)
+      : -1;
+    const exerciseKey = randomIndex >= 0 ? available[randomIndex] : null;
+    if (exerciseKey) localStorage.setItem(memoryKey, exerciseKey);
 
     const en = isEnglish();
     showQuickMessage(en
-      ? 'Breathing complete. Choose your recommended exercise.'
-      : 'Respiration terminée. Choisissez votre exercice conseillé.');
+      ? 'Breathing complete. Your exercise is ready.'
+      : 'Respiration terminée. Votre exercice est prêt.');
 
     window.setTimeout(() => {
-      if (typeof window.openRecommendedExercises === 'function') {
-        window.openRecommendedExercises();
+      if (typeof window.switchPageDirect === 'function') {
+        window.switchPageDirect('exercises');
       } else if (typeof window.showPage === 'function') {
         window.showPage('exercises');
       }
-    }, 650);
+
+      if (typeof window.renderExerciseList === 'function') window.renderExerciseList();
+      if (typeof window.ensureExercisesVisibleAndRendered === 'function') {
+        window.ensureExercisesVisibleAndRendered();
+      }
+
+      window.setTimeout(() => {
+        if (exerciseKey && typeof window.openExercise === 'function') {
+          window.openExercise(exerciseKey);
+        } else if (typeof window.openRecommendedExercises === 'function') {
+          window.openRecommendedExercises();
+        }
+        setQuickModeState(false);
+      }, 180);
+    }, 450);
   }
 
   function configureAndStartQuickBreathing() {
@@ -357,7 +394,14 @@
     quickModeStarting = false;
 
     try {
-      if (typeof window.syncRespirationBarWithCurrentResult === 'function') {
+      /* La respiration suit directement la couleur NeuroFlex :
+         bleu=activation, vert=équilibre, orange=régulation, rouge=frein. */
+      const recommendation = typeof window.getCurrentNeuroRecommendation === 'function'
+        ? window.getCurrentNeuroRecommendation()
+        : null;
+      if (recommendation?.zone && typeof window.syncRespirationBarWithZone === 'function') {
+        window.syncRespirationBarWithZone(recommendation.zone, 'Mode rapide');
+      } else if (typeof window.syncRespirationBarWithCurrentResult === 'function') {
         window.syncRespirationBarWithCurrentResult();
       }
 
@@ -368,11 +412,11 @@
 
       /* On conserve le rythme conseillé par NeuroFlex, mais on remplace
          explicitement sa durée normale (souvent 5 min) par 01:30. */
-      if (typeof window.setBreathDuration === 'function') {
-        window.setBreathDuration(90);
-      } else if (typeof breath !== 'undefined' && breath) {
+      if (typeof breath !== 'undefined' && breath) {
         breath.duration = 90;
         if (typeof window.updateBreath === 'function') window.updateBreath(true);
+      } else if (typeof window.setBreathDuration === 'function') {
+        window.setBreathDuration(90);
       }
 
       const timeLeft = document.getElementById('timeLeft');
@@ -453,6 +497,18 @@
       };
       wrappedFinish.murQuickWrapped = true;
       window.finishBreathing = wrappedFinish;
+    }
+
+    /* En mode rapide, la transition vers l'exercice est immédiate :
+       aucune présentation vocale d'entrée ni de sortie. */
+    if (typeof window.playBreathVoiceRobust === 'function' && !window.playBreathVoiceRobust.murQuickWrapped) {
+      const nativeRobustVoice = window.playBreathVoiceRobust;
+      const wrappedRobustVoice = function murQuickRobustVoice(audioId, ...args) {
+        if (quickModeActive && audioId === 'breathOutroAudio') return Promise.resolve(false);
+        return nativeRobustVoice.call(this, audioId, ...args);
+      };
+      wrappedRobustVoice.murQuickWrapped = true;
+      window.playBreathVoiceRobust = wrappedRobustVoice;
     }
 
     if (typeof window.stopBreathing === 'function' && !window.stopBreathing.murQuickWrapped) {
