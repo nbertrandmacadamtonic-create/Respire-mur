@@ -228,3 +228,128 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
     bottom: 24px !important;
   }
 }
+/* =============================================================
+   M.U.R. — OPTION A | NOUVELLE ORBE DU TABLEAU DE BORD
+   Habillage uniquement. Ne change ni la taille, ni les clics,
+   ni le geste de rotation, ni les couleurs NeuroFlex.
+   Pour revenir en arrière, supprimer ce bloc.
+   ============================================================= */
+
+/* L'orbe occupe exactement le même emplacement et la même taille. */
+#home #homeCircle.home-circle {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  border: 1px solid rgba(188, 227, 255, .52) !important;
+  border-radius: 50%;
+  cursor: pointer;
+  background:
+    /* Reflet sur le verre. */
+    radial-gradient(ellipse at 28% 17%, rgba(255,255,255,.51) 0%, rgba(255,255,255,.15) 9%, transparent 32%),
+    /* Reflet bleuté sur le bord inférieur. */
+    radial-gradient(ellipse at 71% 93%, rgba(74,181,255,.55), transparent 46%),
+    /* Lumière propre à la couleur active. */
+    radial-gradient(ellipse at 63% 61%, color-mix(in srgb, var(--home-color, #22c55e) 52%, transparent), transparent 56%),
+    /* Cœur sombre et profondeur de la sphère. */
+    radial-gradient(circle at 44% 41%, #0d2943 0%, #061423 56%, #081e39 81%, #144a7b 100%)
+    !important;
+  box-shadow:
+    inset 0 3px 11px rgba(255,255,255,.22),
+    inset -11px -18px 27px rgba(0,2,14,.79),
+    inset 0 0 24px color-mix(in srgb, var(--home-color, #22c55e) 25%, transparent),
+    0 0 0 1px rgba(89,179,248,.25),
+    0 0 23px color-mix(in srgb, var(--home-color, #22c55e) 33%, transparent),
+    0 15px 35px rgba(0,5,20,.40)
+    !important;
+  /* On anime seulement la lumière, jamais transform/scale :
+     la rotation tactile et la position du curseur restent intactes. */
+  animation: murOrbeLumiere 5.8s ease-in-out infinite !important;
+}
+
+/* Fine trajectoire lumineuse qui tourne autour de la sphère. */
+#home #homeCircle.home-circle::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border: 0 !important;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 20deg,
+    transparent 0deg 43deg,
+    rgba(168,222,255,.62) 57deg,
+    var(--home-color, #22c55e) 66deg,
+    transparent 84deg 185deg,
+    rgba(180,235,255,.42) 207deg,
+    transparent 224deg 360deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 3px));
+  filter: drop-shadow(0 0 5px var(--home-color, #22c55e));
+  pointer-events: none;
+  z-index: 1;
+  animation: murOrbeTour 16s linear infinite !important;
+}
+
+/* Volutes de lumière à l'intérieur de l'orbe, sous les textes. */
+#home #homeCircle.home-circle::after {
+  content: "";
+  position: absolute;
+  inset: 9%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0deg 18deg,
+      rgba(104,223,255,.44) 54deg,
+      transparent 98deg 150deg,
+      color-mix(in srgb, var(--home-color, #22c55e) 61%, transparent) 209deg,
+      transparent 251deg 302deg,
+      rgba(255,255,255,.23) 333deg,
+      transparent 360deg
+    );
+  -webkit-mask: radial-gradient(circle, transparent 0% 35%, #000 62%, rgba(0,0,0,.7) 76%, transparent 88%);
+  mask: radial-gradient(circle, transparent 0% 35%, #000 62%, rgba(0,0,0,.7) 76%, transparent 88%);
+  filter: blur(7px);
+  mix-blend-mode: screen;
+  opacity: .85;
+  animation: murOrbeVolutes 13s linear infinite !important;
+}
+
+/* Titres et quatre points existants : conservés, mieux lisibles. */
+#home #homeCircle.home-circle .home-circle-text {
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 2px 10px rgba(0,0,0,.85);
+  pointer-events: none;
+}
+
+/* Important : le curseur existant reste au-dessus de la matière. */
+#home #homeCircle.home-circle .home-cursor {
+  z-index: 5;
+}
+
+@keyframes murOrbeTour {
+  to { transform: rotate(360deg); }
+}
+@keyframes murOrbeVolutes {
+  to { transform: rotate(-360deg); }
+}
+@keyframes murOrbeLumiere {
+  0%,100% {
+    filter: brightness(.98) saturate(1.05);
+  }
+  50% {
+    filter: brightness(1.11) saturate(1.18);
+  }
+}
+
+/* Confort : aucune rotation forcée si animations réduites. */
+@media (prefers-reduced-motion: reduce) {
+  #home #homeCircle.home-circle,
+  #home #homeCircle.home-circle::before,
+  #home #homeCircle.home-circle::after {
+    animation: none !important;
+  }
+}
