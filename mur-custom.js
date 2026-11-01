@@ -1111,6 +1111,11 @@ if (typeof window.installPresentationFallback !== 'function') {
       const quickUnlocked = typeof window.testsAreUnlocked !== 'function' || window.testsAreUnlocked();
       quickCenter.classList.toggle('is-locked', !quickUnlocked);
       quickCenter.setAttribute('aria-disabled', quickUnlocked ? 'false' : 'true');
+      buttons.forEach(button => {
+        const locked = button.dataset.page !== 'tests' && !quickUnlocked;
+        button.classList.toggle('is-locked', locked);
+        button.setAttribute('aria-disabled', locked ? 'true' : 'false');
+      });
       placeMenu();
       menu.classList.add('is-open');
       backdrop.classList.add('is-open');
