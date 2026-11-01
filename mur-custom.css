@@ -374,7 +374,7 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
 }
 
 .mur-orb-menu {
-  --mur-orb-radius: 116px;
+  --mur-orb-radius: 134px;
   position: fixed;
   left: 0;
   top: 0;
@@ -400,14 +400,14 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 78px;
-  height: 78px;
-  margin: -39px 0 0 -39px;
-  padding: 7px;
+  width: 92px;
+  height: 92px;
+  margin: -46px 0 0 -46px;
+  padding: 9px;
   border: 1px solid rgba(205, 235, 255, .72);
   border-radius: 50%;
   color: #fff;
-  font: 900 11px/1.05 system-ui, sans-serif;
+  font: 900 12px/1.05 system-ui, sans-serif;
   text-align: center;
   text-shadow: 0 2px 7px rgba(0, 0, 0, .82);
   background:
@@ -427,6 +427,19 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
   pointer-events: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+.mur-orb-choice::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: inherit;
+  background:
+    linear-gradient(115deg, transparent 22%, rgba(255,255,255,.34) 43%, transparent 61%);
+  transform: translateX(-145%) rotate(8deg);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .mur-orb-menu.is-open .mur-orb-choice {
@@ -436,6 +449,12 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
     calc(var(--mur-y) * var(--mur-orb-radius))
   ) scale(1);
   pointer-events: auto;
+  animation: murMiniOrbAura 2.8s ease-in-out calc(var(--mur-delay) + 380ms) infinite;
+}
+
+.mur-orb-menu.is-open .mur-orb-choice::before {
+  opacity: .78;
+  animation: murMiniOrbReflet 3.4s ease-in-out calc(var(--mur-delay) + 520ms) infinite;
 }
 
 .mur-orb-choice:nth-child(1) { --mur-x: 0; --mur-y: -1; --mur-delay: 0ms; --mur-choice-color: #60a5fa; }
@@ -469,18 +488,46 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
 
 @media (max-width: 720px) {
   .mur-orb-choice {
-    width: 70px;
-    height: 70px;
-    margin: -35px 0 0 -35px;
-    font-size: 10px;
+    width: 82px;
+    height: 82px;
+    margin: -41px 0 0 -41px;
+    font-size: 11px;
   }
+}
+
+@keyframes murMiniOrbAura {
+  0%, 100% {
+    filter: brightness(1) saturate(1.04);
+    box-shadow:
+      inset 0 2px 8px rgba(255,255,255,.24),
+      inset -8px -12px 17px rgba(0,3,15,.62),
+      0 0 22px color-mix(in srgb, var(--mur-choice-color) 44%, transparent),
+      0 12px 27px rgba(0,0,0,.40);
+  }
+  50% {
+    filter: brightness(1.13) saturate(1.20);
+    box-shadow:
+      inset 0 3px 11px rgba(255,255,255,.32),
+      inset -8px -12px 17px rgba(0,3,15,.55),
+      0 0 38px color-mix(in srgb, var(--mur-choice-color) 66%, transparent),
+      0 15px 32px rgba(0,0,0,.44);
+  }
+}
+
+@keyframes murMiniOrbReflet {
+  0%, 28% { transform: translateX(-145%) rotate(8deg); opacity: 0; }
+  42% { opacity: .82; }
+  67%, 100% { transform: translateX(145%) rotate(8deg); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mur-orb-backdrop,
-  .mur-orb-choice {
+  .mur-orb-choice,
+  .mur-orb-choice::before {
     transition-duration: .01ms !important;
     transition-delay: 0ms !important;
+    animation: none !important;
   }
 }
+
 
