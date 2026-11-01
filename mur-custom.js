@@ -288,6 +288,177 @@
   document.body.appendChild(bilingualScript);
 })();
 
+/* =========================================================
+   MODE RAPIDE — 1 minute 30 de respiration + 1 exercice
+   ========================================================= */
+(() => {
+  'use strict';
+
+  let quickModeActive = false;
+  let quickModeStarting = false;
+
+  function isEnglish() {
+    return String(document.documentElement.lang || '').toLowerCase().startsWith('en');
+  }
+
+  function refreshQuickModeLabels() {
+    const button = document.getElementById('murQuickModeButton');
+    if (!button) return;
+    const en = isEnglish();
+    button.querySelector('strong').textContent = en ? 'Quick mode' : 'Mode rapide';
+    button.querySelector('small').textContent = en
+      ? '1 min 30 breathing + 1 exercise'
+      : '1 min 30 de respiration + 1 exercice';
+    button.setAttribute('aria-label', en
+      ? 'Start quick mode: 1 minute 30 breathing then one exercise'
+      : 'Démarrer le mode rapide : 1 minute 30 de respiration puis un exercice');
+
+    const pill = document.getElementById('murQuickModePill');
+    if (pill) pill.textContent = en ? 'QUICK MODE · STEP 1/2' : 'MODE RAPIDE · ÉTAPE 1/2';
+  }
+
+  function showQuickMessage(message) {
+    if (typeof window.showLockedMessage === 'function') {
+      window.showLockedMessage(message);
+      return;
+    }
+    const notice = document.getElementById('navNotice');
+    if (!notice) return;
+    notice.textContent = message;
+    notice.classList.add('show');
+    window.setTimeout(() => notice.classList.remove('show'), 3200);
+  }
+
+  function setQuickModeState(active) {
+    quickModeActive = active;
+    document.body.classList.toggle('mur-quick-mode-active', active);
+  }
+
+  function openQuickExercise() {
+    if (!quickModeActive) return;
+    setQuickModeState(false);
+
+    const en = isEnglish();
+    showQuickMessage(en
+      ? 'Breathing complete. Choose your recommended exercise.'
+      : 'Respiration terminée. Choisissez votre exercice conseillé.');
+
+    window.setTimeout(() => {
+      if (typeof window.openRecommendedExercises === 'function') {
+        window.openRecommendedExercises();
+      } else if (typeof window.showPage === 'function') {
+        window.showPage('exercises');
+      }
+    }, 650);
+  }
+
+  function configureAndStartQuickBreathing() {
+    if (!quickModeStarting) return;
+    quickModeStarting = false;
+
+    try {
+      if (typeof window.syncRespirationBarWithCurrentResult === 'function') {
+        window.syncRespirationBarWithCurrentResult();
+      }
+
+      /* breath est la séance native de l'application. On conserve son rythme
+         conseillé et on impose uniquement la durée rapide de 1 minute 30. */
+      if (typeof breath !== 'undefined' && breath) {
+        breath.duration = 90;
+      }
+      if (typeof window.updateBreath === 'function') window.updateBreath(true);
+      if (typeof window.startBreathing === 'function') window.startBreathing();
+    } catch (error) {
+      setQuickModeState(false);
+      showQuickMessage(isEnglish()
+        ? 'Quick mode could not start.'
+        : "Le mode rapide n'a pas pu démarrer.");
+    }
+  }
+
+  function startQuickMode() {
+    if (quickModeStarting || quickModeActive) return;
+
+    if (typeof window.testsAreUnlocked === 'function' && !window.testsAreUnlocked()) {
+      showQuickMessage(isEnglish()
+        ? 'Complete both NeuroFlex tests first.'
+        : "Réalisez d'abord les deux tests NeuroFlex.");
+      if (typeof window.openTestsMenuAlways === 'function') {
+        window.setTimeout(() => window.openTestsMenuAlways(), 650);
+      }
+      return;
+    }
+
+    quickModeStarting = true;
+    setQuickModeState(true);
+    if (typeof window.showPage === 'function') window.showPage('breath');
+    window.setTimeout(configureAndStartQuickBreathing, 180);
+  }
+
+  function installQuickMode() {
+    const home = document.getElementById('home');
+    if (!home || document.getElementById('murQuickModeButton')) return;
+
+    const button = document.createElement('button');
+    button.id = 'murQuickModeButton';
+    button.className = 'mur-quick-mode-button';
+    button.type = 'button';
+    button.innerHTML = `
+      <span class="mur-quick-mode-icon" aria-hidden="true">
+        <i></i><i></i><i></i>
+      </span>
+      <span class="mur-quick-mode-copy"><strong>Mode rapide</strong><small>1 min 30 de respiration + 1 exercice</small></span>
+      <span class="mur-quick-mode-arrow" aria-hidden="true">›</span>`;
+    button.addEventListener('click', startQuickMode);
+
+    const anchor = home.querySelector('.home-line-card');
+    if (anchor) anchor.insertAdjacentElement('beforebegin', button);
+    else home.appendChild(button);
+
+    const pill = document.createElement('div');
+    pill.id = 'murQuickModePill';
+    pill.className = 'mur-quick-mode-pill';
+    pill.textContent = 'MODE RAPIDE · ÉTAPE 1/2';
+    document.body.appendChild(pill);
+
+    /* On prolonge proprement la fin native de respiration afin de conserver
+       la voix, l'historique, les statistiques et le Wake Lock existants. */
+    if (typeof window.finishBreathing === 'function' && !window.finishBreathing.murQuickWrapped) {
+      const nativeFinish = window.finishBreathing;
+      const wrappedFinish = async function murQuickFinishBreathing(...args) {
+        const result = await nativeFinish.apply(this, args);
+        if (quickModeActive) openQuickExercise();
+        return result;
+      };
+      wrappedFinish.murQuickWrapped = true;
+      window.finishBreathing = wrappedFinish;
+    }
+
+    if (typeof window.stopBreathing === 'function' && !window.stopBreathing.murQuickWrapped) {
+      const nativeStop = window.stopBreathing;
+      const wrappedStop = function murQuickStopBreathing(...args) {
+        quickModeStarting = false;
+        setQuickModeState(false);
+        return nativeStop.apply(this, args);
+      };
+      wrappedStop.murQuickWrapped = true;
+      window.stopBreathing = wrappedStop;
+    }
+
+    new MutationObserver(refreshQuickModeLabels).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['lang']
+    });
+    refreshQuickModeLabels();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installQuickMode, { once: true });
+  } else {
+    installQuickMode();
+  }
+})();
+
 /* En-tête de rubrique : logo officiel sur l'accueil, orbe contextuelle ailleurs. */
 (() => {
   const SECTIONS = {
