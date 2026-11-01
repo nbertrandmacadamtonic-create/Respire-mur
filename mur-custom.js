@@ -331,7 +331,7 @@
     officialLogo.className = 'mur-orb-official-logo';
     officialLogo.setAttribute('aria-hidden', 'true');
     const logoImage = document.createElement('img');
-    logoImage.src = 'mur-logo-officiel-transparent-v2.png';
+    logoImage.src = 'apple-touch-icon.png';
     logoImage.alt = '';
     officialLogo.appendChild(logoImage);
     menu.append(connectors, officialLogo);
