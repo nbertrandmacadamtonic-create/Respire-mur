@@ -40,10 +40,10 @@
 /* Nouveau logo M.U.R. : dimensions adaptées à son médaillon détaillé. */
 .app > .top .brand .logo,
 .app > .top .brand img.logo {
-  width: 76px !important;
-  min-width: 76px !important;
-  height: 76px !important;
-  min-height: 76px !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
   object-fit: cover !important;
   border-radius: 50% !important;
   filter: drop-shadow(0 0 12px rgba(74, 190, 177, .30));
@@ -51,7 +51,7 @@
 
 .app > .top .brand {
   gap: 10px !important;
-  min-height: 78px;
+  min-height: 40px;
   align-items: center !important;
 }
 
@@ -545,8 +545,8 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
   position: absolute;
   left: 0;
   top: 0;
-  width: 120px;
-  height: 120px;
+  width: 60px;
+  height: 60px;
   padding: 1px;
   border: 1px solid rgba(204, 235, 255, .72);
   border-radius: 50%;
