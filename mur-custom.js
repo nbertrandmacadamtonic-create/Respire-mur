@@ -325,10 +325,6 @@
     connectors.setAttribute('aria-hidden', 'true');
     connectors.innerHTML = `
       <div class="mur-orbit-line"></div>
-      <i class="mur-link-line mur-link-top"></i>
-      <i class="mur-link-line mur-link-right"></i>
-      <i class="mur-link-line mur-link-bottom"></i>
-      <i class="mur-link-line mur-link-left"></i>
     `;
 
     const officialLogo = document.createElement('div');
