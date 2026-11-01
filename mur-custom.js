@@ -320,6 +320,32 @@
     menu.setAttribute('aria-label', 'Univers M.U.R.');
     menu.setAttribute('aria-hidden', 'true');
 
+    const connectors = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    connectors.classList.add('mur-orb-connectors');
+    connectors.setAttribute('viewBox', '-170 -170 340 340');
+    connectors.setAttribute('aria-hidden', 'true');
+    connectors.innerHTML = `
+      <defs>
+        <linearGradient id="murOrbLineGradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7dd3fc"/>
+          <stop offset=".34" stop-color="#34d399"/>
+          <stop offset=".67" stop-color="#a78bfa"/>
+          <stop offset="1" stop-color="#fb7185"/>
+        </linearGradient>
+      </defs>
+      <circle class="mur-orbit-line" cx="0" cy="0" r="125"/>
+      <path class="mur-link-line" d="M0 -38V-125 M38 0H125 M0 38V125 M-38 0H-125"/>
+    `;
+
+    const officialLogo = document.createElement('div');
+    officialLogo.className = 'mur-orb-official-logo';
+    officialLogo.setAttribute('aria-hidden', 'true');
+    const logoImage = document.createElement('img');
+    logoImage.src = 'apple-touch-icon.png';
+    logoImage.alt = '';
+    officialLogo.appendChild(logoImage);
+    menu.append(connectors, officialLogo);
+
     const buttons = ITEMS.map((item, index) => {
       const button = document.createElement('button');
       button.type = 'button';
