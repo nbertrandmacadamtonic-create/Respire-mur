@@ -357,9 +357,9 @@
       const rect = circle.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
-      const horizontalLimit = Math.max(86, Math.min(centerX, innerWidth - centerX) - 42);
-      const verticalLimit = Math.max(86, Math.min(centerY, innerHeight - centerY) - 42);
-      const radius = Math.max(88, Math.min(126, rect.width * .51, horizontalLimit, verticalLimit));
+      const horizontalLimit = Math.max(102, Math.min(centerX, innerWidth - centerX) - 48);
+      const verticalLimit = Math.max(102, Math.min(centerY, innerHeight - centerY) - 48);
+      const radius = Math.max(102, Math.min(142, rect.width * .57, horizontalLimit, verticalLimit));
       menu.style.left = centerX + 'px';
       menu.style.top = centerY + 'px';
       menu.style.setProperty('--mur-orb-radius', radius + 'px');
