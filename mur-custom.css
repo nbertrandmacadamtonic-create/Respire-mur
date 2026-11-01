@@ -777,7 +777,7 @@ body.mur-quick-mode-active .mur-quick-mode-pill {
   mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
   filter: drop-shadow(0 0 5px rgba(255,54,78,.88));
   pointer-events: none;
-  animation: murQuickCenterSpin 1.15s linear infinite;
+  animation: murQuickCenterSpin 1.85s linear infinite;
 }
 
 .mur-orb-quick-center strong {
