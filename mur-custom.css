@@ -577,10 +577,21 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
   letter-spacing: .08em;
   opacity: 0;
   pointer-events: none;
+  cursor: pointer;
+  touch-action: manipulation;
   transition: opacity .25s ease, transform .25s ease;
 }
 
-body.mur-quick-mode-active .mur-quick-mode-pill { opacity: 1; transform: translate(-50%, 0); }
+body.mur-quick-mode-active .mur-quick-mode-pill {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+.mur-quick-mode-pill:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
 
 @keyframes murQuickSheen {
   0%, 62% { transform: translateX(-120%); }

@@ -337,7 +337,10 @@ if (typeof window.installPresentationFallback !== 'function') {
   function refreshQuickModeLabels() {
     const en = isEnglish();
     const pill = document.getElementById('murQuickModePill');
-    if (pill) pill.textContent = en ? 'QUICK MODE · STEP 1/2' : 'MODE RAPIDE · ÉTAPE 1/2';
+    if (pill) {
+      pill.textContent = en ? 'QUICK MODE · EXIT' : 'MODE RAPIDE · QUITTER';
+      pill.setAttribute('aria-label', en ? 'Exit quick mode' : 'Quitter le mode rapide');
+    }
   }
 
   function showQuickMessage(message) {
@@ -363,6 +366,27 @@ if (typeof window.installPresentationFallback !== 'function') {
     quickBreathTimer = 0;
     quickBreathStartedAt = 0;
     quickBreathPhase = '';
+  }
+
+  function exitQuickMode() {
+    stopDirectQuickBreathing();
+    quickModeStarting = false;
+    setQuickModeState(false);
+    if (typeof window.stopBreathVoices === 'function') window.stopBreathVoices();
+
+    const orb = document.getElementById('orb');
+    if (orb) {
+      orb.style.transitionDuration = '.35s';
+      orb.style.transform = 'scale(.80)';
+    }
+    const homeCircle = document.getElementById('homeCircle');
+    if (homeCircle) homeCircle.classList.remove('breathing');
+    const stopButton = document.getElementById('stopBreathBtn');
+    if (stopButton) stopButton.hidden = true;
+
+    if (typeof window.switchPageDirect === 'function') window.switchPageDirect('home');
+    else if (typeof window.showPage === 'function') window.showPage('home');
+    if (typeof window.refreshHome === 'function') window.refreshHome();
   }
 
   function quickZoneKey() {
@@ -585,10 +609,13 @@ if (typeof window.installPresentationFallback !== 'function') {
   function installQuickMode() {
     if (document.getElementById('murQuickModePill')) return;
 
-    const pill = document.createElement('div');
+    const pill = document.createElement('button');
+    pill.type = 'button';
     pill.id = 'murQuickModePill';
     pill.className = 'mur-quick-mode-pill';
-    pill.textContent = 'MODE RAPIDE · ÉTAPE 1/2';
+    pill.textContent = 'MODE RAPIDE · QUITTER';
+    pill.setAttribute('aria-label', 'Quitter le mode rapide');
+    pill.addEventListener('click', exitQuickMode);
     document.body.appendChild(pill);
 
     /* On prolonge proprement la fin native de respiration afin de conserver
