@@ -399,6 +399,53 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
   pointer-events: none;
 }
 
+/* Correctif multi-navigateurs : géométrie CSS centrée sur le logo. */
+.mur-orb-connectors {
+  left: calc(var(--mur-orb-radius) * -1) !important;
+  top: calc(var(--mur-orb-radius) * -1) !important;
+  width: calc(var(--mur-orb-radius) * 2) !important;
+  height: calc(var(--mur-orb-radius) * 2) !important;
+}
+
+.mur-orb-connectors > .mur-orbit-line {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #7dd3fc, #34d399, #a78bfa, #fb7185, #7dd3fc);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  animation: murCssOrbitSpin 8s linear infinite !important;
+}
+
+.mur-orb-connectors > .mur-link-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: block;
+  width: calc(var(--mur-orb-radius) - 38px);
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(90deg, rgba(153,221,255,.82) 0 6px, transparent 6px 12px);
+  transform-origin: 0 50%;
+  animation: murLinkGlow 2.2s ease-in-out infinite !important;
+}
+
+.mur-orb-connectors > .mur-link-top { transform: rotate(-90deg); }
+.mur-orb-connectors > .mur-link-right { transform: rotate(0deg); }
+.mur-orb-connectors > .mur-link-bottom { transform: rotate(90deg); }
+.mur-orb-connectors > .mur-link-left { transform: rotate(180deg); }
+
+@keyframes murCssOrbitSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes murLinkGlow {
+  0%,100% { opacity: .38; filter: drop-shadow(0 0 2px #7dd3fc); }
+  50% { opacity: .88; filter: drop-shadow(0 0 6px #7dd3fc); }
+}
+
 .mur-orb-connectors .mur-orbit-line,
 .mur-orb-connectors .mur-link-line {
   fill: none;
