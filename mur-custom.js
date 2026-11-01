@@ -661,7 +661,14 @@
   function englishActive() {
     const stored = localStorage.getItem('mur-ui-language') ||
       localStorage.getItem('murLanguage') || localStorage.getItem('murLang');
-    return String(stored || document.documentElement.lang || 'fr').toLowerCase().startsWith('en');
+    const englishButton = document.querySelector('[data-language="en"]');
+    const pickerSaysEnglish = englishButton && (
+      englishButton.getAttribute('aria-pressed') === 'true' ||
+      englishButton.classList.contains('active') ||
+      englishButton.classList.contains('selected')
+    );
+    return pickerSaysEnglish ||
+      String(stored || document.documentElement.lang || 'fr').toLowerCase().startsWith('en');
   }
 
   function colour(value) {
@@ -728,14 +735,36 @@
     });
   }
 
+  function repairEnglishTestButtons() {
+    if (!englishActive()) return;
+    document.querySelectorAll('#tests button, #tests .test-menu-card').forEach(element => {
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(node => {
+        const value = node.nodeValue.trim();
+        if (value === 'Refaire') node.nodeValue = node.nodeValue.replace('Refaire', 'Retake');
+        if (value === 'Voir la synthèse' || value === 'Voir la synthese') {
+          node.nodeValue = node.nodeValue.replace(value, 'View summary');
+        }
+      });
+    });
+  }
+
   function scheduleRepair() {
     if (scheduled) return;
     scheduled = true;
-    requestAnimationFrame(repairEnglish);
+    requestAnimationFrame(() => {
+      repairEnglish();
+      repairEnglishTestButtons();
+      setTimeout(repairEnglishTestButtons, 60);
+      setTimeout(repairEnglishTestButtons, 220);
+    });
   }
 
   function installEnglishRepair() {
     repairEnglish();
+    repairEnglishTestButtons();
     new MutationObserver(scheduleRepair).observe(document.body, {
       childList: true,
       subtree: true,
@@ -750,6 +779,10 @@
     });
     window.addEventListener('storage', scheduleRepair);
     window.addEventListener('mur-content-loaded', scheduleRepair);
+
+    /* Les cartes de tests sont régulièrement reconstruites par l'application.
+       Ce contrôle léger ne parcourt que leurs trois boutons. */
+    window.setInterval(repairEnglishTestButtons, 600);
   }
 
   if (document.readyState === 'loading') {
