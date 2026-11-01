@@ -361,13 +361,32 @@
         window.syncRespirationBarWithCurrentResult();
       }
 
-      /* breath est la séance native de l'application. On conserve son rythme
-         conseillé et on impose uniquement la durée rapide de 1 minute 30. */
-      if (typeof breath !== 'undefined' && breath) {
+      /* Mode rapide : aucune présentation vocale. */
+      if (typeof breathIntroEnabled !== 'undefined') breathIntroEnabled = false;
+      if (typeof window.stopBreathVoices === 'function') window.stopBreathVoices();
+      if (typeof window.updateBreathIntroToggle === 'function') window.updateBreathIntroToggle();
+
+      /* On conserve le rythme conseillé par NeuroFlex, mais on remplace
+         explicitement sa durée normale (souvent 5 min) par 01:30. */
+      if (typeof window.setBreathDuration === 'function') {
+        window.setBreathDuration(90);
+      } else if (typeof breath !== 'undefined' && breath) {
         breath.duration = 90;
+        if (typeof window.updateBreath === 'function') window.updateBreath(true);
       }
-      if (typeof window.updateBreath === 'function') window.updateBreath(true);
-      if (typeof window.startBreathing === 'function') window.startBreathing();
+
+      const timeLeft = document.getElementById('timeLeft');
+      if (timeLeft) timeLeft.textContent = '01:30';
+
+      const phaseText = document.getElementById('phaseText');
+      if (phaseText) phaseText.textContent = isEnglish() ? 'Starting…' : 'Démarrage…';
+
+      if (typeof window.startBreathing === 'function') {
+        const pending = window.startBreathing();
+        if (pending && typeof pending.catch === 'function') {
+          pending.catch(() => setQuickModeState(false));
+        }
+      }
     } catch (error) {
       setQuickModeState(false);
       showQuickMessage(isEnglish()
@@ -392,7 +411,9 @@
     quickModeStarting = true;
     setQuickModeState(true);
     if (typeof window.showPage === 'function') window.showPage('breath');
-    window.setTimeout(configureAndStartQuickBreathing, 180);
+    /* showPage termine plusieurs remises à zéro jusqu'à 160 ms.
+       On démarre après celles-ci pour éviter le retour involontaire à 5 min. */
+    window.setTimeout(configureAndStartQuickBreathing, 320);
   }
 
   function installQuickMode() {
