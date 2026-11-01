@@ -415,16 +415,20 @@
       const phaseText = document.getElementById('phaseText');
       if (phaseText) phaseText.textContent = isEnglish() ? 'Starting…' : 'Démarrage…';
 
-      if (typeof window.startBreathing === 'function') {
+      const nativeOrb = document.getElementById('orb');
+      if (nativeOrb && typeof nativeOrb.click === 'function') {
+        /* Utilise le déclencheur natif onclick="toggleBreathing()". */
+        nativeOrb.click();
+      } else if (typeof window.startBreathing === 'function') {
         const pending = window.startBreathing();
         if (pending && typeof pending.catch === 'function') {
           pending.catch(() => setQuickModeState(false));
         }
-        window.setTimeout(() => {
-          const stopButton = document.getElementById('stopBreathBtn');
-          if (quickModeActive && stopButton) stopButton.hidden = false;
-        }, 220);
       }
+      window.setTimeout(() => {
+        const stopButton = document.getElementById('stopBreathBtn');
+        if (quickModeActive && stopButton) stopButton.hidden = false;
+      }, 220);
     } catch (error) {
       setQuickModeState(false);
       showQuickMessage(isEnglish()
@@ -713,6 +717,9 @@
       if (open) return;
       open = true;
       refreshLabels();
+      const quickUnlocked = typeof window.testsAreUnlocked !== 'function' || window.testsAreUnlocked();
+      quickCenter.classList.toggle('is-locked', !quickUnlocked);
+      quickCenter.setAttribute('aria-disabled', quickUnlocked ? 'false' : 'true');
       placeMenu();
       menu.classList.add('is-open');
       backdrop.classList.add('is-open');
@@ -768,12 +775,10 @@
       event.preventDefault();
       event.stopPropagation();
       stopCloseTimer();
-      quickCenter.classList.add('is-activating');
-      window.setTimeout(() => {
-        closeMenu();
-        quickCenter.classList.remove('is-activating');
-        window.murStartQuickMode?.();
-      }, 150);
+      closeMenu();
+      /* Aucun délai ici : le geste doit rester actif pour que le navigateur
+         autorise le démarrage sonore automatique de la respiration. */
+      window.murStartQuickMode?.();
     });
 
     backdrop.addEventListener('click', () => closeMenu());
