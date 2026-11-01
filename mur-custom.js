@@ -457,6 +457,18 @@ if (typeof window.installPresentationFallback !== 'function') {
       window.setTimeout(() => {
         if (exerciseKey && typeof window.openExercise === 'function') {
           window.openExercise(exerciseKey);
+          /* La fiche vient d'être créée : on lance immédiatement son audio
+             et son halo, sans demander un second appui. */
+          window.setTimeout(() => {
+            const audio = document.getElementById('exerciseAudio');
+            if (!audio || !audio.paused) return;
+            if (typeof window.toggleExerciseAudio === 'function') {
+              window.toggleExerciseAudio();
+            } else {
+              const pending = audio.play();
+              if (pending && typeof pending.catch === 'function') pending.catch(() => {});
+            }
+          }, 180);
         } else if (typeof window.openRecommendedExercises === 'function') {
           window.openRecommendedExercises();
         }
