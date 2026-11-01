@@ -287,3 +287,194 @@
   bilingualScript.defer = true;
   document.body.appendChild(bilingualScript);
 })();
+
+/* =============================================================
+   M.U.R. — ETAPE B | ORBE RADIALE
+   Tap : ouvre les quatre univers. Glissement : la rotation native
+   reste intacte. Aucune logique de test ou de contenu n'est remplacee.
+   ============================================================= */
+(() => {
+  'use strict';
+
+  const ITEMS = [
+    { page: 'tests', labels: { fr: 'Mesurer', en: 'Measure' } },
+    { page: 'breath', labels: { fr: 'Respirer', en: 'Breathe' } },
+    { page: 'exercises', labels: { fr: 'Exercices', en: 'Exercises' } },
+    { page: 'stats', labels: { fr: 'Stats', en: 'Stats' } }
+  ];
+
+  function initMurOrbMenu() {
+    const circle = document.getElementById('homeCircle');
+    if (!circle || circle.dataset.murOrbMenuReady === '1') return;
+    circle.dataset.murOrbMenuReady = '1';
+
+    const backdrop = document.createElement('button');
+    backdrop.type = 'button';
+    backdrop.className = 'mur-orb-backdrop';
+    backdrop.setAttribute('aria-label', 'Fermer le menu');
+    backdrop.tabIndex = -1;
+
+    const menu = document.createElement('div');
+    menu.className = 'mur-orb-menu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', 'Univers M.U.R.');
+    menu.setAttribute('aria-hidden', 'true');
+
+    const buttons = ITEMS.map((item, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'mur-orb-choice';
+      button.dataset.page = item.page;
+      button.dataset.index = String(index);
+      button.setAttribute('role', 'menuitem');
+      button.tabIndex = -1;
+      menu.appendChild(button);
+      return button;
+    });
+
+    document.body.append(backdrop, menu);
+
+    let open = false;
+    let closeTimer = 0;
+
+    function language() {
+      const stored = localStorage.getItem('murLanguage') || localStorage.getItem('murLang');
+      const htmlLang = document.documentElement.lang;
+      return String(stored || htmlLang || 'fr').toLowerCase().startsWith('en') ? 'en' : 'fr';
+    }
+
+    function refreshLabels() {
+      const lang = language();
+      buttons.forEach((button, index) => {
+        button.textContent = ITEMS[index].labels[lang];
+        button.setAttribute('aria-label', ITEMS[index].labels[lang]);
+      });
+      backdrop.setAttribute('aria-label', lang === 'en' ? 'Close menu' : 'Fermer le menu');
+      menu.setAttribute('aria-label', lang === 'en' ? 'M.U.R. sections' : 'Univers M.U.R.');
+    }
+
+    function placeMenu() {
+      const rect = circle.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const horizontalLimit = Math.max(86, Math.min(centerX, innerWidth - centerX) - 42);
+      const verticalLimit = Math.max(86, Math.min(centerY, innerHeight - centerY) - 42);
+      const radius = Math.max(88, Math.min(126, rect.width * .51, horizontalLimit, verticalLimit));
+      menu.style.left = centerX + 'px';
+      menu.style.top = centerY + 'px';
+      menu.style.setProperty('--mur-orb-radius', radius + 'px');
+    }
+
+    function stopCloseTimer() {
+      if (closeTimer) window.clearTimeout(closeTimer);
+      closeTimer = 0;
+    }
+
+    function scheduleClose() {
+      stopCloseTimer();
+      closeTimer = window.setTimeout(closeMenu, 4500);
+    }
+
+    function openMenu() {
+      if (open) return;
+      open = true;
+      refreshLabels();
+      placeMenu();
+      menu.classList.add('is-open');
+      backdrop.classList.add('is-open');
+      circle.classList.add('mur-menu-open');
+      menu.setAttribute('aria-hidden', 'false');
+      circle.setAttribute('aria-expanded', 'true');
+      buttons.forEach(button => { button.tabIndex = 0; });
+      scheduleClose();
+    }
+
+    function closeMenu(options = {}) {
+      if (!open) return;
+      open = false;
+      stopCloseTimer();
+      menu.classList.remove('is-open');
+      backdrop.classList.remove('is-open');
+      circle.classList.remove('mur-menu-open');
+      menu.setAttribute('aria-hidden', 'true');
+      circle.setAttribute('aria-expanded', 'false');
+      buttons.forEach(button => {
+        button.tabIndex = -1;
+        button.classList.remove('is-activating');
+      });
+      if (options.focusCircle) circle.focus?.({ preventScroll: true });
+    }
+
+    function navigate(page) {
+      closeMenu();
+      if (page === 'tests' && typeof window.openTestsMenuAlways === 'function') {
+        window.openTestsMenuAlways();
+      } else if (typeof window.showPage === 'function') {
+        window.showPage(page);
+      }
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener('pointerdown', event => event.stopPropagation());
+      button.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        stopCloseTimer();
+        button.classList.add('is-activating');
+        window.setTimeout(() => navigate(button.dataset.page), 170);
+      });
+      button.addEventListener('pointerenter', scheduleClose);
+      button.addEventListener('focus', scheduleClose);
+    });
+
+    backdrop.addEventListener('click', () => closeMenu());
+    window.addEventListener('resize', () => { if (open) placeMenu(); }, { passive: true });
+    window.addEventListener('orientationchange', () => { if (open) setTimeout(placeMenu, 100); });
+    document.addEventListener('keydown', event => {
+      if (!open) return;
+      if (event.key === 'Escape') closeMenu({ focusCircle: true });
+    });
+
+    document.querySelectorAll('.tabbar button').forEach(button => {
+      button.addEventListener('click', () => closeMenu());
+    });
+
+    circle.setAttribute('aria-haspopup', 'menu');
+    circle.setAttribute('aria-expanded', 'false');
+    if (!circle.hasAttribute('tabindex')) circle.tabIndex = 0;
+
+    /* L'attribut onclick de index.html appelle ce nom au moment du tap.
+       Le glissement natif positionne homeDragJustEnded, que l'on respecte. */
+    window.homeCircleOpen = function murHomeCircleOpen(event) {
+      if (window.homeDragJustEnded) {
+        window.homeDragJustEnded = false;
+        event?.preventDefault?.();
+        return;
+      }
+      event?.preventDefault?.();
+      open ? closeMenu() : openMenu();
+    };
+
+    circle.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        open ? closeMenu() : openMenu();
+      }
+    });
+
+    window.addEventListener('storage', refreshLabels);
+    new MutationObserver(refreshLabels).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['lang']
+    });
+    refreshLabels();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMurOrbMenu, { once: true });
+  } else {
+    initMurOrbMenu();
+  }
+})();
+
+
