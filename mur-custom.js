@@ -6,6 +6,29 @@
  - Back-office, tests et contenus conservés
  - Compatible avec le module de traduction FR/EN
 */
+
+/* Compatibilité avec deux fonctions encore appelées par index.html mais
+   absentes de sa version actuelle. Sans elles, showPage s'interrompt. */
+if (typeof window.ensureExercisesNavAccessible !== 'function') {
+  window.ensureExercisesNavAccessible = function ensureExercisesNavAccessible() {
+    const button = document.getElementById('navExercises');
+    if (!button) return;
+    let unlocked = false;
+    try {
+      unlocked = typeof window.testsAreUnlocked === 'function' && window.testsAreUnlocked();
+    } catch (error) {}
+    button.classList.toggle('locked', !unlocked);
+    button.setAttribute('aria-disabled', unlocked ? 'false' : 'true');
+    if (unlocked) button.removeAttribute('disabled');
+  };
+}
+
+if (typeof window.installPresentationFallback !== 'function') {
+  window.installPresentationFallback = function installPresentationFallback() {
+    /* La présentation est déjà sécurisée par setupIntro dans ce fichier. */
+  };
+}
+
 (() => {
   'use strict';
 
@@ -514,6 +537,9 @@
       tick();
       quickBreathTimer = window.setInterval(tick, 200);
     } catch (error) {
+      console.error('M.U.R. mode rapide :', error);
+      stopDirectQuickBreathing();
+      quickModeStarting = false;
       setQuickModeState(false);
       showQuickMessage(isEnglish()
         ? 'Quick mode could not start.'
@@ -522,7 +548,13 @@
   }
 
   function startQuickMode() {
-    if (quickModeStarting || quickModeActive) return;
+    if (quickModeStarting) return;
+
+    /* Un essai interrompu ne doit jamais bloquer les suivants. */
+    if (quickModeActive) {
+      stopDirectQuickBreathing();
+      setQuickModeState(false);
+    }
 
     if (typeof window.testsAreUnlocked === 'function' && !window.testsAreUnlocked()) {
       showQuickMessage(isEnglish()
