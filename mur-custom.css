@@ -489,30 +489,37 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
 
 .mur-orb-connectors > .mur-link-line {
   position: absolute;
-  left: 50%;
+  left: calc(50% + 34px);
   top: 50%;
   display: block;
-  width: calc(var(--mur-orb-radius) - 38px);
+  width: max(18px, calc(var(--mur-orb-radius) - 82px));
   height: 2px;
   margin-top: -1px;
   border-radius: 999px;
-  background: repeating-linear-gradient(90deg, rgba(153,221,255,.82) 0 6px, transparent 6px 12px);
+  background: linear-gradient(90deg, transparent, var(--mur-link-color), transparent);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--mur-link-color) 72%, transparent);
+  opacity: 0;
   transform-origin: 0 50%;
-  animation: murLinkGlow 2.2s ease-in-out infinite !important;
+  transition: opacity .25s ease, width .35s cubic-bezier(.2,.8,.2,1);
 }
 
-.mur-orb-connectors > .mur-link-top { transform: rotate(-90deg); }
-.mur-orb-connectors > .mur-link-right { transform: rotate(0deg); }
-.mur-orb-connectors > .mur-link-bottom { transform: rotate(90deg); }
-.mur-orb-connectors > .mur-link-left { transform: rotate(180deg); }
+.mur-orb-connectors > .mur-link-top { --mur-link-color: #60a5fa; transform: rotate(-90deg); }
+.mur-orb-connectors > .mur-link-right { --mur-link-color: #34d399; transform: rotate(0deg); }
+.mur-orb-connectors > .mur-link-bottom { --mur-link-color: #a78bfa; transform: rotate(90deg); }
+.mur-orb-connectors > .mur-link-left { --mur-link-color: #fb7185; transform: rotate(180deg); }
+
+.mur-orb-menu.is-open .mur-orb-connectors > .mur-link-line {
+  opacity: .88;
+  animation: murLinkGlow 1.8s ease-in-out .28s infinite !important;
+}
 
 @keyframes murCssOrbitSpin {
   to { transform: rotate(360deg); }
 }
 
 @keyframes murLinkGlow {
-  0%,100% { opacity: .38; filter: drop-shadow(0 0 2px #7dd3fc); }
-  50% { opacity: .88; filter: drop-shadow(0 0 6px #7dd3fc); }
+  0%,100% { opacity: .42; filter: brightness(.9); }
+  50% { opacity: .96; filter: brightness(1.45); }
 }
 
 .mur-orb-connectors .mur-orbit-line,
