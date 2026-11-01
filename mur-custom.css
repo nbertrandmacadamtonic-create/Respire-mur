@@ -37,6 +37,28 @@
   margin: 10px 0 0 !important;
 }
 
+/* Nouveau logo M.U.R. : dimensions adaptées à son médaillon détaillé. */
+.app > .top .brand .logo,
+.app > .top .brand img.logo {
+  width: 68px !important;
+  min-width: 68px !important;
+  height: 68px !important;
+  min-height: 68px !important;
+  object-fit: contain !important;
+  border-radius: 50% !important;
+  filter: drop-shadow(0 0 10px rgba(66, 195, 255, .42));
+}
+
+.app > .top .brand {
+  gap: 10px !important;
+  min-height: 70px;
+  align-items: center !important;
+}
+
+.app > .top .brand h1 {
+  font-size: 20px !important;
+}
+
 /* Le back-office garde son sélecteur de langue. */
 .aside > .mur-language-picker {
   display: flex !important;
@@ -523,9 +545,9 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
   position: absolute;
   left: 0;
   top: 0;
-  width: 98px;
-  height: 98px;
-  padding: 9px;
+  width: 116px;
+  height: 116px;
+  padding: 6px;
   border: 1px solid rgba(204, 235, 255, .72);
   border-radius: 50%;
   background: radial-gradient(circle at 34% 23%, rgba(255,255,255,.24), rgba(6,20,36,.96) 72%);
