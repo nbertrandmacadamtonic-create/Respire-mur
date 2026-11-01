@@ -520,6 +520,159 @@
   }
 })();
 
+/* =========================================================
+   ANGLAIS — correctif des textes dynamiques non traduits
+   ========================================================= */
+(() => {
+  'use strict';
+
+  const EN = new Map(Object.entries({
+    'Refaire': 'Retake',
+    'Voir la synthèse': 'View summary',
+    'Voir la synthese': 'View summary',
+    'Statistiques': 'Statistics',
+    'Jour': 'Day',
+    'Mois': 'Month',
+    'Annee': 'Year',
+    'Année': 'Year',
+    "Lancer l'audio": 'Play audio',
+    'Lancer l’audio': 'Play audio',
+    "Arrêter l'audio": 'Stop audio',
+    'Arrêter l’audio': 'Stop audio',
+    'Pourquoi ca marche ?': 'Why does it work?',
+    'Pourquoi ça marche ?': 'Why does it work?',
+    'Pret': 'Ready',
+    'Prêt': 'Ready',
+    'Termine': 'Finished',
+    'Terminé': 'Finished',
+    'Lecture en cours': 'Playing',
+    'Réessayez': 'Try again',
+    'Reessayez': 'Try again',
+    'Respiration terminée. Votre exercice est prêt.': 'Breathing complete. Your exercise is ready.',
+    'Vert : respiration reguliere, stable et facile a tenir. Recommandation ajustee par le resultat NeuroFlex.':
+      'Green: steady, regular breathing that is easy to maintain. Recommendation adjusted to your NeuroFlex result.',
+    "Orange : l'expiration devient plus longue pour reguler la montee. Recommandation ajustee par le resultat NeuroFlex.":
+      'Orange: a longer exhale helps regulate rising activation. Recommendation adjusted to your NeuroFlex result.',
+    "Rouge : expiration longue pour freiner franchement l'activation. Recommandation ajustee par le resultat NeuroFlex.":
+      'Red: a long exhale helps slow activation. Recommendation adjusted to your NeuroFlex result.',
+    "Bleu : inspiration plus longue, pour remettre de l'elan sans brusquer le systeme. Recommandation ajustee par le resultat NeuroFlex.":
+      'Blue: a longer inhale restores momentum gently. Recommendation adjusted to your NeuroFlex result.',
+    'Vert : respiration reguliere, stable et facile a tenir.':
+      'Green: steady, regular breathing that is easy to maintain.',
+    "Orange : l'expiration devient plus longue pour reguler la montee.":
+      'Orange: a longer exhale helps regulate rising activation.',
+    "Rouge : expiration longue pour freiner franchement l'activation.":
+      'Red: a long exhale helps slow activation.',
+    "Bleu : inspiration plus longue, pour remettre de l'elan sans brusquer le systeme.":
+      'Blue: a longer inhale restores momentum gently.'
+  }));
+
+  const COLOR_WORDS = {
+    bleu: 'Blue', bleue: 'Blue', vert: 'Green', verte: 'Green',
+    orange: 'Orange', rouge: 'Red'
+  };
+
+  function englishActive() {
+    const stored = localStorage.getItem('mur-ui-language') ||
+      localStorage.getItem('murLanguage') || localStorage.getItem('murLang');
+    return String(stored || document.documentElement.lang || 'fr').toLowerCase().startsWith('en');
+  }
+
+  function colour(value) {
+    return COLOR_WORDS[String(value || '').trim().toLowerCase()] || value;
+  }
+
+  function translateDynamic(text) {
+    const exact = EN.get(text);
+    if (exact) return exact;
+
+    let match = text.match(/^Dernier r[ée]sultat\s*:\s*([+−-]?\d+)\s*-\s*(BLEUE|VERTE|ORANGE|ROUGE)$/i);
+    if (match) return `Latest result: ${match[1]} · ${colour(match[2])}`;
+
+    match = text.match(/^(\d+)\s+(test|pratique)\s*-\s*(Bleu|Bleue|Vert|Verte|Orange|Rouge)$/i);
+    if (match) return `${match[1]} ${match[2] === 'test' ? 'test' : 'practice'} · ${colour(match[3])}`;
+
+    match = text.match(/^Moyenne\s+([+−-]?\d+)\s*-\s*dernier\s+([+−-]?\d+)\s*-\s*premier rep[eè]re$/i);
+    if (match) return `Average ${match[1]} · latest ${match[2]} · baseline`;
+
+    match = text.match(/^Zone\s+(rouge|orange|vert|bleu)\s*-\s*exercice audio$/i);
+    if (match) return `${colour(match[1])} zone · audio exercise`;
+
+    match = text.match(/^S[ée]ance respiration\s*-\s*zone\s+(BLEUE|VERTE|ORANGE|ROUGE)$/i);
+    if (match) return `Breathing session · ${colour(match[1])} zone`;
+
+    return text;
+  }
+
+  function translateNode(node) {
+    const original = node.nodeValue;
+    const trimmed = original.trim();
+    if (!trimmed) return;
+    const translated = translateDynamic(trimmed);
+    if (translated === trimmed) return;
+    const leading = original.match(/^\s*/)?.[0] || '';
+    const trailing = original.match(/\s*$/)?.[0] || '';
+    node.nodeValue = leading + translated + trailing;
+  }
+
+  let scheduled = false;
+  function repairEnglish() {
+    scheduled = false;
+    if (!englishActive() || !document.body) return;
+
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const tag = node.parentElement?.tagName;
+        return tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT'
+          ? NodeFilter.FILTER_REJECT
+          : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(translateNode);
+
+    document.querySelectorAll('[aria-label],[title],[placeholder]').forEach(element => {
+      ['aria-label', 'title', 'placeholder'].forEach(attribute => {
+        const value = element.getAttribute(attribute);
+        if (!value) return;
+        const translated = translateDynamic(value.trim());
+        if (translated !== value.trim()) element.setAttribute(attribute, translated);
+      });
+    });
+  }
+
+  function scheduleRepair() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(repairEnglish);
+  }
+
+  function installEnglishRepair() {
+    repairEnglish();
+    new MutationObserver(scheduleRepair).observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+    new MutationObserver(scheduleRepair).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['lang']
+    });
+    document.addEventListener('click', event => {
+      if (event.target.closest?.('[data-language]')) setTimeout(scheduleRepair, 40);
+    });
+    window.addEventListener('storage', scheduleRepair);
+    window.addEventListener('mur-content-loaded', scheduleRepair);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installEnglishRepair, { once: true });
+  } else {
+    installEnglishRepair();
+  }
+})();
+
 /* En-tête de rubrique : logo officiel sur l'accueil, orbe contextuelle ailleurs. */
 (() => {
   const SECTIONS = {
