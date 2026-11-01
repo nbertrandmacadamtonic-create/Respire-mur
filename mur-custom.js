@@ -371,6 +371,12 @@
       });
       backdrop.setAttribute('aria-label', lang === 'en' ? 'Close menu' : 'Fermer le menu');
       menu.setAttribute('aria-label', lang === 'en' ? 'M.U.R. sections' : 'Univers M.U.R.');
+      const trigger = circle.querySelector('.mur-orb-start-trigger');
+      if (trigger) {
+        trigger.textContent = lang === 'en' ? 'Tap to begin' : 'Appuyer pour commencer';
+        trigger.dataset.subtitle = lang === 'en' ? 'Discover the sections' : 'Découvrir les univers';
+        trigger.setAttribute('aria-label', trigger.textContent);
+      }
     }
 
     function placeMenu() {
@@ -461,7 +467,23 @@
 
     circle.setAttribute('aria-haspopup', 'menu');
     circle.setAttribute('aria-expanded', 'false');
-    if (!circle.hasAttribute('tabindex')) circle.tabIndex = 0;
+    circle.removeAttribute('tabindex');
+
+    const startTrigger = document.createElement('button');
+    startTrigger.type = 'button';
+    startTrigger.className = 'mur-orb-start-trigger';
+    startTrigger.textContent = 'Appuyer pour commencer';
+    startTrigger.dataset.subtitle = 'Découvrir les univers';
+    startTrigger.setAttribute('aria-label', 'Appuyer pour commencer');
+    startTrigger.addEventListener('pointerdown', event => event.stopPropagation());
+    startTrigger.addEventListener('pointermove', event => event.stopPropagation());
+    startTrigger.addEventListener('pointerup', event => event.stopPropagation());
+    startTrigger.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      window.homeCircleOpen?.(event);
+    });
+    circle.appendChild(startTrigger);
 
     /* L'attribut onclick de index.html appelle ce nom au moment du tap.
        Le glissement natif positionne homeDragJustEnded, que l'on respecte. */
@@ -474,13 +496,6 @@
       event?.preventDefault?.();
       open ? closeMenu() : openMenu();
     };
-
-    circle.addEventListener('keydown', event => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        open ? closeMenu() : openMenu();
-      }
-    });
 
     window.addEventListener('storage', refreshLabels);
     new MutationObserver(refreshLabels).observe(document.documentElement, {

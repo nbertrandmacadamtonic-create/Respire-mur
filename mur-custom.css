@@ -330,6 +330,53 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
   z-index: 5;
 }
 
+/* Nouveau fonctionnement : l'orbe principale devient un bouton d'entrée. */
+#home #homeCircle.home-circle .home-cursor,
+#home #homeCircle.home-circle .home-circle-text {
+  display: none !important;
+}
+
+#home #homeCircle.home-circle .mur-orb-start-trigger {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  height: 100%;
+  padding: 24%;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: transparent;
+  font: 900 16px/1.12 system-ui, sans-serif;
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0,0,0,.92), 0 0 17px rgba(119,210,255,.42);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#home #homeCircle.home-circle .mur-orb-start-trigger::after {
+  content: attr(data-subtitle);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .025em;
+  color: rgba(232,246,255,.72);
+}
+
+#home #homeCircle.home-circle .mur-orb-start-trigger:focus-visible {
+  outline: 3px solid rgba(255,255,255,.92);
+  outline-offset: 5px;
+}
+
+#home #homeCircle.home-circle.mur-menu-open .mur-orb-start-trigger {
+  opacity: .22;
+}
+
 @keyframes murOrbeTour {
   to { transform: rotate(360deg); }
 }
