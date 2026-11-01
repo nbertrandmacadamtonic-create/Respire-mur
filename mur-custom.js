@@ -296,6 +296,16 @@
 
   let quickModeActive = false;
   let quickModeStarting = false;
+  let quickBreathTimer = 0;
+  let quickBreathStartedAt = 0;
+  let quickBreathPhase = '';
+
+  const QUICK_BREATHS = {
+    bleu:   { zone: 'Blue',   color: '#3b82f6', inhale: 5, exhale: 3, key: 'boost',    message: 'Gentle activation' },
+    vert:   { zone: 'Green',  color: '#22c55e', inhale: 5, exhale: 5, key: '365',      message: 'Balance and stability' },
+    orange: { zone: 'Orange', color: '#f59e0b', inhale: 4, exhale: 6, key: 'regulate', message: 'Gentle regulation' },
+    rouge:  { zone: 'Red',    color: '#ef4444', inhale: 3, exhale: 8, key: 'frein',    message: 'Slow activation' }
+  };
 
   function isEnglish() {
     return String(document.documentElement.lang || '').toLowerCase().startsWith('en');
@@ -322,6 +332,34 @@
   function setQuickModeState(active) {
     quickModeActive = active;
     document.body.classList.toggle('mur-quick-mode-active', active);
+  }
+
+  function stopDirectQuickBreathing() {
+    if (quickBreathTimer) window.clearInterval(quickBreathTimer);
+    quickBreathTimer = 0;
+    quickBreathStartedAt = 0;
+    quickBreathPhase = '';
+  }
+
+  function quickZoneKey() {
+    let zone = null;
+    try {
+      const current = typeof window.getCurrentNeuroRecommendation === 'function'
+        ? window.getCurrentNeuroRecommendation()
+        : null;
+      zone = current?.zone || null;
+    } catch (error) {}
+
+    if (!zone) {
+      try { zone = JSON.parse(localStorage.getItem('murLastNeuro') || 'null')?.zone || null; }
+      catch (error) {}
+    }
+
+    const raw = String(zone?.key || zone?.name || 'vert').toLowerCase();
+    if (raw.includes('bleu')) return 'bleu';
+    if (raw.includes('rouge')) return 'rouge';
+    if (raw.includes('orange')) return 'orange';
+    return 'vert';
   }
 
   function openQuickExercise() {
@@ -384,51 +422,97 @@
     quickModeStarting = false;
 
     try {
-      /* La respiration suit directement la couleur NeuroFlex :
-         bleu=activation, vert=équilibre, orange=régulation, rouge=frein. */
-      const recommendation = typeof window.getCurrentNeuroRecommendation === 'function'
-        ? window.getCurrentNeuroRecommendation()
-        : null;
-      if (recommendation?.zone && typeof window.syncRespirationBarWithZone === 'function') {
-        window.syncRespirationBarWithZone(recommendation.zone, 'Mode rapide');
-      } else if (typeof window.syncRespirationBarWithCurrentResult === 'function') {
-        window.syncRespirationBarWithCurrentResult();
-      }
-
-      /* Mode rapide : aucune présentation vocale. */
-      if (typeof breathIntroEnabled !== 'undefined') breathIntroEnabled = false;
+      stopDirectQuickBreathing();
       if (typeof window.stopBreathVoices === 'function') window.stopBreathVoices();
-      if (typeof window.updateBreathIntroToggle === 'function') window.updateBreathIntroToggle();
 
-      /* On conserve le rythme conseillé par NeuroFlex, mais on remplace
-         explicitement sa durée normale (souvent 5 min) par 01:30. */
-      if (typeof breath !== 'undefined' && breath) {
-        breath.duration = 90;
-        if (typeof window.updateBreath === 'function') window.updateBreath(true);
-      } else if (typeof window.setBreathDuration === 'function') {
-        window.setBreathDuration(90);
+      const zoneKey = quickZoneKey();
+      const profile = QUICK_BREATHS[zoneKey];
+      const en = isEnglish();
+      const names = {
+        bleu: en ? 'Blue' : 'Bleu', vert: en ? 'Green' : 'Vert',
+        orange: 'Orange', rouge: en ? 'Red' : 'Rouge'
+      };
+
+      document.documentElement.style.setProperty('--accent', profile.color);
+      document.querySelectorAll('.dot').forEach(dot => { dot.style.background = profile.color; });
+
+      const zoneLabel = document.getElementById('breathZone');
+      if (zoneLabel) zoneLabel.textContent = names[zoneKey];
+      const cycle = document.getElementById('cycleLabel');
+      if (cycle) cycle.textContent = `${profile.inhale} / 0 / ${profile.exhale} / 0`;
+      const message = document.getElementById('breathMessage');
+      if (message) message.textContent = en
+        ? `${names[zoneKey]} quick breathing · ${profile.message}.`
+        : `${names[zoneKey]} · respiration rapide adaptée à votre résultat NeuroFlex.`;
+
+      const select = document.getElementById('protocolSelect');
+      if (select) select.value = profile.key;
+      const stopButton = document.getElementById('stopBreathBtn');
+      if (stopButton) stopButton.hidden = false;
+      const homeCircle = document.getElementById('homeCircle');
+      if (homeCircle) homeCircle.classList.add('breathing');
+
+      const progress = document.getElementById('progressCircle');
+      const circumference = 2 * Math.PI * 98;
+      if (progress) {
+        progress.style.strokeDasharray = String(circumference);
+        progress.style.strokeDashoffset = String(circumference);
       }
 
-      const timeLeft = document.getElementById('timeLeft');
-      if (timeLeft) timeLeft.textContent = '01:30';
+      quickBreathStartedAt = performance.now();
 
-      const phaseText = document.getElementById('phaseText');
-      if (phaseText) phaseText.textContent = isEnglish() ? 'Starting…' : 'Démarrage…';
-
-      const nativeOrb = document.getElementById('orb');
-      if (nativeOrb && typeof nativeOrb.click === 'function') {
-        /* Utilise le déclencheur natif onclick="toggleBreathing()". */
-        nativeOrb.click();
-      } else if (typeof window.startBreathing === 'function') {
-        const pending = window.startBreathing();
-        if (pending && typeof pending.catch === 'function') {
-          pending.catch(() => setQuickModeState(false));
+      const tick = () => {
+        if (!quickModeActive) {
+          stopDirectQuickBreathing();
+          return;
         }
-      }
-      window.setTimeout(() => {
-        const stopButton = document.getElementById('stopBreathBtn');
-        if (quickModeActive && stopButton) stopButton.hidden = false;
-      }, 220);
+
+        const elapsed = Math.max(0, (performance.now() - quickBreathStartedAt) / 1000);
+        const remaining = Math.max(0, 90 - elapsed);
+        const timeLeft = document.getElementById('timeLeft');
+        if (timeLeft) {
+          const seconds = Math.ceil(remaining);
+          timeLeft.textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+        }
+        if (progress) progress.style.strokeDashoffset = String(circumference * (remaining / 90));
+
+        const cycleDuration = profile.inhale + profile.exhale;
+        const cyclePosition = elapsed % cycleDuration;
+        const phase = cyclePosition < profile.inhale ? 'inhale' : 'exhale';
+        if (phase !== quickBreathPhase) {
+          quickBreathPhase = phase;
+          const duration = phase === 'inhale' ? profile.inhale : profile.exhale;
+          const orb = document.getElementById('orb');
+          const phaseText = document.getElementById('phaseText');
+          const phaseHint = document.getElementById('phaseHint');
+          if (phaseText) phaseText.textContent = phase === 'inhale'
+            ? (en ? 'Inhale' : 'Inspirez')
+            : (en ? 'Exhale' : 'Expirez');
+          if (phaseHint) phaseHint.textContent = phase === 'inhale'
+            ? (en ? 'Let the circle expand gently.' : 'Laissez le cercle s’ouvrir doucement.')
+            : (en ? 'Let the air flow out slowly.' : 'Laissez l’air sortir lentement.');
+          if (orb) {
+            orb.style.transitionDuration = duration + 's';
+            orb.style.transform = phase === 'inhale' ? 'scale(1.34)' : 'scale(.68)';
+          }
+        }
+
+        if (remaining <= 0) {
+          stopDirectQuickBreathing();
+          if (homeCircle) homeCircle.classList.remove('breathing');
+          if (stopButton) stopButton.hidden = true;
+          if (typeof window.addHistory === 'function') {
+            window.addHistory({
+              type: 'breath', title: en ? 'Quick breathing' : 'Respiration rapide',
+              detail: `${names[zoneKey]} · 1 min 30`, minutes: 1.5, color: profile.color
+            });
+          }
+          openQuickExercise();
+        }
+      };
+
+      tick();
+      quickBreathTimer = window.setInterval(tick, 200);
     } catch (error) {
       setQuickModeState(false);
       showQuickMessage(isEnglish()
@@ -452,7 +536,8 @@
 
     quickModeStarting = true;
     setQuickModeState(true);
-    if (typeof window.showPage === 'function') window.showPage('breath');
+    if (typeof window.switchPageDirect === 'function') window.switchPageDirect('breath');
+    else if (typeof window.showPage === 'function') window.showPage('breath');
     /* Démarrage dans le geste utilisateur : indispensable sur iPhone et
        certains navigateurs pour autoriser immédiatement le son et l'animation. */
     configureAndStartQuickBreathing();
@@ -495,6 +580,7 @@
     if (typeof window.stopBreathing === 'function' && !window.stopBreathing.murQuickWrapped) {
       const nativeStop = window.stopBreathing;
       const wrappedStop = function murQuickStopBreathing(...args) {
+        stopDirectQuickBreathing();
         quickModeStarting = false;
         setQuickModeState(false);
         return nativeStop.apply(this, args);
