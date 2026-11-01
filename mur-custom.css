@@ -386,12 +386,13 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
 
 .mur-orb-connectors {
   position: absolute;
-  left: 0;
-  top: 0;
+  left: calc(var(--mur-orb-radius) * -1.36);
+  top: calc(var(--mur-orb-radius) * -1.36);
   width: calc(var(--mur-orb-radius) * 2.72);
   height: calc(var(--mur-orb-radius) * 2.72);
   overflow: visible;
-  transform: translate(-50%, -50%) rotate(-90deg) scale(.68);
+  transform: rotate(-22deg) scale(.86);
+  transform-origin: 50% 50%;
   opacity: 0;
   filter: drop-shadow(0 0 7px rgba(111, 207, 255, .75));
   transition: opacity .24s ease, transform .48s cubic-bezier(.18,.84,.23,1.12);
@@ -421,7 +422,7 @@ body .mur-language-picker button[data-language][aria-pressed="false"] {
 
 .mur-orb-menu.is-open .mur-orb-connectors {
   opacity: 1;
-  transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  transform: rotate(0deg) scale(1);
 }
 
 .mur-orb-official-logo {
