@@ -727,14 +727,35 @@ body.mur-quick-mode-active .mur-quick-mode-pill {
   color: #f5fdff;
   text-align: center;
   background:
-    radial-gradient(circle at 32% 24%, rgba(111, 244, 222, .88) 0%, rgba(21, 133, 151, .96) 35%, #0b3c58 68%, #071827 100%);
+    radial-gradient(circle at 32% 24%, #ffb3b3 0%, #ef4444 31%, #9f1832 64%, #350817 100%);
   box-shadow:
     inset 0 2px 8px rgba(255,255,255,.32),
     inset -7px -10px 15px rgba(0,5,20,.38),
-    0 0 0 4px rgba(112,225,255,.10),
-    0 0 34px rgba(52,211,153,.52);
+    0 0 0 4px rgba(255,100,120,.13),
+    0 0 38px rgba(239,68,68,.64);
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.mur-orb-quick-center::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 18%,
+    rgba(255,255,255,.96) 23%,
+    #ff334f 31%,
+    transparent 39% 68%,
+    rgba(255,128,142,.82) 74%,
+    transparent 82% 100%
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  filter: drop-shadow(0 0 5px rgba(255,54,78,.88));
+  pointer-events: none;
+  animation: murQuickCenterSpin 1.15s linear infinite;
 }
 
 .mur-orb-quick-center strong {
@@ -772,7 +793,7 @@ body.mur-quick-mode-active .mur-quick-mode-pill {
 .mur-orb-menu.is-open .mur-orb-official-logo {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1) rotate(0deg);
-  animation: murLogoAura 3.2s ease-in-out .6s infinite;
+  animation: murQuickRedPulse 1.8s ease-in-out .2s infinite;
   pointer-events: auto;
 }
 
@@ -880,9 +901,9 @@ body.mur-quick-mode-active .mur-quick-mode-pill {
 }
 
 .mur-orb-choice[data-index="0"] { --mur-x: 0; --mur-y: -1; --mur-delay: 0ms; --mur-choice-color: #60a5fa; }
-.mur-orb-choice[data-index="1"] { --mur-x: 1; --mur-y: 0; --mur-delay: 35ms; --mur-choice-color: #34d399; }
+.mur-orb-choice[data-index="1"] { --mur-x: -1; --mur-y: 0; --mur-delay: 35ms; --mur-choice-color: #34d399; }
 .mur-orb-choice[data-index="2"] { --mur-x: 0; --mur-y: 1; --mur-delay: 70ms; --mur-choice-color: #a78bfa; }
-.mur-orb-choice[data-index="3"] { --mur-x: -1; --mur-y: 0; --mur-delay: 105ms; --mur-choice-color: #fb7185; }
+.mur-orb-choice[data-index="3"] { --mur-x: 1; --mur-y: 0; --mur-delay: 105ms; --mur-choice-color: #22d3c5; }
 
 .mur-orb-choice:focus-visible {
   outline: 3px solid #fff;
@@ -959,12 +980,28 @@ body.mur-quick-mode-active .mur-quick-mode-pill {
   50% { filter: brightness(1.13); box-shadow: inset 0 2px 12px rgba(255,255,255,.28), 0 0 0 8px rgba(66,171,240,.12), 0 0 43px rgba(76,183,255,.72); }
 }
 
+@keyframes murQuickCenterSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes murQuickRedPulse {
+  0%, 100% {
+    filter: brightness(1);
+    box-shadow: inset 0 2px 8px rgba(255,255,255,.30), inset -7px -10px 15px rgba(31,0,8,.42), 0 0 0 4px rgba(255,90,110,.12), 0 0 31px rgba(239,68,68,.56);
+  }
+  50% {
+    filter: brightness(1.17) saturate(1.14);
+    box-shadow: inset 0 3px 10px rgba(255,255,255,.38), inset -7px -10px 15px rgba(31,0,8,.34), 0 0 0 7px rgba(255,90,110,.15), 0 0 48px rgba(239,68,68,.80);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mur-orb-backdrop,
   .mur-orb-choice,
   .mur-orb-choice::before,
   .mur-orb-choice::after,
   .mur-orb-connectors .mur-orbit-line,
+  .mur-orb-quick-center::before,
   .mur-orb-official-logo {
     transition-duration: .01ms !important;
     transition-delay: 0ms !important;

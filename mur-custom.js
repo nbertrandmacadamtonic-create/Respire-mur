@@ -876,7 +876,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     tests:     { color: '#60a5fa', fr: 'Mesurer',   en: 'Measure' },
     breath:    { color: '#34d399', fr: 'Respirer',  en: 'Breathe' },
     exercises: { color: '#a78bfa', fr: 'Exercices', en: 'Exercises' },
-    stats:     { color: '#fb7185', fr: 'Stats',      en: 'Stats' }
+    stats:     { color: '#22d3c5', fr: 'Stats',      en: 'Stats' }
   };
 
   function initSectionBrand() {
