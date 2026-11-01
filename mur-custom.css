@@ -91,6 +91,14 @@
     inset -5px -7px 11px rgba(0,3,15,.62),
     0 0 15px color-mix(in srgb, var(--mur-section-color) 55%, transparent);
   overflow: hidden;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mur-section-brand-orb:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
 }
 
 .mur-section-brand-orb::after {

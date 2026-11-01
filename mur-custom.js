@@ -306,7 +306,20 @@
     const originalTitle = title.innerHTML;
     const orb = document.createElement('span');
     orb.className = 'mur-section-brand-orb';
-    orb.setAttribute('aria-hidden', 'true');
+    orb.setAttribute('role', 'button');
+    orb.tabIndex = 0;
+    orb.addEventListener('pointerdown', event => event.stopPropagation());
+    orb.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      window.showPage?.('home');
+    });
+    orb.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      event.stopPropagation();
+      window.showPage?.('home');
+    });
 
     function language() {
       const stored = localStorage.getItem('murLanguage') || localStorage.getItem('murLang');
@@ -325,6 +338,7 @@
       }
 
       orb.style.setProperty('--mur-section-color', section.color);
+      orb.setAttribute('aria-label', language() === 'en' ? 'Back to home' : "Retour à l'accueil");
       if (!orb.isConnected) brand.insertBefore(orb, brand.firstChild);
       brand.classList.add('mur-section-brand');
       title.textContent = section[language()];
