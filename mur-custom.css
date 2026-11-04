@@ -1048,3 +1048,80 @@ body.mur-quick-mode-active .mur-quick-mode-pill {
   }
 }
 
+/* ============================================================
+   M.U.R. — CORRECTIF LARGEUR ORDINATEUR — 02/11/2026
+   INTÉGRÉ DANS LE FICHIER COMPLET (remplacer mur-custom.css).
+   Ne modifie pas l'affichage sur téléphone (<= 720 px).
+   ============================================================ */
+
+@media (min-width: 721px) {
+  /* L'application n'est plus enfermée dans une coque de 350 px. */
+  body > main.app {
+    box-sizing: border-box !important;
+    width: min(490px, calc(100vw - 40px)) !important;
+    min-width: 0 !important;
+    max-width: 490px !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  /* Barre du bas proportionnée à la nouvelle largeur. */
+  body > nav.tabbar {
+    box-sizing: border-box !important;
+    width: min(438px, calc(100vw - 88px)) !important;
+    max-width: 438px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  /* Chaque rubrique profite de la largeur disponible. */
+  body > main.app > .page.active {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: clip !important;
+  }
+
+  /* Fiche d'exercice : image et commandes plus confortables. */
+  #exercises.exercise-detail-open #exerciseDetail {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  #exercises.exercise-detail-open #exerciseDetail #visualAsset.exercise-free-image,
+  #exerciseDetail #visualAsset.exercise-free-image {
+    width: min(100%, 405px) !important;
+    max-width: min(100%, 405px) !important;
+    height: auto !important;
+    max-height: min(65svh, 620px) !important;
+    object-fit: contain !important;
+  }
+
+  #exercises.exercise-detail-open #exerciseDetail #visualWrap.visual-wrap,
+  #exercises.exercise-detail-open #exerciseDetail #visualWrap.exercise-visual-shell,
+  #exerciseDetail #visualWrap.visual-wrap {
+    width: min(100%, 420px) !important;
+    max-width: min(100%, 420px) !important;
+  }
+
+  #exercises.exercise-detail-open #exerciseDetail #exerciseControlPanel.exercise-control-panel,
+  #exerciseDetail #exerciseControlPanel.exercise-control-panel {
+    width: min(100%, 420px) !important;
+    max-width: min(100%, 420px) !important;
+  }
+
+  /* La légende ne doit plus être tronquée dans la fiche. */
+  #exerciseControlPanel .exercise-free-caption strong,
+  #exerciseControlPanel .visual-caption strong {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.3 !important;
+  }
+}
+
+/* =================== FIN DU CORRECTIF DESKTOP =================== */
