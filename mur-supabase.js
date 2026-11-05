@@ -1,4 +1,4 @@
-/* M.U.R. Supabase v3.0 — synchronisation par compte.
+/* M.U.R. Supabase v4.0 — synchronisation par compte.
  * Remplace uniquement mur-supabase.js, sans modifier index.html.
  * La table mur_history est facultative tant que la migration SQL n'est pas lancee.
  * Ne jamais placer de cle secrete/service_role dans ce fichier public.
@@ -190,11 +190,8 @@
     finally{syncing=false;}
   }
   function panel(){
-    const button=document.createElement('button');
-    button.id='mur-cloud-account';button.type='button';button.textContent='Compte';
-    button.setAttribute('aria-label','Compte M.U.R.');
-    button.style.cssText='position:fixed;top:calc(12px + env(safe-area-inset-top));right:12px;z-index:9900;border-radius:14px;border:1px solid #ffffff55;background:#142a3e;color:white;padding:8px 10px;font:600 12px system-ui;cursor:pointer';
-    document.body.appendChild(button);
+    // Aucun bouton flottant : le compte vit dans Profil et la connexion
+    // est proposee sous « Commencer » apres la video de presentation.
     const sheet=document.createElement('section');
     sheet.id='mur-cloud-dialog';sheet.hidden=true;
     sheet.style.cssText='position:fixed;inset:0;z-index:9901;background:#020916db;display:none;align-items:center;justify-content:center;padding:20px';
@@ -211,7 +208,40 @@
     </div>`;
     document.body.appendChild(sheet);
     const close=()=>{sheet.hidden=true;sheet.style.display='none';};
-    button.addEventListener('click',()=>{sheet.hidden=false;sheet.style.display='flex';refreshAuth();});
+    const openAccount=()=>{
+      sheet.hidden=false;
+      sheet.style.display='flex';
+      refreshAuth();
+    };
+    // Page Profil : accès stable à la gestion du compte.
+    const settings=$('settings');
+    const profileCard=settings?.querySelector('.card');
+    if(profileCard){
+      const group=document.createElement('div');
+      group.id='mur-cloud-profile-section';
+      group.style.cssText='margin-top:18px;padding-top:15px;border-top:1px solid rgba(255,255,255,.16)';
+      group.innerHTML=`<h3 style="margin:0 0 8px;font-size:16px">Mon compte M.U.R.</h3>
+        <p id="mur-cloud-profile-status" class="help" style="margin-bottom:10px">Connexion et synchronisation de vos résultats.</p>
+        <button id="mur-cloud-profile-open" type="button" class="secondary">Gérer mon compte</button>`;
+      profileCard.appendChild(group);
+      $('mur-cloud-profile-open').addEventListener('click',openAccount);
+    }
+    // La présentation vidéo ouvre le panneau explicatif ; ajouter la connexion
+    // sous le bouton « Commencer », sans modifier le parcours ni la vidéo.
+    const introActions=document.querySelector('#infoModal .info-actions');
+    if(introActions){
+      const entry=document.createElement('button');
+      entry.id='mur-cloud-intro-open';
+      entry.type='button';
+      entry.textContent='Se connecter à mon compte';
+      entry.style.cssText='display:block;width:100%;margin-top:10px;min-height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.42);background:rgba(255,255,255,.1);color:white;font:700 14px system-ui;cursor:pointer';
+      introActions.appendChild(entry);
+      entry.addEventListener('click',()=>{
+        if(typeof window.closeInfoModal==='function')window.closeInfoModal();
+        openAccount();
+      });
+    }
+
     $('mur-cloud-close').addEventListener('click',close);
     sheet.addEventListener('click',e=>{if(e.target===sheet)close();});
     $('mur-cloud-sync').addEventListener('click',syncFromCloud);
@@ -269,7 +299,11 @@
     if($('mur-cloud-description'))$('mur-cloud-description').textContent=connected
       ? 'Connecte : '+(user.email||'compte actif')+'. Synchronisation disponible. Vous pouvez definir ou changer votre mot de passe ci-dessous.'
       : 'Connectez-vous avec votre e-mail et mot de passe ou recevez un lien si vous n avez pas encore defini de mot de passe.';
-    if($('mur-cloud-account'))$('mur-cloud-account').textContent=connected?'Compte ✓':'Compte';
+    if($('mur-cloud-profile-status'))$('mur-cloud-profile-status').textContent=connected
+      ? 'Connecté : '+(user.email||'compte actif')+' · synchronisation activée.'
+      : 'Non connecté · connectez-vous pour retrouver vos résultats.';
+    if($('mur-cloud-profile-open'))$('mur-cloud-profile-open').textContent=connected?'Gérer mon compte et synchroniser':'Se connecter / gérer mon compte';
+    if($('mur-cloud-intro-open'))$('mur-cloud-intro-open').textContent=connected?'Mon compte (connecté)':'Se connecter à mon compte';
   }
   async function start(){
     panel();installHooks();
