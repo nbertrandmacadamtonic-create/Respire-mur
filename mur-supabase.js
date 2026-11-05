@@ -1,4 +1,4 @@
-/* M.U.R. Supabase v2.0 — synchronisation par compte.
+/* M.U.R. Supabase v3.0 — synchronisation par compte.
  * Remplace uniquement mur-supabase.js, sans modifier index.html.
  * La table mur_history est facultative tant que la migration SQL n'est pas lancee.
  * Ne jamais placer de cle secrete/service_role dans ce fichier public.
@@ -203,9 +203,11 @@
       <p id="mur-cloud-description" style="line-height:1.5;color:#d4e2ee;margin:0 0 14px">Connectez-vous pour retrouver vos resultats sur vos appareils.</p>
       <label id="mur-cloud-email-label" for="mur-cloud-email">Adresse e-mail</label>
       <input id="mur-cloud-email" type="email" autocomplete="email" placeholder="vous@exemple.fr" style="display:block;width:100%;margin:7px 0 12px;padding:12px;border-radius:10px;border:1px solid #ffffff55;background:#091727;color:white" />
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="mur-cloud-send" type="button" style="padding:11px 13px;border:0;border-radius:10px;background:#fff;color:#07111f;font-weight:700">Recevoir un lien</button><button id="mur-cloud-sync" type="button" hidden style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:#245778;color:white">Synchroniser</button><button id="mur-cloud-logout" type="button" hidden style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:transparent;color:white">Se deconnecter</button><button id="mur-cloud-close" type="button" style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:transparent;color:white">Fermer</button></div>
+      <label id="mur-cloud-password-label" for="mur-cloud-password">Mot de passe</label>
+      <input id="mur-cloud-password" type="password" autocomplete="current-password" placeholder="Votre mot de passe" style="display:block;width:100%;margin:7px 0 12px;padding:12px;border-radius:10px;border:1px solid #ffffff55;background:#091727;color:white" />
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="mur-cloud-login" type="button" style="padding:11px 13px;border:0;border-radius:10px;background:#fff;color:#07111f;font-weight:700">Se connecter</button><button id="mur-cloud-set-password" type="button" hidden style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:#245778;color:white">Definir / changer mon mot de passe</button><button id="mur-cloud-send" type="button" style="padding:11px 13px;border:0;border-radius:10px;background:#fff;color:#07111f;font-weight:700">Recevoir un lien</button><button id="mur-cloud-sync" type="button" hidden style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:#245778;color:white">Synchroniser</button><button id="mur-cloud-logout" type="button" hidden style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:transparent;color:white">Se deconnecter</button><button id="mur-cloud-close" type="button" style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:transparent;color:white">Fermer</button></div>
       <p id="mur-cloud-status" role="status" aria-live="polite" style="font-size:12px;line-height:1.4;margin:12px 0 0;color:#b6f3d2"></p>
-      <p style="font-size:11px;color:#b4c5d7;line-height:1.45">Connexion requise sur chaque appareil. Les anciens resultats locaux non envoyes auparavant ne sont pas automatiquement transferes.</p>
+      <p style="font-size:11px;color:#b4c5d7;line-height:1.45">Le compte reste connecte sur cet appareil tant que la session est conservee. Pour activer le mot de passe, connectez-vous une derniere fois par e-mail, puis choisissez Definir / changer mon mot de passe. Ne partagez pas votre mot de passe.</p>
     </div>`;
     document.body.appendChild(sheet);
     const close=()=>{sheet.hidden=true;sheet.style.display='none';};
@@ -213,6 +215,33 @@
     $('mur-cloud-close').addEventListener('click',close);
     sheet.addEventListener('click',e=>{if(e.target===sheet)close();});
     $('mur-cloud-sync').addEventListener('click',syncFromCloud);
+    $('mur-cloud-login').addEventListener('click',async()=>{
+      if(busy)return;
+      const email=String(get('mur-cloud-email')||'').trim();
+      const password=String(get('mur-cloud-password')||'');
+      if(!email||!password){status('Saisissez votre e-mail et votre mot de passe.',true);return;}
+      busy=true;status('Connexion...');
+      try{
+        const {error}=await client.auth.signInWithPassword({email,password});
+        if(error)throw error;
+        $('mur-cloud-password').value='';
+        status('Connecte : vos donnees sont synchronisees.');
+      }catch(e){status('Connexion impossible : '+(e.message||e),true);}
+      finally{busy=false;}
+    });
+    $('mur-cloud-set-password').addEventListener('click',async()=>{
+      if(busy||!user)return;
+      const password=String(get('mur-cloud-password')||'');
+      if(password.length<12){status('Choisissez au moins 12 caracteres pour votre mot de passe.',true);return;}
+      busy=true;status('Enregistrement du mot de passe...');
+      try{
+        const {error}=await client.auth.updateUser({password});
+        if(error)throw error;
+        $('mur-cloud-password').value='';
+        status('Mot de passe enregistre. Vos prochains acces pourront se faire sans e-mail.');
+      }catch(e){status('Impossible de modifier le mot de passe : '+(e.message||e),true);}
+      finally{busy=false;}
+    });
     $('mur-cloud-send').addEventListener('click',async()=>{
       if(busy)return;
       const email=String(get('mur-cloud-email')||'').trim();
@@ -227,16 +256,19 @@
     });
     $('mur-cloud-logout').addEventListener('click',async()=>{
       const {error}=await client.auth.signOut();
-      if(error)status(error.message,true);else status('Deconnecte.');
+      if(error)status(error.message,true);else {if($('mur-cloud-password'))$('mur-cloud-password').value='';status('Deconnecte.');}
     });
   }
   function refreshAuth(){
     const connected=!!user;
-    ['mur-cloud-email','mur-cloud-email-label','mur-cloud-send'].forEach(id=>{if($(id))$(id).style.display=connected?'none':'';});
+    ['mur-cloud-email','mur-cloud-email-label','mur-cloud-send','mur-cloud-login'].forEach(id=>{if($(id))$(id).style.display=connected?'none':'';});
+    if($('mur-cloud-set-password'))$('mur-cloud-set-password').style.display=connected?'inline-block':'none';
+    if($('mur-cloud-password-label'))$('mur-cloud-password-label').textContent=connected?'Definir / modifier mon mot de passe':'Mot de passe';
+    if($('mur-cloud-password'))$('mur-cloud-password').autocomplete=connected?'new-password':'current-password';
     ['mur-cloud-sync','mur-cloud-logout'].forEach(id=>{if($(id))$(id).style.display=connected?'inline-block':'none';});
     if($('mur-cloud-description'))$('mur-cloud-description').textContent=connected
-      ? 'Connecte : '+(user.email||'compte actif')+'. Synchronisation disponible.'
-      : 'Connectez-vous pour retrouver vos resultats sur vos appareils.';
+      ? 'Connecte : '+(user.email||'compte actif')+'. Synchronisation disponible. Vous pouvez definir ou changer votre mot de passe ci-dessous.'
+      : 'Connectez-vous avec votre e-mail et mot de passe ou recevez un lien si vous n avez pas encore defini de mot de passe.';
     if($('mur-cloud-account'))$('mur-cloud-account').textContent=connected?'Compte ✓':'Compte';
   }
   async function start(){
