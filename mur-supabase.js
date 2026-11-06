@@ -1,4 +1,4 @@
-/* M.U.R. Supabase v5.0 — synchronisation par compte.
+/* M.U.R. Supabase v6.0 — synchronisation par compte.
  * Remplace uniquement mur-supabase.js, sans modifier index.html.
  * La table mur_history est facultative tant que la migration SQL n'est pas lancee.
  * Ne jamais placer de cle secrete/service_role dans ce fichier public.
@@ -194,7 +194,7 @@
     // est proposee sous « Commencer » apres la video de presentation.
     const sheet=document.createElement('section');
     sheet.id='mur-cloud-dialog';sheet.hidden=true;
-    sheet.style.cssText='position:fixed;inset:0;z-index:9901;background:#020916db;display:none;align-items:center;justify-content:center;padding:20px';
+    sheet.style.cssText='position:fixed;inset:0;z-index:120000;background:#020916ee;display:none;align-items:center;justify-content:center;padding:20px';
     sheet.innerHTML=`<div role="dialog" aria-modal="true" aria-label="Compte M.U.R." style="max-width:380px;width:100%;border:1px solid #ffffff45;border-radius:24px;background:#112238;color:#fff;padding:23px;font:14px system-ui;box-shadow:0 24px 70px #0009">
       <h2 style="margin:0 0 12px">Compte M.U.R.</h2>
       <p id="mur-cloud-description" style="line-height:1.5;color:#d4e2ee;margin:0 0 14px">Connectez-vous pour retrouver vos resultats sur vos appareils.</p>
@@ -240,6 +240,54 @@
         if(typeof window.closeInfoModal==='function')window.closeInfoModal();
         openAccount();
       });
+    }
+
+    // Page finale reelle de la video : le bouton Commencer est cree par mur-custom.js.
+    // Ajouter la connexion a cet endroit precis, sans toucher au HTML ni au lecteur.
+    const installFinalVideoAccountButton=()=>{
+      const commencer=$('murCommencer');
+      if(!commencer || $('mur-cloud-video-account'))return;
+      const frame=commencer.parentElement;
+      if(!frame)return;
+      // Degager la place sous Commencer : le second bouton se pose au bas du film.
+      commencer.style.bottom='calc(105px + env(safe-area-inset-bottom))';
+      const entry=document.createElement('button');
+      entry.id='mur-cloud-video-account';
+      entry.type='button';
+      entry.textContent=user?'Mon compte':'Se connecter / S’inscrire';
+      entry.setAttribute('aria-label','Se connecter ou créer un compte M.U.R.');
+      entry.style.cssText=[
+        'position:absolute','left:50%',
+        'bottom:calc(38px + env(safe-area-inset-bottom))',
+        'transform:translateX(-50%)','display:none','z-index:6',
+        'width:max-content','min-width:200px','max-width:calc(100% - 32px)',
+        'min-height:50px','padding:10px 15px','border-radius:999px',
+        'border:1px solid rgba(255,255,255,.72)',
+        'background:rgba(9,24,43,.83)','color:#fff',
+        'font:750 14px system-ui,sans-serif','cursor:pointer',
+        'box-shadow:0 8px 24px rgba(0,0,0,.3)',
+        'backdrop-filter:blur(10px)'
+      ].join(';');
+      entry.addEventListener('click',event=>{
+        event.preventDefault(); event.stopPropagation();
+        openAccount();
+      });
+      frame.appendChild(entry);
+      const updateVisibility=()=>{
+        const finalVisible=commencer.style.display!=='none' &&
+          !($('presentation')?.classList.contains('hide'));
+        entry.style.display=finalVisible?'block':'none';
+      };
+      new MutationObserver(updateVisibility).observe(commencer,{attributes:true,attributeFilter:['style']});
+      new MutationObserver(updateVisibility).observe($('presentation'),{attributes:true,attributeFilter:['class']});
+      updateVisibility();
+    };
+    installFinalVideoAccountButton();
+    // Le lecteur peut etre reconstruit par mur-custom.js : conserver ce point de montage.
+    const videoPresentation=$('presentation');
+    if(videoPresentation){
+      const videoMountObserver=new MutationObserver(()=>installFinalVideoAccountButton());
+      videoMountObserver.observe(videoPresentation,{childList:true,subtree:true});
     }
 
     // Parcours inscription : apres la video, y compris lorsque l'on choisit Passer.
@@ -358,6 +406,7 @@
       : 'Non connecté · connectez-vous pour retrouver vos résultats.';
     if($('mur-cloud-profile-open'))$('mur-cloud-profile-open').textContent=connected?'Gérer mon compte et synchroniser':'Se connecter / gérer mon compte';
     if($('mur-cloud-intro-open'))$('mur-cloud-intro-open').textContent=connected?'Mon compte (connecté)':'Se connecter à mon compte';
+    if($('mur-cloud-video-account'))$('mur-cloud-video-account').textContent=connected?'Mon compte':'Se connecter / S’inscrire';
   }
   async function start(){
     panel();installHooks();
