@@ -190,6 +190,20 @@
     finally{syncing=false;}
   }
   function panel(){
+    // V7 : le bouton « Passer » saute seulement la lecture et conserve
+    // le dernier ecran de presentation (Commencer + Inscription).
+    // Le lecteur mur-custom.js gere deja l'evenement "ended" : on le
+    // declenche sans appeler enterApplication(), qui ouvrirait l'app.
+    document.addEventListener('click', event => {
+      const skip = event.target.closest?.('#murIntroSkip');
+      if (!skip) return;
+      const presentation = $('presentation');
+      const introVideo = $('murWelcomeVideo2026');
+      if (!presentation || presentation.classList.contains('hide') || !introVideo) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      introVideo.dispatchEvent(new Event('ended'));
+    }, true);
     // Aucun bouton flottant : le compte vit dans Profil et la connexion
     // est proposee sous « Commencer » apres la video de presentation.
     const sheet=document.createElement('section');
