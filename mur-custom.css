@@ -1279,7 +1279,6 @@ body.mur-quick-mode-active #breath.page.active .mini-info {
   }
 }
 
-
 /* ============================================================
    M.U.R. V19.6 — Empêcher le zoom iOS sur les champs de connexion.
    iOS Safari zoome automatiquement si le champ focalisé est < 16 px.
@@ -1292,4 +1291,32 @@ body.mur-quick-mode-active #breath.page.active .mini-info {
     font-size: 16px !important;
     line-height: 1.35 !important;
   }
+}
+
+/* ============================================================
+   M.U.R. V19.8 — drapeaux FR/EN : une seule image visible.
+   Le CSS fournit deja le drapeau en fond des boutons. On masque
+   le pictogramme/emoji eventuel dans leur contenu et les pseudo-elements.
+   Les boutons restent accessibles par leur aria-label.
+   ============================================================ */
+.mur-language-picker button[data-language="fr"],
+.mur-language-picker button[data-language="en"] {
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+  text-shadow: none !important;
+  text-indent: -9999px !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
+.mur-language-picker button[data-language="fr"] > *,
+.mur-language-picker button[data-language="en"] > *,
+.mur-language-picker button[data-language="fr"]::before,
+.mur-language-picker button[data-language="fr"]::after,
+.mur-language-picker button[data-language="en"]::before,
+.mur-language-picker button[data-language="en"]::after {
+  display: none !important;
+  content: none !important;
 }
