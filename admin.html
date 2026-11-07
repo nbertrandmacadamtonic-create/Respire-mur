@@ -12,8 +12,44 @@ body{margin:0;background:radial-gradient(circle at 8% 0%,#16395b,transparent 36%
 @media(max-width:720px){html,body{width:100%;overflow-x:hidden}.layout{display:block}.aside{border-right:0;border-bottom:1px solid var(--line);padding:13px 12px}.logo{font-size:23px;margin:0 4px 4px}.sub{margin:0 4px 12px}.menu{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.nav{width:100%;min-width:0;min-height:48px;padding:7px 3px;text-align:center;white-space:normal;line-height:1.2;font-size:11px;background:#182b43;border:1px solid #ffffff1c}.nav.active{background:#285a7f;border-color:#79c7ff}.main{width:100%;padding:18px 12px calc(34px + env(safe-area-inset-bottom))}h1{font-size:22px}h2{font-size:16px}.grid,.fields,.media{grid-template-columns:minmax(0,1fr);gap:11px}.card{padding:13px;margin:12px 0}.field.full{grid-column:1}.itemtop{align-items:flex-start;flex-wrap:wrap}.pill{max-width:100%;overflow-wrap:anywhere}.media{padding:10px;margin:10px 0}.preview-img{min-height:160px}.preview-img img{height:235px}.tools{display:grid;grid-template-columns:minmax(0,1fr)}.btn{width:100%;min-height:48px}input,textarea,select{font-size:16px;padding:12px}.hint{font-size:12px}}
 @media(max-width:355px){.nav{font-size:10px}.main{padding-left:9px;padding-right:9px}}
 </style>
+
+<!-- M.U.R. V14 : verrouillage de l'interface avant authentification. -->
+<style>
+html:not(.mur-admin-authorized) .layout{display:none!important}
+#mur-admin-access{position:fixed;inset:0;z-index:999999;overflow:auto;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 25% 10%,#16395b 0%,#08111e 70%);font:15px system-ui;color:#fff}
+html.mur-admin-authorized #mur-admin-access{display:none!important}
+#mur-admin-access .mur-gate-card{background:#112238;border:1px solid #ffffff3a;border-radius:22px;padding:26px;width:min(100%,420px);box-shadow:0 20px 60px #0008}
+#mur-admin-access h1{margin:0 0 8px;font-size:26px}
+#mur-admin-access p{line-height:1.5;color:#c9d8e7}
+#mur-admin-access label{display:block;margin:16px 0 6px}
+#mur-admin-access input{display:block;width:100%;background:#091727;border:1px solid #ffffff65;border-radius:10px;padding:12px;color:#fff;font:inherit}
+#mur-admin-access button{border:0;border-radius:11px;background:#f9fafb;color:#08111e;padding:12px 18px;font-weight:750;cursor:pointer}
+#mur-admin-access a{color:#bce2ff}
+#mur-admin-access .mur-gate-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+#mur-admin-access .mur-gate-muted{font-size:13px}
+#mur-admin-logout-header{position:fixed;right:15px;bottom:15px;z-index:99990;background:#203d5b;border:1px solid #ffffff55;border-radius:12px;color:white;padding:10px 14px;cursor:pointer;font:600 13px system-ui;box-shadow:0 6px 18px #0008}
+html:not(.mur-admin-authorized) #mur-admin-logout-header{display:none!important}
+</style>
 </head>
 <body>
+<div id="mur-admin-access" role="region" aria-label="Contrôle d'accès administrateur M.U.R.">
+  <div class="mur-gate-card">
+    <h1>Administration M.U.R.</h1>
+    <p id="mur-admin-gate-status" role="status" aria-live="polite">Vérification de vos droits d'accès…</p>
+    <form id="mur-admin-gate-form" hidden>
+      <label for="mur-admin-gate-email">Adresse e-mail administrateur</label>
+      <input id="mur-admin-gate-email" type="email" autocomplete="username" required>
+      <label for="mur-admin-gate-password">Mot de passe</label>
+      <input id="mur-admin-gate-password" type="password" autocomplete="current-password" required>
+      <div class="mur-gate-row"><button id="mur-admin-gate-submit" type="submit">Se connecter</button></div>
+    </form>
+    <div class="mur-gate-row"><a href="index.html">← Retour à l'application</a>
+      <button type="button" id="mur-admin-gate-switch" hidden>Changer de compte</button></div>
+    <p class="mur-gate-muted">Accès réservé aux administrateurs autorisés dans Supabase.</p>
+  </div>
+</div>
+<button type="button" id="mur-admin-logout-header" hidden>Se déconnecter du back-office</button>
+
 <div class="layout"><aside class="aside"><div class="logo">M.U.R.</div>
 <a href="index.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:10px 14px;margin:12px 0;border-radius:12px;background:#244062;color:#fff;text-decoration:none;font-size:13px;font-weight:750">← Retour à l’application</a>
 <div class="sub">Administration des contenus · images & audio</div>
@@ -55,5 +91,99 @@ function validate(x){if(!x||!Array.isArray(x.questions)||x.questions.length!==15
 </script>
 <script src="mur-bilingual.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<script>
+/* M.U.R. V14 : contrôle du rôle côté Supabase, avant affichage du back-office.
+   Aucun mot de passe ou rôle n'est stocké dans le code public.
+   La sécurité des données et opérations dépend aussi des politiques/RPC Supabase.
+*/
+(()=>{
+  'use strict';
+  const URL='https://iaglscnuynasdvhrqvby.supabase.co';
+  const KEY='sb_publishable_7RbsvBsF4J3iQF0xVi5M7g_8jfNQ0U_';
+  const $=id=>document.getElementById(id);
+  const root=document.documentElement;
+  const status=$('mur-admin-gate-status');
+  const form=$('mur-admin-gate-form');
+  const submit=$('mur-admin-gate-submit');
+  const switchAccount=$('mur-admin-gate-switch');
+  const logout=$('mur-admin-logout-header');
+  let busy=false, checkNumber=0;
+  const lock=(message,authenticated=false)=>{
+    root.classList.remove('mur-admin-authorized');
+    logout.hidden=true;
+    form.hidden=authenticated;
+    switchAccount.hidden=!authenticated;
+    status.textContent=message;
+  };
+  if(!window.supabase?.createClient){
+    lock('Connexion au service d’authentification impossible. Vérifiez votre connexion Internet puis rechargez la page.');
+    return;
+  }
+  const client=window.supabase.createClient(URL,KEY,{
+    auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+  });
+  async function verify(){
+    const thisCheck=++checkNumber;
+    root.classList.remove('mur-admin-authorized');
+    logout.hidden=true;
+    status.textContent='Vérification des autorisations administrateur…';
+    try{
+      // getUser contacte Supabase Auth, puis la RPC contrôle le rôle serveur.
+      const {data:auth,error:authError}=await client.auth.getUser();
+      if(thisCheck!==checkNumber)return;
+      if(authError||!auth?.user){lock('Connectez-vous avec un compte administrateur M.U.R.');return;}
+      const {data:role,error:roleError}=await client.rpc('mur_my_role');
+      if(thisCheck!==checkNumber)return;
+      if(roleError){lock('Impossible de vérifier vos droits dans Supabase. Vérifiez la fonction mur_my_role. Détail : '+roleError.message,true);return;}
+      if(!['admin','superadmin'].includes(role)){
+        lock('Accès refusé : ce compte ne possède pas le statut administrateur. Connecté : '+(auth.user.email||'compte utilisateur'),true);
+        return;
+      }
+      status.textContent='Accès autorisé.';
+      form.hidden=true;
+      switchAccount.hidden=true;
+      root.classList.add('mur-admin-authorized');
+      logout.hidden=false;
+    }catch(error){
+      if(thisCheck===checkNumber)lock('Vérification impossible : '+(error?.message||'erreur réseau'),true);
+    }
+  }
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(busy)return;
+    const email=$('mur-admin-gate-email').value.trim();
+    const password=$('mur-admin-gate-password').value;
+    if(!email||!password){status.textContent='Saisissez votre e-mail et votre mot de passe.';return;}
+    busy=true;submit.disabled=true;status.textContent='Connexion…';
+    try{
+      const {error}=await client.auth.signInWithPassword({email,password});
+      if(error)throw error;
+      $('mur-admin-gate-password').value='';
+      await verify();
+    }catch(error){lock('Connexion impossible : '+(error?.message||'erreur'),false);}
+    finally{busy=false;submit.disabled=false;}
+  });
+  async function signOut(){
+    ++checkNumber;
+    lock('Déconnexion…',true);
+    const {error}=await client.auth.signOut();
+    if(error){lock('Impossible de se déconnecter : '+error.message,true);return;}
+    lock('Vous êtes déconnecté. Connectez-vous avec un compte administrateur.',false);
+  }
+  logout.addEventListener('click',signOut);
+  switchAccount.addEventListener('click',signOut);
+  client.auth.onAuthStateChange(event=>{
+    if(event==='SIGNED_OUT'){
+      ++checkNumber;lock('Vous êtes déconnecté. Connectez-vous avec un compte administrateur.',false);
+    }else if(event==='SIGNED_IN' || event==='USER_UPDATED'){
+      // On évite l'appel réseau synchronisé dans le callback Auth.
+      setTimeout(verify,0);
+    }
+  });
+  verify();
+})();
+</script>
+
 <script src="mur-admin-users.js"></script>
 </body></html>
