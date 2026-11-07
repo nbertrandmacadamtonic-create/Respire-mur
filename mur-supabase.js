@@ -588,3 +588,36 @@
   window.MURCloud?.client?.auth?.onAuthStateChange?.(()=>queueMicrotask(refresh));
   window.MURDiscoveryV11={freeBreath:FREE_BREATH,freeExercise:FREE_EXERCISE,isSignedIn};
 })();
+
+
+/* ============================================================
+   M.U.R. V17 — Lecture audio iPhone, independante du mode sonnerie
+   Safari iOS 16.4+ : Audio Session API, mode "playback".
+   Les boutons de volume du telephone et l'option Son de M.U.R.
+   continuent de controler le volume et le son des exercices.
+   Les navigateurs sans cette API conservent leur comportement.
+   ============================================================ */
+(()=>{
+  'use strict';
+  function murSetPlaybackAudioSession(){
+    try {
+      if ('audioSession' in navigator && navigator.audioSession) {
+        navigator.audioSession.type = 'playback';
+      }
+    } catch (error) {
+      // API absente, non autorisee ou non prise en charge : aucun blocage.
+    }
+  }
+
+  // Configurer avant les premieres lectures (intro, respiration, exercices).
+  murSetPlaybackAudioSession();
+
+  // Certains iPhone reinitialisent la session apres un changement d'application.
+  // Reaffirmer la categorie lorsque l'utilisateur reprend l'application.
+  document.addEventListener('pointerdown',murSetPlaybackAudioSession,{capture:true,passive:true});
+  document.addEventListener('touchstart',murSetPlaybackAudioSession,{capture:true,passive:true});
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden) murSetPlaybackAudioSession();
+  });
+  window.addEventListener('pageshow',murSetPlaybackAudioSession);
+})();
