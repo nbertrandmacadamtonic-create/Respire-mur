@@ -621,3 +621,23 @@
   });
   window.addEventListener('pageshow',murSetPlaybackAudioSession);
 })();
+
+
+/* ============================================================
+   M.U.R. V18 — Chargeur notifications quotidiennes.
+   Seul le nouveau module est ajoute ; les fonctions V17 sont conservees.
+   ============================================================ */
+(() => {
+  'use strict';
+  if (document.querySelector('script[data-mur-daily-v18]')) return;
+  if (!document.querySelector('link[rel="manifest"]')) {
+    const link=document.createElement('link');link.rel='manifest';link.href='./manifest.webmanifest';
+    document.head.appendChild(link);
+  }
+  const theme=document.createElement('meta');theme.name='theme-color';theme.content='#07111f';document.head.appendChild(theme);
+  const capable=document.createElement('meta');capable.name='apple-mobile-web-app-capable';capable.content='yes';document.head.appendChild(capable);
+  const appName=document.createElement('meta');appName.name='apple-mobile-web-app-title';appName.content='M.U.R.';document.head.appendChild(appName);
+  const icon=document.createElement('link');icon.rel='apple-touch-icon';icon.href='./mur-icon-192.png';document.head.appendChild(icon);
+  const script=document.createElement('script');script.src='./mur-notifications.js';script.dataset.murDailyV18='1';
+  document.body.appendChild(script);
+})();
