@@ -1125,3 +1125,58 @@ body.mur-quick-mode-active .mur-quick-mode-pill {
 }
 
 /* =================== FIN DU CORRECTIF DESKTOP =================== */
+
+/* M.U.R. V15 — correctif drapeaux sur dernier plan de la vidéo.
+   À AJOUTER TOUT EN BAS de mur-custom.css, sans supprimer le contenu existant.
+   Le sélecteur FR/EN reste dans Réglages une fois entré dans l'application.
+*/
+
+/* Pendant la lecture et après entrée : jamais de drapeaux flottants dans l'en-tête. */
+body:not(:has(#presentation:not(.hide) #murCommencer[style*="display: block"]))
+  .app > .top > .mur-language-picker {
+  display: none !important;
+}
+
+/* Dernier écran : sélecteur unique, centré et sur une seule rangée. */
+body:has(#presentation:not(.hide) #murCommencer[style*="display: block"])
+  .app > .top > .mur-language-picker {
+  display: flex !important;
+  position: fixed !important;
+  z-index: 100050 !important;
+  top: calc(20px + env(safe-area-inset-top)) !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translateX(-50%) !important;
+  margin: 0 !important;
+  padding: 5px 8px !important;
+  box-sizing: border-box !important;
+  width: max-content !important;
+  max-width: calc(100vw - 24px) !important;
+  flex-flow: row nowrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 10px !important;
+  white-space: nowrap !important;
+}
+
+body:has(#presentation:not(.hide) #murCommencer[style*="display: block"])
+  .app > .top > .mur-language-picker button[data-language] {
+  display: inline-flex !important;
+  flex: 0 0 44px !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  margin: 0 !important;
+  padding: 4px !important;
+  box-sizing: border-box !important;
+  position: static !important;
+  transform: none !important;
+}
+
+/* Aucun deuxième sélecteur par-dessus la vidéo. */
+#presentation > .mur-language-picker {
+  display: none !important;
+}
