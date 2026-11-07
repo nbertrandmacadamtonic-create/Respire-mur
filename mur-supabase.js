@@ -494,7 +494,7 @@
   window.MURCloud={client,getUser:()=>user,getRole:()=>role,saveKis,saveNow,saveProfile,sync:syncFromCloud};
 })();
 
-/* M.U.R. V11 — accès découverte, intégré au module Supabase existant.
+/* M.U.R. V12 — accès découverte, intégré au module Supabase existant.
    Les deux tests et leur synthèse restent libres. Les règles sont appliquées
    aux actions (pas seulement à la visibilité des cartes).
    Remarque : une application statique ne peut pas sécuriser des fichiers publics
@@ -507,8 +507,8 @@
   const FREE_EXERCISE='double';
   const $=id=>document.getElementById(id);
   const isSignedIn=()=>Boolean(window.MURCloud?.getUser?.());
-  const messageBreath='En mode découverte, seule la Respiration 365 est accessible. Inscrivez-vous pour débloquer les autres respirations.';
-  const messageExercise='En mode découverte, seul l’exercice Double inspiration est accessible. Inscrivez-vous pour accéder à tout Paniflex.';
+  const messageBreath='En mode découverte, seule la Respiration 365 est disponible. Inscrivez-vous pour accéder aux autres respirations.';
+  const messageExercise='En mode découverte, seul l’exercice rouge « Double inspiration » est disponible. Inscrivez-vous pour accéder aux autres exercices Paniflex.';
   function openAccount(){
     const action=$('mur-cloud-profile-open')||$('mur-cloud-video-account')||$('mur-cloud-intro-open');
     if(action){action.click();return;}
@@ -556,17 +556,32 @@
     wrap('startBreathing',()=>String($('protocolSelect')?.value||'')===FREE_BREATH,messageBreath);
     wrap('openExercise',key=>String(key)===FREE_EXERCISE,messageExercise);
     wrap('openExerciseCardFull',key=>String(key)===FREE_EXERCISE,messageExercise);
-    const heading=$('exercises')?.querySelector('.page-title');
-    if(heading&&!$('mur-v11-access-notice')){
-      const notice=document.createElement('p');notice.id='mur-v11-access-notice';
-      notice.style.cssText='font-size:12px;line-height:1.4;opacity:.85;margin:7px 0 0';
+    // Annoncer les deux limites AVANT même que le visiteur touche un protocole.
+    const addNotice=(page,id)=>{
+      const heading=$(page)?.querySelector('.page-title');
+      if(!heading||$(id))return;
+      const notice=document.createElement('p');
+      notice.id=id;
+      notice.setAttribute('role','status');
+      notice.style.cssText='font-size:13px;line-height:1.55;padding:11px 13px;margin:12px 0 0;border:1px solid rgba(122,195,236,.45);border-radius:12px;background:rgba(20,52,79,.75);color:#e5f4ff';
       heading.appendChild(notice);
-    }
+    };
+    addNotice('breath','mur-v12-breath-notice');
+    addNotice('exercises','mur-v11-access-notice');
     refresh();
   }
   function refresh(){
-    const note=$('mur-v11-access-notice');
-    if(note)note.textContent=isSignedIn()?'Tous les exercices Paniflex sont disponibles.':'Découverte : Double inspiration. Inscrivez-vous pour accéder aux autres exercices.';
+    const signedIn=isSignedIn();
+    const breath=$('mur-v12-breath-notice');
+    if(breath){
+      breath.hidden=signedIn;
+      breath.textContent='Mode découverte : seule la Respiration 365 est disponible. Les autres respirations nécessitent une inscription.';
+    }
+    const exercise=$('mur-v11-access-notice');
+    if(exercise){
+      exercise.hidden=signedIn;
+      exercise.textContent='Mode découverte : dans la zone rouge, seul l’exercice « Double inspiration » est disponible. Les autres exercices Paniflex nécessitent une inscription.';
+    }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',restrict,{once:true});
   else restrict();
