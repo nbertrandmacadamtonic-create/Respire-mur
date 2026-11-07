@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08111e">
+<title>M.U.R. — Nouvelle inscription</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+body{min-height:100svh;margin:0;background:radial-gradient(ellipse at 50% 18%,#19364c 0%,#0c1b2b 45%,#08111e 100%);color:#f6fafc;display:grid;place-items:center;padding:24px}
+main{width:min(100%,460px);border:1px solid #ffffff29;border-radius:24px;padding:clamp(25px,7vw,42px) 24px;text-align:center;background:#ffffff0b;box-shadow:0 16px 50px #0005}
+.logo{display:block;width:78px;height:78px;object-fit:contain;margin:0 auto 22px}
+.label{color:#8acbbf;font-size:13px;letter-spacing:.17em;text-transform:uppercase;font-weight:700}
+h1{font-size:clamp(26px,7vw,34px);letter-spacing:-.025em;line-height:1.15;margin:13px 0 18px}
+p{font-size:17px;line-height:1.55;color:#d4e3ec;margin:0 0 28px}
+a.button{display:block;padding:17px 15px;border-radius:14px;background:linear-gradient(110deg,#46b4c2,#58d3aa);font-weight:750;font-size:16px;text-decoration:none;color:#08202e;box-shadow:0 4px 18px #51cdbc35}
+.note{font-size:13px;color:#aabfcb;margin:20px 0 0}
+</style>
+</head>
+<body>
+<main>
+<img class="logo" src="./mur-icon-192.png" alt="M.U.R." />
+<div class="label">M.U.R. · Administration</div>
+<h1 id="heading">Nouvelle inscription</h1>
+<p id="description">Un nouvel utilisateur vient de rejoindre M.U.R.</p>
+<a class="button" href="./admin.html">Accéder au back-office</a>
+<p class="note">Cette page reste affichée jusqu'à ce que vous choisissiez de continuer.</p>
+</main>
+<script>
+if(new URLSearchParams(location.search).has('test')) {
+ document.getElementById('heading').textContent='Notification de test';
+ document.getElementById('description').textContent='Le lien de notification fonctionne. Vous pouvez accéder aux inscriptions.';
+}
+</script>
+</body>
+</html>

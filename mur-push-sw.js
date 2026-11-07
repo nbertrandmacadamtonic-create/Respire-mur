@@ -1,10 +1,11 @@
-/* M.U.R. V19.2 — Réception push et navigation fiable iPhone.
+/* M.U.R. V19.3 — Réception push et navigation fiable iPhone.
  * Deux notifications indépendantes : inscription admin / question NeuroFlex.
- * Le versionnement ?v=19-1 force la mise à jour depuis mur-notifications.js.
+ * Le versionnement ?v=19-3 force la mise à jour depuis mur-notifications.js.
  */
 self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
 const adminUrl = () => new URL('admin.html', self.registration.scope).href;
+const signupLandingUrl = isTest => new URL('nouvelle-inscription.html'+(isTest?'?test=1':''), self.registration.scope).href;
 const dailyUrl = q => new URL('./?mur_daily=1&mur_q='+q, self.registration.scope).href;
 
 self.addEventListener('push', event => {
@@ -18,7 +19,7 @@ self.addEventListener('push', event => {
         body: isTest ? 'Test réussi : touchez pour ouvrir les inscriptions.'
           : 'Un nouvel utilisateur vient de rejoindre M.U.R. Appuyez pour consulter les inscriptions.',
         tag: isTest ? 'mur-signup-test' : 'mur-signup-'+String(payload.event_id || Date.now()),
-        data: {type:'mur_signup_alert',url:adminUrl()},
+        data: {type:'mur_signup_alert',url:signupLandingUrl(isTest)},
         icon:'./mur-icon-192.png',badge:'./mur-icon-192.png',renotify:true
       }
     ));
@@ -46,14 +47,14 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   const data = event.notification.data || {};
   const isAdmin = data.type === 'mur_signup_alert';
-  const target = isAdmin ? adminUrl() : data.url || dailyUrl(0);
+  const target = isAdmin ? (data.url || signupLandingUrl(false)) : data.url || dailyUrl(0);
   event.waitUntil((async () => {
     const pages = await self.clients.matchAll({type:'window',includeUncontrolled:true});
     // Pour les alertes administrateur, privilégier une fenêtre dédiée.
     // Cela évite qu'une page NeuroFlex déjà ouverte garde son état/routage.
     if (isAdmin) {
-      const existingAdmin = pages.find(p => new URL(p.url).pathname.endsWith('/admin.html'));
-      if (existingAdmin) { await existingAdmin.navigate(target); return existingAdmin.focus(); }
+      const existingLanding = pages.find(p => new URL(p.url).pathname.endsWith('/nouvelle-inscription.html'));
+      if (existingLanding) { await existingLanding.navigate(target); return existingLanding.focus(); }
       const opened = await self.clients.openWindow(target);
       if (opened) return opened.focus();
       // Repli lorsque le système bloque l'ouverture d'une nouvelle fenêtre.

@@ -6,7 +6,7 @@
 (() => {
   'use strict';
   const VAPID_PUBLIC_KEY = 'BJsM0BizcjKsez64-pAqRBUy0ICoG89yxpZvDVMCMlHOhEjL369IMz5WmJfE4lMlg1TuMycBiReQJSlwd039fuI';
-  const SW = './mur-push-sw.js?v=19-2';
+  const SW = './mur-push-sw.js?v=19-3';
   const LOCAL_Q = 'mur-daily-pending';
   const labels = ['Énergie', 'Respiration', 'Mental', 'Corps'];
   // Niveaux du test Ici & Maintenant, dans l'ordre exact de l'application.
