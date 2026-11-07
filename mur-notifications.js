@@ -6,7 +6,7 @@
 (() => {
   'use strict';
   const VAPID_PUBLIC_KEY = 'BJsM0BizcjKsez64-pAqRBUy0ICoG89yxpZvDVMCMlHOhEjL369IMz5WmJfE4lMlg1TuMycBiReQJSlwd039fuI';
-  const SW = './mur-push-sw.js';
+  const SW = './mur-push-sw.js?v=19-1';
   const LOCAL_Q = 'mur-daily-pending';
   const labels = ['Énergie', 'Respiration', 'Mental', 'Corps'];
   // Niveaux du test Ici & Maintenant, dans l'ordre exact de l'application.
@@ -61,7 +61,7 @@
       const permissionRequest=Notification.requestPermission();
       const perm=await permissionRequest;
       if(perm!=='granted'){notice('Autorisation refusée. Vous pouvez la réactiver dans les réglages du téléphone.',true);return;}
-      const registration=await navigator.serviceWorker.register(SW,{scope:'./'});
+      const registration=await navigator.serviceWorker.register(SW,{scope:'./',updateViaCache:'none'});
       let subscription=await registration.pushManager.getSubscription();
       if(!subscription)subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64UrlToUint8(VAPID_PUBLIC_KEY)});
       localStorage.setItem('mur-daily-hour',String($('mur-daily-hour')?.value||9));
@@ -184,7 +184,8 @@
     handleDailyOpen();
     if('serviceWorker' in navigator){
       try{
-        await navigator.serviceWorker.register(SW,{scope:'./'});
+        const registration = await navigator.serviceWorker.register(SW,{scope:'./',updateViaCache:'none'});
+        await registration.update();
         navigator.serviceWorker.addEventListener('message',event=>{
           if(event.data?.type==='MUR_DAILY_OPEN'){
             hideIntroductionForNotification();showQuestion(Number(event.data.question));
