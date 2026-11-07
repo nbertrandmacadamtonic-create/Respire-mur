@@ -493,3 +493,83 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.MURCloud={client,getUser:()=>user,getRole:()=>role,saveKis,saveNow,saveProfile,sync:syncFromCloud};
 })();
+
+/* M.U.R. V11 — accès découverte, intégré au module Supabase existant.
+   Les deux tests et leur synthèse restent libres. Les règles sont appliquées
+   aux actions (pas seulement à la visibilité des cartes).
+   Remarque : une application statique ne peut pas sécuriser des fichiers publics
+   contre quelqu'un qui connaît leur URL : la protection serveur reste distincte.
+*/
+(()=>{
+  'use strict';
+  if(window.MURDiscoveryV11) return;
+  const FREE_BREATH='365';
+  const FREE_EXERCISE='double';
+  const $=id=>document.getElementById(id);
+  const isSignedIn=()=>Boolean(window.MURCloud?.getUser?.());
+  const messageBreath='En mode découverte, seule la Respiration 365 est accessible. Inscrivez-vous pour débloquer les autres respirations.';
+  const messageExercise='En mode découverte, seul l’exercice Double inspiration est accessible. Inscrivez-vous pour accéder à tout Paniflex.';
+  function openAccount(){
+    const action=$('mur-cloud-profile-open')||$('mur-cloud-video-account')||$('mur-cloud-intro-open');
+    if(action){action.click();return;}
+    if(typeof window.showPage==='function')window.showPage('settings');
+  }
+  function invite(message){
+    let modal=$('mur-v11-access-dialog');
+    if(!modal){
+      modal=document.createElement('div');modal.id='mur-v11-access-dialog';
+      modal.style.cssText='position:fixed;inset:0;z-index:120200;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,9,22,.88)';
+      modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','Accès réservé aux membres M.U.R.');
+      const card=document.createElement('div');
+      card.style.cssText='width:min(100%,390px);border:1px solid #ffffff50;border-radius:20px;padding:23px;background:#112238;color:white;font:14px/1.5 system-ui,sans-serif;box-shadow:0 12px 44px #0008';
+      const heading=document.createElement('h2');heading.textContent='Découvrez tout M.U.R.';heading.style.cssText='font-size:21px;margin:0 0 10px';
+      const p=document.createElement('p');p.id='mur-v11-access-message';p.style.margin='0 0 20px';
+      const controls=document.createElement('div');controls.style.cssText='display:flex;flex-wrap:wrap;gap:9px';
+      const login=document.createElement('button');login.type='button';login.textContent="Se connecter / S'inscrire";
+      login.style.cssText='padding:12px 14px;border-radius:12px;border:0;background:white;color:#0b1d30;font:700 14px system-ui;cursor:pointer';
+      login.addEventListener('click',()=>{modal.remove();openAccount();});
+      const close=document.createElement('button');close.type='button';close.textContent='Continuer la découverte';
+      close.style.cssText='padding:12px 14px;border-radius:12px;border:1px solid #ffffff55;background:transparent;color:white;font:700 14px system-ui;cursor:pointer';
+      close.addEventListener('click',()=>modal.remove());
+      controls.append(login,close);card.append(heading,p,controls);modal.append(card);
+      document.body.appendChild(modal);
+    }
+    $('mur-v11-access-message').textContent=message;
+  }
+  function wrap(name,condition,message){
+    const original=window[name];
+    if(typeof original!=='function')return false;
+    if(original.__murV11Guard)return true;
+    function guarded(...args){
+      if(!isSignedIn()&&!condition(...args)){
+        invite(message);
+        return;
+      }
+      return original.apply(this,args);
+    }
+    guarded.__murV11Guard=true;
+    window[name]=guarded;
+    return true;
+  }
+  function restrict(){
+    wrap('selectBreath',key=>String(key)===FREE_BREATH,messageBreath);
+    wrap('startBreathing',()=>String($('protocolSelect')?.value||'')===FREE_BREATH,messageBreath);
+    wrap('openExercise',key=>String(key)===FREE_EXERCISE,messageExercise);
+    wrap('openExerciseCardFull',key=>String(key)===FREE_EXERCISE,messageExercise);
+    const heading=$('exercises')?.querySelector('.page-title');
+    if(heading&&!$('mur-v11-access-notice')){
+      const notice=document.createElement('p');notice.id='mur-v11-access-notice';
+      notice.style.cssText='font-size:12px;line-height:1.4;opacity:.85;margin:7px 0 0';
+      heading.appendChild(notice);
+    }
+    refresh();
+  }
+  function refresh(){
+    const note=$('mur-v11-access-notice');
+    if(note)note.textContent=isSignedIn()?'Tous les exercices Paniflex sont disponibles.':'Découverte : Double inspiration. Inscrivez-vous pour accéder aux autres exercices.';
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',restrict,{once:true});
+  else restrict();
+  window.MURCloud?.client?.auth?.onAuthStateChange?.(()=>queueMicrotask(refresh));
+  window.MURDiscoveryV11={freeBreath:FREE_BREATH,freeExercise:FREE_EXERCISE,isSignedIn};
+})();
