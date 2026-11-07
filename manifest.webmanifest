@@ -1,0 +1,16 @@
+{
+  "id": "/Respire-mur/",
+  "name": "M.U.R. — NeuroFlex",
+  "short_name": "M.U.R.",
+  "description": "Mesurer, Utiliser, Réguler — Votre routine NeuroFlex.",
+  "lang": "fr",
+  "start_url": "/Respire-mur/",
+  "scope": "/Respire-mur/",
+  "display": "standalone",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "icons": [
+    { "src": "mur-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "mur-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
