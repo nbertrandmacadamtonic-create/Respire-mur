@@ -1278,3 +1278,18 @@ body.mur-quick-mode-active #breath.page.active .mini-info {
     max-width: 100% !important;
   }
 }
+
+
+/* ============================================================
+   M.U.R. V19.6 — Empêcher le zoom iOS sur les champs de connexion.
+   iOS Safari zoome automatiquement si le champ focalisé est < 16 px.
+   On conserve le zoom manuel (accessibilité).
+   ============================================================ */
+@supports (-webkit-touch-callout: none) {
+  #mur-cloud-dialog input,
+  #mur-cloud-dialog select,
+  #mur-cloud-dialog textarea {
+    font-size: 16px !important;
+    line-height: 1.35 !important;
+  }
+}
