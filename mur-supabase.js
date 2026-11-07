@@ -638,6 +638,6 @@
   const capable=document.createElement('meta');capable.name='apple-mobile-web-app-capable';capable.content='yes';document.head.appendChild(capable);
   const appName=document.createElement('meta');appName.name='apple-mobile-web-app-title';appName.content='M.U.R.';document.head.appendChild(appName);
   const icon=document.createElement('link');icon.rel='apple-touch-icon';icon.href='./mur-icon-192.png';document.head.appendChild(icon);
-  const script=document.createElement('script');script.src='./mur-notifications.js?v=19-1';script.dataset.murDailyV18='1';
+  const script=document.createElement('script');script.src='./mur-notifications.js?v=19-2';script.dataset.murDailyV18='1';
   document.body.appendChild(script);
 })();

@@ -1,4 +1,4 @@
-/* M.U.R. V19.1 — Réception push et navigation fiable iPhone.
+/* M.U.R. V19.2 — Réception push et navigation fiable iPhone.
  * Deux notifications indépendantes : inscription admin / question NeuroFlex.
  * Le versionnement ?v=19-1 force la mise à jour depuis mur-notifications.js.
  */
@@ -14,9 +14,9 @@ self.addEventListener('push', event => {
   if (payload.type === 'mur_signup_alert') {
     const isTest = payload.test === true;
     event.waitUntil(self.registration.showNotification(
-      isTest ? 'M.U.R. · Test administrateur' : 'M.U.R. · Nouveau compte', {
+      isTest ? 'M.U.R. — Test administrateur' : 'M.U.R. — Nouvelle inscription', {
         body: isTest ? 'Test réussi : touchez pour ouvrir les inscriptions.'
-          : 'Un nouvel utilisateur vient de créer un compte M.U.R.',
+          : 'Un nouvel utilisateur vient de rejoindre M.U.R. Appuyez pour consulter les inscriptions.',
         tag: isTest ? 'mur-signup-test' : 'mur-signup-'+String(payload.event_id || Date.now()),
         data: {type:'mur_signup_alert',url:adminUrl()},
         icon:'./mur-icon-192.png',badge:'./mur-icon-192.png',renotify:true
