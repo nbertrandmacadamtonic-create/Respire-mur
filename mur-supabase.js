@@ -232,7 +232,7 @@
       <p style="font-size:11px;color:#b4c5d7;line-height:1.45">Le compte reste connecte sur cet appareil tant que la session est conservee. Pour activer le mot de passe, connectez-vous une derniere fois par e-mail, puis choisissez Definir / changer mon mot de passe. Ne partagez pas votre mot de passe.</p>
     </div>`;
     document.body.appendChild(sheet);
-    let accountMode='register';
+    let accountMode='login';
     const setAccountMode=mode=>{
       accountMode=mode;
       const connected=!!user;
@@ -349,7 +349,7 @@
       const updateVisibility=()=>{
         const finalVisible=commencer.style.display!=='none' &&
           !($('presentation')?.classList.contains('hide'));
-        entry.style.display=finalVisible?'block':'none';
+        entry.style.display=finalVisible && !user && authReady?'block':'none';
       };
       new MutationObserver(updateVisibility).observe(commencer,{attributes:true,attributeFilter:['style']});
       new MutationObserver(updateVisibility).observe($('presentation'),{attributes:true,attributeFilter:['class']});
@@ -457,8 +457,19 @@
       ? 'Connecté : '+(user.email||'compte actif')+' · synchronisation activée.'
       : 'Non connecté · connectez-vous pour retrouver vos résultats.';
     if($('mur-cloud-profile-open'))$('mur-cloud-profile-open').textContent=connected?'Gérer mon compte et synchroniser':'Se connecter / gérer mon compte';
-    if($('mur-cloud-intro-open'))$('mur-cloud-intro-open').textContent=connected?'Mon compte (connecté)':'Se connecter à mon compte';
-    if($('mur-cloud-video-account'))$('mur-cloud-video-account').textContent=connected?'Mon compte':'Se connecter / S’inscrire';
+    if($('mur-cloud-intro-open')){
+      $('mur-cloud-intro-open').textContent='Se connecter à mon compte';
+      $('mur-cloud-intro-open').style.display=connected?'none':'block';
+    }
+    if($('mur-cloud-video-account')){
+      $('mur-cloud-video-account').textContent='Se connecter / S’inscrire';
+      // Sur la presentation, l'inscription n'est proposee qu'aux visiteurs.
+      // La gestion du compte reste accessible depuis Profil.
+      const commencer=$('murCommencer');
+      const presentation=$('presentation');
+      const finalVisible=commencer && commencer.style.display!=='none' && !presentation?.classList.contains('hide');
+      $('mur-cloud-video-account').style.display=!connected && authReady && finalVisible?'block':'none';
+    }
     if($('mur-cloud-role')){ $('mur-cloud-role').style.display=connected?'block':'none'; $('mur-cloud-role').textContent='Statut : '+(role==='superadmin'?'Super-administrateur':role==='admin'?'Administrateur':'Utilisateur inscrit'); }
   }
   async function loadRole(){
@@ -476,6 +487,11 @@
     const {data,error}=await client.auth.getUser();
     if(error)console.info('[MUR Cloud] Pas de session :',error.message);
     user=data?.user||null;authReady=true;refreshAuth();
+    // Une session persistante ne doit jamais etre confrontee au formulaire d'inscription.
+    if(user && $('mur-cloud-dialog') && !$('mur-cloud-dialog').hidden){
+      $('mur-cloud-dialog').hidden=true;
+      $('mur-cloud-dialog').style.display='none';
+    }
     await loadRole();
     if(user)syncFromCloud();
     else if($('presentation')?.classList.contains('hide') && !$('infoModal')?.classList.contains('open')){
@@ -485,6 +501,10 @@
     client.auth.onAuthStateChange((event,session)=>{
       const previous=user?.id||null;
       user=session?.user||null;refreshAuth();
+      if(user && $('mur-cloud-dialog') && !$('mur-cloud-dialog').hidden && event==='SIGNED_IN'){
+        $('mur-cloud-dialog').hidden=true;
+        $('mur-cloud-dialog').style.display='none';
+      }
       void loadRole();
       if(user && (previous!==user.id || (event==='SIGNED_IN'&&lastSyncUser!==user.id)))setTimeout(syncFromCloud,0);
       if(!user)lastSyncUser=null;
