@@ -12,6 +12,7 @@
   });
   if(!client) { console.error('[MUR Cloud] Bibliotheque Supabase absente.'); return; }
 
+  let role = 'visiteur';
   let user = null, busy = false, syncing = false, historyEnabled = true;
   let lastSyncUser = null, authReady = false;
   const $ = id => document.getElementById(id);
@@ -212,20 +213,60 @@
     sheet.innerHTML=`<div role="dialog" aria-modal="true" aria-label="Compte M.U.R." style="max-width:380px;width:100%;border:1px solid #ffffff45;border-radius:24px;background:#112238;color:#fff;padding:23px;font:14px system-ui;box-shadow:0 24px 70px #0009">
       <h2 style="margin:0 0 12px">Compte M.U.R.</h2>
       <p id="mur-cloud-description" style="line-height:1.5;color:#d4e2ee;margin:0 0 14px">Connectez-vous pour retrouver vos resultats sur vos appareils.</p>
+      <div id="mur-cloud-tabs" style="display:flex;gap:8px;margin:10px 0 15px">
+        <button id="mur-cloud-tab-register" type="button" aria-pressed="true" style="flex:1;padding:11px;border-radius:12px;border:1px solid #84e1be;background:#194d46;color:white">S'inscrire</button>
+        <button id="mur-cloud-tab-login" type="button" aria-pressed="false" style="flex:1;padding:11px;border-radius:12px;border:1px solid #ffffff55;background:transparent;color:white">Se connecter</button>
+      </div>
+      <div id="mur-cloud-name-block"><label for="mur-cloud-name">Prénom ou pseudonyme</label>
+      <input id="mur-cloud-name" type="text" autocomplete="nickname" maxlength="100" placeholder="Votre prénom ou pseudonyme" style="display:block;width:100%;box-sizing:border-box;margin:7px 0 12px;padding:12px;border-radius:10px;border:1px solid #ffffff55;background:#091727;color:white" /></div>
       <label id="mur-cloud-email-label" for="mur-cloud-email">Adresse e-mail</label>
       <input id="mur-cloud-email" type="email" autocomplete="email" placeholder="vous@exemple.fr" style="display:block;width:100%;margin:7px 0 12px;padding:12px;border-radius:10px;border:1px solid #ffffff55;background:#091727;color:white" />
       <label id="mur-cloud-password-label" for="mur-cloud-password">Mot de passe</label>
-      <input id="mur-cloud-password" type="password" autocomplete="current-password" placeholder="Votre mot de passe" style="display:block;width:100%;margin:7px 0 12px;padding:12px;border-radius:10px;border:1px solid #ffffff55;background:#091727;color:white" />
+      <input id="mur-cloud-password" type="password" minlength="12" autocomplete="current-password" placeholder="Votre mot de passe" style="display:block;width:100%;margin:7px 0 12px;padding:12px;border-radius:10px;border:1px solid #ffffff55;background:#091727;color:white" />
+      <label id="mur-cloud-consent-block" style="display:flex;align-items:flex-start;gap:8px;margin:6px 0 16px;font-size:12px;line-height:1.4"><input type="checkbox" id="mur-cloud-consent" style="margin-top:2px"/> <span>J'accepte les conditions d'utilisation et reconnais avoir pris connaissance de la politique de confidentialité.</span></label>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="mur-cloud-login" type="button" style="padding:11px 13px;border:0;border-radius:10px;background:#fff;color:#07111f;font-weight:700">Se connecter</button><button id="mur-cloud-register" type="button" style="padding:11px 13px;border:1px solid #5ee2a0;border-radius:10px;background:#173f36;color:#fff;font-weight:700">Créer mon compte</button><button id="mur-cloud-set-password" type="button" hidden style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:#245778;color:white">Definir / changer mon mot de passe</button><button id="mur-cloud-send" type="button" style="padding:11px 13px;border:0;border-radius:10px;background:#fff;color:#07111f;font-weight:700">Recevoir un lien</button><button id="mur-cloud-sync" type="button" hidden style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:#245778;color:white">Synchroniser</button><button id="mur-cloud-logout" type="button" hidden style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:transparent;color:white">Se deconnecter</button><button id="mur-cloud-close" type="button" style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:transparent;color:white">Fermer</button></div>
+      <button id="mur-cloud-reset" type="button" style="border:0;background:transparent;color:#b5dfff;padding:10px 0;text-decoration:underline;cursor:pointer">Mot de passe oublié ?</button>
+      <p id="mur-cloud-role" style="font-size:12px;color:#b6f3d2;display:none"></p>
       <p id="mur-cloud-status" role="status" aria-live="polite" style="font-size:12px;line-height:1.4;margin:12px 0 0;color:#b6f3d2"></p>
       <p style="font-size:11px;color:#b4c5d7;line-height:1.45">Le compte reste connecte sur cet appareil tant que la session est conservee. Pour activer le mot de passe, connectez-vous une derniere fois par e-mail, puis choisissez Definir / changer mon mot de passe. Ne partagez pas votre mot de passe.</p>
     </div>`;
     document.body.appendChild(sheet);
+    let accountMode='register';
+    const setAccountMode=mode=>{
+      accountMode=mode;
+      const connected=!!user;
+      if($('mur-cloud-tabs'))$('mur-cloud-tabs').style.display=connected?'none':'flex';
+      if($('mur-cloud-name-block'))$('mur-cloud-name-block').style.display=!connected&&mode==='register'?'block':'none';
+      if($('mur-cloud-consent-block'))$('mur-cloud-consent-block').style.display=!connected&&mode==='register'?'flex':'none';
+      if($('mur-cloud-register'))$('mur-cloud-register').style.display=!connected&&mode==='register'?'inline-block':'none';
+      if($('mur-cloud-login'))$('mur-cloud-login').style.display=!connected&&mode==='login'?'inline-block':'none';
+      if($('mur-cloud-send'))$('mur-cloud-send').style.display=!connected&&mode==='login'?'inline-block':'none';
+      if($('mur-cloud-reset'))$('mur-cloud-reset').style.display=!connected&&mode==='login'?'block':'none';
+      for(const key of ['register','login']){
+        const btn=$('mur-cloud-tab-'+key);
+        if(btn){btn.setAttribute('aria-pressed',String(mode===key));btn.style.background=mode===key?'#194d46':'transparent';}
+      }
+      if($('mur-cloud-password'))$('mur-cloud-password').autocomplete=connected?'new-password':mode==='register'?'new-password':'current-password';
+    };
+    $('mur-cloud-tab-register').addEventListener('click',()=>setAccountMode('register'));
+    $('mur-cloud-tab-login').addEventListener('click',()=>setAccountMode('login'));
+    $('mur-cloud-reset').addEventListener('click',async()=>{
+      const email=String(get('mur-cloud-email')||'').trim();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){status('Indiquez votre e-mail pour recevoir un lien de réinitialisation.',true);return;}
+      if(busy)return;
+      busy=true;
+      try{
+        const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+        if(error)throw error;
+        status('Si ce compte existe, un e-mail de réinitialisation a été envoyé.');
+      }catch(e){status(e.message||'Erreur de réinitialisation',true);}finally{busy=false;}
+    });
     const close=()=>{sheet.hidden=true;sheet.style.display='none';};
     const openAccount=()=>{
       sheet.hidden=false;
       sheet.style.display='flex';
       refreshAuth();
+      setAccountMode(user?'login':accountMode);
     };
     // Page Profil : accès stable à la gestion du compte.
     const settings=$('settings');
@@ -304,39 +345,9 @@
       videoMountObserver.observe(videoPresentation,{childList:true,subtree:true});
     }
 
-    // Parcours inscription : apres la video, y compris lorsque l'on choisit Passer.
-    // Si l'accueil "Bienvenue" est affiche, proposer le compte apres Commencer.
-    let onboardingDisplayed=false;
-    let introWasVisible=Boolean($('presentation') && !$('presentation').classList.contains('hide'));
-    const offerAccountAfterIntro=()=>{
-      if(onboardingDisplayed || user || !authReady)return;
-      // Attendre que la presentation ait bien disparu, y compris en cas de "Passer".
-      setTimeout(()=>{
-        if(onboardingDisplayed || user || !authReady)return;
-        if($('presentation') && !$('presentation').classList.contains('hide'))return;
-        const welcome=$('infoModal');
-        if(welcome?.classList.contains('open'))return; // "Commencer" ouvrira le compte.
-        onboardingDisplayed=true;
-        openAccount();
-      },900);
-    };
-    window.MUROfferAccountAfterIntro=offerAccountAfterIntro;
-    const introVideo=$('murIntroVideo');
-    if(introVideo){
-      introVideo.addEventListener('ended',offerAccountAfterIntro);
-      introVideo.addEventListener('error',offerAccountAfterIntro);
-    }
-    const introSkip=document.querySelector('#presentation .mur-intro-skip');
-    if(introSkip)introSkip.addEventListener('click',offerAccountAfterIntro);
-    const welcomeStart=document.querySelector('#infoModal .info-close');
-    if(welcomeStart)welcomeStart.addEventListener('click',()=>{
-      if(introWasVisible && !user && !onboardingDisplayed){
-        onboardingDisplayed=true;
-        setTimeout(openAccount,0);
-      }
-    });
-    // Dans le cas d'une presentation deja terminee avant l'initialisation du compte.
-    if(!introWasVisible && !user && !$('infoModal')?.classList.contains('open'))offerAccountAfterIntro();
+    // Le visiteur reste libre d'utiliser le mode découverte : aucune ouverture
+    // automatique du formulaire après le bouton « Commencer ».
+    window.MUROfferAccountAfterIntro=()=>{};
 
     $('mur-cloud-close').addEventListener('click',close);
     sheet.addEventListener('click',e=>{if(e.target===sheet)close();});
@@ -351,12 +362,19 @@
       if(password.length<12){
         status('Choisissez un mot de passe d au moins 12 caracteres.',true);return;
       }
-      busy=true; status('Creation de votre compte...');
+      const displayName=String(get('mur-cloud-name')||'').trim();
+      if(!displayName){status('Indiquez un prénom ou un pseudonyme.',true);return;}
+      if(!$('mur-cloud-consent')?.checked){status('Veuillez accepter les conditions et prendre connaissance de la confidentialité.',true);return;}
+      busy=true; status('Création de votre compte...');
       try{
-        const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
+        const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname,data:{display_name:displayName}}});
         if(error)throw error;
         $('mur-cloud-password').value='';
-        if(data?.session)status('Compte cree et connecte.');
+        if(data?.session){
+          const {error:profileError}=await client.from('mur_profiles').upsert({user_id:data.user.id,display_name:displayName},{onConflict:'user_id'});
+          if(profileError)console.warn('[MUR Cloud] Profil:',profileError.message);
+          status('Compte créé et connecté.');
+        }
         else status('Inscription demandee. Si un e-mail de confirmation est envoye, validez-le pour activer le compte.');
       }catch(e){status('Inscription impossible : '+(e.message||e),true);}
       finally{busy=false;}
@@ -371,7 +389,7 @@
         const {error}=await client.auth.signInWithPassword({email,password});
         if(error)throw error;
         $('mur-cloud-password').value='';
-        status('Connecte : vos donnees sont synchronisees.');
+        status('Connecté : vos données sont synchronisées.');
       }catch(e){status('Connexion impossible : '+(e.message||e),true);}
       finally{busy=false;}
     });
@@ -407,8 +425,10 @@
   }
   function refreshAuth(){
     const connected=!!user;
-    ['mur-cloud-email','mur-cloud-email-label','mur-cloud-send','mur-cloud-login','mur-cloud-register'].forEach(id=>{if($(id))$(id).style.display=connected?'none':'';});
+    ['mur-cloud-email','mur-cloud-email-label'].forEach(id=>{if($(id))$(id).style.display=connected?'none':'';});
     if($('mur-cloud-set-password'))$('mur-cloud-set-password').style.display=connected?'inline-block':'none';
+    if($('mur-cloud-tabs'))$('mur-cloud-tabs').style.display=connected?'none':'flex';
+    if(connected){for(const id of ['mur-cloud-login','mur-cloud-register','mur-cloud-send','mur-cloud-reset','mur-cloud-name-block','mur-cloud-consent-block'])if($(id))$(id).style.display='none';}
     if($('mur-cloud-password-label'))$('mur-cloud-password-label').textContent=connected?'Definir / modifier mon mot de passe':'Mot de passe';
     if($('mur-cloud-password'))$('mur-cloud-password').autocomplete=connected?'new-password':'current-password';
     ['mur-cloud-sync','mur-cloud-logout'].forEach(id=>{if($(id))$(id).style.display=connected?'inline-block':'none';});
@@ -421,12 +441,24 @@
     if($('mur-cloud-profile-open'))$('mur-cloud-profile-open').textContent=connected?'Gérer mon compte et synchroniser':'Se connecter / gérer mon compte';
     if($('mur-cloud-intro-open'))$('mur-cloud-intro-open').textContent=connected?'Mon compte (connecté)':'Se connecter à mon compte';
     if($('mur-cloud-video-account'))$('mur-cloud-video-account').textContent=connected?'Mon compte':'Se connecter / S’inscrire';
+    if($('mur-cloud-role')){ $('mur-cloud-role').style.display=connected?'block':'none'; $('mur-cloud-role').textContent='Statut : '+(role==='superadmin'?'Super-administrateur':role==='admin'?'Administrateur':'Utilisateur inscrit'); }
+  }
+  async function loadRole(){
+    if(!user){role='visiteur';refreshAuth();return;}
+    role='utilisateur';
+    try{
+      const {data,error}=await client.rpc('mur_my_role');
+      if(!error && ['utilisateur','admin','superadmin'].includes(data))role=data;
+      else if(error)console.info('[MUR Cloud] Fonction rôle non installée :',error.message);
+    }catch(e){console.warn('[MUR Cloud] Lecture du rôle:',e);}
+    refreshAuth();
   }
   async function start(){
     panel();installHooks();
     const {data,error}=await client.auth.getUser();
     if(error)console.info('[MUR Cloud] Pas de session :',error.message);
     user=data?.user||null;authReady=true;refreshAuth();
+    await loadRole();
     if(user)syncFromCloud();
     else if($('presentation')?.classList.contains('hide') && !$('infoModal')?.classList.contains('open')){
       window.MUROfferAccountAfterIntro?.();
@@ -435,10 +467,11 @@
     client.auth.onAuthStateChange((event,session)=>{
       const previous=user?.id||null;
       user=session?.user||null;refreshAuth();
+      void loadRole();
       if(user && (previous!==user.id || (event==='SIGNED_IN'&&lastSyncUser!==user.id)))setTimeout(syncFromCloud,0);
       if(!user)lastSyncUser=null;
     });
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
-  window.MURCloud={client,getUser:()=>user,saveKis,saveNow,saveProfile,sync:syncFromCloud};
+  window.MURCloud={client,getUser:()=>user,getRole:()=>role,saveKis,saveNow,saveProfile,sync:syncFromCloud};
 })();
