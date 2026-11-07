@@ -274,7 +274,25 @@
         status('Si ce compte existe, un e-mail de réinitialisation a été envoyé.');
       }catch(e){status(e.message||'Erreur de réinitialisation',true);}finally{busy=false;}
     });
-    const close=()=>{sheet.hidden=true;sheet.style.display='none';};
+    // V19.7 : sortir du zoom automatique Safari après saisie du mot de passe.
+    // Le viewport d'origine est toujours restauré pour préserver le zoom manuel.
+    const resetLoginZoom=()=>{
+      const active=document.activeElement;
+      if(active && sheet.contains(active) && typeof active.blur==='function') active.blur();
+      const restore=()=>{
+        try{window.scrollTo({left:0,top:0,behavior:'instant'});}catch(_){window.scrollTo(0,0);}
+        const vv=window.visualViewport;
+        if(!vv || vv.scale<=1.02)return;
+        const meta=document.querySelector('meta[name="viewport"]');
+        if(!meta)return;
+        const original=meta.getAttribute('content')||'width=device-width, initial-scale=1, viewport-fit=cover';
+        meta.setAttribute('content','width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover');
+        setTimeout(()=>meta.setAttribute('content',original),180);
+      };
+      setTimeout(restore,90);
+      setTimeout(restore,430);
+    };
+    const close=()=>{sheet.hidden=true;sheet.style.display='none';resetLoginZoom();};
     const openAccount=()=>{
       const passwordField=$('mur-cloud-password');
       if(passwordField)passwordField.type='password';
@@ -404,10 +422,13 @@
       if(!email||!password){status('Saisissez votre e-mail et votre mot de passe.',true);return;}
       busy=true;status('Connexion...');
       try{
+        // Refermer le clavier avant l'attente réseau : Safari ne doit pas conserver son zoom.
+        if(document.activeElement && sheet.contains(document.activeElement))document.activeElement.blur();
         const {error}=await client.auth.signInWithPassword({email,password});
         if(error)throw error;
         $('mur-cloud-password').value='';
         status('Connecté : vos données sont synchronisées.');
+        close();
       }catch(e){status('Connexion impossible : '+(e.message||e),true);}
       finally{busy=false;}
     });
@@ -502,8 +523,14 @@
       const previous=user?.id||null;
       user=session?.user||null;refreshAuth();
       if(user && $('mur-cloud-dialog') && !$('mur-cloud-dialog').hidden && event==='SIGNED_IN'){
+        const focus=document.activeElement;
+        if(focus && $('mur-cloud-dialog').contains(focus))focus.blur();
         $('mur-cloud-dialog').hidden=true;
         $('mur-cloud-dialog').style.display='none';
+        // L'événement auth peut arriver avant la fin de la requête de connexion.
+        setTimeout(()=>{
+          try{window.scrollTo(0,0);}catch(_){}
+        },120);
       }
       void loadRole();
       if(user && (previous!==user.id || (event==='SIGNED_IN'&&lastSyncUser!==user.id)))setTimeout(syncFromCloud,0);
