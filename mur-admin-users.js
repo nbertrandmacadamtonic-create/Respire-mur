@@ -18,7 +18,7 @@
   const dt = value => value ? new Intl.DateTimeFormat('fr-FR',{
     dateStyle:'short',timeStyle:'short'
   }).format(new Date(value)) : 'Jamais';
-  let users = [], connected = null;
+  let users = [], connected = null, ownRole = 'utilisateur', roleById = new Map();
   let loading = false;
 
   function mount(){
@@ -53,6 +53,7 @@
         </div>
         <div class="card">
           <div class="itemtop"><h2>Liste des utilisateurs</h2><span class="pill" id="mur-admin-count">0</span></div>
+          <p class="hint" id="mur-admin-role-hint">Les rôles sont contrôlés par Supabase.</p>
           <div class="field"><label for="mur-admin-search">Rechercher</label>
             <input id="mur-admin-search" type="search" placeholder="E-mail ou pseudonyme" /></div>
           <div id="mur-admin-list" style="margin-top:14px;overflow:auto"></div>
@@ -64,6 +65,7 @@
     $('mur-admin-refresh').addEventListener('click',loadUsers);
     $('mur-admin-logout').addEventListener('click',logout);
     $('mur-admin-search').addEventListener('input',renderUsers);
+    $('mur-admin-list').addEventListener('click',onRoleAction);
     $('mur-admin-password').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
   }
   function message(s,error=false){
@@ -79,7 +81,7 @@
     $('mur-admin-who').textContent=ready
       ? 'Connecté : '+(connected.email||'compte actif')+' — vérification des droits administrateur côté serveur.'
       : 'Connectez-vous avec le compte M.U.R. autorisé comme administrateur.';
-    if(!ready){$('mur-admin-data').hidden=true;users=[];}
+    if(!ready){$('mur-admin-data').hidden=true;users=[];roleById.clear();ownRole='utilisateur';}
   }
   async function login(){
     if(loading)return;
@@ -118,12 +120,27 @@
       return;
     }
     users=Array.isArray(data)?data:[];
+    // Les deux RPC sont séparées pour conserver la compatibilité avec l'annuaire existant.
+    // Un échec de gestion des rôles ne doit jamais masquer la liste des comptes.
+    const [own, assigned] = await Promise.all([
+      client.rpc('mur_my_role'), client.rpc('mur_admin_list_roles')
+    ]);
+    ownRole = !own.error && typeof own.data === 'string' ? own.data : 'utilisateur';
+    roleById = new Map(!assigned.error && Array.isArray(assigned.data)
+      ? assigned.data.map(r => [r.user_id,r.role]) : []);
+    $('mur-admin-role-hint').textContent = assigned.error
+      ? 'Gestion des rôles indisponible : exécutez le SQL V13 dans Supabase. La liste reste accessible.'
+      : ownRole === 'superadmin'
+        ? 'Super-administrateur : vous pouvez attribuer ou retirer le rôle administrateur, sauf sur votre propre compte.'
+        : 'Rôles en lecture seule. Seul un super-administrateur peut les modifier.';
     $('mur-admin-data').hidden=false;
     $('mur-admin-total').textContent=users.length;
     $('mur-admin-with-kis').textContent=users.filter(u=>Number(u.kis_count)>0).length;
     $('mur-admin-with-state').textContent=users.filter(u=>Number(u.state_count)>0).length;
     renderUsers();message('Liste actualisée.');
   }
+  function roleOf(id){return roleById.get(id)||'utilisateur';}
+  function roleName(role){return role==='superadmin'?'Super-administrateur':role==='admin'?'Administrateur':'Utilisateur';}
   function renderUsers(){
     const q=String($('mur-admin-search')?.value||'').toLocaleLowerCase('fr');
     const filtered=users.filter(u=>((u.email||'')+' '+(u.display_name||''))
@@ -131,15 +148,42 @@
     $('mur-admin-count').textContent=filtered.length+' / '+users.length;
     const list=$('mur-admin-list');
     if(!filtered.length){list.innerHTML='<p class="hint">Aucun compte correspondant.</p>';return;}
-    list.innerHTML=`<table style="width:100%;border-collapse:collapse;min-width:650px;text-align:left;font-size:12px">
+    list.innerHTML=`<table style="width:100%;border-collapse:collapse;min-width:780px;text-align:left;font-size:12px">
       <thead><tr><th style="padding:10px">Utilisateur</th><th>Création</th><th>Dernière connexion</th>
-      <th>ki.S</th><th>Ici & Maintenant</th></tr></thead>
+      <th>ki.S</th><th>Ici & Maintenant</th><th>Statut</th></tr></thead>
       <tbody>${filtered.map(u=>`<tr style="border-top:1px solid #ffffff24">
         <td style="padding:10px"><strong>${esc(u.display_name||'—')}</strong>
           <div style="color:#adc0d3;overflow-wrap:anywhere">${esc(u.email||'E-mail non renseigné')}</div></td>
         <td>${esc(dt(u.created_at))}</td><td>${esc(dt(u.last_sign_in_at))}</td>
-        <td>${Number(u.kis_count)||0}</td><td>${Number(u.state_count)||0}</td></tr>`).join('')}</tbody>
+        <td>${Number(u.kis_count)||0}</td><td>${Number(u.state_count)||0}</td>
+        <td><strong>${esc(roleName(roleOf(u.user_id)))}</strong>
+          ${ownRole==='superadmin' && u.user_id !== connected?.id
+            ? `<div style="margin-top:7px"><button type="button" class="btn" data-mur-change-role="${esc(u.user_id)}" data-mur-new-role="${roleOf(u.user_id)==='utilisateur'?'admin':'utilisateur'}" style="font-size:11px;padding:7px">${roleOf(u.user_id)==='utilisateur'?'Nommer administrateur':'Retirer le rôle'}</button></div>`
+            : ''}</td></tr>`).join('')}</tbody>
       </table>`;
+  }
+  async function onRoleAction(event){
+    const button=event.target.closest?.('[data-mur-change-role]');
+    if(!button || !connected || ownRole!=='superadmin' || loading)return;
+    const id=button.dataset.murChangeRole;
+    const newRole=button.dataset.murNewRole;
+    const target=users.find(u=>u.user_id===id);
+    if(!target||id===connected.id||!['admin','utilisateur'].includes(newRole))return;
+    const label=target.email||target.display_name||'cet utilisateur';
+    const question=newRole==='admin'
+      ? `Donner les droits administrateur à ${label} ?`
+      : `Retirer les droits administrateur de ${label} ?`;
+    if(!confirm(question))return;
+    loading=true;button.disabled=true;message('Mise à jour du rôle…');
+    try{
+      const {error}=await client.rpc('mur_admin_set_role',{
+        target_user_id:id, new_role:newRole
+      });
+      if(error)throw error;
+      await loadUsers();
+      message('Rôle mis à jour.');
+    }catch(e){message('Modification refusée : '+(e.message||e),true);}
+    finally{loading=false;button.disabled=false;}
   }
   async function start(){
     mount();if(!$('mur-admin-login'))return;
