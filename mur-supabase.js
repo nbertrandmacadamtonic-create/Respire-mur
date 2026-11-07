@@ -223,6 +223,7 @@
       <input id="mur-cloud-email" type="email" autocomplete="email" placeholder="vous@exemple.fr" style="display:block;width:100%;margin:7px 0 12px;padding:12px;border-radius:10px;border:1px solid #ffffff55;background:#091727;color:white" />
       <label id="mur-cloud-password-label" for="mur-cloud-password">Mot de passe</label>
       <input id="mur-cloud-password" type="password" minlength="12" autocomplete="current-password" placeholder="Votre mot de passe" style="display:block;width:100%;margin:7px 0 12px;padding:12px;border-radius:10px;border:1px solid #ffffff55;background:#091727;color:white" />
+      <button id="mur-cloud-password-toggle" type="button" aria-controls="mur-cloud-password" aria-pressed="false" aria-label="Afficher le mot de passe" style="display:flex;align-items:center;gap:7px;margin:-4px 0 13px auto;padding:5px 3px;border:0;background:transparent;color:#c2e4f7;font:600 12px system-ui;cursor:pointer"><span aria-hidden="true" id="mur-cloud-password-eye">👁</span><span id="mur-cloud-password-toggle-label">Afficher le mot de passe</span></button>
       <label id="mur-cloud-consent-block" style="display:flex;align-items:flex-start;gap:8px;margin:6px 0 16px;font-size:12px;line-height:1.4"><input type="checkbox" id="mur-cloud-consent" style="margin-top:2px"/> <span>J'accepte les conditions d'utilisation et reconnais avoir pris connaissance de la politique de confidentialité.</span></label>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="mur-cloud-login" type="button" style="padding:11px 13px;border:0;border-radius:10px;background:#fff;color:#07111f;font-weight:700">Se connecter</button><button id="mur-cloud-register" type="button" style="padding:11px 13px;border:1px solid #5ee2a0;border-radius:10px;background:#173f36;color:#fff;font-weight:700">Créer mon compte</button><button id="mur-cloud-set-password" type="button" hidden style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:#245778;color:white">Definir / changer mon mot de passe</button><button id="mur-cloud-send" type="button" style="padding:11px 13px;border:0;border-radius:10px;background:#fff;color:#07111f;font-weight:700">Recevoir un lien</button><button id="mur-cloud-sync" type="button" hidden style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:#245778;color:white">Synchroniser</button><button id="mur-cloud-logout" type="button" hidden style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:transparent;color:white">Se deconnecter</button><button id="mur-cloud-close" type="button" style="padding:11px 13px;border:1px solid #ffffff55;border-radius:10px;background:transparent;color:white">Fermer</button></div>
       <button id="mur-cloud-reset" type="button" style="border:0;background:transparent;color:#b5dfff;padding:10px 0;text-decoration:underline;cursor:pointer">Mot de passe oublié ?</button>
@@ -248,6 +249,18 @@
       }
       if($('mur-cloud-password'))$('mur-cloud-password').autocomplete=connected?'new-password':mode==='register'?'new-password':'current-password';
     };
+    // Afficher/masquer uniquement le texte saisi, sans jamais recuperer
+    // ni afficher un mot de passe conserve sur les serveurs Supabase.
+    $('mur-cloud-password-toggle').addEventListener('click',()=>{
+      const field=$('mur-cloud-password');
+      if(!field)return;
+      const shown=field.type==='password';
+      field.type=shown?'text':'password';
+      $('mur-cloud-password-toggle').setAttribute('aria-pressed',String(shown));
+      $('mur-cloud-password-toggle').setAttribute('aria-label',shown?'Masquer le mot de passe':'Afficher le mot de passe');
+      $('mur-cloud-password-toggle-label').textContent=shown?'Masquer le mot de passe':'Afficher le mot de passe';
+      $('mur-cloud-password-eye').textContent=shown?'🙈':'👁';
+    });
     $('mur-cloud-tab-register').addEventListener('click',()=>setAccountMode('register'));
     $('mur-cloud-tab-login').addEventListener('click',()=>setAccountMode('login'));
     $('mur-cloud-reset').addEventListener('click',async()=>{
@@ -263,6 +276,11 @@
     });
     const close=()=>{sheet.hidden=true;sheet.style.display='none';};
     const openAccount=()=>{
+      const passwordField=$('mur-cloud-password');
+      if(passwordField)passwordField.type='password';
+      const toggle=$('mur-cloud-password-toggle');
+      if(toggle){toggle.setAttribute('aria-pressed','false');toggle.setAttribute('aria-label','Afficher le mot de passe');}
+      if($('mur-cloud-password-toggle-label'))$('mur-cloud-password-toggle-label').textContent='Afficher le mot de passe';
       sheet.hidden=false;
       sheet.style.display='flex';
       refreshAuth();
