@@ -7,7 +7,7 @@
 (()=>{
   'use strict';
   if(window.MURSOUFFLEVIVANT21)return;
-  const VERSION='21.12-menu-natif';
+  const VERSION='21.13-menu-sans-chevauchement';
   const COUNT=1200, REFERENCE_EXHALE_SECONDS=8, REFERENCE_EXHALES=7;
   const GOAL=REFERENCE_EXHALE_SECONDS*REFERENCE_EXHALES; // 56 s, valeur TEST ajustable après essais
   const fingerprint='<svg aria-hidden="true" viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M10 23c0-9 6-15 14-15s14 6 14 15"/><path d="M15 26v-3c0-6 4-10 9-10s9 4 9 10v5"/><path d="M20 30v-7a4 4 0 0 1 8 0v9"/><path d="M11 31v-7"/><path d="M16 35c3-4 3-7 3-11"/><path d="M24 22v8c0 6-2 10-5 13"/><path d="M32 34c-1 5-3 8-5 10"/><path d="M37 29c0 6-2 11-5 15"/></svg>';
@@ -94,6 +94,23 @@
    @media(max-width:380px){#murSV21 .sv-top-link{font-size:9px;padding:5px 7px}#murSV21 .sv-mark{font-size:10px;letter-spacing:.08em}#murSV21 .sv-results-buttons button{font-size:11px;padding:8px 3px}}
    @media(max-height:740px){#murSV21 .sv-shell{padding-top:calc(5px + env(safe-area-inset-top));padding-bottom:calc(5px + env(safe-area-inset-bottom))}#murSV21 .sv-note{display:none}#murSV21 .sv-options{margin-top:4px}#murSV21 .sv-foot{margin-top:4px;gap:4px}}
    @media(max-height:590px){#murSV21 .sv-sub{display:none}#murSV21 .sv-finger{width:54px;height:54px}#murSV21 .sv-cta{font-size:12px}#murSV21 .sv-hint{font-size:10px}#murSV21 .sv-option{min-height:27px;padding:4px 11px}#murSV21 .sv-action{min-height:30px;padding:6px 8px}#murSV21 .sv-timer{font-size:19px}}
+   /* V21.13 : réserver physiquement la hauteur du menu fixe (60px + marges + safe area).
+      La hauteur disponible du contenu diminue : la barre ne peut plus couvrir les commandes. */
+   body.mur-sv-active #murSV21 .sv-shell{
+     height:calc(100dvh - 80px - env(safe-area-inset-bottom))!important;
+     max-height:calc(100dvh - 80px - env(safe-area-inset-bottom))!important;
+     padding-bottom:5px!important;
+   }
+   body.mur-sv-active #murSV21 .sv-main-card{min-height:0;overflow:hidden}
+   body.mur-sv-active #murSV21 .sv-canvas{min-height:0;flex-shrink:1}
+   body.mur-sv-active #murSV21 .sv-foot{flex-shrink:0}
+   @media(max-height:700px){
+     body.mur-sv-active #murSV21 .sv-shell{height:calc(100dvh - 77px - env(safe-area-inset-bottom))!important;max-height:calc(100dvh - 77px - env(safe-area-inset-bottom))!important}
+     body.mur-sv-active #murSV21 .sv-main-card{padding-top:3px;padding-bottom:3px}
+     body.mur-sv-active #murSV21 .sv-finger{width:clamp(52px,8.2vh,68px);height:clamp(52px,8.2vh,68px)}
+     body.mur-sv-active #murSV21 .sv-options{margin-top:3px}
+     body.mur-sv-active #murSV21 .sv-foot{gap:3px;margin-top:3px}
+   }
    @media(prefers-reduced-motion:reduce){#murSV21 .sv-finger{transition:none}}
   `;
   let escaped=[],lastGreen=0,clock=0;
