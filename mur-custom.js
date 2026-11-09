@@ -1236,3 +1236,28 @@ if (typeof window.installPresentationFallback !== 'function') {
   }
 })();
 
+/* =============================================================
+   M.U.R. V21.8 — Urgence / Mode rapide : Souffle vivant
+   Charge le module de respiration au toucher apres le script principal.
+   Les tests, la respiration 365, les exercices et le back-office sont conserves.
+   ============================================================= */
+(() => {
+  'use strict';
+  const SCRIPT_ID = 'murSouffleVivant218Script';
+  const FILE = 'mur-souffle-vivant.js?v=21.8';
+  function loadSouffleVivant() {
+    if (document.getElementById(SCRIPT_ID) || window.MURSOUFFLEVIVANT21) return;
+    const s = document.createElement('script');
+    s.id = SCRIPT_ID;
+    s.src = FILE;
+    s.async = false;
+    s.onerror = () => console.error('M.U.R. : chargement de Souffle vivant impossible.');
+    document.head.appendChild(s);
+  }
+  // Evite que l'ancien Mode rapide reprenne la main lors de DOMContentLoaded.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadSouffleVivant, {once: true});
+  } else {
+    loadSouffleVivant();
+  }
+})();
