@@ -1244,7 +1244,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 (() => {
   'use strict';
   const SCRIPT_ID = 'murSouffleVivant218Script';
-  const FILE = 'mur-souffle-vivant.js?v=21.12';
+  const FILE = 'mur-souffle-vivant.js?v=21.15';
   function loadSouffleVivant() {
     if (document.getElementById(SCRIPT_ID) || window.MURSOUFFLEVIVANT21) return;
     const s = document.createElement('script');
@@ -1260,4 +1260,86 @@ if (typeof window.installPresentationFallback !== 'function') {
   } else {
     loadSouffleVivant();
   }
+})();
+
+
+/* =============================================================
+   M.U.R. V21.15 — MENU TEMPORAIRE SUR TOUTES LES RUBRIQUES
+   Accueil : le menu reste visible.
+   Mesurer, Respirer, Exercices, Stats et Urgence : un tap sur
+   une zone libre centrale masque le menu pour 6,5 secondes.
+   Aucun appui sur une commande, un test ou un formulaire
+   ne déclenche ce raccourci.
+   ============================================================= */
+(() => {
+  'use strict';
+  const TIMEOUT_MS = 6500;
+  const STYLE_ID = 'murNavAutoHideStyle215';
+  let restoreTimer = 0;
+  const style = document.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = `
+    body .tabbar {
+      transition: opacity .28s ease, visibility .28s ease, transform .28s ease !important;
+    }
+    body.mur-nav-temporary-hidden .tabbar,
+    body.mur-sv-active.mur-nav-temporary-hidden .tabbar {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      transform: translateX(-50%) translateY(76px) !important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  function isHome() {
+    if (document.body.classList.contains('mur-sv-active')) return false;
+    const active = document.querySelector('.app > .page.active');
+    return !active || active.id === 'home';
+  }
+  function restore() {
+    if (restoreTimer) window.clearTimeout(restoreTimer);
+    restoreTimer = 0;
+    document.body.classList.remove('mur-nav-temporary-hidden');
+  }
+  function hide() {
+    if (isHome()) { restore(); return; }
+    document.body.classList.add('mur-nav-temporary-hidden');
+    if (restoreTimer) window.clearTimeout(restoreTimer);
+    restoreTimer = window.setTimeout(restore, TIMEOUT_MS);
+  }
+  // Exposé pour l'écran Urgence : un seul délai et une seule animation.
+  window.murTemporarilyHideNav = hide;
+  window.murRestoreNav = restore;
+
+  function onDocumentClick(event) {
+    if (isHome()) { restore(); return; }
+    if (event.defaultPrevented) return;
+    if (document.querySelector('#svInfo:not([hidden]), #svResults:not([hidden])')) return;
+    const node = event.target;
+    if (!(node instanceof Element)) return;
+    // Respecte les interactions de tous les écrans et les gestes de respiration.
+    if (node.closest('button, a, input, textarea, select, label, summary, [role="button"], [role="link"], [role="slider"], [contenteditable], [onclick], .tabbar, .modal, [role="dialog"]:not(#murSV21), #svFinger')) return;
+    // Pour Urgence, seul le canvas central est un raccourci :
+    // le module le traite déjà lui-même (on unifie son minuteur ci-dessous).
+    if (document.body.classList.contains('mur-sv-active')) return;
+    const x = event.clientX / Math.max(1, window.innerWidth);
+    const y = event.clientY / Math.max(1, window.innerHeight);
+    if (x < .18 || x > .82 || y < .16 || y > .81) return;
+    hide();
+  }
+  document.addEventListener('click', onDocumentClick, false);
+  // Un retour à l'accueil doit immédiatement réafficher le menu.
+  function checkPage() { if (isHome()) restore(); }
+  function init() {
+    document.querySelectorAll('.app > .page').forEach(page => {
+      new MutationObserver(checkPage).observe(page, {attributes:true,attributeFilter:['class']});
+    });
+    document.querySelector('.tabbar')?.addEventListener('click', restore, true);
+    window.addEventListener('pageshow', checkPage);
+    checkPage();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, {once:true});
+  } else init();
 })();

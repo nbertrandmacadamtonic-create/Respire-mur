@@ -7,7 +7,7 @@
 (()=>{
   'use strict';
   if(window.MURSOUFFLEVIVANT21)return;
-  const VERSION='21.13-menu-sans-chevauchement';
+  const VERSION='21.15-menu-toutes-rubriques';
   const COUNT=1200, REFERENCE_EXHALE_SECONDS=8, REFERENCE_EXHALES=7;
   const GOAL=REFERENCE_EXHALE_SECONDS*REFERENCE_EXHALES; // 56 s, valeur TEST ajustable après essais
   const fingerprint='<svg aria-hidden="true" viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M10 23c0-9 6-15 14-15s14 6 14 15"/><path d="M15 26v-3c0-6 4-10 9-10s9 4 9 10v5"/><path d="M20 30v-7a4 4 0 0 1 8 0v9"/><path d="M11 31v-7"/><path d="M16 35c3-4 3-7 3-11"/><path d="M24 22v8c0 6-2 10-5 13"/><path d="M32 34c-1 5-3 8-5 10"/><path d="M37 29c0 6-2 11-5 15"/></svg>';
@@ -16,6 +16,9 @@
    #murSV21 *{box-sizing:border-box}
    /* M.U.R. : on réutilise exactement le menu inférieur de l'application. */
    body.mur-sv-active .tabbar{z-index:10045!important;opacity:1!important;pointer-events:auto!important;transform:translateX(-50%)!important}
+   /* Tap sur la sphere : le menu natif s'efface quelques secondes, puis revient. */
+   body.mur-sv-active .tabbar{transition:opacity .28s ease,visibility .28s ease,transform .28s ease!important}
+   body.mur-sv-active.mur-sv-menu-hidden .tabbar{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translateX(-50%) translateY(76px)!important}
    body.mur-sv-active .tabbar #navBreath:not(.locked){background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(237,242,250,.92));color:#07111f;box-shadow:0 12px 28px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.96)}
    body.mur-sv-active .tabbar #navBreath:not(.locked) .nav-ico{background:linear-gradient(180deg,rgba(7,12,24,.98),rgba(24,34,53,.98))}
    #murSV21 .sv-shell{padding-bottom:calc(80px + env(safe-area-inset-bottom));width:min(100%,520px)}
@@ -51,7 +54,8 @@
    #murSV21 .sv-scoreline strong{color:#80f1b9;font-weight:600}
    #murSV21 .sv-track{height:5px;border-radius:7px;background:#254154;overflow:hidden}
    #murSV21 .sv-fill{height:100%;width:0;background:linear-gradient(90deg,#279e88,#94efb6);border-radius:7px}
-   #murSV21 .sv-canvas{display:block;width:100%;height:0;min-height:0;max-height:none;flex:1 1 0;pointer-events:none}
+   #murSV21 .sv-canvas{display:block;width:100%;height:0;min-height:0;max-height:none;flex:1 1 0;pointer-events:auto;touch-action:manipulation;cursor:pointer}
+   #murSV21 .sv-canvas:focus-visible{outline:2px solid #79dabb;outline-offset:-3px}
    #murSV21 .sv-state{height:17px;min-height:17px;font-size:11px;color:#acc6d4;text-align:center;flex:none;line-height:17px}
    #murSV21 .sv-finger{flex:none;width:clamp(60px,10vh,80px);height:clamp(60px,10vh,80px);display:grid;place-items:center;color:#a1ffe0;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:radial-gradient(circle at 50% 40%,#1b5f55,#0c2b36 76%);border:1px solid #7de5c1;border-radius:50%;box-shadow:0 0 23px #33d39e31,inset 0 0 18px #66d6ac14;cursor:pointer;margin-top:1px;transition:box-shadow .12s,background .12s}
    #murSV21 .sv-finger svg{width:45%;height:45%}
@@ -115,6 +119,23 @@
   `;
   let escaped=[],lastGreen=0,clock=0;
   let activeTabbar=null;
+  let menuRestoreTimer=0;
+  const MENU_HIDE_MS=6500;
+  function restoreTabbar(){
+    if(menuRestoreTimer){clearTimeout(menuRestoreTimer);menuRestoreTimer=0;}
+    document.body.classList.remove('mur-sv-menu-hidden');
+    window.murRestoreNav?.();
+  }
+  function temporarilyHideTabbar(){
+    if(!overlay||get('svInfo')?.hidden===false||get('svResults')?.hidden===false)return;
+    if(typeof window.murTemporarilyHideNav==='function'){
+      window.murTemporarilyHideNav();
+      return;
+    }
+    document.body.classList.add('mur-sv-menu-hidden');
+    if(menuRestoreTimer)clearTimeout(menuRestoreTimer);
+    menuRestoreTimer=window.setTimeout(restoreTabbar,MENU_HIDE_MS);
+  }
   const onTabbarNavigation=()=>{if(overlay)close();};
   let overlay=null,raf=0,prev=0,mode='timed',started=false,ended=false,down=false,pointer=null,elapsed=0,breath=0,cycles=0,angular=0,angle=.3,hiddenBefore=null;
   // 1 200 points exactement : 900 points de surface + 300 points
@@ -217,7 +238,7 @@
       else if(typeof window.showPage==='function')window.showPage(page);
     }catch(error){console.warn('M.U.R. : retour impossible',error);}
   }
-  function showInfo(){
+  function showInfo(){restoreTabbar();
     const dialog=get('svInfo');if(!dialog)return;
     stopPhaseSound();fingerUp();dialog.hidden=false;
     get('svInfoClose')?.focus({preventScroll:true});
@@ -231,7 +252,7 @@
   function hideResults(){
     const dialog=get('svResults');if(dialog)dialog.hidden=true;
   }
-  function showResults(){
+  function showResults(){restoreTabbar();
     const dialog=get('svResults');if(!dialog)return;
     const green=Math.min(COUNT,Math.round(COUNT*breath/GOAL));
     const percent=Math.round(100*green/COUNT);
@@ -346,13 +367,13 @@
   }
   function press(e){if(!started||ended||(e.pointerType==='mouse'&&e.button!==0))return;e.preventDefault();if(down)return;playPhaseSound('expire');down=true;pointer=e.pointerId;cycles++;const b=get('svFinger');b.classList.add('sv-down');try{b.setPointerCapture(e.pointerId);}catch(_){}}
   function lift(e){if(!down)return;if(e&&e.pointerId!==undefined&&e.pointerId!==pointer)return;fingerUp();if(started&&!ended)playPhaseSound('inspire');else stopPhaseSound();}
-  function close(){hideResults();stopPhaseSound();fingerUp();cancelAnimationFrame(raf);raf=0;prev=0;window.removeEventListener('blur',blurListener);document.removeEventListener('visibilitychange',hideListener);if(activeTabbar){activeTabbar.removeEventListener('click',onTabbarNavigation,true);activeTabbar=null;}document.body.classList.remove('mur-sv-active');overlay?.remove();overlay=null;document.body.style.overflow=hiddenBefore||'';}
+  function close(){restoreTabbar();hideResults();stopPhaseSound();fingerUp();cancelAnimationFrame(raf);raf=0;prev=0;window.removeEventListener('blur',blurListener);document.removeEventListener('visibilitychange',hideListener);if(activeTabbar){activeTabbar.removeEventListener('click',onTabbarNavigation,true);activeTabbar=null;}document.body.classList.remove('mur-sv-active');overlay?.remove();overlay=null;document.body.style.overflow=hiddenBefore||'';}
   function blurListener(){stopPhaseSound();fingerUp();}
   function hideListener(){if(document.hidden){stopPhaseSound();fingerUp();}}
   function open(){
     if(overlay)return;
     hiddenBefore=document.body.style.overflow;document.body.style.overflow='hidden';
-    document.body.classList.add('mur-sv-active');
+    restoreTabbar();document.body.classList.add('mur-sv-active');
     activeTabbar=document.querySelector('.tabbar');
     activeTabbar?.addEventListener('click',onTabbarNavigation,true);
     mode='timed';started=false;ended=false;down=false;elapsed=0;breath=0;cycles=0;angle=.3;angular=0;escaped=[];lastGreen=0;clock=0;
@@ -363,6 +384,14 @@
     get('svResultClose').addEventListener('click',()=>navigateTo('home'));get('svResultRestart').addEventListener('click',()=>navigateTo('breath'));
     get('svReset').addEventListener('click',()=>{hideResults();stopPhaseSound();fingerUp();elapsed=0;breath=0;cycles=0;ended=false;started=false;angular=0;escaped=[];lastGreen=0;get('svStart').hidden=false;get('svStart').textContent=t('Démarrer','Start');get('svState').classList.remove('sv-finished');});
     overlay.querySelectorAll('[data-sv-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.svMode)));
+    // Un tap au centre de la sphère masque le menu natif pendant 6,5 s.
+    // L'empreinte reste dédiée à la respiration, sans déclenchement parasite.
+    const sphere=get('svCanvas');
+    sphere.tabIndex=0;
+    sphere.setAttribute('role','button');
+    sphere.setAttribute('aria-label',t('Masquer temporairement le menu du bas','Temporarily hide bottom navigation'));
+    sphere.addEventListener('click',temporarilyHideTabbar);
+    sphere.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();temporarilyHideTabbar();}});
     const finger=get('svFinger');finger.addEventListener('pointerdown',press);finger.addEventListener('pointerup',lift);finger.addEventListener('pointercancel',lift);finger.addEventListener('lostpointercapture',lift);finger.addEventListener('contextmenu',e=>e.preventDefault());
     window.addEventListener('blur',blurListener);document.addEventListener('visibilitychange',hideListener);
     prev=0;raf=requestAnimationFrame(render);
