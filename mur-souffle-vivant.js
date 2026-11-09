@@ -7,7 +7,7 @@
 (()=>{
   'use strict';
   if(window.MURSOUFFLEVIVANT21)return;
-  const VERSION='21.9-compact-sans-scroll';
+  const VERSION='21.10-scores-popup';
   const COUNT=1200, REFERENCE_EXHALE_SECONDS=8, REFERENCE_EXHALES=7;
   const GOAL=REFERENCE_EXHALE_SECONDS*REFERENCE_EXHALES; // 56 s, valeur TEST ajustable après essais
   const fingerprint='<svg aria-hidden="true" viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M10 23c0-9 6-15 14-15s14 6 14 15"/><path d="M15 26v-3c0-6 4-10 9-10s9 4 9 10v5"/><path d="M20 30v-7a4 4 0 0 1 8 0v9"/><path d="M11 31v-7"/><path d="M16 35c3-4 3-7 3-11"/><path d="M24 22v8c0 6-2 10-5 13"/><path d="M32 34c-1 5-3 8-5 10"/><path d="M37 29c0 6-2 11-5 15"/></svg>';
@@ -43,6 +43,23 @@
    #murSV21 .sv-start{background:#2b9377;border-color:#7de6bc;color:#fff;font-weight:700}
    #murSV21 .sv-note{font-size:9px;color:#85a5b5;text-align:center;max-width:350px;line-height:1.2;margin:0}
    #murSV21 .sv-finished{color:#85f5b7}
+   #murSV21 .sv-results-backdrop{position:absolute;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;background:rgba(1,10,22,.79);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:16px calc(14px + env(safe-area-inset-right))}
+   #murSV21 .sv-results-backdrop[hidden]{display:none}
+   #murSV21 .sv-results-card{width:min(100%,390px);max-height:calc(100dvh - 32px);overflow:auto;background:linear-gradient(165deg,#143949,#0c2135 68%,#0b1727);border:1px solid rgba(132,244,194,.5);border-radius:22px;padding:clamp(16px,3vh,24px);box-shadow:0 30px 70px #0008,0 0 40px #22cc9721;text-align:center}
+   #murSV21 .sv-results-label{font-size:11px;color:#99c5d0;letter-spacing:.16em;font-weight:600}
+   #murSV21 .sv-results-card h3{font-size:clamp(21px,3.5vh,27px);font-weight:600;color:#edfaff;margin:9px 0 5px;line-height:1.15}
+   #murSV21 .sv-results-percent{font-size:clamp(48px,9vh,72px);font-variant-numeric:tabular-nums;font-weight:650;color:#8cf6c1;line-height:1.05;margin:11px 0 2px;text-shadow:0 0 28px #4bdca04a}
+   #murSV21 .sv-results-progress{height:7px;background:#243f4f;border-radius:8px;overflow:hidden;margin:14px 0}
+   #murSV21 .sv-results-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#28ac94,#9ff2bd);border-radius:8px}
+   #murSV21 .sv-results-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+   #murSV21 .sv-results-stat{border:1px solid #356073;background:#0d2739;border-radius:12px;padding:10px 5px}
+   #murSV21 .sv-results-stat b{display:block;font-size:clamp(17px,3vh,22px);font-weight:650;color:#edfaff;font-variant-numeric:tabular-nums}
+   #murSV21 .sv-results-stat small{display:block;margin-top:4px;color:#a0cad4;font-size:10px;line-height:1.2}
+   #murSV21 .sv-results-explain{font-size:11px;line-height:1.4;color:#a5bfc9;margin:13px 1px 16px}
+   #murSV21 .sv-results-buttons{display:flex;gap:9px;justify-content:center}
+   #murSV21 .sv-results-buttons button{flex:1;border:1px solid #64889b;background:#12354a;color:#e8f9ff;border-radius:12px;min-height:43px;padding:10px 8px;font-size:12px;font-weight:600}
+   #murSV21 .sv-results-buttons .sv-results-primary{background:#268870;border-color:#80e5b5;color:white}
+
    @media(max-height:740px){#murSV21 .sv-shell{padding-top:calc(5px + env(safe-area-inset-top));padding-bottom:calc(5px + env(safe-area-inset-bottom))}#murSV21 .sv-note{display:none}#murSV21 .sv-options{margin-top:4px}#murSV21 .sv-foot{margin-top:4px;gap:4px}}
    @media(max-height:590px){#murSV21 .sv-sub{display:none}#murSV21 .sv-finger{width:54px;height:54px}#murSV21 .sv-cta{font-size:12px}#murSV21 .sv-hint{font-size:10px}#murSV21 .sv-option{min-height:27px;padding:4px 11px}#murSV21 .sv-action{min-height:30px;padding:6px 8px}#murSV21 .sv-timer{font-size:19px}}
    @media(prefers-reduced-motion:reduce){#murSV21 .sv-finger{transition:none}}
@@ -140,7 +157,25 @@
     overlay.querySelectorAll('[data-sv-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.svMode===mode)));
     get('svTimer').textContent=mode==='timed'?'01:30':'∞';
   }
-  function finish(){stopPhaseSound();ended=true;started=false;fingerUp();get('svState').classList.add('sv-finished');get('svStart').textContent=t('Nouvelle séance','New session');get('svStart').hidden=false;}
+  function hideResults(){
+    const dialog=get('svResults');if(dialog)dialog.hidden=true;
+  }
+  function showResults(){
+    const dialog=get('svResults');if(!dialog)return;
+    const green=Math.min(COUNT,Math.round(COUNT*breath/GOAL));
+    const percent=Math.round(100*green/COUNT);
+    const locale=isEnglish()?'en':'fr';
+    get('svResultPercent').textContent=percent+' %';
+    get('svResultFill').style.width=percent+'%';
+    get('svResultPoints').textContent=green.toLocaleString(locale)+' / 1 200';
+    get('svResultExpirations').textContent=String(cycles);
+    get('svResultExhale').textContent=breath.toFixed(1).replace('.',isEnglish()?'.':',')+' s';
+    get('svResultDuration').textContent=formatClock(elapsed);
+    get('svResultTitle').textContent=mode==='timed'?t('90 secondes terminées','90 seconds complete'):t('Objectif atteint','Goal reached');
+    dialog.hidden=false;
+    get('svResultRestart')?.focus({preventScroll:true});
+  }
+  function finish(){stopPhaseSound();ended=true;started=false;fingerUp();get('svState').classList.add('sv-finished');get('svStart').textContent=t('Nouvelle séance','New session');get('svStart').hidden=false;refresh();showResults();}
   function refresh(){
     if(!overlay)return;
     const green=Math.min(COUNT,Math.round(COUNT*breath/GOAL));
@@ -235,22 +270,23 @@
   }
   function start(){
     if(started)return;
-    if(ended){elapsed=0;breath=0;cycles=0;angular=0;ended=false;escaped=[];lastGreen=0;}
+    if(ended){hideResults();elapsed=0;breath=0;cycles=0;angular=0;ended=false;escaped=[];lastGreen=0;}
     started=true;get('svStart').hidden=true;get('svState').classList.remove('sv-finished');playPhaseSound('inspire');
   }
   function press(e){if(!started||ended||(e.pointerType==='mouse'&&e.button!==0))return;e.preventDefault();if(down)return;playPhaseSound('expire');down=true;pointer=e.pointerId;cycles++;const b=get('svFinger');b.classList.add('sv-down');try{b.setPointerCapture(e.pointerId);}catch(_){}}
   function lift(e){if(!down)return;if(e&&e.pointerId!==undefined&&e.pointerId!==pointer)return;fingerUp();if(started&&!ended)playPhaseSound('inspire');else stopPhaseSound();}
-  function close(){stopPhaseSound();fingerUp();cancelAnimationFrame(raf);raf=0;prev=0;window.removeEventListener('blur',fingerUp);document.removeEventListener('visibilitychange',hideListener);overlay?.remove();overlay=null;document.body.style.overflow=hiddenBefore||'';}
+  function close(){hideResults();stopPhaseSound();fingerUp();cancelAnimationFrame(raf);raf=0;prev=0;window.removeEventListener('blur',fingerUp);document.removeEventListener('visibilitychange',hideListener);overlay?.remove();overlay=null;document.body.style.overflow=hiddenBefore||'';}
   function hideListener(){if(document.hidden){stopPhaseSound();fingerUp();}}
   function open(){
     if(overlay)return;
     hiddenBefore=document.body.style.overflow;document.body.style.overflow='hidden';
     mode='timed';started=false;ended=false;down=false;elapsed=0;breath=0;cycles=0;angle=.3;angular=0;escaped=[];lastGreen=0;clock=0;
     overlay=document.createElement('section');overlay.id='murSV21';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label',t('Souffle vivant','Living breath'));
-    overlay.innerHTML=`<div class="sv-shell"><div class="sv-top"><div class="sv-mark">M.U.R. · ${t('MODE RAPIDE','QUICK MODE')}</div><button class="sv-close" id="svClose" type="button" aria-label="${t('Fermer','Close')}">×</button></div><h2>${t('Souffle vivant','Living breath')}</h2><p class="sv-sub">${t('Votre souffle transforme la sphère','Your breath transforms the sphere')}</p><div class="sv-options"><button type="button" class="sv-option" data-sv-mode="timed" aria-pressed="true">${t('90 secondes','90 seconds')}</button><button type="button" class="sv-option" data-sv-mode="free" aria-pressed="false">${t('Mode libre','Free mode')}</button></div><div class="sv-timer" id="svTimer">01:30</div><div class="sv-scorebox"><div class="sv-scoreline"><span id="svScore">0 / 1 200</span><span><strong id="svPct">0 %</strong> ${t('verts','green')}</span></div><div class="sv-track"><div class="sv-fill" id="svFill"></div></div></div><canvas class="sv-canvas" id="svCanvas" aria-label="${t('Sphère animée de 1200 points','Animated sphere of 1200 points')}"></canvas><div class="sv-state" id="svState" aria-live="polite"></div><button id="svFinger" type="button" class="sv-finger" aria-label="${t('Maintenir pendant l’expiration','Hold while exhaling')}">${fingerprint}</button><div class="sv-cta">${t('Maintenez pour expirer','Hold to exhale')}</div><div class="sv-hint">${t('Relâchez pour inspirer','Release to inhale')}</div><div class="sv-foot"><div class="sv-meta">${t('Expiration cumulée','Total exhalation')}: <b id="svBreath">0,0 s</b> · ${t('Cycles','Cycles')}: <b id="svCycles">0</b></div><div class="sv-actions"><button class="sv-action sv-start" id="svStart" type="button">${t('Démarrer','Start')}</button><button class="sv-action" id="svSound" type="button" aria-pressed="true">${t('Son activé','Sound on')}</button><button class="sv-action" id="svReset" type="button">${t('Réinitialiser','Reset')}</button></div><div class="sv-note">${t('Démo sonore : doigt posé = expiration, doigt levé = inspiration. Les sons suivent les mêmes paramètres que M.U.R. ; soufflez sans forcer.','Sound demo: hold to exhale, release to inhale. Same sound synthesis parameters as M.U.R.; breathe gently.')}</div></div></div>`;
+    overlay.innerHTML=`<div class="sv-shell"><div class="sv-top"><div class="sv-mark">M.U.R. · ${t('MODE RAPIDE','QUICK MODE')}</div><button class="sv-close" id="svClose" type="button" aria-label="${t('Fermer','Close')}">×</button></div><h2>${t('Souffle vivant','Living breath')}</h2><p class="sv-sub">${t('Votre souffle transforme la sphère','Your breath transforms the sphere')}</p><div class="sv-options"><button type="button" class="sv-option" data-sv-mode="timed" aria-pressed="true">${t('90 secondes','90 seconds')}</button><button type="button" class="sv-option" data-sv-mode="free" aria-pressed="false">${t('Mode libre','Free mode')}</button></div><div class="sv-timer" id="svTimer">01:30</div><div class="sv-scorebox"><div class="sv-scoreline"><span id="svScore">0 / 1 200</span><span><strong id="svPct">0 %</strong> ${t('verts','green')}</span></div><div class="sv-track"><div class="sv-fill" id="svFill"></div></div></div><canvas class="sv-canvas" id="svCanvas" aria-label="${t('Sphère animée de 1200 points','Animated sphere of 1200 points')}"></canvas><div class="sv-state" id="svState" aria-live="polite"></div><button id="svFinger" type="button" class="sv-finger" aria-label="${t('Maintenir pendant l’expiration','Hold while exhaling')}">${fingerprint}</button><div class="sv-cta">${t('Maintenez pour expirer','Hold to exhale')}</div><div class="sv-hint">${t('Relâchez pour inspirer','Release to inhale')}</div><div class="sv-foot"><div class="sv-meta">${t('Expiration cumulée','Total exhalation')}: <b id="svBreath">0,0 s</b> · ${t('Cycles','Cycles')}: <b id="svCycles">0</b></div><div class="sv-actions"><button class="sv-action sv-start" id="svStart" type="button">${t('Démarrer','Start')}</button><button class="sv-action" id="svSound" type="button" aria-pressed="true">${t('Son activé','Sound on')}</button><button class="sv-action" id="svReset" type="button">${t('Réinitialiser','Reset')}</button></div><div class="sv-note">${t('Démo sonore : doigt posé = expiration, doigt levé = inspiration. Les sons suivent les mêmes paramètres que M.U.R. ; soufflez sans forcer.','Sound demo: hold to exhale, release to inhale. Same sound synthesis parameters as M.U.R.; breathe gently.')}</div></div><div id="svResults" class="sv-results-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="svResultTitle"><div class="sv-results-card"><div class="sv-results-label">M.U.R. · ${t('BILAN DE SÉANCE','SESSION RESULTS')}</div><h3 id="svResultTitle">${t('Séance terminée','Session complete')}</h3><div id="svResultPercent" class="sv-results-percent">0 %</div><div class="sv-results-label">${t('PARTICULES DEVENUES VERTES','PARTICLES TURNED GREEN')}</div><div class="sv-results-progress"><span id="svResultFill"></span></div><div class="sv-results-grid"><div class="sv-results-stat"><b id="svResultPoints">0 / 1 200</b><small>${t('Points verts','Green particles')}</small></div><div class="sv-results-stat"><b id="svResultExpirations">0</b><small>${t('Expirations (appuis)','Exhalations (holds)')}</small></div><div class="sv-results-stat"><b id="svResultExhale">0,0 s</b><small>${t('Expiration cumulée','Total exhalation')}</small></div><div class="sv-results-stat"><b id="svResultDuration">00:00</b><small>${t('Durée de séance','Session duration')}</small></div></div><p class="sv-results-explain">${t('Ce score illustre votre progression dans l’exercice à partir du temps d’appui. Il ne mesure pas l’équilibre de votre système nerveux autonome.','This score illustrates your exercise progress using hold time. It does not measure autonomic nervous system balance.')}</p><div class="sv-results-buttons"><button id="svResultClose" type="button">${t('Retour à M.U.R.','Back to M.U.R.')}</button><button id="svResultRestart" class="sv-results-primary" type="button">${t('Recommencer','Start again')}</button></div></div></div></div>`;
     document.body.appendChild(overlay);
     get('svClose').addEventListener('click',close);get('svStart').addEventListener('click',start);get('svSound').addEventListener('click',toggleSound);
-    get('svReset').addEventListener('click',()=>{stopPhaseSound();fingerUp();elapsed=0;breath=0;cycles=0;ended=false;started=false;angular=0;escaped=[];lastGreen=0;get('svStart').hidden=false;get('svStart').textContent=t('Démarrer','Start');get('svState').classList.remove('sv-finished');});
+    get('svResultClose').addEventListener('click',close);get('svResultRestart').addEventListener('click',()=>{hideResults();start();});
+    get('svReset').addEventListener('click',()=>{hideResults();stopPhaseSound();fingerUp();elapsed=0;breath=0;cycles=0;ended=false;started=false;angular=0;escaped=[];lastGreen=0;get('svStart').hidden=false;get('svStart').textContent=t('Démarrer','Start');get('svState').classList.remove('sv-finished');});
     overlay.querySelectorAll('[data-sv-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.svMode)));
     const finger=get('svFinger');finger.addEventListener('pointerdown',press);finger.addEventListener('pointerup',lift);finger.addEventListener('pointercancel',lift);finger.addEventListener('lostpointercapture',lift);finger.addEventListener('contextmenu',e=>e.preventDefault());
     window.addEventListener('blur',()=>{stopPhaseSound();fingerUp();});document.addEventListener('visibilitychange',hideListener);
