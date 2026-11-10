@@ -1244,7 +1244,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 (() => {
   'use strict';
   const SCRIPT_ID = 'murSouffleVivant218Script';
-  const FILE = 'mur-souffle-vivant.js?v=22.7';
+  const FILE = 'mur-souffle-vivant.js?v=22.8';
   function loadSouffleVivant() {
     if (document.getElementById(SCRIPT_ID) || window.MURSOUFFLEVIVANT21) return;
     const s = document.createElement('script');
