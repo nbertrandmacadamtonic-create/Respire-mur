@@ -1361,15 +1361,15 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V27 — ACCUEIL SPHERE 3D 2400 PARTICULES
+   M.U.R. V28 — ACCUEIL SPHERE 3D 2400 PARTICULES
    Sphère horaire / bandeau équatorial antihoraire.
    Le texte « Appuyer pour commencer » est intégré au bandeau
    et tourne avec lui. Ajout limité à mur-custom.js.
    ============================================================= */
 (() => {
   'use strict';
-  const COUNT=2400, STYLE_ID='murHomeParticlesV27Style', LABEL='APPUYER POUR COMMENCER';
-  if(window.MUR_HOME_PARTICLES_V27) return;
+  const COUNT=2400, STYLE_ID='murHomeParticlesV28Style', LABEL='APPUYER POUR COMMENCER';
+  if(window.MUR_HOME_PARTICLES_V28) return;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const points=Array.from({length:COUNT},(_,i)=>{
     const y=1-2*(i+.5)/COUNT, rad=Math.sqrt(Math.max(0,1-y*y));
@@ -1391,7 +1391,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     #home .home-wheel-card:has(#homeCircle.mur-home-2400){overflow:visible!important;isolation:isolate!important}
     #home #homeCircle.mur-home-2400 .mur-home-2400-canvas{
       position:absolute!important;left:50%!important;top:50%!important;
-      width:145%!important;height:145%!important;
+      width:156%!important;height:156%!important;
       transform:translate(-50%,-50%)!important;max-width:none!important;
       pointer-events:none!important;z-index:1!important;display:block!important;
     }
@@ -1420,6 +1420,9 @@ if (typeof window.installPresentationFallback !== 'function') {
     if(!rgb)rgb=palettes.vert;
     return rgb;
   }
+  function lighten(rgb,factor=.38){
+    return rgb.map(v=>Math.max(0,Math.min(255,Math.round(v+(255-v)*factor))));
+  }
   function drawBandText(ctx,cx,cy,rx,ry,th,rotation,color){
     const [r,g,b]=color;
     const fontSize=Math.max(10,Math.min(15,th*.54));
@@ -1438,15 +1441,17 @@ if (typeof window.installPresentationFallback !== 'function') {
       const front=(wrap>0 && wrap<Math.PI);
       if(!front) continue;
       const x=cx+Math.cos(a)*rx;
-      const y=cy+Math.sin(a)*ry+th*.46;
-      const tangent=Math.atan2(ry*Math.cos(a), -rx*Math.sin(a));
-      const alpha=.58+.35*Math.sin(a);
+      const y=cy+Math.sin(a)*ry+th*.47;
+      let tangent=Math.atan2(ry*Math.cos(a), -rx*Math.sin(a));
+      if(tangent>Math.PI/2) tangent-=Math.PI;
+      if(tangent<-Math.PI/2) tangent+=Math.PI;
+      const alpha=.62+.30*Math.sin(a);
       ctx.save();
       ctx.translate(x,y);
       ctx.rotate(tangent);
-      ctx.strokeStyle='rgba(5,18,25,.82)';
-      ctx.fillStyle=`rgba(245,255,250,${alpha})`;
-      ctx.shadowColor=`rgba(${r},${g},${b},.55)`;
+      ctx.strokeStyle='rgba(5,18,25,.88)';
+      ctx.fillStyle=`rgba(248,255,252,${alpha})`;
+      ctx.shadowColor=`rgba(${r},${g},${b},.72)`;
       ctx.shadowBlur=7;
       ctx.strokeText(ch,0,0);
       ctx.fillText(ch,0,0);
@@ -1485,10 +1490,12 @@ if (typeof window.installPresentationFallback !== 'function') {
       ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
       const actual=getColor(circle);
       const signature=actual.join(',');if(lastRgb!==signature){lastRgb=signature;color=actual;}
-      const [r,g,b]=color;const cx=w/2,cy=h/2,R=Math.min(w,h)*.318;
+      const [r,g,b]=color;
+      const light=lighten(color,.42);
+      const cx=w/2,cy=h/2,R=Math.min(w,h)*.318;
       const glow=ctx.createRadialGradient(cx,cy,R*.12,cx,cy,R*1.35);
-      glow.addColorStop(0,`rgba(${r},${g},${b},.045)`);
-      glow.addColorStop(.72,`rgba(${r},${g},${b},.13)`);
+      glow.addColorStop(0,`rgba(${light[0]},${light[1]},${light[2]},.06)`);
+      glow.addColorStop(.72,`rgba(${r},${g},${b},.17)`);
       glow.addColorStop(1,`rgba(${r},${g},${b},0)`);
       ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
       const ca=Math.cos(phase),sa=Math.sin(phase);
@@ -1502,20 +1509,20 @@ if (typeof window.installPresentationFallback !== 'function') {
         const size=.65+depth*1.1;
         const shimmer=.85+.15*Math.sin(t*.0012+p.phase*TAU);
         ctx.globalAlpha=(.28+.68*depth)*shimmer;
-        ctx.fillStyle=depth>.8?'#e7fff7':`rgb(${r},${g},${b})`;
+        ctx.fillStyle=depth>.8?`rgb(${light[0]},${light[1]},${light[2]})`:`rgb(${r},${g},${b})`;
         ctx.beginPath();ctx.arc(p.x,p.y,size,0,TAU);ctx.fill();
       }
       ctx.globalAlpha=1;
-      const ry=R*.24,rx=R*1.12,th=R*.22;
+      const ry=R*.285,rx=R*1.33,th=R*.27;
       ctx.save();
-      ctx.shadowColor=`rgba(${r},${g},${b},.9)`;ctx.shadowBlur=15;
+      ctx.shadowColor=`rgba(${r},${g},${b},.95)`;ctx.shadowBlur=18;
       ctx.strokeStyle=`rgba(${r},${g},${b},.80)`;ctx.lineWidth=2.2;
       ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,Math.PI,TAU);ctx.stroke();
       ctx.restore();
       const grad=ctx.createLinearGradient(0,cy-th/2,0,cy+th/2);
-      grad.addColorStop(0,`rgba(${r},${g},${b},.90)`);
-      grad.addColorStop(.48,'rgba(6,31,37,.91)');
-      grad.addColorStop(1,`rgba(${r},${g},${b},.87)`);
+      grad.addColorStop(0,`rgba(${light[0]},${light[1]},${light[2]},.96)`);
+      grad.addColorStop(.44,'rgba(8,36,43,.93)');
+      grad.addColorStop(1,`rgba(${r},${g},${b},.90)`);
       ctx.fillStyle=grad;ctx.beginPath();
       ctx.moveTo(cx-rx,cy);ctx.bezierCurveTo(cx-rx,cy+ry*.96,cx+rx,cy+ry*.96,cx+rx,cy);
       ctx.lineTo(cx+rx,cy+th);ctx.bezierCurveTo(cx+rx,cy+ry*.96+th,cx-rx,cy+ry*.96+th,cx-rx,cy+th);
@@ -1523,11 +1530,11 @@ if (typeof window.installPresentationFallback !== 'function') {
       ctx.save();ctx.shadowColor=`rgb(${r},${g},${b})`;ctx.shadowBlur=8;
       for(let i=0;i<42;i++){
         const a=i*TAU/42+band;const x=cx+Math.cos(a)*rx,y=cy+Math.sin(a)*ry;
-        ctx.fillStyle=`rgba(236,255,250,${Math.sin(a)>0?.92:.36})`;
+        ctx.fillStyle=`rgba(${light[0]},${light[1]},${light[2]},${Math.sin(a)>0?.94:.42})`;
         ctx.beginPath();ctx.arc(x,y,1.2+(Math.sin(a)+1)*.4,0,TAU);ctx.fill();
       }
       ctx.restore();
-      drawBandText(ctx,cx,cy,rx*.94,ry*.78,th,band,color);
+      drawBandText(ctx,cx,cy,rx*.965,ry*.86,th,band,color);
       ctx.save();ctx.shadowColor=`rgb(${r},${g},${b})`;ctx.shadowBlur=9;
       ctx.strokeStyle=`rgb(${r},${g},${b})`;ctx.lineWidth=2;
       ctx.beginPath();ctx.ellipse(cx,cy+th*.55,rx,ry,0,0,Math.PI);ctx.stroke();ctx.restore();
@@ -1536,5 +1543,5 @@ if (typeof window.installPresentationFallback !== 'function') {
     window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_HOME_PARTICLES_V27={particles:COUNT,sphereRotation:'clockwise',bandRotation:'counterclockwise',label:'band-integrated'};
+  window.MUR_HOME_PARTICLES_V28={particles:COUNT,sphereRotation:'clockwise',bandRotation:'counterclockwise',label:'band-integrated-upright',bandScale:'larger',centerColor:'light-dominant'};
 })();
