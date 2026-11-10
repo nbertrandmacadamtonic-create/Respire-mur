@@ -1120,6 +1120,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       menu.classList.add('is-open');
       backdrop.classList.add('is-open');
       circle.classList.add('mur-menu-open');
+      circle.dispatchEvent(new CustomEvent('mur-orb-transition', { detail: { open: true } }));
       menu.setAttribute('aria-hidden', 'false');
       circle.setAttribute('aria-expanded', 'true');
       buttons.forEach(button => { button.tabIndex = 0; });
@@ -1134,6 +1135,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       menu.classList.remove('is-open');
       backdrop.classList.remove('is-open');
       circle.classList.remove('mur-menu-open');
+      circle.dispatchEvent(new CustomEvent('mur-orb-transition', { detail: { open: false } }));
       menu.setAttribute('aria-hidden', 'true');
       circle.setAttribute('aria-expanded', 'false');
       quickCenter.tabIndex = -1;
@@ -1361,14 +1363,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V31 — ACCUEIL SPHERE 3D 2400 PARTICULES
+   M.U.R. V32 — ACCUEIL SPHERE 3D 2400 PARTICULES
    Suppression du bandeau. Appel a l'action agrandi sous la sphère.
    Ajout limité à mur-custom.js.
    ============================================================= */
 (() => {
   'use strict';
-  const COUNT=2400, STYLE_ID='murHomeParticlesV31Style';
-  if(window.MUR_HOME_PARTICLES_V31) return;
+  const COUNT=2400, STYLE_ID='murHomeParticlesV32Style';
+  if(window.MUR_HOME_PARTICLES_V32) return;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const points=Array.from({length:COUNT},(_,i)=>{
     const y=1-2*(i+.5)/COUNT, rad=Math.sqrt(Math.max(0,1-y*y));
@@ -1430,7 +1432,19 @@ if (typeof window.installPresentationFallback !== 'function') {
     main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint:focus-visible{
       outline:2px solid #a5f2d1!important;outline-offset:3px!important;
     }
-    #home #homeCircle.mur-home-2400.mur-menu-open .mur-home-2400-canvas{opacity:.27!important}
+    #home #homeCircle.mur-home-2400.mur-menu-open .mur-home-2400-canvas,
+    #home #homeCircle.mur-home-2400.mur-particles-transitioning .mur-home-2400-canvas{opacity:0!important}
+    .mur-home-particle-burst{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:10011!important;pointer-events:none!important;display:none!important}
+    body.mur-burst-opening .mur-orb-choice,
+    body.mur-burst-opening .mur-orb-quick-center{
+      animation:mur-reveal-choice .34s ease-out both!important;
+      animation-delay:.14s!important;
+    }
+    @keyframes mur-reveal-choice{
+      0%{opacity:0;filter:blur(5px)}
+      50%{opacity:.68;filter:blur(1px)}
+      100%{opacity:1;filter:blur(0)}
+    }
     @media(max-height:690px){
       main.app #home.page.active > section.home-wheel-card.card:has(#homeCircle.mur-home-2400){padding:8px 10px 12px!important}
       main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint{min-height:38px!important;margin-top:12px!important;padding:6px 12px!important;font-size:14px!important}
@@ -1552,6 +1566,127 @@ if (typeof window.installPresentationFallback !== 'function') {
     window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_HOME_PARTICLES_V31={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere'};
+  window.MUR_HOME_PARTICLES_V32={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere',menuTransition:'particle-dispersion-600ms'};
 })();
 
+
+
+/* =============================================================
+   M.U.R. V32 — DIFFUSION / RECONSTITUTION DE LA SPHERE
+   Les boutons du menu radial, les verrous NeuroFlex et les
+   commandes existantes restent gérés par le module d'origine.
+   0,6 seconde ouverture · 0,5 seconde fermeture.
+   ============================================================= */
+(() => {
+  'use strict';
+  if(window.MUR_HOME_BURST_V32)return;
+  const N=2400, TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
+  const OUT_MS=600, IN_MS=500;
+  const cloud=Array.from({length:N},(_,i)=>{
+    const y=1-2*(i+.5)/N,r=Math.sqrt(Math.max(0,1-y*y)),a=i*GOLD;
+    const seed=((i*541+29)%N)/N;
+    const theta=i*GOLD*.93;
+    return {x:r*Math.cos(a),y,z:r*Math.sin(a),phase:seed,
+      angle:theta,dist:.96+((i*71)%211)/211*.65};
+  });
+  const easing=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
+  const lighten=(c,k)=>c.map(v=>Math.round(v+(255-v)*k));
+  function init(){
+    const circle=document.getElementById('homeCircle');
+    const home=document.getElementById('home');
+    if(!circle||!home||circle.dataset.murBurstV32)return;
+    circle.dataset.murBurstV32='1';
+    const overlay=document.createElement('canvas');
+    overlay.className='mur-home-particle-burst';
+    overlay.setAttribute('aria-hidden','true');
+    document.body.appendChild(overlay);
+    const ctx=overlay.getContext('2d',{alpha:true});
+    if(!ctx)return;
+    const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    let animation=null,frame=0;
+    const menu=document.querySelector('.mur-orb-menu');
+    const backdrop=document.querySelector('.mur-orb-backdrop');
+    if(menu)menu.style.zIndex='10020';
+    if(backdrop)backdrop.style.zIndex='10005';
+    function getColor(){
+      const raw=(circle.style.getPropertyValue('--home-color')||getComputedStyle(circle).getPropertyValue('--home-color')).trim();
+      if(/^#[0-9a-f]{6}$/i.test(raw))return [1,3,5].map(i=>parseInt(raw.slice(i,i+2),16));
+      if(/^#[0-9a-f]{3}$/i.test(raw))return [1,2,3].map(i=>parseInt(raw[i]+raw[i],16));
+      if(/^rgba?\(/.test(raw))return (raw.match(/[\d.]+/g)||[]).slice(0,3).map(Number);
+      return [85,233,153];
+    }
+    function setSize(){
+      const dpr=Math.min(window.devicePixelRatio||1,2);
+      const w=window.innerWidth,h=window.innerHeight;
+      if(overlay.width!==Math.round(w*dpr)||overlay.height!==Math.round(h*dpr)){
+        overlay.width=Math.round(w*dpr);overlay.height=Math.round(h*dpr);
+      }
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      return {w,h};
+    }
+    function render(t){
+      if(!animation)return;
+      if(!circle.isConnected||!home.classList.contains('active')){finish();return;}
+      const duration=animation.open?OUT_MS:IN_MS;
+      const p=easing((t-animation.started)/duration);
+      const scatter=animation.open?p:1-p;
+      const {w,h}=setSize();
+      const rect=circle.getBoundingClientRect();
+      const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+      const R=Math.min(rect.width,rect.height)*.405;
+      const extent=Math.max(110,Math.min(Math.min(w,h)*.42,R*1.85));
+      ctx.clearRect(0,0,w,h);
+      const color=getColor(), bright=lighten(color,.42);
+      const phase=(t*.00023);
+      const ca=Math.cos(phase),sa=Math.sin(phase);
+      ctx.save();
+      for(const dot of cloud){
+        const sx=dot.x*ca-dot.z*sa;
+        const sz=dot.x*sa+dot.z*ca;
+        const k=2.9/(2.9-sz*.26);
+        const homeX=cx+sx*R*k,homeY=cy+dot.y*R*k;
+        const theta=dot.angle;
+        const spread=extent*dot.dist;
+        const targetX=cx+Math.cos(theta)*spread;
+        const targetY=cy+Math.sin(theta)*spread*.89;
+        const x=homeX+(targetX-homeX)*scatter;
+        const y=homeY+(targetY-homeY)*scatter;
+        if(x<0||y<0||x>w||y>h)continue;
+        const depth=(sz+1)/2;
+        const alpha=(.25+.67*depth)*(1-.54*scatter);
+        ctx.globalAlpha=alpha;
+        ctx.fillStyle=depth>.82?`rgb(${bright.join(',')})`:`rgb(${color.join(',')})`;
+        const radius=.65+depth*1.15+scatter*.23;
+        ctx.beginPath();ctx.arc(x,y,radius,0,TAU);ctx.fill();
+      }
+      ctx.restore();
+      if((t-animation.started)<duration){frame=requestAnimationFrame(render);}
+      else finish();
+    }
+    function finish(){
+      if(frame)cancelAnimationFrame(frame);
+      frame=0;animation=null;
+      overlay.style.display='none';
+      circle.classList.remove('mur-particles-transitioning');
+      document.body.classList.remove('mur-burst-opening');
+    }
+    function transition(open){
+      if(frame)cancelAnimationFrame(frame);
+      frame=0;
+      const reduced=!!reduce?.matches;
+      if(reduced){finish();return;}
+      animation={open,started:performance.now()};
+      circle.classList.add('mur-particles-transitioning');
+      document.body.classList.toggle('mur-burst-opening',open);
+      overlay.style.display='block';
+      frame=requestAnimationFrame(render);
+    }
+    circle.addEventListener('mur-orb-transition',e=>transition(!!e.detail?.open));
+    document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',finish,{passive:true}));
+    window.addEventListener('pagehide',finish);
+    window.addEventListener('resize',()=>{if(animation)frame=requestAnimationFrame(render)},{passive:true});
+    window.MUR_HOME_BURST_V32={particles:N,openMs:OUT_MS,closeMs:IN_MS};
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
