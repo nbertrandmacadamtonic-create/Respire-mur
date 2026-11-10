@@ -88,6 +88,13 @@
       .mur-exsphere-fs-close{top:calc(12px + env(safe-area-inset-top));right:16px}
       .mur-exsphere-fs-play{bottom:calc(23px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);min-width:148px}
       @media(prefers-reduced-motion:reduce){.mur-exsphere-stage.mur-exsphere-zoom{transition-duration:.01s!important}}
+      /* V22.12 : le plein écran est une couche indépendante de la fiche native. */
+      body>.mur-exsphere-fs-overlay{position:fixed!important;z-index:12010!important;overflow:hidden!important;box-sizing:border-box!important;background:#0b2433!important;border:1px solid rgba(138,212,196,.22)!important;display:block!important;opacity:1!important;visibility:visible!important;transition:left .7s cubic-bezier(.22,1,.36,1),top .7s cubic-bezier(.22,1,.36,1),width .7s cubic-bezier(.22,1,.36,1),height .7s cubic-bezier(.22,1,.36,1),border-radius .7s ease!important}
+      .mur-exsphere-fs-image,.mur-exsphere-fs-canvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:block!important;object-fit:contain!important;pointer-events:none!important}
+      .mur-exsphere-fs-image{z-index:1!important;opacity:1}
+      .mur-exsphere-fs-canvas{z-index:2!important}
+      .mur-exsphere-fs-caption{position:absolute;z-index:3;left:50%;bottom:calc(89px + env(safe-area-inset-bottom));transform:translateX(-50%);padding:7px 13px;background:rgba(6,22,32,.77);border:1px solid rgba(138,212,196,.3);border-radius:15px;color:#ecfff7;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;pointer-events:none}
+      @media(prefers-reduced-motion:reduce){body>.mur-exsphere-fs-overlay{transition-duration:.01s!important}}
       /* On conserve le lecteur audio et sa boucle infinie natifs, sous la photo. */
       #exerciseDetail .exercise-audio-actions{display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center;gap:12px}
       #exerciseDetail .exercise-audio-actions #exercisePlayBtn{display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center}
@@ -187,90 +194,98 @@
     document.body.scrollTop=0;
   }
 
+  function stopOtherMedia(activeAudio){
+    // Une seule bande-son à la fois, même si un autre module a été laissé en lecture.
+    document.querySelectorAll('audio,video').forEach(media=>{
+      if(media===activeAudio || media.id==='murWelcomeVideo2026' && document.getElementById('presentation')?.classList.contains('hide')===false) return;
+      try{if(!media.paused)media.pause();}catch(_){}
+    });
+    if(typeof window.stopBreathVoices==='function'){
+      try{window.stopBreathVoices()}catch(_){}
+    }
+  }
+  function setFullscreenAudio(s,play){
+    if(state!==s || !s.audio)return;
+    if(play){
+      stopOtherMedia(s.audio);
+      if(s.audio.ended){try{s.audio.currentTime=0}catch(_){}}
+      if(s.audio.paused){
+        // Le lecteur natif gère seul le halo, l'historique et ses boutons.
+        if(typeof window.toggleExerciseAudio==='function')window.toggleExerciseAudio();
+        else s.audio.play().catch(()=>{s.caption.textContent='Touchez Lecture pour démarrer le son';});
+      }
+    }else if(!s.audio.paused){
+      if(typeof window.toggleExerciseAudio==='function')window.toggleExerciseAudio();
+      else s.audio.pause();
+    }
+    if(s.fsPlay)s.fsPlay.textContent=play?'Pause':'Lecture';
+  }
   function endFullscreen(s, {pause=true}={}){
     if(!s)return;
     if(s.zoomTimer){clearTimeout(s.zoomTimer);s.zoomTimer=0;}
     s.zooming=false;s.visualHold=false;
-    if(pause && s.audio && !s.audio.paused){
-      // Le lecteur natif reste maître de la lecture et de ses états.
-      if(typeof window.toggleExerciseAudio==='function')window.toggleExerciseAudio();
-      else s.audio.pause();
-    }
-    if(s.volumeBeforeZoom!==undefined){s.audio.volume=s.volumeBeforeZoom;s.volumeBeforeZoom=undefined;}
-    s.fsScrim?.remove();s.fsToolbar?.remove();
-    s.fsScrim=null;s.fsToolbar=null;
-    document.body.classList.remove('mur-exsphere-fullscreen');
-    s.stage?.classList.remove('mur-exsphere-zoom');
-    // Remettre le même stage et son image au même emplacement, sans les recréer.
-    if(s.stage && s.fsPlaceholder?.parentNode){
-      s.fsPlaceholder.parentNode.insertBefore(s.stage,s.fsPlaceholder);
-      s.fsPlaceholder.remove();
-    }
-    s.fsPlaceholder=null;
-    for(const prop of ['left','top','right','bottom','width','height','borderRadius','zIndex'])s.stage?.style.removeProperty(prop);
+    if(pause)setFullscreenAudio(s,false);
     s.fullscreen=false;
+    s.fsOverlay?.remove();s.fsToolbar?.remove();
+    s.fsOverlay=null;s.fsToolbar=null;s.fsImage=null;s.fsCanvas=null;s.fsPlay=null;
+    document.body.classList.remove('mur-exsphere-fullscreen');
+    if(s.image){s.image.style.opacity='1';s.image.style.filter='none';}
     if(s.stage?.isConnected)sizeStage(s);
-    // Aucun scroll de page déclenché à la sortie du plein écran.
-  }
-  function startAudioFromFullscreen(s){
-    if(state!==s||!s.fullscreen)return;
-    if(s.audio.ended){try{s.audio.currentTime=0;}catch(e){}}
-    if(s.audio.paused){
-      if(typeof window.toggleExerciseAudio==='function')window.toggleExerciseAudio();
-      else s.audio.play().catch(()=>{s.caption.textContent='Touchez Lecture pour démarrer le son';});
-    }
-    s.fsPlay && (s.fsPlay.textContent='Pause / Lecture');
   }
   function enterFullscreen(s){
     if(state!==s || s.fullscreen || s.zooming)return;
     const box=s.stage.getBoundingClientRect();
-    s.fullscreen=true;s.zooming=true;s.visualHold=true;
-    const scrim=document.createElement('div');scrim.className='mur-exsphere-fs-scrim';
+    if(box.width<10||box.height<10)return;
+    // La fiche native et son image ne quittent JAMAIS leur parent : cela évite
+    // les conflits de CSS, les fonds noirs et le décalage de la navigation.
+    const overlay=document.createElement('div');
+    overlay.className='mur-exsphere-fs-overlay';
+    overlay.setAttribute('role','dialog');
+    overlay.setAttribute('aria-modal','true');
+    overlay.setAttribute('aria-label','Exercice en plein écran');
+    const image=s.image.cloneNode(false);
+    image.removeAttribute('id');image.removeAttribute('onclick');image.removeAttribute('onkeydown');
+    image.removeAttribute('role');image.removeAttribute('tabindex');
+    image.className='mur-exsphere-fs-image';
+    image.loading='eager';image.decoding='sync';
+    image.src=s.image.currentSrc || s.image.src;
+    const canvas=document.createElement('canvas');canvas.className='mur-exsphere-fs-canvas';
+    const caption=document.createElement('div');caption.className='mur-exsphere-fs-caption';
+    caption.textContent='Agrandissement de l’image…';
+    overlay.append(image,canvas,caption);
     const toolbar=document.createElement('div');toolbar.className='mur-exsphere-fs-bar';
-    const close=document.createElement('button');close.type='button';close.className='mur-exsphere-fs-close';close.textContent='← Retour';close.setAttribute('aria-label','Revenir à la fiche exercice');
-    const play=document.createElement('button');play.type='button';play.className='mur-exsphere-fs-play';play.textContent='Lecture / Pause';play.setAttribute('aria-label','Lecture ou pause de l’exercice');
-    toolbar.append(close,play);document.body.append(scrim,toolbar);
-    s.fsScrim=scrim;s.fsToolbar=toolbar;s.fsPlay=play;
+    const close=document.createElement('button');close.type='button';close.className='mur-exsphere-fs-close';close.textContent='← Retour';
+    const play=document.createElement('button');play.type='button';play.className='mur-exsphere-fs-play';play.textContent='Lecture';
+    toolbar.append(close,play);
+    s.fsOverlay=overlay;s.fsImage=image;s.fsCanvas=canvas;s.fsCaption=caption;s.fsToolbar=toolbar;s.fsPlay=play;
+    s.fullscreen=true;s.zooming=true;s.visualHold=true;
+    stopOtherMedia(s.audio);
+    // S'il y avait déjà un son en cours, on ne le superpose jamais.
+    if(!s.audio.paused)setFullscreenAudio(s,false);
+    Object.assign(overlay.style,{left:box.left+'px',top:box.top+'px',width:box.width+'px',height:box.height+'px',borderRadius:'20px'});
+    document.body.append(overlay,toolbar);
+    document.body.classList.add('mur-exsphere-fullscreen');
     close.addEventListener('click',()=>endFullscreen(s));
     play.addEventListener('click',()=>{
       if(s.zooming)return;
-      if(typeof window.toggleExerciseAudio==='function')window.toggleExerciseAudio();
-      else if(s.audio.paused)s.audio.play().catch(()=>{});else s.audio.pause();
+      setFullscreenAudio(s,s.audio.paused);
     });
-    // Un élément fixed dans un parent transformé ou isolé reste prisonnier
-    // de son contexte d'empilement : déplacer le vrai stage sous body.
-    const placeholder=document.createElement('span');
-    placeholder.className='mur-exsphere-fs-placeholder';
-    placeholder.setAttribute('aria-hidden','true');
-    placeholder.style.cssText=`display:block;width:${box.width}px;height:${box.height}px;flex:none;visibility:hidden`;
-    s.stage.parentNode.insertBefore(placeholder,s.stage);
-    s.fsPlaceholder=placeholder;
-    document.body.appendChild(s.stage);
-    document.body.classList.add('mur-exsphere-fullscreen');
-    s.stage.classList.add('mur-exsphere-zoom');
-    Object.assign(s.stage.style,{left:box.left+'px',top:box.top+'px',width:box.width+'px',height:box.height+'px',borderRadius:'20px'});
-    s.caption.textContent='Agrandissement de l’image…';
-    // Déclencher la lecture dans le geste tactile pour iOS/Safari.
-    // Son à zéro durant le zoom, puis recommencer à 0 à plein écran.
-    const wasPaused=s.audio.paused;
-    if(wasPaused){
-      s.volumeBeforeZoom=s.audio.volume;
-      s.audio.volume=0;
-      if(typeof window.toggleExerciseAudio==='function')window.toggleExerciseAudio();
-      else s.audio.play().catch(()=>{});
-    }
+    overlay.addEventListener('click',event=>{
+      if(s.zooming||event.target===caption)return;
+      setFullscreenAudio(s,s.audio.paused);
+    });
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       if(state!==s||!s.fullscreen)return;
-      Object.assign(s.stage.style,{left:'0px',top:'0px',width:'100vw',height:'100dvh',borderRadius:'0px'});
+      Object.assign(overlay.style,{left:'0px',top:'0px',width:'100vw',height:'100dvh',borderRadius:'0px'});
     }));
     s.zoomTimer=window.setTimeout(()=>{
       if(state!==s||!s.fullscreen)return;
-      s.zoomTimer=0;s.zooming=false;
-      if(wasPaused){try{s.audio.currentTime=0;}catch(e){};s.audio.volume=s.volumeBeforeZoom;s.volumeBeforeZoom=undefined;}
-      s.visualHold=false;
-      if(s.audio.paused){s.caption.textContent='Appuyer sur Lecture pour démarrer';}
-      else{s.caption.textContent='L’image devient une sphère';}
-    },prefersReduced()?30:ZOOM_MS+80);
+      s.zoomTimer=0;s.zooming=false;s.visualHold=false;
+      caption.textContent='Touchez Lecture pour démarrer';
+      // Le démarrage automatique peut être interdit par Safari après le zoom.
+      // Un clic explicite Lecture garantit alors le départ sans doublon.
+      setFullscreenAudio(s,true);
+    },prefersReduced()?50:ZOOM_MS+90);
   }
   function detach(){
     const s=state;if(!s)return;
@@ -307,8 +322,7 @@
       if(s.returnAt!==null)return;
       if(!s.fullscreen){enterFullscreen(s);return;}
       if(s.zooming)return;
-      if(typeof window.toggleExerciseAudio==='function')window.toggleExerciseAudio();
-      else if(s.audio.paused)s.audio.play().catch(()=>{});else s.audio.pause();
+      setFullscreenAudio(s,s.audio.paused);
     };
     s.onStageClick=(event)=>{event.stopPropagation();startFromPhoto()};
     s.onStageKeydown=(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();startFromPhoto()}};
@@ -336,7 +350,10 @@
   }
   function render(s,t){
     if(state!==s)return;
-    const canvas=s.canvas,c=s.ctx,w=Math.max(s.stage.clientWidth,1),h=Math.max(s.stage.clientHeight,1),dpr=Math.min(devicePixelRatio||1,2);
+    const canvas=s.fullscreen&&s.fsCanvas?s.fsCanvas:s.canvas;
+    const c=canvas===s.canvas?s.ctx:canvas.getContext('2d');
+    const host=s.fullscreen&&s.fsOverlay?s.fsOverlay:s.stage;
+    const w=Math.max(host.clientWidth,1),h=Math.max(host.clientHeight,1),dpr=Math.min(devicePixelRatio||1,2);
     if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){
       canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
     }
@@ -352,14 +369,17 @@
     if(s.returnAt!==null&&reverse>=1){
       s.started=false;s.ended=false;s.returnAt=null;s.reverseProgress=0;s.playedAt=null;s.voice=.11;
       s.image.style.opacity='1';s.image.style.filter='none';
+      if(s.fsImage){s.fsImage.style.opacity='1';s.fsImage.style.filter='none';}
       s.caption.textContent='Toucher la photo pour recommencer';
       s.caption.style.opacity='1';
       c.clearRect(0,0,w,h);
       s.raf=requestAnimationFrame(next=>render(s,next));return;
     }
     // The photo visually dissolves into the same pixels' spatial cloud.
-    s.image.style.opacity=(!s.enabled||!started)?'1':String(1-smooth(clamp((morph-.08)/.85)));
-    s.image.style.filter=s.enabled&&started?`saturate(${1+.3*morph}) brightness(${1+.2*morph})`:'none';
+    const imageTarget=s.fullscreen&&s.fsImage?s.fsImage:s.image;
+    imageTarget.style.opacity=(!s.enabled||!started)?'1':String(1-smooth(clamp((morph-.08)/.85)));
+    imageTarget.style.filter=s.enabled&&started?`saturate(${1+.3*morph}) brightness(${1+.2*morph})`:'none';
+    if(s.fullscreen){s.image.style.opacity='1';s.image.style.filter='none';}
     if(started&&s.enabled){
       let level=s.voice;
       if(s.analyser&&!s.audio.paused){
@@ -403,7 +423,7 @@
         c.beginPath();c.arc(pnt.xx,pnt.yy,radius,0,Math.PI*2);c.fill();
       }
       c.globalAlpha=1;
-      if(!s.ended)s.caption.textContent=current<TRANSFORM_SECONDS?'L’image devient une sphère':s.audio.paused?'En pause':`Voix narrative · ${Math.round(mix*100)} % vers le vert`;
+      if(!s.ended){const message=current<TRANSFORM_SECONDS?'L’image devient une sphère':s.audio.paused?'En pause':`Voix narrative · ${Math.round(mix*100)} % vers le vert`;if(s.fullscreen&&s.fsCaption)s.fsCaption.textContent=message;else s.caption.textContent=message;}
     }else if(!started && !s.visualHold && !s.fullscreen)s.caption.textContent='Toucher la photo pour ouvrir en plein écran';
     s.raf=requestAnimationFrame(next=>render(s,next));
   }
@@ -447,7 +467,7 @@
     if(observed===detail)return;
     observed=detail;
     const obs=new MutationObserver(()=>{
-      if(state?.fullscreen)return; // stage temporairement placé sous body
+      if(state?.fullscreen)return; // ne pas reconstruire la fiche pendant la séance
       if(!document.getElementById('exerciseAudio')){if(state)detach();return}
       attach();
     });
@@ -465,5 +485,5 @@
     window.addEventListener('pagehide',()=>{if(state)cancelAnimationFrame(state.raf)});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_EXERCICES_SPHERE={version:'22.11',get active(){return !!state},refresh:attach,close:detach};
+  window.MUR_EXERCICES_SPHERE={version:'22.12',get active(){return !!state},refresh:attach,close:detach};
 })();
