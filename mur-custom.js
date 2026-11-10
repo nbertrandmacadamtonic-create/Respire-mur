@@ -1361,15 +1361,15 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V26 — ACCUEIL SPHERE 3D 2400 PARTICULES
+   M.U.R. V27 — ACCUEIL SPHERE 3D 2400 PARTICULES
    Sphère horaire / bandeau équatorial antihoraire.
-   Ajout limité à mur-custom.js ; conserve l'accueil, ses données,
-   la navigation et le menu radial existant.
+   Le texte « Appuyer pour commencer » est intégré au bandeau
+   et tourne avec lui. Ajout limité à mur-custom.js.
    ============================================================= */
 (() => {
   'use strict';
-  const COUNT=2400, STYLE_ID='murHomeParticlesV26Style';
-  if(window.MUR_HOME_PARTICLES_V26) return;
+  const COUNT=2400, STYLE_ID='murHomeParticlesV27Style', LABEL='APPUYER POUR COMMENCER';
+  if(window.MUR_HOME_PARTICLES_V27) return;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const points=Array.from({length:COUNT},(_,i)=>{
     const y=1-2*(i+.5)/COUNT, rad=Math.sqrt(Math.max(0,1-y*y));
@@ -1398,13 +1398,12 @@ if (typeof window.installPresentationFallback !== 'function') {
     #home #homeCircle.mur-home-2400 .home-circle-text,
     #home #homeCircle.mur-home-2400 .home-cursor{display:none!important}
     #home #homeCircle.mur-home-2400 .mur-orb-start-trigger{
-      z-index:8!important;position:absolute!important;top:50%!important;left:50%!important;
-      transform:translate(-50%,-50%)!important;
-      min-width:0!important;width:88%!important;min-height:42px!important;
+      z-index:8!important;position:absolute!important;inset:0!important;
+      min-width:0!important;width:100%!important;height:100%!important;min-height:0!important;
       border:0!important;background:transparent!important;box-shadow:none!important;
-      color:#f4fffa!important;text-shadow:0 2px 7px #071c17,0 0 8px #063!important;
-      padding:7px 0!important;font-size:clamp(10px,3.2vw,14px)!important;
-      white-space:nowrap!important;text-align:center!important;
+      color:transparent!important;text-shadow:none!important;font-size:0!important;
+      padding:0!important;white-space:nowrap!important;text-align:center!important;
+      touch-action:manipulation!important;
     }
     #home #homeCircle.mur-home-2400 .mur-orb-start-trigger::before,
     #home #homeCircle.mur-home-2400 .mur-orb-start-trigger::after{display:none!important}
@@ -1421,10 +1420,51 @@ if (typeof window.installPresentationFallback !== 'function') {
     if(!rgb)rgb=palettes.vert;
     return rgb;
   }
+  function drawBandText(ctx,cx,cy,rx,ry,th,rotation,color){
+    const [r,g,b]=color;
+    const fontSize=Math.max(10,Math.min(15,th*.54));
+    const step=Math.max(.11, Math.min(.16, 2.4/Math.max(20,LABEL.length)));
+    const total=(LABEL.length-1)*step;
+    const mid=Math.PI/2;
+    ctx.save();
+    ctx.font=`900 ${fontSize}px -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Arial,sans-serif`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.lineWidth=Math.max(2,fontSize*.22);
+    for(let i=0;i<LABEL.length;i++){
+      const ch=LABEL[i];
+      const a=mid + rotation + (i-(LABEL.length-1)/2)*step;
+      const wrap=((a%TAU)+TAU)%TAU;
+      const front=(wrap>0 && wrap<Math.PI);
+      if(!front) continue;
+      const x=cx+Math.cos(a)*rx;
+      const y=cy+Math.sin(a)*ry+th*.46;
+      const tangent=Math.atan2(ry*Math.cos(a), -rx*Math.sin(a));
+      const alpha=.58+.35*Math.sin(a);
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(tangent);
+      ctx.strokeStyle='rgba(5,18,25,.82)';
+      ctx.fillStyle=`rgba(245,255,250,${alpha})`;
+      ctx.shadowColor=`rgba(${r},${g},${b},.55)`;
+      ctx.shadowBlur=7;
+      ctx.strokeText(ch,0,0);
+      ctx.fillText(ch,0,0);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
   function install(){
     const circle=document.getElementById('homeCircle');
     if(!circle||circle.dataset.murHome2400==='1')return;
     addStyle();circle.dataset.murHome2400='1';circle.classList.add('mur-home-2400');
+    const trigger=circle.querySelector('.mur-orb-start-trigger');
+    if(trigger){
+      trigger.textContent='';
+      trigger.dataset.subtitle='';
+      trigger.setAttribute('aria-label','Appuyer pour commencer');
+      trigger.setAttribute('title','Appuyer pour commencer');
+    }
     const canvas=document.createElement('canvas');canvas.className='mur-home-2400-canvas';
     canvas.setAttribute('aria-hidden','true');circle.prepend(canvas);
     const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
@@ -1435,7 +1475,6 @@ if (typeof window.installPresentationFallback !== 'function') {
       raf=requestAnimationFrame(draw);
       if(!circle.isConnected || !document.getElementById('home')?.classList.contains('active')){previous=t;return;}
       const dt=Math.max(0,Math.min(.05,(t-(previous||t))/1000));previous=t;
-      // Rotation 3D de la sphère horaire ; flux du bandeau en sens inverse.
       if(!reduce.matches&&!circle.classList.contains('mur-menu-open')){
         phase+=dt*.23; band-=dt*.42;
       }
@@ -1467,14 +1506,12 @@ if (typeof window.installPresentationFallback !== 'function') {
         ctx.beginPath();ctx.arc(p.x,p.y,size,0,TAU);ctx.fill();
       }
       ctx.globalAlpha=1;
-      // Bandeau 3D elliptique : contre-rotation des reflets et marqueurs.
       const ry=R*.24,rx=R*1.12,th=R*.22;
       ctx.save();
       ctx.shadowColor=`rgba(${r},${g},${b},.9)`;ctx.shadowBlur=15;
       ctx.strokeStyle=`rgba(${r},${g},${b},.80)`;ctx.lineWidth=2.2;
       ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,Math.PI,TAU);ctx.stroke();
       ctx.restore();
-      // Face avant du bandeau avec fond semi-transparent pour un texte net.
       const grad=ctx.createLinearGradient(0,cy-th/2,0,cy+th/2);
       grad.addColorStop(0,`rgba(${r},${g},${b},.90)`);
       grad.addColorStop(.48,'rgba(6,31,37,.91)');
@@ -1483,7 +1520,6 @@ if (typeof window.installPresentationFallback !== 'function') {
       ctx.moveTo(cx-rx,cy);ctx.bezierCurveTo(cx-rx,cy+ry*.96,cx+rx,cy+ry*.96,cx+rx,cy);
       ctx.lineTo(cx+rx,cy+th);ctx.bezierCurveTo(cx+rx,cy+ry*.96+th,cx-rx,cy+ry*.96+th,cx-rx,cy+th);
       ctx.closePath();ctx.fill();
-      // Particules lumineuses se déplacent réellement sur le bandeau à l'inverse.
       ctx.save();ctx.shadowColor=`rgb(${r},${g},${b})`;ctx.shadowBlur=8;
       for(let i=0;i<42;i++){
         const a=i*TAU/42+band;const x=cx+Math.cos(a)*rx,y=cy+Math.sin(a)*ry;
@@ -1491,6 +1527,7 @@ if (typeof window.installPresentationFallback !== 'function') {
         ctx.beginPath();ctx.arc(x,y,1.2+(Math.sin(a)+1)*.4,0,TAU);ctx.fill();
       }
       ctx.restore();
+      drawBandText(ctx,cx,cy,rx*.94,ry*.78,th,band,color);
       ctx.save();ctx.shadowColor=`rgb(${r},${g},${b})`;ctx.shadowBlur=9;
       ctx.strokeStyle=`rgb(${r},${g},${b})`;ctx.lineWidth=2;
       ctx.beginPath();ctx.ellipse(cx,cy+th*.55,rx,ry,0,0,Math.PI);ctx.stroke();ctx.restore();
@@ -1499,5 +1536,5 @@ if (typeof window.installPresentationFallback !== 'function') {
     window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_HOME_PARTICLES_V26={particles:COUNT,sphereRotation:'clockwise',bandRotation:'counterclockwise'};
+  window.MUR_HOME_PARTICLES_V27={particles:COUNT,sphereRotation:'clockwise',bandRotation:'counterclockwise',label:'band-integrated'};
 })();
