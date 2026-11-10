@@ -1361,14 +1361,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V30 — ACCUEIL SPHERE 3D 2400 PARTICULES
+   M.U.R. V31 — ACCUEIL SPHERE 3D 2400 PARTICULES
    Suppression du bandeau. Appel a l'action agrandi sous la sphère.
    Ajout limité à mur-custom.js.
    ============================================================= */
 (() => {
   'use strict';
-  const COUNT=2400, STYLE_ID='murHomeParticlesV30Style';
-  if(window.MUR_HOME_PARTICLES_V30) return;
+  const COUNT=2400, STYLE_ID='murHomeParticlesV31Style';
+  if(window.MUR_HOME_PARTICLES_V31) return;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const points=Array.from({length:COUNT},(_,i)=>{
     const y=1-2*(i+.5)/COUNT, rad=Math.sqrt(Math.max(0,1-y*y));
@@ -1389,9 +1389,11 @@ if (typeof window.installPresentationFallback !== 'function') {
     #home #homeCircle.mur-home-2400::after{content:none!important;display:none!important}
     main.app #home.page.active > section.home-wheel-card.card:has(#homeCircle.mur-home-2400){
       overflow:hidden!important;isolation:isolate!important;
-      justify-content:center!important;gap:12px!important;
-      padding:14px 12px 16px!important;
+      display:flex!important;flex-direction:column!important;align-items:center!important;
+      justify-content:flex-start!important;gap:0!important;
+      padding:14px 12px 20px!important;
     }
+    #home #homeCircle.mur-home-2400{margin:4px auto 0!important;flex:0 0 auto!important;align-self:center!important}
     #home #homeCircle.mur-home-2400 .mur-home-2400-canvas{
       position:absolute!important;left:50%!important;top:50%!important;
       width:100%!important;height:100%!important;
@@ -1411,10 +1413,11 @@ if (typeof window.installPresentationFallback !== 'function') {
     #home #homeCircle.mur-home-2400 .mur-orb-start-trigger::before,
     #home #homeCircle.mur-home-2400 .mur-orb-start-trigger::after{display:none!important}
     main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint{
-      position:relative!important;display:flex!important;align-items:center!important;
-      justify-content:center!important;flex:0 0 auto!important;
-      width:min(100%,280px)!important;max-width:100%!important;
-      min-height:46px!important;margin:0 auto!important;padding:9px 12px!important;
+      position:relative!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;
+      display:flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;
+      align-self:center!important;
+      width:min(86%,260px)!important;max-width:260px!important;
+      min-height:48px!important;margin:16px auto 0 auto!important;padding:10px 14px!important;
       border-radius:999px!important;border:1px solid rgba(140,230,190,.34)!important;
       background:rgba(12,43,48,.68)!important;color:#f4fffa!important;
       font-size:clamp(15px,4vw,18px)!important;font-weight:800!important;
@@ -1422,14 +1425,15 @@ if (typeof window.installPresentationFallback !== 'function') {
       white-space:normal!important;cursor:pointer!important;
       z-index:3!important;user-select:none!important;
       text-shadow:0 1px 4px rgba(0,0,0,.35)!important;
+      transform:none!important;
     }
     main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint:focus-visible{
       outline:2px solid #a5f2d1!important;outline-offset:3px!important;
     }
     #home #homeCircle.mur-home-2400.mur-menu-open .mur-home-2400-canvas{opacity:.27!important}
     @media(max-height:690px){
-      main.app #home.page.active > section.home-wheel-card.card:has(#homeCircle.mur-home-2400){gap:6px!important;padding:8px 10px 10px!important}
-      main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint{min-height:38px!important;padding:6px 12px!important;font-size:14px!important}
+      main.app #home.page.active > section.home-wheel-card.card:has(#homeCircle.mur-home-2400){padding:8px 10px 12px!important}
+      main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint{min-height:38px!important;margin-top:12px!important;padding:6px 12px!important;font-size:14px!important}
     }
     @media(prefers-reduced-motion:reduce){#home #homeCircle.mur-home-2400 .mur-home-2400-canvas{transition:none!important}}
   `;
@@ -1548,6 +1552,6 @@ if (typeof window.installPresentationFallback !== 'function') {
     window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_HOME_PARTICLES_V30={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'in-card-below-sphere'};
+  window.MUR_HOME_PARTICLES_V31={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere'};
 })();
 
