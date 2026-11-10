@@ -1,4 +1,4 @@
-/* M.U.R. V22.2 — Exercices guidés : image vers sphère, voix et progression.
+/* M.U.R. V22.3 — Exercices guidés : image vers sphère, voix et progression.
    Module additionnel non destructif. Aucun changement de index.html.
    L'animation s'appuie sur #visualAsset, #exerciseAudio, #exerciseDetail
    et les objets EXERCISES déjà présents dans l'application. */
@@ -8,6 +8,7 @@
   const NS = 'mur-exsphere';
   const TOTAL = 1200;
   const TRANSFORM_SECONDS = 5.4;
+  const RETURN_SECONDS = 5.4;
   const DEFAULT_DURATION = 90;
   const COLORS = {rouge:[255,82,86],orange:[255,163,65],vert:[78,224,148],bleu:[83,157,244]};
   const GREEN=[80,235,155];
@@ -20,11 +21,13 @@
     if(document.getElementById(NS+'-style'))return;
     const el=document.createElement('style');el.id=NS+'-style';
     el.textContent=`
-      #exerciseDetail .mur-exsphere-stage{position:relative;isolation:isolate;overflow:hidden;flex:none;width:min(76vw,320px);height:auto;aspect-ratio:1/1;min-height:0;max-height:54svh;border:1px solid rgba(169,219,240,.20);border-radius:20px;background:radial-gradient(ellipse at 50% 45%,#173b4a,#0b2130 62%,#071625);margin:8px auto 5px;touch-action:pan-y}
+      #exerciseDetail .mur-exsphere-stage{position:relative;isolation:isolate;overflow:hidden;flex:none;width:min(76vw,320px);height:auto;aspect-ratio:1/1;min-height:0;max-height:54svh;border:1px solid rgba(169,219,240,.20);border-radius:20px;background:radial-gradient(ellipse at 50% 45%,#173b4a,#0b2130 62%,#071625);margin:8px auto 5px;touch-action:manipulation;cursor:pointer;-webkit-tap-highlight-color:transparent}
       #exercises.exercise-detail-open #exerciseDetail .mur-exsphere-stage #visualAsset.exercise-free-image,
       #exerciseDetail .mur-exsphere-stage #visualAsset{position:absolute!important;left:0!important;top:0!important;transform:none!important;display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;min-height:0!important;object-fit:contain!important;object-position:center!important;border:0!important;border-radius:0!important;margin:0!important;transition:none!important;box-shadow:none!important;outline:0!important;animation:none!important;pointer-events:none!important;z-index:1}
       #exerciseDetail .mur-exsphere-stage canvas{display:block;width:100%;height:100%;position:absolute;inset:0;z-index:2;pointer-events:none}
       #exerciseDetail .mur-exsphere-caption{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);z-index:4;max-width:95%;padding:6px 12px;border-radius:15px;background:rgba(7,18,32,.75);color:#e4f9f3;border:1px solid rgba(170,229,222,.2);font-size:11px;font-weight:700;text-align:center;white-space:nowrap;pointer-events:none}
+      #exerciseDetail .mur-exsphere-controls{display:none!important;}
+      #exerciseDetail .mur-exsphere-stage:focus-visible{outline:2px solid #85e9bd;outline-offset:3px}
       #exerciseDetail .mur-exsphere-controls{display:flex;align-items:center;justify-content:space-between;gap:8px;width:min(100%,460px);margin:4px auto 8px;color:#b8d5df;font-size:11px}
       #exerciseDetail .mur-exsphere-progress{height:5px;border-radius:9px;flex:1;background:rgba(129,164,185,.22);overflow:hidden}
       #exerciseDetail .mur-exsphere-progress>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--mur-sphere-start,#f66),#53e89f);transition:width .15s linear}
@@ -113,6 +116,7 @@
   function detach(){
     const s=state;if(!s)return;
     cancelAnimationFrame(s.raf);
+    if(s.stage){s.stage.removeEventListener('click',s.onStageClick);s.stage.removeEventListener('keydown',s.onStageKeydown)}
     if(s.audio){s.audio.removeEventListener('play',s.onPlay);s.audio.removeEventListener('pause',s.onPause);s.audio.removeEventListener('ended',s.onEnded);s.audio.removeEventListener('loadedmetadata',s.onMetadata)}
     disconnectAudio(s);
     if(s.image){s.image.style.opacity='';s.image.style.filter='';if(s.stage?.contains(s.image))s.stage.parentNode?.insertBefore(s.image,s.stage)}
@@ -126,23 +130,47 @@
     if(state?.audio===audio&&state?.image===img)return;
     detach();style();
     const key=window.currentExerciseKey||'',zone=zoneOf(key),color=COLORS[zone]||COLORS.rouge;
-    const stage=document.createElement('div');stage.className='mur-exsphere-stage';stage.setAttribute('aria-label','Animation sphérique synchronisée avec la narration');
-    const canvas=document.createElement('canvas');const caption=document.createElement('div');caption.className='mur-exsphere-caption';caption.textContent='Lancez l’audio pour transformer l’image';
+    const stage=document.createElement('div');stage.className='mur-exsphere-stage';stage.setAttribute('aria-label','Appuyer sur la photo pour lancer l’exercice guidé');stage.setAttribute('role','button');stage.setAttribute('tabindex','0');
+    const canvas=document.createElement('canvas');const caption=document.createElement('div');caption.className='mur-exsphere-caption';caption.textContent='Toucher la photo pour démarrer';
     stage.style.setProperty('--mur-sphere-start',`rgb(${color.join(',')})`);
     img.parentNode.insertBefore(stage,img);stage.append(img,canvas,caption);
     const controls=document.createElement('div');controls.className='mur-exsphere-controls';
     controls.innerHTML='<span class="mur-exsphere-time">0:00 / --:--</span><div class="mur-exsphere-progress" aria-label="Progression de l’exercice"><span></span></div><button type="button" class="mur-exsphere-toggle" aria-pressed="true" title="Afficher ou masquer la sphère">Vue sphère · ON</button>';
     stage.after(controls);
-    const s={key,zone,color,detail,audio,image:img,stage,canvas,caption,controls,ctx:canvas.getContext('2d'),points:makeParticles(color),raf:0,playedAt:null,started:false,enabled:true,analyser:null,frequency:null,voice:.11,analyserFrames:0,paused:false};
+    const s={key,zone,color,detail,audio,image:img,stage,canvas,caption,controls,ctx:canvas.getContext('2d'),points:makeParticles(color),raf:0,playedAt:null,started:false,enabled:true,analyser:null,frequency:null,voice:.11,analyserFrames:0,paused:false,returnAt:null,reverseProgress:0};
     state=s;
     s.onImageLoad=()=>sizeStage(s);s.onResize=()=>sizeStage(s);
     img.addEventListener('load',s.onImageLoad);window.addEventListener('resize',s.onResize,{passive:true});
     sizeStage(s);
-    const toggle=controls.querySelector('button');
-    toggle.addEventListener('click',()=>{s.enabled=!s.enabled;toggle.setAttribute('aria-pressed',String(s.enabled));toggle.textContent=s.enabled?'Vue sphère · ON':'Vue sphère · OFF';if(!s.enabled){s.image.style.opacity='1';s.caption.textContent='Image de l’exercice'}else{s.caption.textContent=audio.paused?'Reprendre l’audio':'Sphère guidée par la voix'}});
-    s.onPlay=()=>{s.started=true;s.paused=false;attachAnalyser(s);if(s.playedAt===null)s.playedAt=performance.now();};
+    // Une seule commande : toucher la photo. Les contrôles de lecture existants
+    // restent dans le DOM pour compatibilité avec le reste de M.U.R., mais sont masqués.
+    const oldPlay=detail.querySelector('#exercisePlayBtn');
+    if(oldPlay)oldPlay.style.setProperty('display','none','important');
+    const oldActions=detail.querySelector('.exercise-audio-actions');
+    if(oldActions)oldActions.style.setProperty('display','none','important');
+    const startFromPhoto=()=>{
+      if(s.returnAt!==null || (!s.audio.paused && !s.audio.ended))return;
+      if(s.started && s.audio.paused && !s.audio.ended){
+        // Un appui permet de reprendre une séquence mise en pause ailleurs.
+        s.audio.play().catch(()=>{s.caption.textContent='Toucher à nouveau pour écouter';});
+        return;
+      }
+      s.ended=false;s.returnAt=null;s.reverseProgress=0;s.started=false;s.playedAt=null;
+      try{s.audio.currentTime=0;}catch(e){}
+      // Réutilise la logique native (état du lecteur, réveil de l’écran, historique).
+      if(typeof window.toggleExerciseAudio==='function')window.toggleExerciseAudio();
+      else s.audio.play().catch(()=>{s.caption.textContent='Lecture indisponible';});
+    };
+    s.onStageClick=(event)=>{event.stopPropagation();startFromPhoto()};
+    s.onStageKeydown=(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();startFromPhoto()}};
+    stage.addEventListener('click',s.onStageClick);
+    stage.addEventListener('keydown',s.onStageKeydown);
+    s.onPlay=()=>{s.started=true;s.ended=false;s.paused=false;s.returnAt=null;s.reverseProgress=0;attachAnalyser(s);if(s.playedAt===null)s.playedAt=performance.now();};
     s.onPause=()=>{s.paused=true};
-    s.onEnded=()=>{s.paused=true;s.ended=true;s.caption.textContent='Exercice terminé · progression complète';};
+    s.onEnded=()=>{
+      s.paused=true;s.ended=true;s.returnAt=performance.now();
+      s.caption.textContent='Retour à l’image…';
+    };
     s.onMetadata=()=>updateUI(s);
     audio.addEventListener('play',s.onPlay);audio.addEventListener('pause',s.onPause);audio.addEventListener('ended',s.onEnded);audio.addEventListener('loadedmetadata',s.onMetadata);
     if(!audio.paused)s.onPlay();
@@ -164,8 +192,21 @@
     }
     c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
     const {current,p}=updateUI(s);
-    const started=s.started, morph=started?smooth((current-.15)/TRANSFORM_SECONDS):0;
+    // À la fin de l'enregistrement on rejoue exactement la métamorphose en sens inverse,
+    // en conservant la sphère verte jusqu'au début de la transition de retour.
+    const reverse=s.returnAt===null?0:smooth(clamp((t-s.returnAt)/(RETURN_SECONDS*1000)));
+    const started=s.started;
+    const forward=started?smooth((current-.15)/TRANSFORM_SECONDS):0;
+    const morph=forward*(1-reverse);
     const mix=s.ended?1:smooth(clamp((current-TRANSFORM_SECONDS)/Math.max(1,(s.audio.duration||DEFAULT_DURATION)-TRANSFORM_SECONDS)));
+    if(s.returnAt!==null&&reverse>=1){
+      s.started=false;s.ended=false;s.returnAt=null;s.reverseProgress=0;s.playedAt=null;s.voice=.11;
+      s.image.style.opacity='1';s.image.style.filter='none';
+      s.caption.textContent='Toucher la photo pour recommencer';
+      s.caption.style.opacity='1';
+      c.clearRect(0,0,w,h);
+      s.raf=requestAnimationFrame(next=>render(s,next));return;
+    }
     // The photo visually dissolves into the same pixels' spatial cloud.
     s.image.style.opacity=(!s.enabled||!started)?'1':String(1-smooth(clamp((morph-.08)/.85)));
     s.image.style.filter=s.enabled&&started?`saturate(${1+.3*morph}) brightness(${1+.2*morph})`:'none';
@@ -199,9 +240,9 @@
       for(const pnt of points){
         const pt=pnt.pt,green=pt.order<TOTAL*mix;
         const initial=pt.color;
-        const amount=green?1:0;
+        const amount=green?(1-reverse):0;
         const base=pt.pixel||initial;
-        const fromPhoto=1-smooth(clamp((morph-.15)/.85));
+        const fromPhoto=Math.max(reverse,1-smooth(clamp((morph-.15)/.85)));
         const rr=Math.round((base[0]*fromPhoto+initial[0]*(1-fromPhoto))*(1-amount)+GREEN[0]*amount);
         const gg=Math.round((base[1]*fromPhoto+initial[1]*(1-fromPhoto))*(1-amount)+GREEN[1]*amount);
         const bb=Math.round((base[2]*fromPhoto+initial[2]*(1-fromPhoto))*(1-amount)+GREEN[2]*amount);
@@ -213,7 +254,7 @@
       }
       c.globalAlpha=1;
       if(!s.ended)s.caption.textContent=current<TRANSFORM_SECONDS?'L’image devient une sphère':s.audio.paused?'En pause':`Voix narrative · ${Math.round(mix*100)} % vers le vert`;
-    }else if(!started)s.caption.textContent='Lancez l’audio pour transformer l’image';
+    }else if(!started)s.caption.textContent='Toucher la photo pour démarrer';
     s.raf=requestAnimationFrame(next=>render(s,next));
   }
   function install(){
@@ -228,5 +269,5 @@
     window.addEventListener('pagehide',()=>{if(state)cancelAnimationFrame(state.raf)});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_EXERCICES_SPHERE={version:'22.2',get active(){return !!state},refresh:attach,close:detach};
+  window.MUR_EXERCICES_SPHERE={version:'22.3',get active(){return !!state},refresh:attach,close:detach};
 })();

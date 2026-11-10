@@ -1345,13 +1345,13 @@ if (typeof window.installPresentationFallback !== 'function') {
 })();
 
 
-/* M.U.R. V22.2 — photo entière et transformation progressive vers la sphère. */
+/* M.U.R. V22.3 — photo entière et transformation progressive vers la sphère. */
 (() => {
   const load = () => {
     if(document.querySelector('script[data-mur-exsphere]')) return;
     const script=document.createElement('script');
-    script.dataset.murExsphere='22.2';
-    script.src='mur-exercices-sphere.js?v=22.2';
+    script.dataset.murExsphere='22.3';
+    script.src='mur-exercices-sphere.js?v=22.3';
     script.defer=true;
     document.head.appendChild(script);
   };
