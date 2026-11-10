@@ -1,4 +1,4 @@
-/* M.U.R. V22.1 — Exercices guidés : image vers sphère, voix et progression.
+/* M.U.R. V22.2 — Exercices guidés : image vers sphère, voix et progression.
    Module additionnel non destructif. Aucun changement de index.html.
    L'animation s'appuie sur #visualAsset, #exerciseAudio, #exerciseDetail
    et les objets EXERCISES déjà présents dans l'application. */
@@ -7,7 +7,7 @@
   if (window.MUR_EXERCICES_SPHERE) return;
   const NS = 'mur-exsphere';
   const TOTAL = 1200;
-  const TRANSFORM_SECONDS = 4.4;
+  const TRANSFORM_SECONDS = 5.4;
   const DEFAULT_DURATION = 90;
   const COLORS = {rouge:[255,82,86],orange:[255,163,65],vert:[78,224,148],bleu:[83,157,244]};
   const GREEN=[80,235,155];
@@ -20,8 +20,9 @@
     if(document.getElementById(NS+'-style'))return;
     const el=document.createElement('style');el.id=NS+'-style';
     el.textContent=`
-      #exerciseDetail .mur-exsphere-stage{position:relative;isolation:isolate;overflow:hidden;width:min(100%,460px);height:clamp(205px,42dvh,380px);min-height:205px;max-height:380px;border:1px solid rgba(169,219,240,.20);border-radius:22px;background:radial-gradient(ellipse at 50% 45%,#173b4a,#0b2130 62%,#071625);margin:8px auto 5px;touch-action:pan-y}
-      #exerciseDetail .mur-exsphere-stage #visualAsset{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;min-height:0!important;object-fit:cover!important;border:0!important;border-radius:0!important;margin:0!important;transition:none!important;box-shadow:none!important;pointer-events:none!important;z-index:1}
+      #exerciseDetail .mur-exsphere-stage{position:relative;isolation:isolate;overflow:hidden;flex:none;width:min(76vw,320px);height:auto;aspect-ratio:1/1;min-height:0;max-height:54svh;border:1px solid rgba(169,219,240,.20);border-radius:20px;background:radial-gradient(ellipse at 50% 45%,#173b4a,#0b2130 62%,#071625);margin:8px auto 5px;touch-action:pan-y}
+      #exercises.exercise-detail-open #exerciseDetail .mur-exsphere-stage #visualAsset.exercise-free-image,
+      #exerciseDetail .mur-exsphere-stage #visualAsset{position:absolute!important;left:0!important;top:0!important;transform:none!important;display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;min-height:0!important;object-fit:contain!important;object-position:center!important;border:0!important;border-radius:0!important;margin:0!important;transition:none!important;box-shadow:none!important;outline:0!important;animation:none!important;pointer-events:none!important;z-index:1}
       #exerciseDetail .mur-exsphere-stage canvas{display:block;width:100%;height:100%;position:absolute;inset:0;z-index:2;pointer-events:none}
       #exerciseDetail .mur-exsphere-caption{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);z-index:4;max-width:95%;padding:6px 12px;border-radius:15px;background:rgba(7,18,32,.75);color:#e4f9f3;border:1px solid rgba(170,229,222,.2);font-size:11px;font-weight:700;text-align:center;white-space:nowrap;pointer-events:none}
       #exerciseDetail .mur-exsphere-controls{display:flex;align-items:center;justify-content:space-between;gap:8px;width:min(100%,460px);margin:4px auto 8px;color:#b8d5df;font-size:11px}
@@ -29,7 +30,7 @@
       #exerciseDetail .mur-exsphere-progress>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--mur-sphere-start,#f66),#53e89f);transition:width .15s linear}
       #exerciseDetail .mur-exsphere-toggle{color:#d7f0ee;background:rgba(33,71,79,.6);border:1px solid rgba(104,198,181,.43);border-radius:13px;min-height:34px;padding:6px 11px;font-size:11px;font-weight:700;touch-action:manipulation}
       #exerciseDetail .mur-exsphere-toggle[aria-pressed="false"]{background:rgba(39,53,70,.45);border-color:rgba(145,168,188,.3)}
-      @media(max-height:710px){#exerciseDetail .mur-exsphere-stage{height:clamp(175px,33dvh,255px);min-height:175px}}
+
     `;
     document.head.appendChild(el);
   }
@@ -41,9 +42,50 @@
     for(let i=0;i<TOTAL;i++){
       const q=(i+.5)/TOTAL,z=1-2*q,r=Math.sqrt(1-z*z),a=i*2.3999632297;
       const ix=((i*73)%1200)/1200,iy=((i*191+47)%1200)/1200;
-      points.push({x:Math.cos(a)*r,y:z,z:Math.sin(a)*r,ix,iy,seed:i*1.61803398875,order:(i*491)%TOTAL,color:rgb});
+      points.push({x:Math.cos(a)*r,y:z,z:Math.sin(a)*r,ix,iy,pixel:null,seed:i*1.61803398875,order:(i*491)%TOTAL,color:rgb});
     }
     return points;
+  }
+  function sizeStage(s){
+    if(!s.stage?.isConnected)return;
+    const img=s.image;
+    // Même taille que la photo native de la fiche, mais jamais rognée.
+    const naturalW=img.naturalWidth||320,naturalH=img.naturalHeight||320;
+    const ratio=clamp(naturalW/naturalH,.45,2.0);
+    const allowedW=Math.min(window.innerWidth*.76,320);
+    const allowedH=Math.min(window.innerHeight*.54,window.innerHeight-220);
+    const height=Math.max(140,Math.min(allowedH,allowedW/ratio));
+    const width=height*ratio;
+    s.stage.style.setProperty('width',`${Math.round(width)}px`);
+    s.stage.style.setProperty('height',`${Math.round(height)}px`);
+    s.stage.style.setProperty('aspect-ratio',`${naturalW} / ${naturalH}`);
+    samplePhoto(s);
+  }
+  function samplePhoto(s){
+    const img=s.image;
+    if(!img.complete||!img.naturalWidth)return;
+    const oc=document.createElement('canvas');oc.width=260;oc.height=260;
+    const cx=oc.getContext('2d',{willReadFrequently:true});
+    if(!cx)return;
+    // Fit image *entirely* on a transparent surface, like object-fit:contain.
+    const ratio=Math.min(260/img.naturalWidth,260/img.naturalHeight);
+    const iw=img.naturalWidth*ratio,ih=img.naturalHeight*ratio;
+    const ox=(260-iw)/2,oy=(260-ih)/2;
+    try{
+      cx.drawImage(img,ox,oy,iw,ih);
+      const pixels=cx.getImageData(0,0,260,260).data;
+      let seed=777;
+      const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+      for(const pt of s.points){
+        const px=Math.floor(ox+rnd()*iw),py=Math.floor(oy+rnd()*ih),idx=(py*260+px)*4;
+        pt.ix=px/260;pt.iy=py/260;
+        pt.pixel=[pixels[idx],pixels[idx+1],pixels[idx+2]];
+      }
+      s.hasPhotoPixels=true;
+    }catch(error){
+      // Images externes sans CORS : animation colorée préservée, jamais de blocage audio.
+      s.hasPhotoPixels=false;
+    }
   }
   function disconnectAudio(s){
     if(s.analyser){try{s.analyser.disconnect()}catch(e){}}
@@ -74,6 +116,8 @@
     if(s.audio){s.audio.removeEventListener('play',s.onPlay);s.audio.removeEventListener('pause',s.onPause);s.audio.removeEventListener('ended',s.onEnded);s.audio.removeEventListener('loadedmetadata',s.onMetadata)}
     disconnectAudio(s);
     if(s.image){s.image.style.opacity='';s.image.style.filter='';if(s.stage?.contains(s.image))s.stage.parentNode?.insertBefore(s.image,s.stage)}
+    if(s.onImageLoad)s.image.removeEventListener('load',s.onImageLoad);
+    if(s.onResize)window.removeEventListener('resize',s.onResize);
     s.stage?.remove();s.controls?.remove();state=null;
   }
   function attach(){
@@ -91,6 +135,9 @@
     stage.after(controls);
     const s={key,zone,color,detail,audio,image:img,stage,canvas,caption,controls,ctx:canvas.getContext('2d'),points:makeParticles(color),raf:0,playedAt:null,started:false,enabled:true,analyser:null,frequency:null,voice:.11,analyserFrames:0,paused:false};
     state=s;
+    s.onImageLoad=()=>sizeStage(s);s.onResize=()=>sizeStage(s);
+    img.addEventListener('load',s.onImageLoad);window.addEventListener('resize',s.onResize,{passive:true});
+    sizeStage(s);
     const toggle=controls.querySelector('button');
     toggle.addEventListener('click',()=>{s.enabled=!s.enabled;toggle.setAttribute('aria-pressed',String(s.enabled));toggle.textContent=s.enabled?'Vue sphère · ON':'Vue sphère · OFF';if(!s.enabled){s.image.style.opacity='1';s.caption.textContent='Image de l’exercice'}else{s.caption.textContent=audio.paused?'Reprendre l’audio':'Sphère guidée par la voix'}});
     s.onPlay=()=>{s.started=true;s.paused=false;attachAnalyser(s);if(s.playedAt===null)s.playedAt=performance.now();};
@@ -120,7 +167,7 @@
     const started=s.started, morph=started?smooth((current-.15)/TRANSFORM_SECONDS):0;
     const mix=s.ended?1:smooth(clamp((current-TRANSFORM_SECONDS)/Math.max(1,(s.audio.duration||DEFAULT_DURATION)-TRANSFORM_SECONDS)));
     // The photo visually dissolves into the same pixels' spatial cloud.
-    s.image.style.opacity=(!s.enabled||!started)?'1':String(1-morph);
+    s.image.style.opacity=(!s.enabled||!started)?'1':String(1-smooth(clamp((morph-.08)/.85)));
     s.image.style.filter=s.enabled&&started?`saturate(${1+.3*morph}) brightness(${1+.2*morph})`:'none';
     if(started&&s.enabled){
       let level=s.voice;
@@ -144,7 +191,7 @@
         const zoom=1+.14*z;
         const xx=cx+x*baseR*zoom*wiggle,yy=cy+pt.y*baseR*zoom*wiggle;
         // Map of points from the original rectangle smoothly bends into the sphere.
-        const sx=(pt.ix-.5)*w*.86+cx,sy=(pt.iy-.5)*h*.86+cy;
+        const sx=pt.ix*w,sy=pt.iy*h;
         return {xx:sx+(xx-sx)*morph,yy:sy+(yy-sy)*morph,z,pt};
       });
       points.sort((a,b)=>a.z-b.z);
@@ -153,9 +200,13 @@
         const pt=pnt.pt,green=pt.order<TOTAL*mix;
         const initial=pt.color;
         const amount=green?1:0;
-        const rr=Math.round(initial[0]*(1-amount)+GREEN[0]*amount),gg=Math.round(initial[1]*(1-amount)+GREEN[1]*amount),bb=Math.round(initial[2]*(1-amount)+GREEN[2]*amount);
+        const base=pt.pixel||initial;
+        const fromPhoto=1-smooth(clamp((morph-.15)/.85));
+        const rr=Math.round((base[0]*fromPhoto+initial[0]*(1-fromPhoto))*(1-amount)+GREEN[0]*amount);
+        const gg=Math.round((base[1]*fromPhoto+initial[1]*(1-fromPhoto))*(1-amount)+GREEN[1]*amount);
+        const bb=Math.round((base[2]*fromPhoto+initial[2]*(1-fromPhoto))*(1-amount)+GREEN[2]*amount);
         const depth=(pnt.z+1)/2;
-        c.globalAlpha=clamp((.4+.6*depth)*Math.max(.2,morph),0,1);
+        c.globalAlpha=clamp((.4+.6*depth)*smooth(clamp((morph+.05)*2.5)),0,1);
         c.fillStyle=`rgb(${rr},${gg},${bb})`;
         const radius=(.8+depth*1.7)*(.6+.4*saturation);
         c.beginPath();c.arc(pnt.xx,pnt.yy,radius,0,Math.PI*2);c.fill();
@@ -177,5 +228,5 @@
     window.addEventListener('pagehide',()=>{if(state)cancelAnimationFrame(state.raf)});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_EXERCICES_SPHERE={version:'22.1',get active(){return !!state},refresh:attach,close:detach};
+  window.MUR_EXERCICES_SPHERE={version:'22.2',get active(){return !!state},refresh:attach,close:detach};
 })();
