@@ -1566,22 +1566,22 @@ if (typeof window.installPresentationFallback !== 'function') {
     window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_HOME_PARTICLES_V33={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere',menuTransition:'particle-dispersion-600ms'};
+  window.MUR_HOME_PARTICLES_V33={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere',menuTransition:'particle-dispersion-1000ms'};
 })();
 
 
 
 /* =============================================================
-   M.U.R. V33 — DIFFUSION / RECONSTITUTION DE LA SPHERE
+   M.U.R. V34 — DIFFUSION / RECONSTITUTION DE LA SPHERE
    Les boutons du menu radial, les verrous NeuroFlex et les
    commandes existantes restent gérés par le module d'origine.
-   0,6 seconde ouverture · 0,5 seconde fermeture.
+   1 seconde ouverture · 0,8 seconde fermeture.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_BURST_V33)return;
+  if(window.MUR_HOME_BURST_V34)return;
   const N=2400, TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
-  const OUT_MS=600, IN_MS=500;
+  const OUT_MS=1000, IN_MS=800;
   const cloud=Array.from({length:N},(_,i)=>{
     const y=1-2*(i+.5)/N,r=Math.sqrt(Math.max(0,1-y*y)),a=i*GOLD;
     const seed=((i*541+29)%N)/N;
@@ -1594,8 +1594,8 @@ if (typeof window.installPresentationFallback !== 'function') {
   function init(){
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
-    if(!circle||!home||circle.dataset.murBurstV32)return;
-    circle.dataset.murBurstV32='1';
+    if(!circle||!home||circle.dataset.murBurstV34)return;
+    circle.dataset.murBurstV34='1';
     const overlay=document.createElement('canvas');
     overlay.className='mur-home-particle-burst';
     overlay.setAttribute('aria-hidden','true');
@@ -1685,7 +1685,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',finish,{passive:true}));
     window.addEventListener('pagehide',finish);
     window.addEventListener('resize',()=>{if(animation)frame=requestAnimationFrame(render)},{passive:true});
-    window.MUR_HOME_BURST_V33={particles:N,openMs:OUT_MS,closeMs:IN_MS};
+    window.MUR_HOME_BURST_V34={particles:N,openMs:OUT_MS,closeMs:IN_MS};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
