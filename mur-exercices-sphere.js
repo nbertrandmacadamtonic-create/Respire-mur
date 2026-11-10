@@ -1,4 +1,4 @@
-/* M.U.R. V22.3 — Exercices guidés : image vers sphère, voix et progression.
+/* M.U.R. V22.4 — Exercices guidés : image vers sphère, voix et progression.
    Module additionnel non destructif. Aucun changement de index.html.
    L'animation s'appuie sur #visualAsset, #exerciseAudio, #exerciseDetail
    et les objets EXERCISES déjà présents dans l'application. */
@@ -26,13 +26,16 @@
       #exerciseDetail .mur-exsphere-stage #visualAsset{position:absolute!important;left:0!important;top:0!important;transform:none!important;display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;min-height:0!important;object-fit:contain!important;object-position:center!important;border:0!important;border-radius:0!important;margin:0!important;transition:none!important;box-shadow:none!important;outline:0!important;animation:none!important;pointer-events:none!important;z-index:1}
       #exerciseDetail .mur-exsphere-stage canvas{display:block;width:100%;height:100%;position:absolute;inset:0;z-index:2;pointer-events:none}
       #exerciseDetail .mur-exsphere-caption{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);z-index:4;max-width:95%;padding:6px 12px;border-radius:15px;background:rgba(7,18,32,.75);color:#e4f9f3;border:1px solid rgba(170,229,222,.2);font-size:11px;font-weight:700;text-align:center;white-space:nowrap;pointer-events:none}
-      #exerciseDetail .mur-exsphere-controls{display:none!important;}
       #exerciseDetail .mur-exsphere-stage:focus-visible{outline:2px solid #85e9bd;outline-offset:3px}
       #exerciseDetail .mur-exsphere-controls{display:flex;align-items:center;justify-content:space-between;gap:8px;width:min(100%,460px);margin:4px auto 8px;color:#b8d5df;font-size:11px}
       #exerciseDetail .mur-exsphere-progress{height:5px;border-radius:9px;flex:1;background:rgba(129,164,185,.22);overflow:hidden}
       #exerciseDetail .mur-exsphere-progress>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--mur-sphere-start,#f66),#53e89f);transition:width .15s linear}
       #exerciseDetail .mur-exsphere-toggle{color:#d7f0ee;background:rgba(33,71,79,.6);border:1px solid rgba(104,198,181,.43);border-radius:13px;min-height:34px;padding:6px 11px;font-size:11px;font-weight:700;touch-action:manipulation}
       #exerciseDetail .mur-exsphere-toggle[aria-pressed="false"]{background:rgba(39,53,70,.45);border-color:rgba(145,168,188,.3)}
+      /* On conserve le lecteur audio et sa boucle infinie natifs, sous la photo. */
+      #exerciseDetail .exercise-audio-actions{display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center;gap:12px}
+      #exerciseDetail .exercise-audio-actions #exercisePlayBtn{display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center}
+
 
     `;
     document.head.appendChild(el);
@@ -142,24 +145,17 @@
     s.onImageLoad=()=>sizeStage(s);s.onResize=()=>sizeStage(s);
     img.addEventListener('load',s.onImageLoad);window.addEventListener('resize',s.onResize,{passive:true});
     sizeStage(s);
-    // Une seule commande : toucher la photo. Les contrôles de lecture existants
-    // restent dans le DOM pour compatibilité avec le reste de M.U.R., mais sont masqués.
-    const oldPlay=detail.querySelector('#exercisePlayBtn');
-    if(oldPlay)oldPlay.style.setProperty('display','none','important');
-    const oldActions=detail.querySelector('.exercise-audio-actions');
-    if(oldActions)oldActions.style.setProperty('display','none','important');
+    // Le clic photo est un raccourci : le lecteur natif et le bouton infini restent visibles.
     const startFromPhoto=()=>{
-      if(s.returnAt!==null || (!s.audio.paused && !s.audio.ended))return;
-      if(s.started && s.audio.paused && !s.audio.ended){
-        // Un appui permet de reprendre une séquence mise en pause ailleurs.
-        s.audio.play().catch(()=>{s.caption.textContent='Toucher à nouveau pour écouter';});
-        return;
+      // Photo et bouton Lecture/Pause commandent le même lecteur natif.
+      if(s.returnAt!==null)return; // Laisser le retour vers la photo se terminer.
+      if(s.audio.ended){
+        s.ended=false;s.returnAt=null;s.reverseProgress=0;s.started=false;s.playedAt=null;
+        try{s.audio.currentTime=0;}catch(e){}
       }
-      s.ended=false;s.returnAt=null;s.reverseProgress=0;s.started=false;s.playedAt=null;
-      try{s.audio.currentTime=0;}catch(e){}
-      // Réutilise la logique native (état du lecteur, réveil de l’écran, historique).
       if(typeof window.toggleExerciseAudio==='function')window.toggleExerciseAudio();
-      else s.audio.play().catch(()=>{s.caption.textContent='Lecture indisponible';});
+      else if(s.audio.paused)s.audio.play().catch(()=>{s.caption.textContent='Lecture indisponible';});
+      else s.audio.pause();
     };
     s.onStageClick=(event)=>{event.stopPropagation();startFromPhoto()};
     s.onStageKeydown=(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();startFromPhoto()}};
@@ -168,6 +164,7 @@
     s.onPlay=()=>{s.started=true;s.ended=false;s.paused=false;s.returnAt=null;s.reverseProgress=0;attachAnalyser(s);if(s.playedAt===null)s.playedAt=performance.now();};
     s.onPause=()=>{s.paused=true};
     s.onEnded=()=>{
+      if(s.audio.loop)return;
       s.paused=true;s.ended=true;s.returnAt=performance.now();
       s.caption.textContent='Retour à l’image…';
     };
@@ -269,5 +266,5 @@
     window.addEventListener('pagehide',()=>{if(state)cancelAnimationFrame(state.raf)});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_EXERCICES_SPHERE={version:'22.3',get active(){return !!state},refresh:attach,close:detach};
+  window.MUR_EXERCICES_SPHERE={version:'22.4',get active(){return !!state},refresh:attach,close:detach};
 })();
