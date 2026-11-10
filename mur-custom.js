@@ -1343,3 +1343,18 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.addEventListener('DOMContentLoaded', init, {once:true});
   } else init();
 })();
+
+
+/* M.U.R. V22.1 — moteur de sphère vocale des exercices guidés. */
+(() => {
+  const load = () => {
+    if(document.querySelector('script[data-mur-exsphere]')) return;
+    const script=document.createElement('script');
+    script.dataset.murExsphere='22.1';
+    script.src='mur-exercices-sphere.js?v=22.1';
+    script.defer=true;
+    document.head.appendChild(script);
+  };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', load, {once:true});
+  else load();
+})();
