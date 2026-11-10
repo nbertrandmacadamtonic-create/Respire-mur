@@ -1,4 +1,4 @@
-/* M.U.R. V22.9 — Exercices guidés : image vers sphère, voix et progression.
+/* M.U.R. V22.10 — Exercices guidés : image vers sphère, voix et progression.
    Module additionnel non destructif. Aucun changement de index.html.
    L'animation s'appuie sur #visualAsset, #exerciseAudio, #exerciseDetail
    et les objets EXERCISES déjà présents dans l'application. */
@@ -172,6 +172,15 @@
     }catch(err){s.analyser=null;s.frequency=null}
   }
   const ZOOM_MS=700;
+  function resetDocumentScroll(){
+    // Seule la fenêtre est remise à zéro : on ne touche pas au scroll des contenus
+    // des tests, de l'historique, ni aux modales autonomes.
+    try { window.scrollTo({left:0,top:0,behavior:'instant'}); }
+    catch(e){try{window.scrollTo(0,0)}catch(_) {}}
+    document.documentElement.scrollTop=0;
+    document.body.scrollTop=0;
+  }
+
   function endFullscreen(s, {pause=true}={}){
     if(!s)return;
     if(s.zoomTimer){clearTimeout(s.zoomTimer);s.zoomTimer=0;}
@@ -187,8 +196,12 @@
     document.body.classList.remove('mur-exsphere-fullscreen');
     s.stage?.classList.remove('mur-exsphere-zoom');
     for(const prop of ['left','top','right','bottom','width','height','borderRadius','zIndex'])s.stage?.style.removeProperty(prop);
-    if(s.stage?.isConnected)sizeStage(s);
     s.fullscreen=false;
+    if(s.stage?.isConnected)sizeStage(s);
+    // Le plein écran ne doit jamais laisser un décalage global du document.
+    if(document.getElementById('exercises')?.classList.contains('active')){
+      requestAnimationFrame(()=>{ if(state===s) resetDocumentScroll(); });
+    }
   }
   function startAudioFromFullscreen(s){
     if(state!==s||!s.fullscreen)return;
@@ -201,6 +214,7 @@
   }
   function enterFullscreen(s){
     if(state!==s || s.fullscreen || s.zooming)return;
+    resetDocumentScroll();
     const box=s.stage.getBoundingClientRect();
     s.fullscreen=true;s.zooming=true;s.visualHold=true;
     const scrim=document.createElement('div');scrim.className='mur-exsphere-fs-scrim';
@@ -388,25 +402,23 @@
     function openWithSphere(...args){
       const detail=document.getElementById('exerciseDetail');
       let ownScroll=false;
-      // L'ancienne fiche invoque scrollIntoView({behavior:"smooth"}) :
-      // cela fait traverser l'ecran precedent avant d'arriver a la fiche.
-      // Convertir ce seul scroll en deplacement instantane, sans agir ailleurs.
+      // L'application appelle scrollIntoView({behavior:"smooth",block:"start"}).
+      // Ce scroll déplace le document ENTIER, et ses effets survivent au plein écran.
+      // Neutralisation strictement limitée à l'appel natif d'ouverture de fiche.
       if(detail){
-        const originalScroll=detail.scrollIntoView;
         try{
-          detail.scrollIntoView=function(options){
-            const opts=options&&typeof options==='object'?{...options,behavior:'instant',block:'start'}:{behavior:'instant',block:'start'};
-            return originalScroll.call(this,opts);
-          };
+          detail.scrollIntoView=function(){ /* aucun scroll global */ };
           ownScroll=true;
         }catch(e){}
       }
+      // Supprimer une éventuelle animation de scroll héritée d'un exercice précédent.
+      resetDocumentScroll();
       try{return original.apply(this,args)}
       finally{
         if(ownScroll){try{delete detail.scrollIntoView}catch(e){}}
-        // Meme tick : photo, cadre et sphere sont deja dans leur etat final
-        // avant que le navigateur n'ait la possibilite de peindre la page.
         attach();
+        resetDocumentScroll();
+        requestAnimationFrame(()=>{if(document.getElementById('exercises')?.classList.contains('active'))resetDocumentScroll();});
       }
     }
     openWithSphere.__murSphereImmediate=true;
@@ -421,9 +433,19 @@
       if(!document.getElementById('exerciseAudio')){if(state)detach();return}
       attach();
     });
+    // Changer d'onglet pendant le plein écran doit nettoyer immédiatement l'overlay.
+    const pages=document.querySelectorAll('.app > .page');
+    const navObserver=new MutationObserver(()=>{
+      if(!document.getElementById('exercises')?.classList.contains('active')){
+        if(state?.fullscreen)endFullscreen(state,{pause:true});
+        document.body.classList.remove('mur-exsphere-fullscreen');
+        if(window.scrollY>0)resetDocumentScroll();
+      }
+    });
+    pages.forEach(page=>navObserver.observe(page,{attributes:true,attributeFilter:['class']}));
     obs.observe(detail,{childList:true,subtree:true});attach();
     window.addEventListener('pagehide',()=>{if(state)cancelAnimationFrame(state.raf)});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_EXERCICES_SPHERE={version:'22.9',get active(){return !!state},refresh:attach,close:detach};
+  window.MUR_EXERCICES_SPHERE={version:'22.10',get active(){return !!state},refresh:attach,close:detach};
 })();
