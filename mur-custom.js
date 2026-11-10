@@ -1244,7 +1244,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 (() => {
   'use strict';
   const SCRIPT_ID = 'murSouffleVivant218Script';
-  const FILE = 'mur-souffle-vivant.js?v=22.5';
+  const FILE = 'mur-souffle-vivant.js?v=22.7';
   function loadSouffleVivant() {
     if (document.getElementById(SCRIPT_ID) || window.MURSOUFFLEVIVANT21) return;
     const s = document.createElement('script');
@@ -1350,8 +1350,8 @@ if (typeof window.installPresentationFallback !== 'function') {
   const load = () => {
     if(document.querySelector('script[data-mur-exsphere]')) return;
     const script=document.createElement('script');
-    script.dataset.murExsphere='22.6';
-    script.src='mur-exercices-sphere.js?v=22.6';
+    script.dataset.murExsphere='22.7';
+    script.src='mur-exercices-sphere.js?v=22.7';
     script.defer=true;
     document.head.appendChild(script);
   };

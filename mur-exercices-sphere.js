@@ -1,4 +1,4 @@
-/* M.U.R. V22.6 — Exercices guidés : image vers sphère, voix et progression.
+/* M.U.R. V22.7 — Exercices guidés : image vers sphère, voix et progression.
    Module additionnel non destructif. Aucun changement de index.html.
    L'animation s'appuie sur #visualAsset, #exerciseAudio, #exerciseDetail
    et les objets EXERCISES déjà présents dans l'application. */
@@ -22,6 +22,19 @@
     if(document.getElementById(NS+'-style'))return;
     const el=document.createElement('style');el.id=NS+'-style';
     el.textContent=`
+      /* V22.7 : fiche compacte, titre visible sans descendre dans la page. */
+      #exercises.exercise-detail-open #exerciseDetail{padding:8px 10px 10px!important;gap:3px!important;align-items:center!important;scroll-margin-top:calc(64px + env(safe-area-inset-top))!important}
+      #exercises.exercise-detail-open #exerciseDetail>h2{display:block!important;position:relative!important;order:0!important;width:100%!important;margin:0 auto 2px!important;padding:0!important;line-height:1.17!important;font-size:clamp(17px,2.35vh,23px)!important;text-align:center!important;flex:none!important;max-width:100%!important;white-space:normal!important;visibility:visible!important;opacity:1!important}
+      #exercises.exercise-detail-open #exerciseDetail>.exercise-zone-line{order:1!important;margin:0 auto 2px!important;padding:0!important;line-height:1.15!important;font-size:10px!important;text-align:center!important;flex:none!important}
+      #exercises.exercise-detail-open #exerciseDetail>.mur-exsphere-stage{order:2!important;max-height:min(36svh,310px)!important;margin:2px auto 1px!important}
+      #exercises.exercise-detail-open #exerciseDetail>.mur-exsphere-controls{order:3!important;margin:1px auto 2px!important;gap:5px!important}
+      #exercises.exercise-detail-open #exerciseDetail>.exercise-control-panel{order:4!important;gap:4px!important;margin:0!important;padding:3px 6px 6px!important;width:100%!important}
+      #exercises.exercise-detail-open #exerciseDetail .exercise-free-caption{margin:0 auto 4px!important;padding:0!important;line-height:1.15!important;font-size:11px!important}
+      #exercises.exercise-detail-open #exerciseDetail .exercise-audio-actions{margin:2px auto!important;padding:0!important;gap:9px!important}
+      #exercises.exercise-detail-open #exerciseDetail .exercise-audio-actions button{min-height:36px!important;padding:7px 13px!important}
+      #exercises.exercise-detail-open #exerciseDetail .why-toggle-btn{margin:3px auto!important;padding:7px 12px!important;min-height:33px!important}
+      #exercises.exercise-detail-open #exerciseDetail .mur-exsphere-caption{font-size:10px!important;padding:4px 9px!important;bottom:6px!important}
+      @media(max-height:700px){#exercises.exercise-detail-open #exerciseDetail>.mur-exsphere-stage{max-height:31svh!important}#exercises.exercise-detail-open #exerciseDetail{padding-top:4px!important}#exercises.exercise-detail-open #exerciseDetail>.exercise-zone-line{font-size:9px!important}}
       #exerciseDetail .mur-exsphere-stage{position:relative;isolation:isolate;overflow:hidden;flex:none;width:min(76vw,320px);height:auto;aspect-ratio:1/1;min-height:0;max-height:54svh;border:1px solid rgba(169,219,240,.20);border-radius:20px;background:radial-gradient(ellipse at 50% 45%,#173b4a,#0b2130 62%,#071625);margin:8px auto 5px;touch-action:manipulation;cursor:pointer;-webkit-tap-highlight-color:transparent}
       #exercises.exercise-detail-open #exerciseDetail .mur-exsphere-stage #visualAsset.exercise-free-image,
       #exerciseDetail .mur-exsphere-stage #visualAsset{position:absolute!important;left:0!important;top:0!important;transform:none!important;display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;min-height:0!important;object-fit:contain!important;object-position:center!important;border:0!important;border-radius:0!important;margin:0!important;transition:none!important;box-shadow:none!important;outline:0!important;animation:none!important;pointer-events:none!important;z-index:1}
@@ -58,8 +71,8 @@
     const naturalW=img.naturalWidth||320,naturalH=img.naturalHeight||320;
     const ratio=clamp(naturalW/naturalH,.45,2.0);
     const allowedW=Math.min(window.innerWidth*.76,320);
-    const allowedH=Math.min(window.innerHeight*.54,window.innerHeight-220);
-    const height=Math.max(140,Math.min(allowedH,allowedW/ratio));
+    const allowedH=Math.min(window.innerHeight*.36,310,Math.max(140,window.innerHeight-360));
+    const height=Math.max(110,Math.min(allowedH,allowedW/ratio));
     const width=height*ratio;
     s.stage.style.setProperty('width',`${Math.round(width)}px`);
     s.stage.style.setProperty('height',`${Math.round(height)}px`);
@@ -272,7 +285,7 @@
         const originalScroll=detail.scrollIntoView;
         try{
           detail.scrollIntoView=function(options){
-            const opts=options&&typeof options==='object'?{...options,behavior:'instant'}:{behavior:'instant',block:'start'};
+            const opts=options&&typeof options==='object'?{...options,behavior:'instant',block:'start'}:{behavior:'instant',block:'start'};
             return originalScroll.call(this,opts);
           };
           ownScroll=true;
@@ -302,5 +315,5 @@
     window.addEventListener('pagehide',()=>{if(state)cancelAnimationFrame(state.raf)});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_EXERCICES_SPHERE={version:'22.6',get active(){return !!state},refresh:attach,close:detach};
+  window.MUR_EXERCICES_SPHERE={version:'22.7',get active(){return !!state},refresh:attach,close:detach};
 })();

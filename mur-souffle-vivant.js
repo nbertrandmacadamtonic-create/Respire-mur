@@ -7,7 +7,7 @@
 (()=>{
   'use strict';
   if(window.MURSOUFFLEVIVANT21)return;
-  const VERSION='22.5-demarrage-empreinte';
+  const VERSION='22.7-demarrage-empreinte-ios';
   const COUNT=1200, REFERENCE_EXHALE_SECONDS=8, REFERENCE_EXHALES=7;
   const GOAL=REFERENCE_EXHALE_SECONDS*REFERENCE_EXHALES; // 56 s, valeur TEST ajustable après essais
   const fingerprint='<svg aria-hidden="true" viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M10 23c0-9 6-15 14-15s14 6 14 15"/><path d="M15 26v-3c0-6 4-10 9-10s9 4 9 10v5"/><path d="M20 30v-7a4 4 0 0 1 8 0v9"/><path d="M11 31v-7"/><path d="M16 35c3-4 3-7 3-11"/><path d="M24 22v8c0 6-2 10-5 13"/><path d="M32 34c-1 5-3 8-5 10"/><path d="M37 29c0 6-2 11-5 15"/></svg>';
@@ -365,7 +365,20 @@
     if(ended){hideResults();elapsed=0;breath=0;cycles=0;angular=0;ended=false;escaped=[];lastGreen=0;}
     started=true;get('svState').classList.remove('sv-finished');
   }
-  function press(e){if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault();if(down)return;if(!started)start();playPhaseSound('expire');down=true;pointer=e.pointerId;cycles++;const b=get('svFinger');b.classList.add('sv-down');try{b.setPointerCapture(e.pointerId);}catch(_){}}
+  let lastPointerPress=0;
+  function press(e){
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    if(e.cancelable)e.preventDefault();
+    if(down)return;
+    lastPointerPress=Date.now();
+    // Premier contact : déclenche séance + chronomètre + première expiration.
+    if(!started)start();
+    if(ended)return;
+    down=true;pointer=e.pointerId??'touch';cycles++;
+    const b=get('svFinger');b.classList.add('sv-down');
+    playPhaseSound('expire');
+    if(e.pointerId!==undefined)try{b.setPointerCapture(e.pointerId);}catch(_){}
+  }
   function lift(e){if(!down)return;if(e&&e.pointerId!==undefined&&e.pointerId!==pointer)return;fingerUp();if(started&&!ended)playPhaseSound('inspire');else stopPhaseSound();}
   function close(){restoreTabbar();hideResults();stopPhaseSound();fingerUp();cancelAnimationFrame(raf);raf=0;prev=0;window.removeEventListener('blur',blurListener);document.removeEventListener('visibilitychange',hideListener);if(activeTabbar){activeTabbar.removeEventListener('click',onTabbarNavigation,true);activeTabbar=null;}document.body.classList.remove('mur-sv-active');overlay?.remove();overlay=null;document.body.style.overflow=hiddenBefore||'';}
   function blurListener(){stopPhaseSound();fingerUp();}
@@ -380,6 +393,7 @@
     overlay=document.createElement('section');overlay.id='murSV21';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label',t('Souffle vivant','Living breath'));
     overlay.innerHTML=`<div class="sv-shell"><div class="sv-top"><div class="sv-mark"><button id="svGoHome" class="sv-brand-orb" type="button" aria-label="${t('Retour à l’accueil','Back to home')}">↶</button><span>${t('Urgence · Souffle vivant','Urgency · Living breath')}</span></div><div class="sv-top-actions"><button class="sv-info-trigger" id="svInfoBtn" type="button" aria-label="${t('Informations sur l’expiration','Exhalation information')}" aria-haspopup="dialog">i</button></div></div><div class="sv-main-card"><h2>${t('Souffle vivant','Living breath')}</h2><p class="sv-sub">${t('Votre souffle transforme la sphère','Your breath transforms the sphere')}</p><div class="sv-options"><button type="button" class="sv-option" data-sv-mode="timed" aria-pressed="true">${t('90 secondes','90 seconds')}</button><button type="button" class="sv-option" data-sv-mode="free" aria-pressed="false">${t('Mode libre','Free mode')}</button></div><div class="sv-timer" id="svTimer">01:30</div><div class="sv-scorebox"><div class="sv-scoreline"><span id="svScore">0 / 1 200</span><span><strong id="svPct">0 %</strong> ${t('verts','green')}</span></div><div class="sv-track"><div class="sv-fill" id="svFill"></div></div></div><canvas class="sv-canvas" id="svCanvas" aria-label="${t('Sphère animée de 1200 points','Animated sphere of 1200 points')}"></canvas><div class="sv-state" id="svState" aria-live="polite"></div><button id="svFinger" type="button" class="sv-finger" aria-label="${t('Maintenir pendant l’expiration','Hold while exhaling')}">${fingerprint}</button><div class="sv-cta">${t('Maintenez pour expirer','Hold to exhale')}</div><div class="sv-hint">${t('Relâchez pour inspirer','Release to inhale')}</div><div class="sv-foot"><div class="sv-meta">${t('Expiration cumulée','Total exhalation')}: <b id="svBreath">0,0 s</b> · ${t('Cycles','Cycles')}: <b id="svCycles">0</b></div><div class="sv-actions"><button class="sv-action" id="svSound" type="button" aria-pressed="true">${t('Son activé','Sound on')}</button><button class="sv-action" id="svReset" type="button">${t('Réinitialiser','Reset')}</button></div><div class="sv-note">${t('Le doigt guide le son : appui = expiration, relâchement = inspiration.','The finger guides the sound: hold = exhale, release = inhale.')}</div></div></div><div id="svInfo" class="sv-info-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="svInfoTitle"><div class="sv-info-card"><div class="sv-info-heading"><h3 id="svInfoTitle">${t('Pourquoi expirer ?','Why exhale?')}</h3><button id="svInfoClose" class="sv-close" type="button" aria-label="${t('Fermer les informations','Close information')}">×</button></div><p>${t('<strong>Inspirez</strong> naturellement, sans forcer, pendant que votre doigt est levé. La sphère ralentit.','<strong>Inhale</strong> naturally without forcing while your finger is released. The sphere slows down.')}</p><p>${t('<strong>Expirez</strong> lentement en maintenant le doigt sur l’empreinte. Le son descend, la sphère accélère et les particules deviennent progressivement vertes.','<strong>Exhale</strong> slowly while holding the fingerprint button. The sound falls, the sphere speeds up and particles gradually turn green.')}</p><p>${t('<strong>Relâchez</strong> pour revenir à l’inspiration. Vous pouvez répéter ce cycle à votre rythme, sans blocage respiratoire volontaire.','<strong>Release</strong> to inhale again. Repeat at your own pace without deliberately holding your breath.')}</p><p>${t('Une expiration calme et confortable peut favoriser une sensation d’apaisement. Ne cherchez pas à expirer plus longtemps que ce qui vous est agréable.','A calm, comfortable exhale may promote a feeling of relaxation. Do not force a longer exhale than feels comfortable.')}</p><p class="sv-info-note">${t('Le pourcentage vert est une progression ludique basée sur le temps d’appui. Il ne mesure ni la qualité respiratoire ni l’état du système nerveux autonome.','The green percentage is exercise progress based on hold time, not a measure of breathing quality or autonomic nervous system state.')}</p><button id="svInfoOk" class="sv-info-ok" type="button">${t('Compris — revenir à l’exercice','Got it — back to exercise')}</button></div></div><div id="svResults" class="sv-results-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="svResultTitle"><div class="sv-results-card"><div class="sv-results-label">M.U.R. · ${t('BILAN DE SÉANCE','SESSION RESULTS')}</div><h3 id="svResultTitle">${t('Séance terminée','Session complete')}</h3><div id="svResultPercent" class="sv-results-percent">0 %</div><div class="sv-results-label">${t('PARTICULES DEVENUES VERTES','PARTICLES TURNED GREEN')}</div><div class="sv-results-progress"><span id="svResultFill"></span></div><div class="sv-results-grid"><div class="sv-results-stat"><b id="svResultPoints">0 / 1 200</b><small>${t('Points verts','Green particles')}</small></div><div class="sv-results-stat"><b id="svResultExpirations">0</b><small>${t('Expirations (appuis)','Exhalations (holds)')}</small></div><div class="sv-results-stat"><b id="svResultExhale">0,0 s</b><small>${t('Expiration cumulée','Total exhalation')}</small></div><div class="sv-results-stat"><b id="svResultDuration">00:00</b><small>${t('Durée de séance','Session duration')}</small></div></div><p class="sv-results-explain">${t('Ce score illustre votre progression dans l’exercice à partir du temps d’appui. Il ne mesure pas l’équilibre de votre système nerveux autonome.','This score illustrates your exercise progress using hold time. It does not measure autonomic nervous system balance.')}</p><div class="sv-results-buttons"><button id="svResultClose" type="button">${t('Accueil','Home')}</button><button id="svResultRestart" class="sv-results-primary" type="button">${t('Respiration','Breathing')}</button></div></div></div></div>`;
     document.body.appendChild(overlay);
+    overlay.querySelectorAll('#svStart, .sv-start, [data-sv-start]').forEach(b=>b.remove());
     get('svGoHome').addEventListener('click',()=>navigateTo('home'));get('svInfoBtn').addEventListener('click',showInfo);get('svInfoClose').addEventListener('click',hideInfo);get('svInfoOk').addEventListener('click',hideInfo);get('svSound').addEventListener('click',toggleSound);
     get('svResultClose').addEventListener('click',()=>navigateTo('home'));get('svResultRestart').addEventListener('click',()=>navigateTo('breath'));
     get('svReset').addEventListener('click',()=>{hideResults();stopPhaseSound();fingerUp();elapsed=0;breath=0;cycles=0;ended=false;started=false;angular=0;escaped=[];lastGreen=0;get('svState').classList.remove('sv-finished');});
@@ -392,7 +406,26 @@
     sphere.setAttribute('aria-label',t('Masquer temporairement le menu du bas','Temporarily hide bottom navigation'));
     sphere.addEventListener('click',temporarilyHideTabbar);
     sphere.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();temporarilyHideTabbar();}});
-    const finger=get('svFinger');finger.addEventListener('pointerdown',press);finger.addEventListener('pointerup',lift);finger.addEventListener('pointercancel',lift);finger.addEventListener('lostpointercapture',lift);finger.addEventListener('contextmenu',e=>e.preventDefault());
+    const finger=get('svFinger');
+    if(window.PointerEvent){
+      finger.addEventListener('pointerdown',press);
+      finger.addEventListener('pointerup',lift);
+      finger.addEventListener('pointercancel',lift);
+      finger.addEventListener('lostpointercapture',lift);
+    }else{
+      // Anciennes versions de Safari iPad : événements Touch.
+      finger.addEventListener('touchstart',e=>press({pointerId:'touch',cancelable:e.cancelable,preventDefault:()=>e.preventDefault()}),{passive:false});
+      finger.addEventListener('touchend',()=>lift({pointerId:'touch'}));
+      finger.addEventListener('touchcancel',()=>lift({pointerId:'touch'}));
+      finger.addEventListener('mousedown',press);
+      window.addEventListener('mouseup',lift);
+    }
+    // Fallback accessibilité et navigateurs qui ne relaient pas pointerdown.
+    finger.addEventListener('click',()=>{
+      if(Date.now()-lastPointerPress<750)return;
+      if(!started&&!down){start();cycles++;playPhaseSound('expire');down=true;finger.classList.add('sv-down');setTimeout(()=>{if(down){fingerUp();playPhaseSound('inspire');}},180);}
+    });
+    finger.addEventListener('contextmenu',e=>e.preventDefault());
     window.addEventListener('blur',blurListener);document.addEventListener('visibilitychange',hideListener);
     prev=0;raf=requestAnimationFrame(render);
   }
