@@ -1363,14 +1363,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V32 — ACCUEIL SPHERE 3D 2400 PARTICULES
+   M.U.R. V33 — ACCUEIL SPHERE 3D 2400 PARTICULES
    Suppression du bandeau. Appel a l'action agrandi sous la sphère.
    Ajout limité à mur-custom.js.
    ============================================================= */
 (() => {
   'use strict';
-  const COUNT=2400, STYLE_ID='murHomeParticlesV32Style';
-  if(window.MUR_HOME_PARTICLES_V32) return;
+  const COUNT=2400, STYLE_ID='murHomeParticlesV33Style';
+  if(window.MUR_HOME_PARTICLES_V33) return;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const points=Array.from({length:COUNT},(_,i)=>{
     const y=1-2*(i+.5)/COUNT, rad=Math.sqrt(Math.max(0,1-y*y));
@@ -1434,7 +1434,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     }
     #home #homeCircle.mur-home-2400.mur-menu-open .mur-home-2400-canvas,
     #home #homeCircle.mur-home-2400.mur-particles-transitioning .mur-home-2400-canvas{opacity:0!important}
-    .mur-home-particle-burst{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:10011!important;pointer-events:none!important;display:none!important}
+    .mur-home-particle-burst{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:10011!important;pointer-events:none!important;display:none}
     body.mur-burst-opening .mur-orb-choice,
     body.mur-burst-opening .mur-orb-quick-center{
       animation:mur-reveal-choice .34s ease-out both!important;
@@ -1566,20 +1566,20 @@ if (typeof window.installPresentationFallback !== 'function') {
     window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_HOME_PARTICLES_V32={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere',menuTransition:'particle-dispersion-600ms'};
+  window.MUR_HOME_PARTICLES_V33={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere',menuTransition:'particle-dispersion-600ms'};
 })();
 
 
 
 /* =============================================================
-   M.U.R. V32 — DIFFUSION / RECONSTITUTION DE LA SPHERE
+   M.U.R. V33 — DIFFUSION / RECONSTITUTION DE LA SPHERE
    Les boutons du menu radial, les verrous NeuroFlex et les
    commandes existantes restent gérés par le module d'origine.
    0,6 seconde ouverture · 0,5 seconde fermeture.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_BURST_V32)return;
+  if(window.MUR_HOME_BURST_V33)return;
   const N=2400, TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const OUT_MS=600, IN_MS=500;
   const cloud=Array.from({length:N},(_,i)=>{
@@ -1666,7 +1666,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     function finish(){
       if(frame)cancelAnimationFrame(frame);
       frame=0;animation=null;
-      overlay.style.display='none';
+      overlay.style.setProperty('display','none','important');
       circle.classList.remove('mur-particles-transitioning');
       document.body.classList.remove('mur-burst-opening');
     }
@@ -1678,14 +1678,14 @@ if (typeof window.installPresentationFallback !== 'function') {
       animation={open,started:performance.now()};
       circle.classList.add('mur-particles-transitioning');
       document.body.classList.toggle('mur-burst-opening',open);
-      overlay.style.display='block';
+      overlay.style.setProperty('display','block','important');
       frame=requestAnimationFrame(render);
     }
     circle.addEventListener('mur-orb-transition',e=>transition(!!e.detail?.open));
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',finish,{passive:true}));
     window.addEventListener('pagehide',finish);
     window.addEventListener('resize',()=>{if(animation)frame=requestAnimationFrame(render)},{passive:true});
-    window.MUR_HOME_BURST_V32={particles:N,openMs:OUT_MS,closeMs:IN_MS};
+    window.MUR_HOME_BURST_V33={particles:N,openMs:OUT_MS,closeMs:IN_MS};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
