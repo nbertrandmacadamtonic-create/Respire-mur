@@ -1358,3 +1358,7 @@ if (typeof window.installPresentationFallback !== 'function') {
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', load, {once:true});
   else load();
 })();
+
+
+/* V23 — Nouveau visuel accueil, sans modification des autres modules. */
+(()=>{const load=()=>{if(document.querySelector('script[data-mur-home-2026]'))return;const s=document.createElement('script');s.dataset.murHome2026='1';s.src='mur-accueil-2026.js?v=23.0';document.head.appendChild(s)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});else load()})();
