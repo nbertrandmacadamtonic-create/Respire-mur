@@ -59,16 +59,22 @@
       /* Plein écran progressif, sans déplacer le lecteur audio ni modifier index.html. */
       body.mur-exsphere-fullscreen{overflow:hidden!important}
       body.mur-exsphere-fullscreen .tabbar{visibility:hidden!important;pointer-events:none!important}
-      #exerciseDetail .mur-exsphere-stage.mur-exsphere-zoom{
+      .mur-exsphere-stage.mur-exsphere-zoom{
         position:fixed!important;margin:0!important;min-height:0!important;max-height:none!important;
         max-width:none!important;aspect-ratio:auto!important;border-radius:0!important;
         z-index:12010!important;overflow:hidden!important;
         transition:left .7s cubic-bezier(.22,1,.36,1),top .7s cubic-bezier(.22,1,.36,1),
           width .7s cubic-bezier(.22,1,.36,1),height .7s cubic-bezier(.22,1,.36,1),border-radius .7s ease!important;
       }
-      #exerciseDetail .mur-exsphere-stage.mur-exsphere-zoom #visualAsset{object-fit:contain!important}
-      #exerciseDetail .mur-exsphere-stage.mur-exsphere-zoom .mur-exsphere-caption{bottom:calc(94px + env(safe-area-inset-bottom))!important;white-space:normal!important}
+      .mur-exsphere-stage.mur-exsphere-zoom #visualAsset{object-fit:contain!important}
+      .mur-exsphere-stage.mur-exsphere-zoom .mur-exsphere-caption{bottom:calc(94px + env(safe-area-inset-bottom))!important;white-space:normal!important}
+      /* Le stage est déplacé sous body : il ne peut plus être masqué par le fond. */
       .mur-exsphere-fs-scrim{position:fixed;inset:0;background:#061523;z-index:12000}
+      body>.mur-exsphere-stage.mur-exsphere-zoom{position:fixed!important;z-index:12010!important;box-sizing:border-box!important;display:block!important;visibility:visible!important;opacity:1!important;background:radial-gradient(ellipse at 50% 45%,#173b4a,#0b2130 62%,#071625)!important}
+      body>.mur-exsphere-stage.mur-exsphere-zoom #visualAsset{position:absolute!important;inset:0!important;display:block!important;visibility:visible!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center!important;opacity:1;z-index:1!important;pointer-events:none!important}
+      body>.mur-exsphere-stage.mur-exsphere-zoom canvas{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;z-index:2!important;pointer-events:none!important}
+      body>.mur-exsphere-stage.mur-exsphere-zoom .mur-exsphere-caption{position:absolute!important;left:50%!important;bottom:calc(94px + env(safe-area-inset-bottom))!important;transform:translateX(-50%)!important;z-index:4!important;max-width:95%!important;padding:6px 12px!important;border-radius:15px!important;background:rgba(7,18,32,.75)!important;color:#e4f9f3!important;text-align:center!important;font-size:11px!important;font-weight:700!important;white-space:normal!important;pointer-events:none!important}
+
       .mur-exsphere-fs-bar{
         position:fixed;z-index:12030;left:0;right:0;top:0;bottom:0;
         pointer-events:none;color:white;font-family:inherit;
@@ -81,7 +87,7 @@
       }
       .mur-exsphere-fs-close{top:calc(12px + env(safe-area-inset-top));right:16px}
       .mur-exsphere-fs-play{bottom:calc(23px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);min-width:148px}
-      @media(prefers-reduced-motion:reduce){#exerciseDetail .mur-exsphere-stage.mur-exsphere-zoom{transition-duration:.01s!important}}
+      @media(prefers-reduced-motion:reduce){.mur-exsphere-stage.mur-exsphere-zoom{transition-duration:.01s!important}}
       /* On conserve le lecteur audio et sa boucle infinie natifs, sous la photo. */
       #exerciseDetail .exercise-audio-actions{display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center;gap:12px}
       #exerciseDetail .exercise-audio-actions #exercisePlayBtn{display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center}
@@ -195,13 +201,16 @@
     s.fsScrim=null;s.fsToolbar=null;
     document.body.classList.remove('mur-exsphere-fullscreen');
     s.stage?.classList.remove('mur-exsphere-zoom');
+    // Remettre le même stage et son image au même emplacement, sans les recréer.
+    if(s.stage && s.fsPlaceholder?.parentNode){
+      s.fsPlaceholder.parentNode.insertBefore(s.stage,s.fsPlaceholder);
+      s.fsPlaceholder.remove();
+    }
+    s.fsPlaceholder=null;
     for(const prop of ['left','top','right','bottom','width','height','borderRadius','zIndex'])s.stage?.style.removeProperty(prop);
     s.fullscreen=false;
     if(s.stage?.isConnected)sizeStage(s);
-    // Le plein écran ne doit jamais laisser un décalage global du document.
-    if(document.getElementById('exercises')?.classList.contains('active')){
-      requestAnimationFrame(()=>{ if(state===s) resetDocumentScroll(); });
-    }
+    // Aucun scroll de page déclenché à la sortie du plein écran.
   }
   function startAudioFromFullscreen(s){
     if(state!==s||!s.fullscreen)return;
@@ -214,7 +223,6 @@
   }
   function enterFullscreen(s){
     if(state!==s || s.fullscreen || s.zooming)return;
-    resetDocumentScroll();
     const box=s.stage.getBoundingClientRect();
     s.fullscreen=true;s.zooming=true;s.visualHold=true;
     const scrim=document.createElement('div');scrim.className='mur-exsphere-fs-scrim';
@@ -229,6 +237,15 @@
       if(typeof window.toggleExerciseAudio==='function')window.toggleExerciseAudio();
       else if(s.audio.paused)s.audio.play().catch(()=>{});else s.audio.pause();
     });
+    // Un élément fixed dans un parent transformé ou isolé reste prisonnier
+    // de son contexte d'empilement : déplacer le vrai stage sous body.
+    const placeholder=document.createElement('span');
+    placeholder.className='mur-exsphere-fs-placeholder';
+    placeholder.setAttribute('aria-hidden','true');
+    placeholder.style.cssText=`display:block;width:${box.width}px;height:${box.height}px;flex:none;visibility:hidden`;
+    s.stage.parentNode.insertBefore(placeholder,s.stage);
+    s.fsPlaceholder=placeholder;
+    document.body.appendChild(s.stage);
     document.body.classList.add('mur-exsphere-fullscreen');
     s.stage.classList.add('mur-exsphere-zoom');
     Object.assign(s.stage.style,{left:box.left+'px',top:box.top+'px',width:box.width+'px',height:box.height+'px',borderRadius:'20px'});
@@ -430,6 +447,7 @@
     if(observed===detail)return;
     observed=detail;
     const obs=new MutationObserver(()=>{
+      if(state?.fullscreen)return; // stage temporairement placé sous body
       if(!document.getElementById('exerciseAudio')){if(state)detach();return}
       attach();
     });
@@ -447,5 +465,5 @@
     window.addEventListener('pagehide',()=>{if(state)cancelAnimationFrame(state.raf)});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_EXERCICES_SPHERE={version:'22.10',get active(){return !!state},refresh:attach,close:detach};
+  window.MUR_EXERCICES_SPHERE={version:'22.11',get active(){return !!state},refresh:attach,close:detach};
 })();
