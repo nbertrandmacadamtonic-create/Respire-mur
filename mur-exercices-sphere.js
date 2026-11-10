@@ -1,4 +1,4 @@
-/* M.U.R. V22.4 — Exercices guidés : image vers sphère, voix et progression.
+/* M.U.R. V22.6 — Exercices guidés : image vers sphère, voix et progression.
    Module additionnel non destructif. Aucun changement de index.html.
    L'animation s'appuie sur #visualAsset, #exerciseAudio, #exerciseDetail
    et les objets EXERCISES déjà présents dans l'application. */
@@ -13,6 +13,7 @@
   const COLORS = {rouge:[255,82,86],orange:[255,163,65],vert:[78,224,148],bleu:[83,157,244]};
   const GREEN=[80,235,155];
   let state = null, observed = null;
+  let nativeExerciseOpen = null;
   const prefersReduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
   const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
   const smooth=x=>{x=clamp(x);return x*x*(3-2*x)};
@@ -30,8 +31,6 @@
       #exerciseDetail .mur-exsphere-controls{display:flex;align-items:center;justify-content:space-between;gap:8px;width:min(100%,460px);margin:4px auto 8px;color:#b8d5df;font-size:11px}
       #exerciseDetail .mur-exsphere-progress{height:5px;border-radius:9px;flex:1;background:rgba(129,164,185,.22);overflow:hidden}
       #exerciseDetail .mur-exsphere-progress>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--mur-sphere-start,#f66),#53e89f);transition:width .15s linear}
-      #exerciseDetail .mur-exsphere-toggle{color:#d7f0ee;background:rgba(33,71,79,.6);border:1px solid rgba(104,198,181,.43);border-radius:13px;min-height:34px;padding:6px 11px;font-size:11px;font-weight:700;touch-action:manipulation}
-      #exerciseDetail .mur-exsphere-toggle[aria-pressed="false"]{background:rgba(39,53,70,.45);border-color:rgba(145,168,188,.3)}
       /* On conserve le lecteur audio et sa boucle infinie natifs, sous la photo. */
       #exerciseDetail .exercise-audio-actions{display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center;gap:12px}
       #exerciseDetail .exercise-audio-actions #exercisePlayBtn{display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center}
@@ -138,7 +137,7 @@
     stage.style.setProperty('--mur-sphere-start',`rgb(${color.join(',')})`);
     img.parentNode.insertBefore(stage,img);stage.append(img,canvas,caption);
     const controls=document.createElement('div');controls.className='mur-exsphere-controls';
-    controls.innerHTML='<span class="mur-exsphere-time">0:00 / --:--</span><div class="mur-exsphere-progress" aria-label="Progression de l’exercice"><span></span></div><button type="button" class="mur-exsphere-toggle" aria-pressed="true" title="Afficher ou masquer la sphère">Vue sphère · ON</button>';
+    controls.innerHTML='<span class="mur-exsphere-time">0:00 / --:--</span><div class="mur-exsphere-progress" aria-label="Progression de l’exercice"><span></span></div>';
     stage.after(controls);
     const s={key,zone,color,detail,audio,image:img,stage,canvas,caption,controls,ctx:canvas.getContext('2d'),points:makeParticles(color),raf:0,playedAt:null,started:false,enabled:true,analyser:null,frequency:null,voice:.11,analyserFrames:0,paused:false,returnAt:null,reverseProgress:0};
     state=s;
@@ -254,8 +253,45 @@
     }else if(!started)s.caption.textContent='Toucher la photo pour démarrer';
     s.raf=requestAnimationFrame(next=>render(s,next));
   }
+  // L'ouverture native construisait d'abord la fiche ancienne, puis le
+  // MutationObserver la convertissait au frame suivant. Sur mobile cela
+  // produisait un ecran parasite et parfois un scroll anime visible.
+  // On prepare la sphere de maniere SYNCHRONE au meme appel openExercise.
+  function bridgeOpenExercise(){
+    if(typeof window.openExercise!=='function')return;
+    if(window.openExercise.__murSphereImmediate)return;
+    const original=window.openExercise;
+    nativeExerciseOpen=original;
+    function openWithSphere(...args){
+      const detail=document.getElementById('exerciseDetail');
+      let ownScroll=false;
+      // L'ancienne fiche invoque scrollIntoView({behavior:"smooth"}) :
+      // cela fait traverser l'ecran precedent avant d'arriver a la fiche.
+      // Convertir ce seul scroll en deplacement instantane, sans agir ailleurs.
+      if(detail){
+        const originalScroll=detail.scrollIntoView;
+        try{
+          detail.scrollIntoView=function(options){
+            const opts=options&&typeof options==='object'?{...options,behavior:'instant'}:{behavior:'instant',block:'start'};
+            return originalScroll.call(this,opts);
+          };
+          ownScroll=true;
+        }catch(e){}
+      }
+      try{return original.apply(this,args)}
+      finally{
+        if(ownScroll){try{delete detail.scrollIntoView}catch(e){}}
+        // Meme tick : photo, cadre et sphere sont deja dans leur etat final
+        // avant que le navigateur n'ait la possibilite de peindre la page.
+        attach();
+      }
+    }
+    openWithSphere.__murSphereImmediate=true;
+    window.openExercise=openWithSphere;
+  }
   function install(){
     const detail=document.getElementById('exerciseDetail');if(!detail)return;
+    bridgeOpenExercise();
     if(observed===detail)return;
     observed=detail;
     const obs=new MutationObserver(()=>{
@@ -266,5 +302,5 @@
     window.addEventListener('pagehide',()=>{if(state)cancelAnimationFrame(state.raf)});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_EXERCICES_SPHERE={version:'22.4',get active(){return !!state},refresh:attach,close:detach};
+  window.MUR_EXERCICES_SPHERE={version:'22.6',get active(){return !!state},refresh:attach,close:detach};
 })();
