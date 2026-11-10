@@ -1361,14 +1361,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V29 — ACCUEIL SPHERE 3D 2400 PARTICULES
+   M.U.R. V30 — ACCUEIL SPHERE 3D 2400 PARTICULES
    Suppression du bandeau. Appel a l'action agrandi sous la sphère.
    Ajout limité à mur-custom.js.
    ============================================================= */
 (() => {
   'use strict';
-  const COUNT=2400, STYLE_ID='murHomeParticlesV29Style';
-  if(window.MUR_HOME_PARTICLES_V29) return;
+  const COUNT=2400, STYLE_ID='murHomeParticlesV30Style';
+  if(window.MUR_HOME_PARTICLES_V30) return;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const points=Array.from({length:COUNT},(_,i)=>{
     const y=1-2*(i+.5)/COUNT, rad=Math.sqrt(Math.max(0,1-y*y));
@@ -1381,38 +1381,56 @@ if (typeof window.installPresentationFallback !== 'function') {
   const css=`
     #home #homeCircle.mur-home-2400,
     #home #homeCircle.mur-home-2400.ready{
-      position:relative!important;isolation:isolate!important;overflow:visible!important;
+      position:relative!important;isolation:isolate!important;overflow:hidden!important;
       background:transparent!important;border:0!important;box-shadow:none!important;
       cursor:pointer!important;touch-action:none!important;
     }
     #home #homeCircle.mur-home-2400::before,
     #home #homeCircle.mur-home-2400::after{content:none!important;display:none!important}
-    #home .home-wheel-card:has(#homeCircle.mur-home-2400){overflow:visible!important;isolation:isolate!important}
+    main.app #home.page.active > section.home-wheel-card.card:has(#homeCircle.mur-home-2400){
+      overflow:hidden!important;isolation:isolate!important;
+      justify-content:center!important;gap:12px!important;
+      padding:14px 12px 16px!important;
+    }
     #home #homeCircle.mur-home-2400 .mur-home-2400-canvas{
-      position:absolute!important;left:50%!important;top:46%!important;
-      width:156%!important;height:156%!important;
-      transform:translate(-50%,-50%)!important;max-width:none!important;
+      position:absolute!important;left:50%!important;top:50%!important;
+      width:100%!important;height:100%!important;
+      transform:translate(-50%,-50%)!important;max-width:100%!important;
       pointer-events:none!important;z-index:1!important;display:block!important;
     }
     #home #homeCircle.mur-home-2400 .home-circle-text,
     #home #homeCircle.mur-home-2400 .home-cursor{display:none!important}
     #home #homeCircle.mur-home-2400 .mur-orb-start-trigger{
-      z-index:8!important;position:absolute!important;left:50%!important;top:calc(100% + 2px)!important;
-      transform:translateX(-50%)!important;
-      width:min(92vw,260px)!important;min-height:58px!important;
-      padding:14px 20px!important;border-radius:999px!important;
-      border:1px solid rgba(255,255,255,.16)!important;
-      background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05))!important;
-      box-shadow:0 10px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.10)!important;
-      color:#f4fffa!important;text-shadow:0 2px 9px rgba(6,25,22,.55)!important;
-      font-size:clamp(16px,4.3vw,22px)!important;font-weight:900!important;line-height:1.12!important;
-      white-space:normal!important;text-align:center!important;
-      touch-action:manipulation!important;backdrop-filter:blur(6px)!important;
+      position:absolute!important;inset:0!important;top:0!important;left:0!important;
+      transform:none!important;width:100%!important;height:100%!important;
+      min-height:0!important;min-width:0!important;padding:0!important;
+      border:0!important;background:transparent!important;box-shadow:none!important;
+      color:transparent!important;text-shadow:none!important;font-size:0!important;
+      pointer-events:none!important;opacity:0!important;
     }
     #home #homeCircle.mur-home-2400 .mur-orb-start-trigger::before,
     #home #homeCircle.mur-home-2400 .mur-orb-start-trigger::after{display:none!important}
-    #home #homeCircle.mur-home-2400.mur-menu-open .mur-home-2400-canvas,
-    #home #homeCircle.mur-home-2400.mur-menu-open .mur-orb-start-trigger{opacity:.27!important}
+    main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint{
+      position:relative!important;display:flex!important;align-items:center!important;
+      justify-content:center!important;flex:0 0 auto!important;
+      width:min(100%,280px)!important;max-width:100%!important;
+      min-height:46px!important;margin:0 auto!important;padding:9px 12px!important;
+      border-radius:999px!important;border:1px solid rgba(140,230,190,.34)!important;
+      background:rgba(12,43,48,.68)!important;color:#f4fffa!important;
+      font-size:clamp(15px,4vw,18px)!important;font-weight:800!important;
+      line-height:1.2!important;text-align:center!important;
+      white-space:normal!important;cursor:pointer!important;
+      z-index:3!important;user-select:none!important;
+      text-shadow:0 1px 4px rgba(0,0,0,.35)!important;
+    }
+    main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint:focus-visible{
+      outline:2px solid #a5f2d1!important;outline-offset:3px!important;
+    }
+    #home #homeCircle.mur-home-2400.mur-menu-open .mur-home-2400-canvas{opacity:.27!important}
+    @media(max-height:690px){
+      main.app #home.page.active > section.home-wheel-card.card:has(#homeCircle.mur-home-2400){gap:6px!important;padding:8px 10px 10px!important}
+      main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint{min-height:38px!important;padding:6px 12px!important;font-size:14px!important}
+    }
     @media(prefers-reduced-motion:reduce){#home #homeCircle.mur-home-2400 .mur-home-2400-canvas{transition:none!important}}
   `;
   function addStyle(){if(document.getElementById(STYLE_ID))return;const el=document.createElement('style');el.id=STYLE_ID;el.textContent=css;document.head.appendChild(el);}
@@ -1434,10 +1452,34 @@ if (typeof window.installPresentationFallback !== 'function') {
     addStyle();circle.dataset.murHome2400='1';circle.classList.add('mur-home-2400');
     const trigger=circle.querySelector('.mur-orb-start-trigger');
     if(trigger){
-      trigger.textContent='Appuyer pour commencer';
+      trigger.textContent='';
       trigger.dataset.subtitle='';
       trigger.setAttribute('aria-label','Appuyer pour commencer');
       trigger.setAttribute('title','Appuyer pour commencer');
+    }
+    // Le libellé de l'accueil existe déjà en dehors de la sphère : on le
+    // réutilise pour éviter tout débordement et toute duplication visuelle.
+    const homeHint=document.getElementById('homeHint');
+    if(homeHint){
+      const refreshLabel=()=>{
+        const en=String(document.documentElement.lang||'').toLowerCase().startsWith('en');
+        homeHint.textContent=en?'Tap to begin':'Appuyer pour commencer';
+        homeHint.setAttribute('aria-label',homeHint.textContent);
+      };
+      homeHint.setAttribute('role','button');
+      homeHint.tabIndex=0;
+      homeHint.addEventListener('click',event=>{
+        event.preventDefault();event.stopPropagation();
+        window.homeCircleOpen?.(event);
+      });
+      homeHint.addEventListener('keydown',event=>{
+        if(event.key==='Enter'||event.key===' '){
+          event.preventDefault();event.stopPropagation();
+          window.homeCircleOpen?.(event);
+        }
+      });
+      new MutationObserver(refreshLabel).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+      refreshLabel();
     }
     const canvas=document.createElement('canvas');canvas.className='mur-home-2400-canvas';
     canvas.setAttribute('aria-hidden','true');circle.prepend(canvas);
@@ -1459,11 +1501,10 @@ if (typeof window.installPresentationFallback !== 'function') {
       const signature=actual.join(',');if(lastRgb!==signature){lastRgb=signature;color=actual;}
       const [r,g,b]=color;
       const light=lighten(color,.42);
-      if(trigger){
-        trigger.style.borderColor=`rgba(${light[0]},${light[1]},${light[2]},.24)`;
-        trigger.style.boxShadow=`0 12px 26px rgba(0,0,0,.18), 0 0 20px rgba(${r},${g},${b},.12), inset 0 1px 0 rgba(255,255,255,.10)`;
+      if(homeHint){
+        homeHint.style.setProperty('border-color',`rgba(${light[0]},${light[1]},${light[2]},.40)`,'important');
       }
-      const cx=w/2,cy=h*.43,R=Math.min(w,h)*.318;
+      const cx=w/2,cy=h/2,R=Math.min(w,h)*.405;
       const glow=ctx.createRadialGradient(cx,cy,R*.12,cx,cy,R*1.45);
       glow.addColorStop(0,`rgba(${light[0]},${light[1]},${light[2]},.07)`);
       glow.addColorStop(.70,`rgba(${r},${g},${b},.18)`);
@@ -1507,6 +1548,6 @@ if (typeof window.installPresentationFallback !== 'function') {
     window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_HOME_PARTICLES_V29={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'below-sphere-large'};
+  window.MUR_HOME_PARTICLES_V30={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'in-card-below-sphere'};
 })();
 
