@@ -1690,3 +1690,42 @@ if (typeof window.installPresentationFallback !== 'function') {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
+
+
+/* ============================================================
+   M.U.R. V35 — Affichage des scores NeuroFlex sur une ligne.
+   Correctif CSS non destructif : aucun calcul ni HTML modifié.
+   ============================================================ */
+(() => {
+  'use strict';
+  const id = 'mur-neuroflex-score-nowrap-v35';
+  if (document.getElementById(id)) return;
+  const css = document.createElement('style');
+  css.id = id;
+  css.textContent = `
+    /* La synthèse alloue assez de place aux scores à deux chiffres. */
+    #testResultView #resultSynthesisBlock.result-step.open .result-score-row {
+      grid-template-columns: minmax(78px,auto) minmax(0,1fr) !important;
+    }
+    #testResultView #resultSynthesisBlock #neuroScore,
+    #testResultView #resultNowBlock #resultNowScore,
+    #testResultView #resultSynthesisBlock .synth-grid-clean .result-detail-chip:nth-child(3) b {
+      white-space:nowrap !important;
+      overflow-wrap:normal !important;
+      word-break:keep-all !important;
+      hyphens:none !important;
+      font-variant-numeric:tabular-nums;
+    }
+    #testResultView #resultSynthesisBlock.result-step.open .result-score-row #neuroScore {
+      display:inline-block !important;
+      min-width:max-content !important;
+      font-size:clamp(29px,8vw,38px) !important;
+    }
+    @media(max-width:390px) {
+      #testResultView #resultSynthesisBlock.result-step.open .result-score-row {
+        grid-template-columns:minmax(72px,auto) minmax(0,1fr) !important;
+      }
+    }
+  `;
+  document.head.appendChild(css);
+})();
