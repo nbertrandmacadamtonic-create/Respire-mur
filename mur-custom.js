@@ -2041,3 +2041,85 @@ if (typeof window.installPresentationFallback !== 'function') {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
+
+
+/* ================================================================
+   M.U.R. V59 - Informations harmonisees par page, FR/EN, Supabase
+   Sans changement index.html. Contenu distant en lecture uniquement.
+   ================================================================ */
+(() => {
+  'use strict';
+  if (window.MUR_PAGE_INFO_V59) return;
+  const PAGES = {
+    home: ['Accueil','Home'], tests:['Tests NeuroFlex','NeuroFlex tests'],
+    breath:['Respiration','Breathing'], exercises:['Exercices','Exercises'],
+    stats:['Historique et statistiques','History and statistics'],
+    settings:['Réglages','Settings']
+  };
+  const DEFAULT = {
+    home:{fr:'M.U.R. vous aide à mieux comprendre votre fonctionnement neurovégétatif et à choisir des exercices adaptés à votre état.',en:'M.U.R. helps you understand your autonomic nervous system and choose exercises suited to your current state.'},
+    tests:{fr:'Ki.S explore votre tendance habituelle. Ici & Maintenant décrit votre état du moment. Leur synthèse oriente vos exercices NeuroFlex. Ces tests ne constituent pas un diagnostic médical.',en:'Ki.S explores your usual tendencies. Here & Now describes your current state. Their synthesis helps guide NeuroFlex exercises. These tests are not a medical diagnosis.'},
+    breath:{fr:'Suivez la sphère : elle grandit lorsque vous inspirez et diminue lorsque vous expirez. Adaptez le rythme à votre confort, sans forcer.',en:'Follow the sphere: it expands as you inhale and contracts as you exhale. Adjust the pace to your comfort without forcing.'},
+    exercises:{fr:'Choisissez un exercice adapté à votre tendance NeuroFlex. Installez-vous confortablement et interrompez l’exercice si vous ressentez une gêne.',en:'Choose an exercise suited to your NeuroFlex state. Make yourself comfortable and stop if you feel discomfort.'},
+    stats:{fr:'Retrouvez ici votre historique, vos scores et leurs évolutions. Ces tendances sont des repères de suivi personnel.',en:'Find your history, scores and changes over time. These trends support personal tracking.'},
+    settings:{fr:'Réglez votre profil et personnalisez votre expérience M.U.R.',en:'Edit your profile and personalize your M.U.R. experience.'}
+  };
+  const remote={};let busy=false;
+  function language(){const s=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||document.documentElement.lang||'fr';return /^en/i.test(s)?'en':'fr';}
+  function supa(){
+    const candidates=[window.MURCloud?.client,window.murSupabase,window.murSupabaseClient,window.supabaseClient,window.MUR_SUPABASE_CLIENT,window.murDB,window.sb,window._supabase];
+    return candidates.find(x=>x&&typeof x.from==='function')||null;
+  }
+  async function load(){
+    const db=supa();if(!db||busy)return;
+    busy=true;
+    try{
+      const {data,error}=await db.from('mur_page_informations').select('page_key,title_fr,title_en,body_fr,body_en,is_published').eq('is_published',true);
+      if(error)throw error;
+      if(Array.isArray(data))data.forEach(r=>{if(PAGES[r.page_key])remote[r.page_key]=r;});
+    }catch(err){console.warn('[MUR information] Texte local conservé :',err?.message||err);}
+    finally{busy=false;}
+  }
+  function activePage(){return document.querySelector('section.page.active')?.id||'home';}
+  function title(id,lang){const r=remote[id]||{};return (r['title_'+lang]||PAGES[id]?.[lang==='fr'?0:1]||'Information');}
+  function content(id,lang){const r=remote[id]||{};return (r['body_'+lang]||DEFAULT[id]?.[lang]||'');}
+  function close(){const m=document.getElementById('murInfoUnifiedModalV58');if(m){m.hidden=true;document.body.classList.remove('mur-info-open');}}
+  function open(id){id=PAGES[id]?id:activePage();const lang=language(),m=document.getElementById('murInfoUnifiedModalV58');if(!m)return;
+    m.querySelector('.mur-info-title').textContent=title(id,lang);
+    const body=m.querySelector('.mur-info-content');body.replaceChildren();
+    // Paragraphes en texte brut : aucun HTML arbitraire venant du back-office.
+    content(id,lang).split(/\n\s*\n/).filter(Boolean).forEach(para=>{const p=document.createElement('p');p.textContent=para;body.appendChild(p);});
+    m.querySelector('.mur-info-close').textContent=lang==='fr'?'Compris':'Got it';
+    m.hidden=false;document.body.classList.add('mur-info-open');m.querySelector('.mur-info-close-x').focus();
+  }
+  function install(){if(document.getElementById('murInfoUnifiedModalV58'))return;
+    const style=document.createElement('style');style.id='mur-info-unified-style-v58';style.textContent=`
+      #appInfoBtn,#testsInfoBtn{display:none!important;visibility:hidden!important;pointer-events:none!important}
+      .mur-info-page-button{position:absolute!important;right:14px!important;top:12px!important;z-index:90!important;width:38px!important;height:38px!important;display:grid!important;place-items:center!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.36)!important;background:rgba(10,32,52,.84)!important;color:#fff!important;font-size:19px!important;font-family:Arial,sans-serif!important;font-weight:800!important;line-height:1!important;box-shadow:0 5px 18px rgba(0,0,0,.30)!important;cursor:pointer!important;touch-action:manipulation!important}
+      .mur-info-page-button:focus-visible{outline:3px solid #79e8d8!important;outline-offset:3px!important}
+      section.page{position:relative!important}
+      #home>.mur-info-page-button{left:14px!important;right:auto!important;top:18px!important}
+      section.page:not(.active)>.mur-info-page-button{display:none!important}
+      .mur-info-screen[hidden]{display:none!important}
+      .mur-info-screen{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:22px 15px;background:rgba(3,10,20,.82);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+      .mur-info-panel{position:relative;width:min(550px,100%);max-height:min(80dvh,760px);overflow:auto;border-radius:20px;background:linear-gradient(145deg,#132a41,#081522);border:1px solid rgba(155,223,225,.32);padding:28px 22px 23px;color:#f6fafc;box-shadow:0 25px 80px rgba(0,0,0,.56)}
+      .mur-info-title{margin:0 38px 17px 0;font-size:22px;line-height:1.2;color:white}
+      .mur-info-content{font-size:15px;line-height:1.65;white-space:normal}
+      .mur-info-content p{margin:0 0 13px}.mur-info-close-x{position:absolute;right:12px;top:12px;border:1px solid #556b7e;background:#162d43;color:#fff;border-radius:50%;width:34px;height:34px;font-size:23px;cursor:pointer}
+      .mur-info-close{display:block;margin:20px auto 0;padding:10px 26px;border:1px solid #68d6c5;border-radius:30px;color:#fff;background:#12665f;font-weight:750;cursor:pointer}
+    `;document.head.appendChild(style);
+    Object.keys(PAGES).forEach(id=>{
+      const pg=document.getElementById(id);if(!pg)return;
+      const b=document.createElement('button');b.type='button';b.className='mur-info-page-button';b.textContent='i';b.setAttribute('aria-label',language()==='fr'?'Informations sur cette page':'Information about this page');
+      b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open(id);});pg.appendChild(b);
+    });
+    const m=document.createElement('div');m.id='murInfoUnifiedModalV58';m.className='mur-info-screen';m.hidden=true;m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-label','Informations M.U.R.');
+    m.innerHTML='<div class="mur-info-panel"><button type="button" class="mur-info-close-x" aria-label="Fermer">×</button><h2 class="mur-info-title"></h2><div class="mur-info-content"></div><button type="button" class="mur-info-close">Compris</button></div>';
+    m.querySelector('.mur-info-close-x').addEventListener('click',close);m.querySelector('.mur-info-close').addEventListener('click',close);m.addEventListener('click',e=>{if(e.target===m)close();});document.body.appendChild(m);
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!m.hidden)close();});
+    // Les boutons historiques sont masqués et remplacés, les fenêtres de première visite ne sont pas modifiées.
+    load();setTimeout(load,1400);setTimeout(load,5000);
+  }
+  window.MUR_PAGE_INFO_V59={open,close,reload:load,pages:Object.keys(PAGES)};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+})();

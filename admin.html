@@ -53,13 +53,26 @@ html:not(.mur-admin-authorized) #mur-admin-logout-header{display:none!important}
 <div class="layout"><aside class="aside"><div class="logo">M.U.R.</div>
 <a href="index.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:10px 14px;margin:12px 0;border-radius:12px;background:#244062;color:#fff;text-decoration:none;font-size:13px;font-weight:750">← Retour à l’application</a>
 <div class="sub">Administration des contenus · images & audio</div>
-<div class="menu"><button class="nav active" data-tab="dashboard">Vue générale</button><button class="nav" data-tab="questions">Questions ki.S</button><button class="nav" data-tab="exercises">Exercices</button><button class="nav" data-tab="breaths">Respiration</button><button class="nav" data-tab="users">Inscriptions</button><button class="nav" data-tab="publish">Publication</button></div></aside>
+<div class="menu"><button class="nav active" data-tab="dashboard">Vue générale</button><button class="nav" data-tab="questions">Questions ki.S</button><button class="nav" data-tab="exercises">Exercices</button><button class="nav" data-tab="breaths">Respiration</button><button class="nav" data-tab="users">Inscriptions</button><button class="nav" data-tab="informations">Informations</button><button class="nav" data-tab="publish">Publication</button></div></aside>
 <main class="main">
 <section id="dashboard" class="section active"><h1>Tableau de bord M.U.R.</h1><p class="hint">Gérez les fiches, visualisez les images et écoutez les audios associés à chaque exercice.</p><div class="grid"><article class="card"><div class="num" id="countQ">—</div>Questions ki.S</article><article class="card"><div class="num" id="countE">—</div>Exercices</article><article class="card"><div class="num" id="countB">—</div>Protocoles respiratoires</article></div><div class="card"><h2>Modifier les contenus</h2><p class="hint">Modifiez vos fiches puis exportez <code>mur-content.json</code> pour mettre à jour GitHub. Les noms de fichiers font le lien entre chaque exercice, son image et son audio.</p><div class="tools"><button class="btn primary" data-go="exercises">Voir images et audios</button><button class="btn" data-go="questions">Questions ki.S</button></div></div></section>
 <section id="questions" class="section"><h1>Questions ki.S</h1><p class="hint">15 questions. Conservez le lien A / F / P pour le calcul des profils.</p><div id="questionList"></div></section>
 <section id="exercises" class="section"><h1>Exercices : images et audios</h1><p class="hint">Chaque fiche affiche son illustration, l'audio associé, les fichiers réellement chargés et les champs éditables. Vous pouvez écouter chaque correspondance.</p><select class="search" id="zoneFilter"><option value="">Toutes les familles</option><option value="rouge">Rouge</option><option value="orange">Orange</option><option value="vert">Vert</option><option value="bleu">Bleu</option></select><div id="exerciseList"></div></section>
 <section id="breaths" class="section"><h1>Respiration guidée</h1><p class="hint">Durées en secondes et message associé à chaque protocole.</p><div id="breathList"></div></section>
 <section id="users" class="section"><h1>Inscriptions et utilisateurs</h1><p class="hint">Chargement de l’annuaire sécurisé depuis Supabase…</p><p class="hint">Seuls les administrateurs autorisés peuvent consulter les comptes. Les réponses détaillées ne sont pas affichées.</p></section>
+<section id="informations" class="section">
+<h1>Informations des pages</h1>
+<p class="hint">Modifiez les fenêtres ouvertes par le bouton « i » de chaque page de M.U.R. Les textes français et anglais sont enregistrés directement dans Supabase.</p>
+<div class="card">
+<div class="fields"><div class="field"><label for="mur-info-page">Page concernée</label><select id="mur-info-page"><option value="home">Accueil</option><option value="tests">Tests NeuroFlex</option><option value="breath">Respiration</option><option value="exercises">Exercices</option><option value="stats">Historique / Statistiques</option><option value="settings">Réglages</option></select></div>
+<div class="field"><label for="mur-info-published">Publication</label><select id="mur-info-published"><option value="true">Publiée</option><option value="false">Brouillon (masqué dans l’application)</option></select></div></div>
+<div class="tools" role="group" aria-label="Langue du texte"><button type="button" id="mur-info-lang-fr" class="btn primary" aria-pressed="true">Français</button><button type="button" id="mur-info-lang-en" class="btn" aria-pressed="false">English</button></div>
+<div class="field"><label for="mur-info-title">Titre affiché dans la fenêtre</label><input id="mur-info-title" maxlength="180" autocomplete="off"></div>
+<div class="field" style="margin-top:13px"><label for="mur-info-body">Texte d'information</label><textarea id="mur-info-body" rows="8" maxlength="12000"></textarea></div>
+<p class="hint">Séparez les paragraphes par une ligne vide. Les textes sont traités comme du texte simple, sans HTML.</p>
+<div class="tools"><button class="btn primary" id="mur-info-save" type="button">Enregistrer dans Supabase</button><button class="btn" id="mur-info-refresh" type="button">Recharger depuis Supabase</button></div>
+<p id="mur-info-editor-status" class="status" role="status" aria-live="polite">Vérification de votre accès administrateur…</p>
+</div></section>
 <section id="publish" class="section"><h1>Publier les modifications</h1><p class="hint">Les modifications sont sauvegardées localement dans ce navigateur, puis exportées. Elles ne sont pas envoyées automatiquement à GitHub.</p><div class="tools"><button class="btn primary" id="exportBtn">Exporter mur-content.json</button><button class="btn" id="importBtn">Importer un JSON</button><button class="btn danger" id="resetBtn">Restaurer le contenu publié</button><input type="file" id="jsonFile" accept=".json,application/json" hidden></div><div class="card"><h2>Publication</h2><p class="hint">Exportez le JSON, ouvrez votre dépôt <a href="https://github.com/nbertrandmacadamtonic-create/Respire-mur" target="_blank" rel="noopener">Respire-mur</a>, puis remplacez <code>mur-content.json</code> et validez le commit.</p></div></section>
 <div class="status" id="status" aria-live="polite"></div><p class="footer">M.U.R. · Back-office visuel · Utilisation sur ordinateur et mobile</p>
 </main></div>
@@ -123,6 +136,7 @@ function validate(x){if(!x||!Array.isArray(x.questions)||x.questions.length!==15
   const client=window.supabase.createClient(URL,KEY,{
     auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
   });
+  window.MURAdminInfoClient=client;
   async function verify(){
     const thisCheck=++checkNumber;
     root.classList.remove('mur-admin-authorized');
@@ -185,5 +199,93 @@ function validate(x){if(!x||!Array.isArray(x.questions)||x.questions.length!==15
 })();
 </script>
 
+<script>
+/* M.U.R. V60 — Editeur des informations dans le back-office existant.
+   Respecte le contrôle d'accès mur_my_role + RLS mur_info_editors. */
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const status=$('mur-info-editor-status');
+  const form=$('informations');
+  const input={page:$('mur-info-page'),published:$('mur-info-published'),title:$('mur-info-title'),body:$('mur-info-body')};
+  const save=$('mur-info-save'),refresh=$('mur-info-refresh');
+  const langBtns={fr:$('mur-info-lang-fr'),en:$('mur-info-lang-en')};
+  let client=null,rows={},lang='fr',page='home',permitted=false,loading=false,dirty=false;
+  const say=(s,error=false)=>{status.textContent=s;status.style.color=error?'#ffb4b4':'#a7f3d0';};
+  const authorized=()=>document.documentElement.classList.contains('mur-admin-authorized');
+  const empty=k=>({page_key:k,title_fr:'',title_en:'',body_fr:'',body_en:'',is_published:true});
+  function remember(){
+    if(!permitted)return;
+    const row=rows[page]||(rows[page]=empty(page));
+    row['title_'+lang]=input.title.value;
+    row['body_'+lang]=input.body.value;
+    row.is_published=input.published.value==='true';
+  }
+  function fill(){
+    const r=rows[page]||empty(page);
+    input.page.value=page;
+    input.published.value=r.is_published===false?'false':'true';
+    input.title.value=r['title_'+lang]||'';
+    input.body.value=r['body_'+lang]||'';
+    for(const k of ['fr','en']){
+      langBtns[k].classList.toggle('primary',k===lang);
+      langBtns[k].setAttribute('aria-pressed',String(k===lang));
+    }
+  }
+  function setEnabled(on){
+    for(const el of Object.values(input))el.disabled=!on;
+    for(const el of Object.values(langBtns))el.disabled=!on;
+    save.disabled=!on;refresh.disabled=!on;
+  }
+  async function load(){
+    if(!permitted||loading)return;
+    loading=true;say('Chargement des informations…');
+    try{
+      const {data,error}=await client.from('mur_page_informations').select('page_key,title_fr,title_en,body_fr,body_en,is_published');
+      if(error)throw error;
+      rows=Object.fromEntries((data||[]).map(r=>[r.page_key,r]));
+      fill();dirty=false;say('Informations chargées depuis Supabase.');
+    }catch(e){say('Chargement impossible : '+(e.message||e),true);}
+    finally{loading=false;}
+  }
+  async function init(){
+    if(!authorized()){permitted=false;setEnabled(false);return;}
+    client=window.MURAdminInfoClient;
+    if(!client){say('Session Supabase indisponible.',true);return;}
+    try{
+      const {data:userInfo,error:userError}=await client.auth.getUser();
+      if(userError||!userInfo?.user)throw new Error('Session administrateur absente');
+      const {data:role,error:roleError}=await client.rpc('mur_my_role');
+      if(roleError||!['admin','superadmin'].includes(role))throw new Error('Droits administrateur non confirmés');
+      const {data:editor,error:editorError}=await client.from('mur_info_editors').select('user_id').eq('user_id',userInfo.user.id).maybeSingle();
+      if(editorError)throw editorError;
+      if(!editor)throw new Error('Compte non inscrit dans mur_info_editors : ajoutez son UUID dans Supabase (voir fichier SQL).');
+      permitted=true;setEnabled(true);await load();
+    }catch(e){permitted=false;setEnabled(false);say('Accès éditeur : '+(e.message||e),true);}
+  }
+  input.page.addEventListener('change',()=>{remember();page=input.page.value;fill();});
+  for(const k of ['fr','en'])langBtns[k].addEventListener('click',()=>{remember();lang=k;fill();});
+  for(const el of [input.title,input.body,input.published])el.addEventListener('input',()=>{dirty=true;say('Modifications non enregistrées.');});
+  save.addEventListener('click',async()=>{
+    if(!permitted||!authorized())return;
+    remember();const row=rows[page];save.disabled=true;say('Enregistrement…');
+    try{
+      const payload={page_key:page,title_fr:row.title_fr||'',title_en:row.title_en||'',body_fr:row.body_fr||'',body_en:row.body_en||'',is_published:row.is_published!==false,updated_at:new Date().toISOString()};
+      const {error}=await client.from('mur_page_informations').upsert(payload,{onConflict:'page_key'});
+      if(error)throw error;
+      dirty=false;say('Enregistré dans Supabase. Le texte est disponible au prochain chargement de l’application.');
+    }catch(e){say('Enregistrement impossible : '+(e.message||e),true);}finally{save.disabled=false;}
+  });
+  refresh.addEventListener('click',()=>{if(dirty&&!confirm('Annuler les changements non enregistrés ?'))return;void load();});
+  document.querySelector('[data-tab="informations"]').addEventListener('click',()=>{if(!permitted)void init();});
+  const observer=new MutationObserver(()=>{
+    if(!authorized()){permitted=false;setEnabled(false);say('Connectez-vous en tant qu’administrateur.');}
+    else if(!permitted)void init();
+  });
+  observer.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+  setEnabled(false);
+  if(authorized())void init();
+})();
+</script>
 <script src="mur-admin-users.js"></script>
 </body></html>
