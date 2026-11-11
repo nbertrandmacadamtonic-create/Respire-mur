@@ -1572,14 +1572,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V41 — DISSOLUTION LENTE, URGENCE ROUGE, PICTOGRAMME RESPIRER
+   M.U.R. V43 — FLUX ENTRE SPHERES PERIPHERIQUES + HALO CENTRAL
    La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V41)return;
+  if(window.MUR_HOME_FIVE_V43)return;
   const N=2400, PER=1050, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
@@ -1604,10 +1604,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV41)return;
-    circle.dataset.murFiveV41='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV43)return;
+    circle.dataset.murFiveV43='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v41-css';
+    style.id='mur-five-spheres-v43-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1722,27 +1722,59 @@ if (typeof window.installPresentationFallback !== 'function') {
         }
         ctx.restore();
       }
+      // Halo vivant de micro-particules autour de la sphère centrale.
+      if(progress>.18){
+        ctx.save();ctx.globalCompositeOperation='lighter';
+        const haloVis=Math.min(1,(progress-.18)/.45);
+        const haloCount=140;
+        for(let i=0;i<haloCount;i++){
+          const a=time*.0007 + i*TAU/haloCount;
+          const rr=centerRadius + 10 + 8*Math.sin(time*.0012 + i*.37);
+          const x=coords[0][0] + Math.cos(a)*rr;
+          const y=coords[0][1] + Math.sin(a)*rr*0.88;
+          const alpha=(.12 + .22*((i%7)/6))*haloVis;
+          ctx.fillStyle=`rgba(255,92,108,${alpha.toFixed(3)})`;
+          ctx.beginPath();ctx.arc(x,y,.9 + (i%5)*.16,0,TAU);ctx.fill();
+        }
+        ctx.restore();
+      }
       // Un courant de points se détache du coeur et nourrit chaque orbite.
+      // Les quatre sphères périphériques sont reliées entre elles par un anneau vivant
+      // de particules. Le centre n'est pas relié : il garde seulement son halo.
       if(progress>.035){
         ctx.save();ctx.globalCompositeOperation='lighter';
-        const visible=Math.min(1,(progress-.035)/.48);
-        for(let k=1;k<5;k++){
-          const target=coords[k],startPoint=coords[0],rgb=GROUPS[k].rgb;
+        const visible=Math.min(1,(progress-.035)/.52);
+        const ringPairs=[[1,3],[3,4],[4,2],[2,1]]; // haut -> gauche -> bas -> droite -> haut
+        for(let idx=0; idx<ringPairs.length; idx++){
+          const aIndex=ringPairs[idx][0], bIndex=ringPairs[idx][1];
+          const startPoint=coords[aIndex], target=coords[bIndex];
+          const colorA=GROUPS[aIndex].rgb, colorB=GROUPS[bIndex].rgb;
+          const rgb=[
+            Math.round((colorA[0]+colorB[0])/2),
+            Math.round((colorA[1]+colorB[1])/2),
+            Math.round((colorA[2]+colorB[2])/2)
+          ];
           const dx=target[0]-startPoint[0],dy=target[1]-startPoint[1];
           const length=Math.max(1,Math.hypot(dx,dy));
-          const nx=-dy/length,ny=dx/length;
-          const midX=(startPoint[0]+target[0])*.5+nx*(k%2?16:-16);
-          const midY=(startPoint[1]+target[1])*.5+ny*(k%2?16:-16);
-          for(let j=0;j<195;j++){
-            const seed=(j*.61803398875+k*.173)%1;
-            const q=(time*.00032*(.65+(j%9)*.025)+seed)%1;
+          const nx=dx/length,ny=dy/length;
+          const px=-dy/length,py=dx/length;
+          const startX=startPoint[0]+nx*(radius*.48);
+          const startY=startPoint[1]+ny*(radius*.48);
+          const endX=target[0]-nx*(radius*.48);
+          const endY=target[1]-ny*(radius*.48);
+          const bend=(idx%2?12:-12);
+          const midX=(startX+endX)*.5+px*bend;
+          const midY=(startY+endY)*.5+py*bend;
+          for(let j=0;j<235;j++){
+            const seed=(j*.61803398875+idx*.173)%1;
+            const q=(time*.00026*(.60+(j%11)*.020)+seed)%1;
             const u=q*q*(3-2*q);
-            const spread=Math.sin(Math.PI*u)*((j%19)-9)*1.95;
-            const x=(1-u)*(1-u)*startPoint[0]+2*(1-u)*u*midX+u*u*target[0]+nx*spread;
-            const y=(1-u)*(1-u)*startPoint[1]+2*(1-u)*u*midY+u*u*target[1]+ny*spread;
-            const alpha=visible*(.30+.64*Math.sin(Math.PI*u))*(.72+.28*(j%7)/6);
+            const spread=(1-Math.abs(.5-u)*2)*(((j%9)-4)*1.18);
+            const x=(1-u)*(1-u)*startX+2*(1-u)*u*midX+u*u*endX+px*spread;
+            const y=(1-u)*(1-u)*startY+2*(1-u)*u*midY+u*u*endY+py*spread;
+            const alpha=visible*(.28+.66*Math.sin(Math.PI*u))*(.76+.24*(j%7)/6);
             ctx.fillStyle=`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha.toFixed(3)})`;
-            ctx.beginPath();ctx.arc(x,y,.95+((j*5)%9)/8,0,TAU);ctx.fill();
+            ctx.beginPath();ctx.arc(x,y,1.0+((j*5)%9)/8,0,TAU);ctx.fill();
           }
         }
         ctx.restore();
@@ -1805,7 +1837,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V41={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'anchored-dissolving-cloud-orbits-red-urgent-breath-symbol'};
+    window.MUR_HOME_FIVE_V43={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'peripheral-ring-links-halo-center'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
