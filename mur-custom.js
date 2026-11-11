@@ -1572,22 +1572,22 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V36 — UNE SPHERE DEVIENT CINQ SPHERES CLIQUABLES
+   M.U.R. V37 — CINQ SPHERES RELIEES, URGENCE AU CENTRE
    2400 points repartis en 5 x 480. Retour inverse.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V36)return;
+  if(window.MUR_HOME_FIVE_V37)return;
   const N=2400, PER=480, OPEN_MS=1000, CLOSE_MS=800;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
+    {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[176,134,255]},
     {key:'tests',fr:'Mesurer',en:'Measure',icon:'⌁',rgb:[60,160,255]},
     {key:'breath',fr:'Respirer',en:'Breathe',icon:'◌',rgb:[55,226,166]},
     {key:'exercises',fr:'Exercices',en:'Exercises',icon:'✦',rgb:[255,166,70]},
-    {key:'stats',fr:'Stats',en:'Stats',icon:'▥',rgb:[248,99,169]},
-    {key:'quick',fr:'Mode rapide',en:'Quick mode',icon:'ϟ',rgb:[176,134,255]}
+    {key:'stats',fr:'Stats',en:'Stats',icon:'▥',rgb:[248,99,169]}
   ];
   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
   const points=Array.from({length:N},(_,i)=>{
@@ -1602,7 +1602,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     if(!circle||!home||!nativeMenu||circle.dataset.murFiveV36)return;
     circle.dataset.murFiveV36='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v36-css';
+    style.id='mur-five-spheres-v37-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open #homeCircle .mur-home-2400-canvas{opacity:0!important}
@@ -1610,7 +1610,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       .mur-five-layer{position:fixed!important;inset:0!important;z-index:10030!important;pointer-events:none!important;display:none!important;overflow:hidden!important}
       .mur-five-layer.is-visible{display:block!important}
       .mur-five-layer canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-      .mur-five-target{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transform:translate(-50%,-50%);width:104px;height:104px;border:0;border-radius:50%;color:#fff;background:transparent;cursor:pointer;pointer-events:auto;opacity:0;transition:opacity .25s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-shadow:0 2px 8px #001c31;font-family:inherit}
+      .mur-five-target{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transform:translate(-50%,-50%);width:104px;height:104px;border:0;border-radius:50%;color:#fff;background:transparent;cursor:pointer;pointer-events:auto;opacity:0;transition:opacity .25s ease,left .12s linear, top .12s linear;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-shadow:0 2px 8px #001c31;font-family:inherit}
       .mur-five-target.ready{opacity:1}
       .mur-five-target .mur-five-icon{font-size:24px;line-height:1;font-weight:750;filter:drop-shadow(0 0 5px currentColor)}
       .mur-five-target .mur-five-label{font-size:13px;font-weight:850;line-height:1.1;white-space:nowrap}
@@ -1642,22 +1642,24 @@ if (typeof window.installPresentationFallback !== 'function') {
     function refreshLabels(){GROUPS.forEach((g,i)=>{buttons[i].querySelector('.mur-five-label').textContent=isEn()?g.en:g.fr;buttons[i].setAttribute('aria-label',isEn()?g.en:g.fr)})}
     refreshLabels();
     new MutationObserver(refreshLabels).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
-    function layout(){
+    function layout(time=0){
       const w=innerWidth,h=innerHeight,small=w<390;
-      const sx=Math.min((w-115)/2,small?105:128);
-      const top=Math.max(90,Math.min(h-190,h*.22));
-      const bottom=Math.max(top+225,Math.min(h-115,h*.79));
-      const center=(top+bottom)/2;
+      const cx=w*.5;
+      const cy=Math.max(240,Math.min(h*.56,h-235));
+      const orbitR=Math.min(w*.32,small?118:146);
+      const radius=small?42:50;
+      const centerRadius=small?46:56;
+      const a=time*.00018;
       const coords=[
-        [w*.5,top+15],
-        [w*.5-sx,center-21],
-        [w*.5+sx,center-21],
-        [w*.5-sx*.82,bottom-7],
-        [w*.5+sx*.82,bottom-7]
+        [cx,cy]
       ];
-      const radius=small?43:49;
-      coords.forEach((p,i)=>{buttons[i].style.left=p[0]+'px';buttons[i].style.top=p[1]+'px';buttons[i].style.width=(radius*2+12)+'px';buttons[i].style.height=(radius*2+12)+'px'});
-      return {coords,radius};
+      const offsets=[-Math.PI/2, Math.PI, 0, Math.PI/2];
+      offsets.forEach(off=>coords.push([cx+Math.cos(a+off)*orbitR, cy+Math.sin(a+off)*orbitR]));
+      coords.forEach((p,i)=>{
+        const rr=i===0?centerRadius:radius;
+        buttons[i].style.left=p[0]+'px';buttons[i].style.top=p[1]+'px';buttons[i].style.width=(rr*2+14)+'px';buttons[i].style.height=(rr*2+14)+'px';
+      });
+      return {coords,radius,centerRadius,orbitR,cx,cy};
     }
     function homeColor(){
       const raw=(circle.style.getPropertyValue('--home-color')||getComputedStyle(circle).getPropertyValue('--home-color')).trim();
@@ -1672,11 +1674,28 @@ if (typeof window.installPresentationFallback !== 'function') {
     function draw(time){
       if(!layer.isConnected)return;
       const {w,h}=size();ctx.clearRect(0,0,w,h);
-      const {coords,radius}=layout();
+      const {coords,radius,centerRadius,orbitR,cx,cy}=layout(time);
       const rect=circle.getBoundingClientRect();
       const hx=rect.left+rect.width*.5,hy=rect.top+rect.height*.5;
       const hr=Math.min(rect.width,rect.height)*.405;
       const color=homeColor();
+      if(progress>.12){
+        ctx.save();
+        ctx.lineWidth=2.2;
+        ctx.globalAlpha=.16+.36*progress;
+        for(let i=1;i<coords.length;i++){
+          const g=GROUPS[i].rgb;
+          const grad=ctx.createLinearGradient(coords[0][0],coords[0][1],coords[i][0],coords[i][1]);
+          grad.addColorStop(0,`rgba(${g[0]},${g[1]},${g[2]},.55)`);
+          grad.addColorStop(1,`rgba(${g[0]},${g[1]},${g[2]},.18)`);
+          ctx.strokeStyle=grad;
+          ctx.beginPath();
+          ctx.moveTo(coords[0][0],coords[0][1]);
+          ctx.lineTo(coords[i][0],coords[i][1]);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
       const ca=Math.cos(time*.00023),sa=Math.sin(time*.00023);
       const cb=Math.cos(time*.00027),sb=Math.sin(time*.00027);
       ctx.globalCompositeOperation='lighter';
@@ -1698,11 +1717,21 @@ if (typeof window.installPresentationFallback !== 'function') {
         ctx.beginPath();ctx.arc(x,y,rad,0,TAU);ctx.fill();
       }
       ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+      if(progress>.35){
+        ctx.save();
+        ctx.globalAlpha=.18+.15*Math.sin(time*.003);
+        ctx.strokeStyle='rgba(196,172,255,.55)';
+        ctx.lineWidth=1.4;
+        ctx.beginPath();
+        ctx.arc(coords[0][0],coords[0][1],centerRadius+10,0,TAU);
+        ctx.stroke();
+        ctx.restore();
+      }
       buttons.forEach((b,i)=>{
-        const show=progress>.48;
+        const show=progress>.42;
         b.classList.toggle('ready',show);
         b.style.pointerEvents=(show&&open)?'auto':'none';
-        const locked=(i!==0&&typeof window.testsAreUnlocked==='function'&&!window.testsAreUnlocked());
+        const locked=(i>0&&typeof window.testsAreUnlocked==='function'&&!window.testsAreUnlocked());
         b.classList.toggle('is-locked',locked);b.setAttribute('aria-disabled',String(locked));
         b.tabIndex=show&&open?0:-1;
       });
@@ -1732,7 +1761,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V36={particles:N,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS};
+    window.MUR_HOME_FIVE_V37={particles:N,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'center-urgent-orbits'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
