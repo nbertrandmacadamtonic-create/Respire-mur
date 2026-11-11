@@ -1854,14 +1854,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ============================================================
-   M.U.R. V53 — RESPIRATION AERIENNE, TEXTE INDEPENDANT ET AMPLITUDE
+   M.U.R. V55 — RESPIRATION COULEUR SCORE NEUROFLEX
    950 particules, 3D en rotation lente, dilatation pilotee par
    les phases de respiration existantes (sans modifier les cycles,
    l'audio, les pauses, les commandes ou index.html).
    ============================================================ */
 (() => {
   'use strict';
-  if (window.MUR_BREATH_PARTICLE_ORB_V53) return;
+  if (window.MUR_BREATH_PARTICLE_ORB_V55) return;
   const COUNT = 950;
   const GOLDEN = Math.PI * (3 - Math.sqrt(5));
   const TWO_PI = Math.PI * 2;
@@ -1968,6 +1968,29 @@ if (typeof window.installPresentationFallback !== 'function') {
     function clamp(v){return Math.max(0,Math.min(255,Math.round(v)));}
     function tint(rgb,f){return rgb.map(v=>clamp(v+(255-v)*f));}
     function shade(rgb,f){return rgb.map(v=>clamp(v*(1-f)));}
+    // Priorité à la couleur NeuroFlex effectivement utilisée pour la boule d'accueil.
+    // Même source de couleur, donc même résultat, sans recalculer les scores.
+    const scorePalette={
+      bleu:[59,150,247], vert:[85,233,153],
+      orange:[255,165,63], rouge:[255,88,100]
+    };
+    function neuroFlexColor(){
+      const homeCircle=document.getElementById('homeCircle');
+      if(homeCircle){
+        const styles=getComputedStyle(homeCircle);
+        const liveColor=parseRGB(homeCircle.style.getPropertyValue('--home-color'))
+          || parseRGB(styles.getPropertyValue('--home-color'));
+        if(liveColor && liveColor.length===3 && liveColor.every(Number.isFinite))return liveColor;
+      }
+      let zone=null;
+      try {zone=window.getCurrentNeuroRecommendation?.()?.zone;} catch(e){}
+      if(!zone){try{zone=JSON.parse(localStorage.getItem('murLastNeuro')||'null')?.zone;}catch(e){}}
+      const key=String(zone?.key||zone?.name||zone||'vert').toLowerCase();
+      if(key.includes('bleu')||key.includes('blue'))return scorePalette.bleu;
+      if(key.includes('orange'))return scorePalette.orange;
+      if(key.includes('rouge')||key.includes('red'))return scorePalette.rouge;
+      return scorePalette.vert;
+    }
     function render(t){
       raf = requestAnimationFrame(render);
       if (document.hidden || !page.classList.contains('active')) return;
@@ -1986,9 +2009,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const cos = Math.cos(angle), sin = Math.sin(angle);
       const tilt = .17;
       const ct=Math.cos(tilt),st=Math.sin(tilt);
-      const base = parseRGB(getComputedStyle(orb).getPropertyValue('--mur-section-color'))
-        || parseRGB(getComputedStyle(page).getPropertyValue('--mur-section-color'))
-        || [55,226,166];
+      const base = neuroFlexColor();
       const near=tint(base,.42), far=shade(base,.18);
       ctx.globalCompositeOperation='lighter';
       for(const p of points){
@@ -2015,7 +2036,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     }
     raf=requestAnimationFrame(render);
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);raf=0;},{once:true});
-    window.MUR_BREATH_PARTICLE_ORB_V53={points:COUNT, breathingAnimation:'native-orb-transform-enhanced', rotation:'slow', phaseText:'separate-below-orb', color:'trend'};
+    window.MUR_BREATH_PARTICLE_ORB_V55={points:COUNT, breathingAnimation:'native-orb-transform-enhanced', rotation:'slow', phaseText:'separate-below-orb', color:'neuroflex-score'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
