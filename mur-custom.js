@@ -1572,15 +1572,15 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V38 — FLUX DE PARTICULES DEPUIS URGENCE
-   2400 points repartis en 5 x 480. Retour inverse.
+   M.U.R. V39 — DISSOLUTION A LA SOURCE ET ORBITES DENSES
+   La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V38)return;
-  const N=2400, PER=480, OPEN_MS=1000, CLOSE_MS=800;
+  if(window.MUR_HOME_FIVE_V39)return;
+  const N=2400, PER=680, OPEN_MS=1200, CLOSE_MS=900;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
     {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[176,134,255]},
@@ -1590,21 +1590,28 @@ if (typeof window.installPresentationFallback !== 'function') {
     {key:'stats',fr:'Stats',en:'Stats',icon:'▥',rgb:[248,99,169]}
   ];
   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
-  const points=Array.from({length:N},(_,i)=>{
+  // Deux populations distinctes : 2400 points de la sphère source et
+  // 5 x 680 points de condensation (aucune scission en cinq morceaux).
+  const sourcePoints=Array.from({length:N},(_,i)=>{
     const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),a=i*GOLD;
-    const j=i%PER,v=1-2*(j+.5)/PER,rr=Math.sqrt(1-v*v),aa=j*GOLD;
-    return {x:r*Math.cos(a),y,z:r*Math.sin(a),gx:rr*Math.cos(aa),gy:v,gz:rr*Math.sin(aa),g:Math.floor(i/PER),seed:(i*67%109)/109};
+    return {x:r*Math.cos(a),y,z:r*Math.sin(a),seed:((i*67)%1009)/1009};
+  });
+  const miniPoints=Array.from({length:PER*5},(_,i)=>{
+    const j=i%PER,y=1-2*(j+.5)/PER,r=Math.sqrt(1-y*y),a=j*GOLD;
+    return {x:r*Math.cos(a),y,z:r*Math.sin(a),g:Math.floor(i/PER),seed:((i*127)%1021)/1021};
   });
   function init(){
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV36)return;
-    circle.dataset.murFiveV36='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV39)return;
+    circle.dataset.murFiveV39='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v38-css';
+    style.id='mur-five-spheres-v39-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+      body.mur-five-open .mur-home-particle-burst{display:none!important}
+      body.mur-five-open #homeCircle{visibility:visible!important}
       body.mur-five-open #homeCircle .mur-home-2400-canvas{opacity:0!important}
       body.mur-five-open .mur-orb-backdrop{z-index:10005!important}
       .mur-five-layer{position:fixed!important;inset:0!important;z-index:10030!important;pointer-events:none!important;display:none!important;overflow:hidden!important}
@@ -1644,11 +1651,15 @@ if (typeof window.installPresentationFallback !== 'function') {
     new MutationObserver(refreshLabels).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
     function layout(time=0){
       const w=innerWidth,h=innerHeight,small=w<390;
-      const cx=w*.5;
-      const cy=Math.max(240,Math.min(h*.56,h-235));
-      const orbitR=Math.min(w*.32,small?118:146);
-      const radius=small?42:50;
-      const centerRadius=small?46:56;
+      // Même centre que la sphère réellement affichée (et non le centre de l'écran).
+      const rect=circle.getBoundingClientRect();
+      const cx=rect.left+rect.width/2;
+      const cy=rect.top+rect.height/2;
+      const radius=small?35:42;
+      const centerRadius=small?39:46;
+      // Adaptation à la place disponible autour de la sphère sur mobile.
+      const edge=Math.min(cx,w-cx,cy,h-cy);
+      const orbitR=Math.max(75,Math.min(small?120:150,edge-radius-10));
       const a=time*.00018;
       const coords=[
         [cx,cy]
@@ -1676,75 +1687,82 @@ if (typeof window.installPresentationFallback !== 'function') {
       const {w,h}=size();ctx.clearRect(0,0,w,h);
       const {coords,radius,centerRadius,orbitR,cx,cy}=layout(time);
       const rect=circle.getBoundingClientRect();
-      const hx=rect.left+rect.width*.5,hy=rect.top+rect.height*.5;
+      const hx=cx,hy=cy;
       const hr=Math.min(rect.width,rect.height)*.405;
       const color=homeColor();
-      // Quatre courants de particules, sans trait rigide.
-      // Chaque particule part du coeur Urgence, suit un léger arc,
-      // puis rejoint une sphère orbitale. Les courants suivent leur rotation.
-      if(progress>.08){
-        ctx.save();
-        ctx.globalCompositeOperation='lighter';
-        const visible=Math.min(1,(progress-.08)/.56);
-        const flowTime=time*.00024;
+      const ca=Math.cos(time*.00023),sa=Math.sin(time*.00023);
+      const cb=Math.cos(time*.00030),sb=Math.sin(time*.00030);
+      const sourceFade=ease(Math.min(1,progress/.76));
+      // La sphère mère perd progressivement ses points, de façon irrégulière.
+      // Les points ne sont PAS transportés chacun vers une petite sphère.
+      if(sourceFade<1){
+        ctx.save();ctx.globalCompositeOperation='lighter';
+        for(const p of sourcePoints){
+          const threshold=.06+p.seed*.88;
+          if(sourceFade>=threshold)continue;
+          const remaining=Math.max(0,Math.min(1,(threshold-sourceFade)/.15));
+          const xx=p.x*ca-p.z*sa,zz=p.x*sa+p.z*ca;
+          const perspective=2.9/(2.9-zz*.26);
+          const drift=1+sourceFade*(.13+.17*p.seed);
+          const x=hx+xx*hr*perspective*drift,y=hy+p.y*hr*perspective*drift;
+          const depth=(zz+1)/2;
+          ctx.globalAlpha=(.35+.56*depth)*remaining;
+          ctx.fillStyle=`rgb(${color.join(',')})`;
+          ctx.beginPath();ctx.arc(x,y,.7+depth*1.1,0,TAU);ctx.fill();
+        }
+        ctx.restore();
+      }
+      // Un courant de points se détache du coeur et nourrit chaque orbite.
+      if(progress>.06){
+        ctx.save();ctx.globalCompositeOperation='lighter';
+        const visible=Math.min(1,(progress-.06)/.43);
         for(let k=1;k<5;k++){
-          const target=coords[k], startPoint=coords[0], rgb=GROUPS[k].rgb;
-          const dx=target[0]-startPoint[0], dy=target[1]-startPoint[1];
+          const target=coords[k],startPoint=coords[0],rgb=GROUPS[k].rgb;
+          const dx=target[0]-startPoint[0],dy=target[1]-startPoint[1];
           const length=Math.max(1,Math.hypot(dx,dy));
-          const nx=-dy/length, ny=dx/length;
-          const middleX=(startPoint[0]+target[0])*.5 + nx*(k%2?13:-13);
-          const middleY=(startPoint[1]+target[1])*.5 + ny*(k%2?13:-13);
-          const count=86;
-          for(let j=0;j<count;j++){
-            const seed=(j*0.61803398875+k*.173)%1;
-            const q=(flowTime*(.67+(j%7)*.035)+seed)%1;
+          const nx=-dy/length,ny=dx/length;
+          const midX=(startPoint[0]+target[0])*.5+nx*(k%2?16:-16);
+          const midY=(startPoint[1]+target[1])*.5+ny*(k%2?16:-16);
+          for(let j=0;j<120;j++){
+            const seed=(j*.61803398875+k*.173)%1;
+            const q=(time*.00027*(.65+(j%9)*.025)+seed)%1;
             const u=q*q*(3-2*q);
-            // Nuage plus large au milieu, resserré aux extrémités.
-            const spread=Math.sin(Math.PI*u)*((j%13)-6)*1.55;
-            const x=(1-u)*(1-u)*startPoint[0]+2*(1-u)*u*middleX+u*u*target[0]+nx*spread;
-            const y=(1-u)*(1-u)*startPoint[1]+2*(1-u)*u*middleY+u*u*target[1]+ny*spread;
-            const alpha=visible*(.24+.52*Math.sin(Math.PI*u))*(.65+.35*((j*7)%11)/10);
-            const radius=.65+((j*5)%9)/10;
+            const spread=Math.sin(Math.PI*u)*((j%17)-8)*1.35;
+            const x=(1-u)*(1-u)*startPoint[0]+2*(1-u)*u*midX+u*u*target[0]+nx*spread;
+            const y=(1-u)*(1-u)*startPoint[1]+2*(1-u)*u*midY+u*u*target[1]+ny*spread;
+            const alpha=visible*(.22+.56*Math.sin(Math.PI*u))*(.72+.28*(j%7)/6);
             ctx.fillStyle=`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha.toFixed(3)})`;
-            ctx.beginPath();ctx.arc(x,y,radius,0,TAU);ctx.fill();
+            ctx.beginPath();ctx.arc(x,y,.75+((j*5)%9)/9,0,TAU);ctx.fill();
           }
         }
         ctx.restore();
       }
-      const ca=Math.cos(time*.00023),sa=Math.sin(time*.00023);
-      const cb=Math.cos(time*.00027),sb=Math.sin(time*.00027);
-      ctx.globalCompositeOperation='lighter';
-      for(const p of points){
-        const xx=p.x*ca-p.z*sa,zz=p.x*sa+p.z*ca;
-        const hk=2.9/(2.9-zz*.26);
-        const x0=hx+xx*hr*hk,y0=hy+p.y*hr*hk;
-        const g=GROUPS[p.g],c=coords[p.g];
-        const gx=p.gx*cb-p.gz*sb,gz=p.gx*sb+p.gz*cb;
-        const gk=2.9/(2.9-gz*.25);
-        const targetRadius=p.g===0?centerRadius:radius;
-        const x1=c[0]+gx*targetRadius*gk,y1=c[1]+p.gy*targetRadius*gk;
-        const x=x0+(x1-x0)*progress,y=y0+(y1-y0)*progress;
-        if(x<0||y<0||x>w||y>h)continue;
-        const rgb=g.rgb.map((v,i)=>Math.round(color[i]*(1-progress)+v*progress));
-        const depth=(gz+1)/2;
-        ctx.globalAlpha=.35+.55*depth;
-        ctx.fillStyle=`rgb(${rgb.join(',')})`;
-        const rad=.65+depth*1.25;
-        ctx.beginPath();ctx.arc(x,y,rad,0,TAU);ctx.fill();
-      }
-      ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
-      if(progress>.35){
-        ctx.save();
-        ctx.globalAlpha=.18+.15*Math.sin(time*.003);
-        ctx.strokeStyle='rgba(196,172,255,.55)';
-        ctx.lineWidth=1.4;
-        ctx.beginPath();
-        ctx.arc(coords[0][0],coords[0][1],centerRadius+10,0,TAU);
-        ctx.stroke();
+      // Condensation indépendante : chaque mini-sphère compte 680 points,
+      // plus serrés et plus lumineux que dans la V38.
+      const grown=ease(Math.max(0,Math.min(1,(progress-.18)/.70)));
+      if(grown>0){
+        ctx.save();ctx.globalCompositeOperation='lighter';
+        for(const p of miniPoints){
+          const threshold=.07+p.seed*.65;
+          const appear=ease(Math.max(0,Math.min(1,(grown-threshold)/.20)));
+          if(appear<=0)continue;
+          const g=GROUPS[p.g],c=coords[p.g];
+          const xx=p.x*cb-p.z*sb,zz=p.x*sb+p.z*cb;
+          const perspective=2.9/(2.9-zz*.22);
+          const R=p.g===0?centerRadius:radius;
+          const cloudScale=1+(1-appear)*(.55+.50*p.seed);
+          const x=c[0]+xx*R*perspective*cloudScale;
+          const y=c[1]+p.y*R*perspective*cloudScale;
+          const depth=(zz+1)/2;
+          ctx.globalAlpha=appear*(.54+.43*depth);
+          ctx.fillStyle=`rgb(${g.rgb.join(',')})`;
+          ctx.beginPath();ctx.arc(x,y,.85+depth*1.25,0,TAU);ctx.fill();
+        }
         ctx.restore();
       }
+      ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
       buttons.forEach((b,i)=>{
-        const show=progress>.42;
+        const show=progress>.68;
         b.classList.toggle('ready',show);
         b.style.pointerEvents=(show&&open)?'auto':'none';
         const locked=(i>0&&typeof window.testsAreUnlocked==='function'&&!window.testsAreUnlocked());
@@ -1777,7 +1795,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V38={particles:N,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'living-particle-cloud-orbits'};
+    window.MUR_HOME_FIVE_V39={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'anchored-dissolving-cloud-orbits'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
