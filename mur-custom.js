@@ -2044,7 +2044,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ================================================================
-   M.U.R. V59 - Informations harmonisees par page, FR/EN, Supabase
+   M.U.R. V61 - Bouton accueil aligne, pastille respiration masquee
    Sans changement index.html. Contenu distant en lecture uniquement.
    ================================================================ */
 (() => {
@@ -2098,8 +2098,15 @@ if (typeof window.installPresentationFallback !== 'function') {
       .mur-info-page-button{position:absolute!important;right:14px!important;top:12px!important;z-index:90!important;width:38px!important;height:38px!important;display:grid!important;place-items:center!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.36)!important;background:rgba(10,32,52,.84)!important;color:#fff!important;font-size:19px!important;font-family:Arial,sans-serif!important;font-weight:800!important;line-height:1!important;box-shadow:0 5px 18px rgba(0,0,0,.30)!important;cursor:pointer!important;touch-action:manipulation!important}
       .mur-info-page-button:focus-visible{outline:3px solid #79e8d8!important;outline-offset:3px!important}
       section.page{position:relative!important}
-      #home>.mur-info-page-button{left:14px!important;right:auto!important;top:18px!important}
-      section.page:not(.active)>.mur-info-page-button{display:none!important}
+      /* Accueil : utiliser l’emplacement du bouton info historique,
+         à gauche du bouton Profil, dans la barre de titre. */
+      #home .home-title{position:relative!important}
+      #home .home-title>.mur-info-page-button{position:absolute!important;top:4px!important;right:52px!important;left:auto!important;width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;border-radius:16px!important;margin:0!important;transform:none!important;z-index:30!important}
+      @media(max-width:380px){#home .home-title>.mur-info-page-button{top:3px!important;right:46px!important;width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;border-radius:15px!important}}
+      /* Respiration : masquer seulement la pastille de zone dans l'en-tête.
+         Le score et les couleurs de l'orbe restent inchangés. */
+      #breath>.card>.status>.badge:has(#breathZone){display:none!important}
+      section.page:not(.active) .mur-info-page-button{display:none!important}
       .mur-info-screen[hidden]{display:none!important}
       .mur-info-screen{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:22px 15px;background:rgba(3,10,20,.82);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
       .mur-info-panel{position:relative;width:min(550px,100%);max-height:min(80dvh,760px);overflow:auto;border-radius:20px;background:linear-gradient(145deg,#132a41,#081522);border:1px solid rgba(155,223,225,.32);padding:28px 22px 23px;color:#f6fafc;box-shadow:0 25px 80px rgba(0,0,0,.56)}
@@ -2111,7 +2118,9 @@ if (typeof window.installPresentationFallback !== 'function') {
     Object.keys(PAGES).forEach(id=>{
       const pg=document.getElementById(id);if(!pg)return;
       const b=document.createElement('button');b.type='button';b.className='mur-info-page-button';b.textContent='i';b.setAttribute('aria-label',language()==='fr'?'Informations sur cette page':'Information about this page');
-      b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open(id);});pg.appendChild(b);
+      b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open(id);});
+      const mount=id==='home'?(pg.querySelector('.home-title')||pg):pg;
+      mount.appendChild(b);
     });
     const m=document.createElement('div');m.id='murInfoUnifiedModalV58';m.className='mur-info-screen';m.hidden=true;m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-label','Informations M.U.R.');
     m.innerHTML='<div class="mur-info-panel"><button type="button" class="mur-info-close-x" aria-label="Fermer">×</button><h2 class="mur-info-title"></h2><div class="mur-info-content"></div><button type="button" class="mur-info-close">Compris</button></div>';
