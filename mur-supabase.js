@@ -1,4 +1,4 @@
-/* M.U.R. Supabase v6.0 — synchronisation par compte.
+/* M.U.R. Supabase V71 — synchronisation par compte et état de session stabilisé.
  * Remplace uniquement mur-supabase.js, sans modifier index.html.
  * La table mur_history est facultative tant que la migration SQL n'est pas lancee.
  * Ne jamais placer de cle secrete/service_role dans ce fichier public.
@@ -15,6 +15,17 @@
   let role = 'visiteur';
   let user = null, busy = false, syncing = false, historyEnabled = true;
   let lastSyncUser = null, authReady = false;
+  const notifySession=()=>window.dispatchEvent(new CustomEvent('mur-auth-state-ready',{detail:{ready:authReady,signedIn:!!user}}));
+  let refreshSessionPending=null;
+  function refreshSession(){
+    if(refreshSessionPending)return refreshSessionPending;
+    refreshSessionPending=client.auth.getUser().then(({data,error})=>{
+      // En cas d'erreur réseau, ne pas remplacer un compte confirmé par 'visiteur'.
+      if(!error){user=data?.user||null;authReady=true;refreshAuth();notifySession();}
+      return {user,error};
+    }).catch(error=>({user,error})).finally(()=>{refreshSessionPending=null;});
+    return refreshSessionPending;
+  }
   const $ = id => document.getElementById(id);
   const get = id => $(id)?.value;
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
@@ -507,7 +518,7 @@
     panel();installHooks();
     const {data,error}=await client.auth.getUser();
     if(error)console.info('[MUR Cloud] Pas de session :',error.message);
-    user=data?.user||null;authReady=true;refreshAuth();
+    user=data?.user||null;authReady=true;refreshAuth();notifySession();
     // Une session persistante ne doit jamais etre confrontee au formulaire d'inscription.
     if(user && $('mur-cloud-dialog') && !$('mur-cloud-dialog').hidden){
       $('mur-cloud-dialog').hidden=true;
@@ -521,7 +532,7 @@
 
     client.auth.onAuthStateChange((event,session)=>{
       const previous=user?.id||null;
-      user=session?.user||null;refreshAuth();
+      user=session?.user||null;authReady=true;refreshAuth();notifySession();
       if(user && $('mur-cloud-dialog') && !$('mur-cloud-dialog').hidden && event==='SIGNED_IN'){
         const focus=document.activeElement;
         if(focus && $('mur-cloud-dialog').contains(focus))focus.blur();
@@ -536,9 +547,11 @@
       if(user && (previous!==user.id || (event==='SIGNED_IN'&&lastSyncUser!==user.id)))setTimeout(syncFromCloud,0);
       if(!user)lastSyncUser=null;
     });
+    window.addEventListener('pageshow',()=>{void refreshSession();});
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refreshSession();});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
-  window.MURCloud={client,getUser:()=>user,getRole:()=>role,saveKis,saveNow,saveProfile,sync:syncFromCloud};
+  window.MURCloud={client,getUser:()=>user,getRole:()=>role,isReady:()=>authReady,refreshSession,saveKis,saveNow,saveProfile,sync:syncFromCloud};
 })();
 
 /* M.U.R. V12 — accès découverte, intégré au module Supabase existant.
@@ -554,6 +567,7 @@
   const FREE_EXERCISE='double';
   const $=id=>document.getElementById(id);
   const isSignedIn=()=>Boolean(window.MURCloud?.getUser?.());
+  const isAuthReady=()=>Boolean(window.MURCloud?.isReady?.());
   const messageBreath='En mode découverte, seule la Respiration 365 est disponible. Inscrivez-vous pour accéder aux autres respirations.';
   const messageExercise='En mode découverte, seul l’exercice rouge « Double inspiration » est disponible. Inscrivez-vous pour accéder aux autres exercices Paniflex.';
   function openAccount(){
@@ -588,6 +602,15 @@
     if(typeof original!=='function')return false;
     if(original.__murV11Guard)return true;
     function guarded(...args){
+      // Ne pas conclure 'visiteur' pendant la restauration de session Supabase.
+      if(!isAuthReady()&&!condition(...args)){
+        const cloud=window.MURCloud;
+        return Promise.resolve(cloud?.refreshSession?.()).then(()=>{
+          refresh();
+          if(!isSignedIn()){invite(message);return;}
+          return original.apply(this,args);
+        });
+      }
       if(!isSignedIn()&&!condition(...args)){
         invite(message);
         return;
@@ -621,19 +644,26 @@
     const signedIn=isSignedIn();
     const breath=$('mur-v12-breath-notice');
     if(breath){
-      breath.hidden=signedIn;
+      breath.hidden=signedIn||!isAuthReady();
       breath.textContent='Mode découverte : seule la Respiration 365 est disponible. Les autres respirations nécessitent une inscription.';
     }
     const exercise=$('mur-v11-access-notice');
     if(exercise){
-      exercise.hidden=signedIn;
+      exercise.hidden=signedIn||!isAuthReady();
       exercise.textContent='Mode découverte : dans la zone rouge, seul l’exercice « Double inspiration » est disponible. Les autres exercices Paniflex nécessitent une inscription.';
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',restrict,{once:true});
   else restrict();
-  window.MURCloud?.client?.auth?.onAuthStateChange?.(()=>queueMicrotask(refresh));
-  window.MURDiscoveryV11={freeBreath:FREE_BREATH,freeExercise:FREE_EXERCISE,isSignedIn};
+  window.addEventListener('mur-auth-state-ready',()=>{
+    refresh();
+    if(isSignedIn())$('mur-v11-access-dialog')?.remove();
+  });
+  // Le callback auth peut précéder la mise à jour de la variable user.
+  window.MURCloud?.client?.auth?.onAuthStateChange?.(()=>setTimeout(refresh,0));
+  window.addEventListener('pageshow',refresh);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+  window.MURDiscoveryV71={freeBreath:FREE_BREATH,freeExercise:FREE_EXERCISE,isSignedIn,refresh};
 })();
 
 
