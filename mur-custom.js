@@ -2044,7 +2044,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ================================================================
-   M.U.R. V61 - Bouton accueil aligne, pastille respiration masquee
+   M.U.R. V62 - Bouton information carre uniforme
    Sans changement index.html. Contenu distant en lecture uniquement.
    ================================================================ */
 (() => {
@@ -2095,14 +2095,14 @@ if (typeof window.installPresentationFallback !== 'function') {
   function install(){if(document.getElementById('murInfoUnifiedModalV58'))return;
     const style=document.createElement('style');style.id='mur-info-unified-style-v58';style.textContent=`
       #appInfoBtn,#testsInfoBtn{display:none!important;visibility:hidden!important;pointer-events:none!important}
-      .mur-info-page-button{position:absolute!important;right:14px!important;top:12px!important;z-index:90!important;width:38px!important;height:38px!important;display:grid!important;place-items:center!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.36)!important;background:rgba(10,32,52,.84)!important;color:#fff!important;font-size:19px!important;font-family:Arial,sans-serif!important;font-weight:800!important;line-height:1!important;box-shadow:0 5px 18px rgba(0,0,0,.30)!important;cursor:pointer!important;touch-action:manipulation!important}
+      .mur-info-page-button{position:absolute!important;right:14px!important;top:12px!important;z-index:90!important;width:38px!important;height:38px!important;display:grid!important;place-items:center!important;border-radius:10px!important;border:1px solid rgba(255,255,255,.36)!important;background:rgba(10,32,52,.84)!important;color:#fff!important;font-size:19px!important;font-family:Arial,sans-serif!important;font-weight:800!important;line-height:1!important;box-shadow:0 5px 18px rgba(0,0,0,.30)!important;cursor:pointer!important;touch-action:manipulation!important}
       .mur-info-page-button:focus-visible{outline:3px solid #79e8d8!important;outline-offset:3px!important}
       section.page{position:relative!important}
       /* Accueil : utiliser l’emplacement du bouton info historique,
          à gauche du bouton Profil, dans la barre de titre. */
       #home .home-title{position:relative!important}
-      #home .home-title>.mur-info-page-button{position:absolute!important;top:4px!important;right:52px!important;left:auto!important;width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;border-radius:16px!important;margin:0!important;transform:none!important;z-index:30!important}
-      @media(max-width:380px){#home .home-title>.mur-info-page-button{top:3px!important;right:46px!important;width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;border-radius:15px!important}}
+      #home .home-title>.mur-info-page-button{position:absolute!important;top:4px!important;right:52px!important;left:auto!important;width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;border-radius:10px!important;margin:0!important;transform:none!important;z-index:30!important}
+      @media(max-width:380px){#home .home-title>.mur-info-page-button{top:3px!important;right:46px!important;width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;border-radius:10px!important}}
       /* Respiration : masquer seulement la pastille de zone dans l'en-tête.
          Le score et les couleurs de l'orbe restent inchangés. */
       #breath>.card>.status>.badge:has(#breathZone){display:none!important}
