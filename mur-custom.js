@@ -1101,7 +1101,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 
     function scheduleClose() {
       stopCloseTimer();
-      closeTimer = window.setTimeout(closeMenu, 4500);
+      closeTimer = window.setTimeout(closeMenu, 15000);
     }
 
     function openMenu() {
@@ -1572,7 +1572,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V43 — FLUX ENTRE SPHERES PERIPHERIQUES + HALO CENTRAL
+   M.U.R. V44 — FLUX PERIPHERIQUES ET MENU 15 SECONDES
    La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
