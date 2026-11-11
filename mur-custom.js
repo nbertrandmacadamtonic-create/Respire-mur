@@ -1572,22 +1572,22 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V46 — ANNEAU DE POINTS REGULIERS
+   M.U.R. V47 — ANNEAU DE POINTS REGULIERS
    La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V46)return;
+  if(window.MUR_HOME_FIVE_V47)return;
   const N=2400, PER=1050, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
-    {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[255,67,87]},
-    {key:'tests',fr:'Mesurer',en:'Measure',icon:'⌁',rgb:[60,160,255]},
-    {key:'breath',fr:'Respirer',en:'Breathe',icon:'◌',rgb:[55,226,166]},
-    {key:'exercises',fr:'Exercices',en:'Exercises',icon:'✦',rgb:[255,166,70]},
-    {key:'stats',fr:'Stats',en:'Stats',icon:'▥',rgb:[248,99,169]}
+    {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[255,45,67]},
+    {key:'tests',fr:'Mesurer',en:'Measure',icon:'⌁',rgb:[24,135,255]},
+    {key:'breath',fr:'Respirer',en:'Breathe',icon:'◌',rgb:[0,235,137]},
+    {key:'exercises',fr:'Exercices',en:'Exercises',icon:'✦',rgb:[255,127,20]},
+    {key:'stats',fr:'Stats',en:'Stats',icon:'▥',rgb:[255,46,138]}
   ];
   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
   // Deux populations distinctes : 2400 points de la sphère source et
@@ -1604,10 +1604,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV46)return;
-    circle.dataset.murFiveV46='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV47)return;
+    circle.dataset.murFiveV47='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v46-css';
+    style.id='mur-five-spheres-v47-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1636,7 +1636,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const pictogram=b.querySelector('.mur-five-icon');
       if(g.key==='breath'){
         pictogram.innerHTML='<svg viewBox="0 0 32 32" width="31" height="31" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5v17"/><path d="M16 11c-3-4-5-5-7-4-4 2-6 9-4 14 1.5 4 6 5 9 2l2-3"/><path d="M16 11c3-4 5-5 7-4 4 2 6 9 4 14-1.5 4-6 5-9 2l-2-3"/><path d="M12 14c-2 1-3 3-3 6M20 14c2 1 3 3 3 6"/></svg>';
-        pictogram.style.color='#a7ffe8';
+        pictogram.style.color='#00ff9c';
       }else{
         pictogram.textContent=g.icon;
       }
@@ -1751,7 +1751,7 @@ if (typeof window.installPresentationFallback !== 'function') {
           const angle=angleOffset+TAU*j/count;
           const x=cx+orbitR*Math.cos(angle);
           const y=cy+orbitR*Math.sin(angle);
-          // Quatre quartiers, dégradés entre les couleurs des sphères.
+          // Quatre quartiers aux couleurs franches ; transition très courte seulement.
           const sector=(angle-angleOffset+TAU)%TAU/(TAU/4);
           const index=Math.floor(sector);
           const fraction=sector-index;
@@ -1759,10 +1759,13 @@ if (typeof window.installPresentationFallback !== 'function') {
           const order=[3,4,2,1];
           const aColor=GROUPS[order[index%4]].rgb;
           const bColor=GROUPS[order[(index+1)%4]].rgb;
-          const rgb=aColor.map((v,k)=>Math.round(v+(bColor[k]-v)*fraction));
-          ctx.fillStyle=`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${(.76*visible).toFixed(3)})`;
+          // Couleur pure pour 94 % de chaque quartier : aucun dégradé pastel.
+          // Petit raccord adouci uniquement sur les 6 % finaux.
+          const blend=ease(Math.max(0,Math.min(1,(fraction-.94)/.06)));
+          const rgb=aColor.map((v,k)=>Math.round(v+(bColor[k]-v)*blend));
+          ctx.fillStyle=`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${(.98*visible).toFixed(3)})`;
           ctx.beginPath();
-          ctx.arc(x,y,1.0,0,TAU);
+          ctx.arc(x,y,1.30,0,TAU);
           ctx.fill();
         }
         ctx.restore();
@@ -1789,7 +1792,7 @@ if (typeof window.installPresentationFallback !== 'function') {
           const x=c[0]+xx*R*perspective*cloudScale;
           const y=c[1]+p.y*R*perspective*cloudScale;
           const depth=(zz+1)/2;
-          ctx.globalAlpha=appear*(.71+.28*depth);
+          ctx.globalAlpha=appear*(.88+.12*depth);
           ctx.fillStyle=`rgb(${g.rgb.join(',')})`;
           ctx.beginPath();ctx.arc(x,y,1.0+depth*1.3,0,TAU);ctx.fill();
         }
@@ -1830,7 +1833,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V46={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'regular-dotted-ring-no-waves'};
+    window.MUR_HOME_FIVE_V47={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'regular-dotted-ring-vivid-colors'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
