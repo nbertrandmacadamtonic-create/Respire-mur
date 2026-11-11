@@ -1894,14 +1894,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ============================================================
-   M.U.R. V55 — RESPIRATION COULEUR SCORE NEUROFLEX
+   M.U.R. V74 — RESPIRATION COULEUR NEUROFLEX STABLE
    950 particules, 3D en rotation lente, dilatation pilotee par
    les phases de respiration existantes (sans modifier les cycles,
    l'audio, les pauses, les commandes ou index.html).
    ============================================================ */
 (() => {
   'use strict';
-  if (window.MUR_BREATH_PARTICLE_ORB_V55) return;
+  if (window.MUR_BREATH_PARTICLE_ORB_V74) return;
   const COUNT = 950;
   const GOLDEN = Math.PI * (3 - Math.sqrt(5));
   const TWO_PI = Math.PI * 2;
@@ -2014,21 +2014,23 @@ if (typeof window.installPresentationFallback !== 'function') {
       bleu:[59,150,247], vert:[85,233,153],
       orange:[255,165,63], rouge:[255,88,100]
     };
+    // V74 : priorité absolue à la zone NeuroFlex mémorisée.
+    // Les changements de couleur de navigation ne modifient plus cette boule.
     function neuroFlexColor(){
-      const homeCircle=document.getElementById('homeCircle');
-      if(homeCircle){
-        const styles=getComputedStyle(homeCircle);
-        const liveColor=parseRGB(homeCircle.style.getPropertyValue('--home-color'))
-          || parseRGB(styles.getPropertyValue('--home-color'));
-        if(liveColor && liveColor.length===3 && liveColor.every(Number.isFinite))return liveColor;
-      }
       let zone=null;
-      try {zone=window.getCurrentNeuroRecommendation?.()?.zone;} catch(e){}
-      if(!zone){try{zone=JSON.parse(localStorage.getItem('murLastNeuro')||'null')?.zone;}catch(e){}}
-      const key=String(zone?.key||zone?.name||zone||'vert').toLowerCase();
+      try {
+        const saved=JSON.parse(localStorage.getItem('murLastNeuro')||'null');
+        zone=saved?.zone || null;
+      } catch(e) {}
+      if(!zone){
+        try {zone=window.getCurrentNeuroRecommendation?.()?.zone || null;} catch(e) {}
+      }
+      const key=String(zone?.key||zone?.name||zone||'').toLowerCase();
       if(key.includes('bleu')||key.includes('blue'))return scorePalette.bleu;
       if(key.includes('orange'))return scorePalette.orange;
       if(key.includes('rouge')||key.includes('red'))return scorePalette.rouge;
+      if(key.includes('vert')||key.includes('green'))return scorePalette.vert;
+      // Sans résultat NeuroFlex, teinte d'attente neutre.
       return scorePalette.vert;
     }
     function render(t){
@@ -2076,7 +2078,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     }
     raf=requestAnimationFrame(render);
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);raf=0;},{once:true});
-    window.MUR_BREATH_PARTICLE_ORB_V55={points:COUNT, breathingAnimation:'native-orb-transform-enhanced', rotation:'slow', phaseText:'separate-below-orb', color:'neuroflex-score'};
+    window.MUR_BREATH_PARTICLE_ORB_V74={points:COUNT, breathingAnimation:'native-orb-transform-enhanced', rotation:'slow', phaseText:'separate-below-orb', color:'neuroflex-score'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
