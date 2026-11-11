@@ -1572,15 +1572,15 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V47 — ANNEAU DE POINTS REGULIERS
+   M.U.R. V48 — ANNEAU DEGAGE ET SPHERES ALLEGEES
    La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V47)return;
-  const N=2400, PER=1050, OPEN_MS=2350, CLOSE_MS=1550;
+  if(window.MUR_HOME_FIVE_V48)return;
+  const N=2400, PER=650, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
     {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[255,45,67]},
@@ -1591,7 +1591,7 @@ if (typeof window.installPresentationFallback !== 'function') {
   ];
   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
   // Deux populations distinctes : 2400 points de la sphère source et
-  // 5 x 1050 points de condensation (aucune scission en cinq morceaux).
+  // 5 x 650 points de condensation (aucune scission en cinq morceaux).
   const sourcePoints=Array.from({length:N},(_,i)=>{
     const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),a=i*GOLD;
     return {x:r*Math.cos(a),y,z:r*Math.sin(a),seed:((i*67)%1009)/1009};
@@ -1604,10 +1604,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV47)return;
-    circle.dataset.murFiveV47='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV48)return;
+    circle.dataset.murFiveV48='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v47-css';
+    style.id='mur-five-spheres-v48-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1751,6 +1751,10 @@ if (typeof window.installPresentationFallback !== 'function') {
           const angle=angleOffset+TAU*j/count;
           const x=cx+orbitR*Math.cos(angle);
           const y=cy+orbitR*Math.sin(angle);
+          // Anneau interrompu aux quatre sphères : marge de 8 px autour
+          // de leur silhouette, même lorsqu'elles tournent.
+          const clearRadius=radius+8;
+          if(coords.slice(1).some(([bx,by])=>Math.hypot(x-bx,y-by)<clearRadius))continue;
           // Quatre quartiers aux couleurs franches ; transition très courte seulement.
           const sector=(angle-angleOffset+TAU)%TAU/(TAU/4);
           const index=Math.floor(sector);
@@ -1770,7 +1774,7 @@ if (typeof window.installPresentationFallback !== 'function') {
         }
         ctx.restore();
       }
-      // Condensation indépendante : chaque mini-sphère compte 1050 points,
+      // Condensation indépendante : chaque mini-sphère compte 650 points,
       // plus serrés et plus lumineux que dans la V38.
       const grown=ease(Math.max(0,Math.min(1,(progress-.22)/.73)));
       if(grown>0){
@@ -1833,7 +1837,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V47={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'regular-dotted-ring-vivid-colors'};
+    window.MUR_HOME_FIVE_V48={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'ring-with-four-gaps-lighter-spheres'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
