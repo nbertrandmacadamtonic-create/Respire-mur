@@ -1906,15 +1906,15 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ============================================================
-   M.U.R. V51 — ORBE RESPIRATION EN SPHERE MULTIPOINTS
+   M.U.R. V52 — BOULE RESPIRATION ALLEGEE ET TEXTE HORS BOULE
    2400 particules, 3D en rotation lente, dilatation pilotee par
    les phases de respiration existantes (sans modifier les cycles,
    l'audio, les pauses, les commandes ou index.html).
    ============================================================ */
 (() => {
   'use strict';
-  if (window.MUR_BREATH_PARTICLE_ORB_V51) return;
-  const COUNT = 2400;
+  if (window.MUR_BREATH_PARTICLE_ORB_V52) return;
+  const COUNT = 1200;
   const GOLDEN = Math.PI * (3 - Math.sqrt(5));
   const TWO_PI = Math.PI * 2;
   const points = Array.from({length: COUNT}, (_, i) => {
@@ -1926,9 +1926,9 @@ if (typeof window.installPresentationFallback !== 'function') {
   function init(){
     const orb = document.getElementById('orb');
     const page = document.getElementById('breath');
-    if (!orb || !page || orb.querySelector('.mur-breath-points-v51')) return;
+    if (!orb || !page || orb.querySelector('.mur-breath-points-v52')) return;
     const css = document.createElement('style');
-    css.id = 'mur-breath-particle-v51-css';
+    css.id = 'mur-breath-particle-v52-css';
     css.textContent = `
       #breath #orb.mur-breath-particle-orb {
         position:relative!important;
@@ -1938,7 +1938,7 @@ if (typeof window.installPresentationFallback !== 'function') {
         overflow:visible!important;
         border:0!important;
       }
-      #breath #orb.mur-breath-particle-orb .mur-breath-points-v51 {
+      #breath #orb.mur-breath-particle-orb .mur-breath-points-v52 {
         position:absolute!important;
         inset:0!important;
         width:100%!important;
@@ -1948,29 +1948,36 @@ if (typeof window.installPresentationFallback !== 'function') {
         border-radius:50%!important;
       }
       #breath #orb.mur-breath-particle-orb #phaseText {
-        position:relative!important;
-        z-index:1!important;
+        position:absolute!important;
+        left:50%!important;
+        top:calc(100% + 14px)!important;
+        transform:translateX(-50%)!important;
+        z-index:3!important;
         display:block!important;
-        max-width:85%!important;
-        color:#fff!important;
-        font-size:clamp(13px,3.7vw,18px)!important;
-        font-weight:800!important;
-        line-height:1.15!important;
-        padding:5px 7px!important;
-        border-radius:12px!important;
-        background:rgba(4,25,30,.67)!important;
+        min-width:120px!important;
+        max-width:220px!important;
+        color:#f4fffb!important;
+        font-size:clamp(14px,3.9vw,19px)!important;
+        font-weight:900!important;
+        line-height:1.1!important;
+        letter-spacing:.01em!important;
+        padding:7px 12px!important;
+        border-radius:999px!important;
+        background:rgba(4,25,30,.78)!important;
+        border:1px solid rgba(123,255,214,.28)!important;
         text-shadow:0 1px 8px #061d1b!important;
         text-align:center!important;
         overflow-wrap:normal!important;
         word-break:normal!important;
-        white-space:normal!important;
+        white-space:nowrap!important;
+        box-shadow:0 6px 18px rgba(0,0,0,.16)!important;
       }
       #breath.breath-immersive #orb.mur-breath-particle-orb {box-shadow:none!important;}
-      #breath.breath-immersive #orb.mur-breath-particle-orb #phaseText {font-size:18px!important;}
+      #breath.breath-immersive #orb.mur-breath-particle-orb #phaseText {top:calc(100% + 18px)!important;font-size:19px!important;}
     `;
     document.head.appendChild(css);
     const canvas = document.createElement('canvas');
-    canvas.className = 'mur-breath-points-v51';
+    canvas.className = 'mur-breath-points-v52';
     canvas.setAttribute('aria-hidden','true');
     const ctx = canvas.getContext('2d', {alpha:true});
     if (!ctx) return;
@@ -1978,6 +1985,17 @@ if (typeof window.installPresentationFallback !== 'function') {
     orb.classList.add('mur-breath-particle-orb');
     let raf = 0;
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    function parseRGB(str){
+      const s=String(str||'').trim();
+      if(/^#[0-9a-f]{6}$/i.test(s)) return [1,3,5].map(i=>parseInt(s.slice(i,i+2),16));
+      if(/^#[0-9a-f]{3}$/i.test(s)) return [1,2,3].map(i=>parseInt(s[i]+s[i],16));
+      if(/^rgba?\(/i.test(s)) return (s.match(/[\d.]+/g)||[]).slice(0,3).map(Number);
+      return null;
+    }
+    function mix(a,b,t){return a.map((v,i)=>Math.round(v*(1-t)+b[i]*t));}
+    function clamp(v){return Math.max(0,Math.min(255,Math.round(v)));}
+    function tint(rgb,f){return rgb.map(v=>clamp(v+(255-v)*f));}
+    function shade(rgb,f){return rgb.map(v=>clamp(v*(1-f)));}
     function render(t){
       raf = requestAnimationFrame(render);
       if (document.hidden || !page.classList.contains('active')) return;
@@ -1996,7 +2014,10 @@ if (typeof window.installPresentationFallback !== 'function') {
       const cos = Math.cos(angle), sin = Math.sin(angle);
       const tilt = .17;
       const ct=Math.cos(tilt),st=Math.sin(tilt);
-      const near=[188,255,220], far=[18,172,116];
+      const base = parseRGB(getComputedStyle(orb).getPropertyValue('--mur-section-color'))
+        || parseRGB(getComputedStyle(page).getPropertyValue('--mur-section-color'))
+        || [55,226,166];
+      const near=tint(base,.42), far=shade(base,.18);
       ctx.globalCompositeOperation='lighter';
       for(const p of points){
         const x = p.x*cos - p.z*sin;
@@ -2022,7 +2043,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     }
     raf=requestAnimationFrame(render);
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);raf=0;},{once:true});
-    window.MUR_BREATH_PARTICLE_ORB_V51={points:COUNT, breathingAnimation:'native-orb-transform', rotation:'slow'};
+    window.MUR_BREATH_PARTICLE_ORB_V52={points:COUNT, breathingAnimation:'native-orb-transform', rotation:'slow', phaseText:'below-orb', color:'trend'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
