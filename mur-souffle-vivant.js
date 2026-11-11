@@ -1,4 +1,4 @@
-/* M.U.R. V69 — Souffle vivant compact, proportions harmonisées avec les autres pages. */
+/* M.U.R. V70 — Souffle vivant : retrait sous le header et grande sphère restaurée. */
 /* M.U.R. V68 — Bilan Souffle vivant : bouton Fermer unique, retour au menu des modes. */
 /* M.U.R. V67 — Souffle vivant harmonisé, inspiration silencieuse.
    Déploiement non destructif : surcharge uniquement l'entrée murStartQuickMode.
@@ -9,7 +9,7 @@
 (()=>{
   'use strict';
   if(window.MURSOUFFLEVIVANT21)return;
-  const VERSION='22.9-score-bonus-inspiration-silencieuse-mise-en-page-V69';
+  const VERSION='22.9-score-bonus-inspiration-silencieuse-mise-en-page-V70';
   const COUNT=1200, REFERENCE_EXHALE_SECONDS=8, REFERENCE_EXHALES=7;
   const GOAL=REFERENCE_EXHALE_SECONDS*REFERENCE_EXHALES; // 56 s = 100 % du score ; en mode 90 s, bonus possible au-delà.
   const fingerprint='<svg aria-hidden="true" viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M10 23c0-9 6-15 14-15s14 6 14 15"/><path d="M15 26v-3c0-6 4-10 9-10s9 4 9 10v5"/><path d="M20 30v-7a4 4 0 0 1 8 0v9"/><path d="M11 31v-7"/><path d="M16 35c3-4 3-7 3-11"/><path d="M24 22v8c0 6-2 10-5 13"/><path d="M32 34c-1 5-3 8-5 10"/><path d="M37 29c0 6-2 11-5 15"/></svg>';
@@ -319,6 +319,33 @@
      #murSV21 .sv-canvas{max-height:145px!important;min-height:50px!important}
      #murSV21 .sv-finger{width:53px!important;height:53px!important}
      #murSV21 .sv-sub{display:none!important}
+   }
+   /* V70 — restaurer un espace visible sous le haut de la page.
+      La sphère reprend sa place sans rallonger les commandes. */
+   body.mur-sv-active #murSV21 .sv-shell{
+     padding-top:calc(24px + env(safe-area-inset-top))!important;
+     height:min(calc(100dvh - 88px - env(safe-area-inset-bottom)),780px)!important;
+     max-height:calc(100dvh - 88px - env(safe-area-inset-bottom))!important;
+     gap:9px!important;
+   }
+   #murSV21 .sv-main-card{max-width:440px!important;flex:1 1 0!important}
+   #murSV21 .sv-canvas{
+     max-width:390px!important;
+     max-height:310px!important;
+     min-height:150px!important;
+     flex:1 1 240px!important;
+   }
+   @media(max-height:730px){
+     body.mur-sv-active #murSV21 .sv-shell{
+       padding-top:calc(16px + env(safe-area-inset-top))!important;
+       height:calc(100dvh - 80px - env(safe-area-inset-bottom))!important;
+       gap:5px!important;
+     }
+     #murSV21 .sv-canvas{max-height:240px!important;min-height:100px!important;flex-basis:180px!important}
+   }
+   @media(max-height:590px){
+     body.mur-sv-active #murSV21 .sv-shell{padding-top:calc(10px + env(safe-area-inset-top))!important;gap:3px!important}
+     #murSV21 .sv-canvas{max-height:180px!important;min-height:65px!important;flex-basis:120px!important}
    }
   `;
   let escaped=[],lastGreen=0,clock=0;
