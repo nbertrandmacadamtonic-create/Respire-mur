@@ -911,7 +911,7 @@ if (typeof window.installPresentationFallback !== 'function') {
   }
 })();
 
-/* En-tête de rubrique : logo officiel sur l'accueil, orbe contextuelle ailleurs. */
+/* En-tête de rubrique : logo officiel sur l'accueil, boule colorée ailleurs. */
 (() => {
   const SECTIONS = {
     tests:     { color: '#60a5fa', fr: 'Mesurer',   en: 'Measure' },
@@ -925,6 +925,45 @@ if (typeof window.installPresentationFallback !== 'function') {
     const title = brand?.querySelector('h1');
     if (!brand || !title || brand.dataset.murSectionBrandReady === '1') return;
     brand.dataset.murSectionBrandReady = '1';
+
+    if (!document.getElementById('mur-section-brand-v63-css')) {
+      const style = document.createElement('style');
+      style.id = 'mur-section-brand-v63-css';
+      style.textContent = `
+        .app > .top .brand.mur-section-brand{display:flex!important;align-items:center!important;gap:10px!important}
+        .app > .top .brand .mur-section-brand-orb{
+          --mur-section-color:#60a5fa;
+          position:relative!important;
+          display:inline-block!important;
+          width:28px!important;height:28px!important;min-width:28px!important;
+          border-radius:50%!important;cursor:pointer!important;flex:0 0 28px!important;
+          background:
+            radial-gradient(circle at 34% 30%, rgba(255,255,255,.98) 0 10%, rgba(255,255,255,.62) 11%, rgba(255,255,255,.18) 20%, transparent 24%),
+            radial-gradient(circle at 42% 36%, color-mix(in srgb, var(--mur-section-color) 32%, white) 0 16%, var(--mur-section-color) 38%, color-mix(in srgb, var(--mur-section-color) 82%, black) 76%, rgba(5,16,22,.92) 100%)!important;
+          box-shadow:
+            inset 0 1px 2px rgba(255,255,255,.26),
+            inset 0 -5px 10px rgba(0,0,0,.28),
+            0 0 0 1px rgba(255,255,255,.08),
+            0 4px 12px color-mix(in srgb, var(--mur-section-color) 42%, transparent)!important;
+          transition:transform .18s ease, box-shadow .18s ease!important;
+          isolation:isolate!important;
+        }
+        .app > .top .brand .mur-section-brand-orb::before,
+        .app > .top .brand .mur-section-brand-orb::after{
+          content:'';position:absolute;border-radius:50%;pointer-events:none
+        }
+        .app > .top .brand .mur-section-brand-orb::before{
+          inset:5px auto auto 6px;width:5px;height:5px;background:rgba(255,255,255,.92);
+          box-shadow:6px 4px 0 rgba(255,255,255,.35), 11px 8px 0 rgba(255,255,255,.18), 3px 13px 0 rgba(255,255,255,.18)
+        }
+        .app > .top .brand .mur-section-brand-orb::after{
+          inset:-4px;opacity:.32;background:radial-gradient(circle, color-mix(in srgb, var(--mur-section-color) 70%, white) 0, transparent 70%)
+        }
+        .app > .top .brand .mur-section-brand-orb:hover,
+        .app > .top .brand .mur-section-brand-orb:focus-visible{transform:scale(1.06)!important;outline:none!important}
+      `;
+      document.head.appendChild(style);
+    }
 
     const originalTitle = title.innerHTML;
     const orb = document.createElement('span');
