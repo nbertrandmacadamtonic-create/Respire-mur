@@ -1572,14 +1572,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V49 — SPHERES PERIPHERIQUES PLUS AEREES
+   M.U.R. V50 — SPHERES FIXES, LABELS LISIBLES, ARCS ORBITAUX
    La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V49)return;
+  if(window.MUR_HOME_FIVE_V50)return;
   const N=2400, PER=350, CENTER_PER=650, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
@@ -1607,10 +1607,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV49)return;
-    circle.dataset.murFiveV49='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV50)return;
+    circle.dataset.murFiveV50='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v49-css';
+    style.id='mur-five-spheres-v50-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1620,13 +1620,13 @@ if (typeof window.installPresentationFallback !== 'function') {
       .mur-five-layer{position:fixed!important;inset:0!important;z-index:10030!important;pointer-events:none!important;display:none!important;overflow:hidden!important}
       .mur-five-layer.is-visible{display:block!important}
       .mur-five-layer canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-      .mur-five-target{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transform:translate(-50%,-50%);width:104px;height:104px;border:0;border-radius:50%;color:#fff;background:transparent;cursor:pointer;pointer-events:auto;opacity:0;transition:opacity .25s ease,left .12s linear, top .12s linear;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-shadow:0 2px 8px #001c31;font-family:inherit}
+      .mur-five-target{position:absolute;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);width:104px;height:104px;border:0;border-radius:50%;color:#fff;background:transparent;cursor:pointer;pointer-events:auto;opacity:0;transition:opacity .25s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-shadow:0 2px 8px #001c31;font-family:inherit;overflow:visible}
       .mur-five-target.ready{opacity:1}
-      .mur-five-target .mur-five-icon{font-size:24px;line-height:1;font-weight:750;filter:drop-shadow(0 0 5px currentColor)}
-      .mur-five-target .mur-five-label{font-size:13px;font-weight:850;line-height:1.1;white-space:nowrap}
-      .mur-five-target.is-locked{opacity:.42;filter:grayscale(.65)}
+      .mur-five-target .mur-five-icon{font-size:25px;line-height:1;font-weight:750;filter:drop-shadow(0 0 6px currentColor)}
+      .mur-five-target .mur-five-label{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%);display:block;min-width:max-content;max-width:124px;padding:5px 9px;border-radius:10px;background:rgba(5,17,32,.90);border:1px solid rgba(255,255,255,.24);box-shadow:0 2px 12px rgba(0,0,0,.38);font-size:15px;font-weight:800;letter-spacing:.015em;line-height:1.2;text-align:center;white-space:nowrap;color:#fff;text-shadow:0 1px 4px #000;pointer-events:none}
+      .mur-five-target.is-locked{opacity:.50;filter:grayscale(.55)}
       .mur-five-target:focus-visible{outline:2px solid #fff;outline-offset:4px}
-      @media(max-width:370px){.mur-five-target{width:92px;height:92px}.mur-five-target .mur-five-label{font-size:12px}.mur-five-target .mur-five-icon{font-size:21px}}
+      @media(max-width:370px){.mur-five-target .mur-five-label{font-size:13px;padding:4px 7px}.mur-five-target .mur-five-icon{font-size:22px}}
     `;
     document.head.appendChild(style);
     const layer=document.createElement('div');layer.className='mur-five-layer';
@@ -1670,12 +1670,10 @@ if (typeof window.installPresentationFallback !== 'function') {
       // Adaptation à la place disponible autour de la sphère sur mobile.
       const edge=Math.min(cx,w-cx,cy,h-cy);
       const orbitR=Math.max(82,Math.min(small?119:147,edge-radius-10));
-      const a=time*.00018;
-      const coords=[
-        [cx,cy]
-      ];
+      // Positionnement fixe : haut, gauche, droite, bas.
+      const coords=[[cx,cy]];
       const offsets=[-Math.PI/2, Math.PI, 0, Math.PI/2];
-      offsets.forEach(off=>coords.push([cx+Math.cos(a+off)*orbitR, cy+Math.sin(a+off)*orbitR]));
+      offsets.forEach(off=>coords.push([cx+Math.cos(off)*orbitR, cy+Math.sin(off)*orbitR]));
       coords.forEach((p,i)=>{
         const rr=i===0?centerRadius:radius;
         buttons[i].style.left=p[0]+'px';buttons[i].style.top=p[1]+'px';buttons[i].style.width=(rr*2+14)+'px';buttons[i].style.height=(rr*2+14)+'px';
@@ -1749,7 +1747,7 @@ if (typeof window.installPresentationFallback !== 'function') {
         ctx.globalCompositeOperation='lighter';
         const visible=ease(Math.min(1,Math.max(0,(progress-.035)/.55)));
         const count=360;
-        const angleOffset=time*.00018;
+        const angleOffset=0;
         for(let j=0;j<count;j++){
           const angle=angleOffset+TAU*j/count;
           const x=cx+orbitR*Math.cos(angle);
@@ -1777,6 +1775,27 @@ if (typeof window.installPresentationFallback !== 'function') {
         }
         ctx.restore();
       }
+      // V50 : quatre fins arcs lumineux orbitent AUTOUR des petites sphères fixes.
+      // La sphère elle-même et l'anneau global ne tournent plus.
+      if(progress>.25){
+        ctx.save();
+        ctx.globalCompositeOperation='lighter';
+        const alpha=ease(Math.min(1,Math.max(0,(progress-.25)/.50)));
+        for(let i=1;i<5;i++){
+          const g=GROUPS[i],p=coords[i],angle=time*.00105+i*.83;
+          const orbit=radius+8;
+          // Un arc fin, avec une petite tête lumineuse, tourne régulièrement.
+          ctx.lineWidth=1.65;
+          ctx.lineCap='round';
+          ctx.strokeStyle=`rgba(${g.rgb.join(',')},${(.85*alpha).toFixed(3)})`;
+          ctx.beginPath();ctx.arc(p[0],p[1],orbit,angle,angle+Math.PI*.66);ctx.stroke();
+          ctx.fillStyle=`rgba(${g.rgb.join(',')},${alpha.toFixed(3)})`;
+          ctx.beginPath();
+          ctx.arc(p[0]+orbit*Math.cos(angle+Math.PI*.66),p[1]+orbit*Math.sin(angle+Math.PI*.66),2.25,0,TAU);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
       // Condensation indépendante : centre à 650 points, satellites à 350 points,
       // plus serrés et plus lumineux que dans la V38.
       const grown=ease(Math.max(0,Math.min(1,(progress-.22)/.73)));
@@ -1792,7 +1811,8 @@ if (typeof window.installPresentationFallback !== 'function') {
           if(gone)continue;
           if(appear<=0)continue;
           const g=GROUPS[p.g],c=coords[p.g];
-          const xx=p.x*cb-p.z*sb,zz=p.x*sb+p.z*cb;
+          const xx=p.g===0 ? p.x*cb-p.z*sb : p.x;
+          const zz=p.g===0 ? p.x*sb+p.z*cb : p.z;
           const perspective=2.9/(2.9-zz*.22);
           const R=p.g===0?centerRadius:radius;
           const cloudScale=1+(1-appear)*(.62+.46*p.seed);
@@ -1840,7 +1860,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V49={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'ring-with-four-gaps-peripheral-350-points'};
+    window.MUR_HOME_FIVE_V50={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'static-four-spheres-readable-labels-rotating-small-arcs'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
