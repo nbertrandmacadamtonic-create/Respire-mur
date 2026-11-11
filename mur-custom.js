@@ -1674,14 +1674,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
     const buttons=GROUPS.map((g,i)=>{
       const b=document.createElement('button');b.type='button';b.className='mur-five-target';
-      b.dataset.key=g.key;b.innerHTML='<span class="mur-five-icon"></span><span class="mur-five-label"></span>';
-      const pictogram=b.querySelector('.mur-five-icon');
-      if(g.key==='breath'){
-        pictogram.innerHTML='<svg viewBox="0 0 32 32" width="31" height="31" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5v17"/><path d="M16 11c-3-4-5-5-7-4-4 2-6 9-4 14 1.5 4 6 5 9 2l2-3"/><path d="M16 11c3-4 5-5 7-4 4 2 6 9 4 14-1.5 4-6 5-9 2l-2-3"/><path d="M12 14c-2 1-3 3-3 6M20 14c2 1 3 3 3 6"/></svg>';
-        pictogram.style.color='#ffffff';
-      }else{
-        pictogram.textContent=g.icon;
-      }
+      // V73 : aucune icône dans les cinq sphères du menu.
+      // Les libellés sous les sphères et les zones cliquables sont conservés.
+      b.dataset.key=g.key;
+      b.innerHTML='<span class="mur-five-label"></span>';
 
       b.addEventListener('pointerdown',e=>e.stopPropagation());
       b.addEventListener('click',e=>{
@@ -2184,7 +2180,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V66 — STABILISATION ANTI-DOUBLONS
+   M.U.R. V73 — STABILISATION ANTI-DOUBLONS
    Neutralisation ciblée de l'ancien visuel V24 et des contrôles
    redondants. Les scripts de navigation, les données, l'audio,
    le back-office et la respiration sont conservés.
