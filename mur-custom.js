@@ -2145,6 +2145,8 @@ if (typeof window.installPresentationFallback !== 'function') {
       /* Respiration : masquer seulement la pastille de zone dans l'en-tête.
          Le score et les couleurs de l'orbe restent inchangés. */
       #breath>.card>.status>.badge:has(#breathZone){display:none!important}
+      /* Reglages : masquer l'ancien bouton X sous le nouveau bouton Information. */
+      #settings > section.card:first-child > .status > button.icon-btn[onclick*="showPage"]{display:none!important}
       section.page:not(.active) .mur-info-page-button{display:none!important}
       .mur-info-screen[hidden]{display:none!important}
       .mur-info-screen{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:22px 15px;background:rgba(3,10,20,.82);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
@@ -2161,7 +2163,10 @@ if (typeof window.installPresentationFallback !== 'function') {
       const mount=id==='home'?(pg.querySelector('.home-title')||pg):pg;
       mount.appendChild(b);
     });
-    const m=document.createElement('div');m.id='murInfoUnifiedModalV58';m.className='mur-info-screen';m.hidden=true;m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-label','Informations M.U.R.');
+    /* Le retour X de Reglages est redondant et chevauche le bouton i. */
+    const oldSettingsClose=document.querySelector('#settings > section.card:first-child > .status > button.icon-btn[onclick*="showPage"]');
+    if(oldSettingsClose) oldSettingsClose.remove();
+        const m=document.createElement('div');m.id='murInfoUnifiedModalV58';m.className='mur-info-screen';m.hidden=true;m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-label','Informations M.U.R.');
     m.innerHTML='<div class="mur-info-panel"><button type="button" class="mur-info-close-x" aria-label="Fermer">×</button><h2 class="mur-info-title"></h2><div class="mur-info-content"></div><button type="button" class="mur-info-close">Compris</button></div>';
     m.querySelector('.mur-info-close-x').addEventListener('click',close);m.querySelector('.mur-info-close').addEventListener('click',close);m.addEventListener('click',e=>{if(e.target===m)close();});document.body.appendChild(m);
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!m.hidden)close();});
