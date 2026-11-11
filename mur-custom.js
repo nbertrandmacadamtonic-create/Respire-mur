@@ -2311,3 +2311,184 @@ if (typeof window.installPresentationFallback !== 'function') {
   window.addEventListener('resize',apply,{passive:true});
   apply();
 })();
+
+
+/* ================================================================
+   M.U.R. V77 — RESPIRATION IMMERSIVE PLEIN ECRAN
+   Ne s'active QUE pendant une séance native (#breath.breath-immersive).
+   L'orbe multipoints NeuroFlex conserve son mouvement, son son et ses
+   commandes : pas de changement des durées ou de la navigation JS.
+   ================================================================ */
+(() => {
+  'use strict';
+  if (window.MUR_BREATH_FULLSCREEN_V77) return;
+  window.MUR_BREATH_FULLSCREEN_V77 = {version:77,mode:'immersive-full-viewport',color:'NeuroFlex'};
+  if (document.getElementById('mur-breath-fullscreen-v77-css')) return;
+  const style = document.createElement('style');
+  style.id = 'mur-breath-fullscreen-v77-css';
+  style.textContent = `
+    /* Aucun impact sur les pages tant que Respiration n'est pas en cours. */
+    #breath.page.active.breath-immersive{
+      position:fixed!important;
+      inset:0!important;
+      width:100vw!important;
+      height:100dvh!important;
+      min-height:0!important;
+      max-height:100dvh!important;
+      margin:0!important;
+      padding:calc(11px + env(safe-area-inset-top, 0px)) 12px
+              calc(11px + env(safe-area-inset-bottom, 0px))!important;
+      z-index:11020!important;
+      overflow:hidden!important;
+      box-sizing:border-box!important;
+      background:radial-gradient(ellipse at 50% 43%,#142e45 0%,#071525 65%,#050c18 100%)!important;
+      overscroll-behavior:contain!important;
+    }
+    /* Le paramétrage se replie uniquement durant la séance. */
+    #breath.page.active.breath-immersive > section.card:first-child{
+      display:none!important;
+    }
+    #breath.page.active.breath-immersive > section.card:last-child{
+      position:relative!important;
+      display:flex!important;
+      flex-direction:column!important;
+      align-items:center!important;
+      justify-content:space-between!important;
+      width:100%!important;
+      max-width:760px!important;
+      height:100%!important;
+      min-height:0!important;
+      max-height:100%!important;
+      margin:0 auto!important;
+      padding:clamp(10px,2.3dvh,22px) 8px clamp(8px,1.5dvh,16px)!important;
+      gap:clamp(4px,1.1dvh,11px)!important;
+      overflow:hidden!important;
+      border-radius:24px!important;
+      box-sizing:border-box!important;
+      background:radial-gradient(ellipse at center,rgba(255,255,255,.055),rgba(255,255,255,.012) 65%)!important;
+    }
+    #breath.page.active.breath-immersive .mini-info{
+      order:0!important;
+      flex:0 0 auto!important;
+      width:min(100%,360px)!important;
+      max-width:360px!important;
+      margin:0 auto!important;
+      gap:10px!important;
+    }
+    #breath.page.active.breath-immersive .mini-info .info-box{
+      padding:9px 12px!important;
+    }
+    #breath.page.active.breath-immersive .breath-stage{
+      order:1!important;
+      display:grid!important;
+      place-items:center!important;
+      position:relative!important;
+      flex:1 1 0!important;
+      width:100%!important;
+      height:auto!important;
+      min-height:190px!important;
+      max-height:none!important;
+      padding:0!important;
+      margin:0!important;
+      overflow:visible!important;
+    }
+    /* Plus aucune petite taille forcée par les anciens styles d'immersion. */
+    #breath.page.active.breath-immersive #orb.mur-breath-particle-orb{
+      width:min(59vw,38dvh,340px)!important;
+      height:min(59vw,38dvh,340px)!important;
+      min-width:0!important;
+      min-height:0!important;
+      max-width:none!important;
+      max-height:none!important;
+      flex:0 0 auto!important;
+      margin:0!important;
+      padding:0!important;
+      background:transparent!important;
+      box-shadow:none!important;
+      border:0!important;
+      touch-action:manipulation!important;
+    }
+    /* Le suivi circulaire existant est discret : place à la sphère. */
+    #breath.page.active.breath-immersive .breath-stage > svg.ring{
+      opacity:.14!important;
+      width:min(83vw,56dvh,500px)!important;
+      height:min(83vw,56dvh,500px)!important;
+      pointer-events:none!important;
+    }
+    #breath.page.active.breath-immersive #phaseText.mur-breath-label-v53{
+      order:2!important;
+      flex:0 0 auto!important;
+      margin:0 auto!important;
+      padding:9px 18px!important;
+      font-size:clamp(18px,4.5vw,23px)!important;
+      max-width:90%!important;
+      text-align:center!important;
+    }
+    #breath.page.active.breath-immersive #phaseHint{
+      order:3!important;
+      flex:0 0 auto!important;
+      margin:0 auto!important;
+      width:min(100%,410px)!important;
+      max-width:410px!important;
+      padding:0 4px!important;
+      font-size:clamp(12px,3.2vw,15px)!important;
+      line-height:1.4!important;
+      text-align:center!important;
+    }
+    #breath.page.active.breath-immersive .breath-action-row{
+      order:4!important;
+      flex:0 0 auto!important;
+      width:min(100%,360px)!important;
+      max-width:360px!important;
+      margin:0 auto!important;
+      padding:0!important;
+      min-height:42px!important;
+      display:flex!important;
+      justify-content:center!important;
+      align-items:center!important;
+    }
+    #breath.page.active.breath-immersive #stopBreathBtn:not([hidden]){
+      display:block!important;
+      min-height:44px!important;
+      min-width:140px!important;
+      padding:10px 18px!important;
+      border-radius:999px!important;
+      font-weight:800!important;
+    }
+    /* Les autres sections ne sont pas modifiées ; la barre s'efface
+       pendant la seule séance plein écran et revient à la fermeture. */
+    body.breath-immersive-global:has(#breath.page.active.breath-immersive) .tabbar{
+      opacity:0!important;
+      visibility:hidden!important;
+      pointer-events:none!important;
+    }
+    /* Le son demeure accessible, au-dessus des particules. */
+    #breath.page.active.breath-immersive .orb-sound-btn{
+      z-index:15!important;
+      top:8px!important;
+      right:10px!important;
+    }
+    @media (max-height:680px){
+      #breath.page.active.breath-immersive > section.card:last-child{
+        padding:8px 6px!important;
+        gap:3px!important;
+      }
+      #breath.page.active.breath-immersive #orb.mur-breath-particle-orb{
+        width:min(58vw,35dvh,300px)!important;
+        height:min(58vw,35dvh,300px)!important;
+      }
+      #breath.page.active.breath-immersive .mini-info .info-box{
+        padding:5px 9px!important;
+      }
+      #breath.page.active.breath-immersive #phaseHint{
+        font-size:12px!important;
+      }
+    }
+    @media (prefers-reduced-motion:reduce){
+      #breath.page.active.breath-immersive .breath-stage > svg.ring{
+        transition:none!important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+})();
