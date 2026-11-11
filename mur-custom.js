@@ -1894,14 +1894,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ============================================================
-   M.U.R. V74 — RESPIRATION COULEUR NEUROFLEX STABLE
+   M.U.R. V76 — RESPIRATION COULEUR NEUROFLEX EXACTE
    950 particules, 3D en rotation lente, dilatation pilotee par
    les phases de respiration existantes (sans modifier les cycles,
    l'audio, les pauses, les commandes ou index.html).
    ============================================================ */
 (() => {
   'use strict';
-  if (window.MUR_BREATH_PARTICLE_ORB_V74) return;
+  if (window.MUR_BREATH_PARTICLE_ORB_V76) return;
   const COUNT = 950;
   const GOLDEN = Math.PI * (3 - Math.sqrt(5));
   const TWO_PI = Math.PI * 2;
@@ -2020,17 +2020,21 @@ if (typeof window.installPresentationFallback !== 'function') {
       let zone=null;
       try {
         const saved=JSON.parse(localStorage.getItem('murLastNeuro')||'null');
-        zone=saved?.zone || null;
+        zone=saved?.zone||null;
       } catch(e) {}
       if(!zone){
         try {zone=window.getCurrentNeuroRecommendation?.()?.zone || null;} catch(e) {}
       }
       const key=String(zone?.key||zone?.name||zone||'').toLowerCase();
+      const c=String(zone?.color||'').trim();
+      // When the test supplies a genuine zone color, prefer that exact value.
+      // The URL parameter, navigation state and CSS --accent are irrelevant.
+      const parsed=parseRGB(c);
+      if(parsed && parsed.length===3 && parsed.every(Number.isFinite))return parsed;
       if(key.includes('bleu')||key.includes('blue'))return scorePalette.bleu;
       if(key.includes('orange'))return scorePalette.orange;
       if(key.includes('rouge')||key.includes('red'))return scorePalette.rouge;
       if(key.includes('vert')||key.includes('green'))return scorePalette.vert;
-      // Sans résultat NeuroFlex, teinte d'attente neutre.
       return scorePalette.vert;
     }
     function render(t){
@@ -2052,6 +2056,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const tilt = .17;
       const ct=Math.cos(tilt),st=Math.sin(tilt);
       const base = neuroFlexColor();
+      orb.dataset.murNeuroflexColor=base.join(',');
       const near=tint(base,.42), far=shade(base,.18);
       ctx.globalCompositeOperation='lighter';
       for(const p of points){
@@ -2078,7 +2083,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     }
     raf=requestAnimationFrame(render);
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);raf=0;},{once:true});
-    window.MUR_BREATH_PARTICLE_ORB_V74={points:COUNT, breathingAnimation:'native-orb-transform-enhanced', rotation:'slow', phaseText:'separate-below-orb', color:'neuroflex-score'};
+    window.MUR_BREATH_PARTICLE_ORB_V76={points:COUNT, breathingAnimation:'native-orb-transform-enhanced', rotation:'slow', phaseText:'separate-below-orb', color:'neuroflex-score'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
@@ -2251,4 +2256,58 @@ if (typeof window.installPresentationFallback !== 'function') {
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
   else install();
+})();
+
+
+/* ============================================================
+   M.U.R. V76 — LOGO ACCUEIL & COULEUR NEUROFLEX VERIFIABLE
+   Aucun changement index.html. Scope strict a l'accueil.
+   ============================================================ */
+(() => {
+  'use strict';
+  if(window.MUR_FIX_V76)return;
+  window.MUR_FIX_V76={version:'76',features:['home-logo','neuroflex-breath-color']};
+  const logoCSS=document.createElement('style');
+  logoCSS.id='mur-v76-home-logo-css';
+  logoCSS.textContent=`
+    main.app:has(> #home.page.active) > header.top .brand > img.logo,
+    main.app:has(> #home.page.active) > .top .brand > img.logo {
+      display:block!important;
+      width:76px!important;height:76px!important;min-width:76px!important;
+      max-width:76px!important;max-height:76px!important;
+      border-radius:19px!important;object-fit:contain!important;
+    }
+    main.app:has(> #home.page.active) > header.top .brand > div,
+    main.app:has(> #home.page.active) > .top .brand > div,
+    #home.page.active .home-title > .title-kicker {display:none!important}
+    @media(max-width:380px){
+      main.app:has(> #home.page.active) > .top .brand > img.logo{
+        width:66px!important;height:66px!important;min-width:66px!important;max-width:66px!important;
+      }
+    }
+  `;
+  document.head.appendChild(logoCSS);
+  const home=document.getElementById('home');
+  const brand=document.querySelector('main.app > header.top .brand');
+  const logo=brand?.querySelector('img.logo');
+  const logoText=brand?.querySelector('div');
+  const kicker=home?.querySelector('.home-title > .title-kicker');
+  if(!home||!logo)return;
+  const apply=()=>{
+    const active=home.classList.contains('active');
+    const dimension=window.matchMedia('(max-width:380px)').matches?'66px':'76px';
+    if(active){
+      ['width','height','min-width','max-width','max-height'].forEach(k=>logo.style.setProperty(k,dimension,'important'));
+      logo.style.setProperty('display','block','important');
+      if(logoText)logoText.style.setProperty('display','none','important');
+      if(kicker)kicker.style.setProperty('display','none','important');
+    } else {
+      ['width','height','min-width','max-width','max-height','display'].forEach(k=>logo.style.removeProperty(k));
+      if(logoText)logoText.style.removeProperty('display');
+      if(kicker)kicker.style.removeProperty('display');
+    }
+  };
+  new MutationObserver(apply).observe(home,{attributes:true,attributeFilter:['class']});
+  window.addEventListener('resize',apply,{passive:true});
+  apply();
 })();
