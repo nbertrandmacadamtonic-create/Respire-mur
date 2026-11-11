@@ -1903,3 +1903,127 @@ if (typeof window.installPresentationFallback !== 'function') {
   `;
   document.head.appendChild(css);
 })();
+
+
+/* ============================================================
+   M.U.R. V51 — ORBE RESPIRATION EN SPHERE MULTIPOINTS
+   2400 particules, 3D en rotation lente, dilatation pilotee par
+   les phases de respiration existantes (sans modifier les cycles,
+   l'audio, les pauses, les commandes ou index.html).
+   ============================================================ */
+(() => {
+  'use strict';
+  if (window.MUR_BREATH_PARTICLE_ORB_V51) return;
+  const COUNT = 2400;
+  const GOLDEN = Math.PI * (3 - Math.sqrt(5));
+  const TWO_PI = Math.PI * 2;
+  const points = Array.from({length: COUNT}, (_, i) => {
+    const y = 1 - 2 * (i + .5) / COUNT;
+    const a = i * GOLDEN;
+    const r = Math.sqrt(1 - y*y);
+    return {x:r*Math.cos(a), y:y, z:r*Math.sin(a)};
+  });
+  function init(){
+    const orb = document.getElementById('orb');
+    const page = document.getElementById('breath');
+    if (!orb || !page || orb.querySelector('.mur-breath-points-v51')) return;
+    const css = document.createElement('style');
+    css.id = 'mur-breath-particle-v51-css';
+    css.textContent = `
+      #breath #orb.mur-breath-particle-orb {
+        position:relative!important;
+        isolation:isolate!important;
+        background:transparent!important;
+        box-shadow:none!important;
+        overflow:visible!important;
+        border:0!important;
+      }
+      #breath #orb.mur-breath-particle-orb .mur-breath-points-v51 {
+        position:absolute!important;
+        inset:0!important;
+        width:100%!important;
+        height:100%!important;
+        z-index:0!important;
+        pointer-events:none!important;
+        border-radius:50%!important;
+      }
+      #breath #orb.mur-breath-particle-orb #phaseText {
+        position:relative!important;
+        z-index:1!important;
+        display:block!important;
+        max-width:85%!important;
+        color:#fff!important;
+        font-size:clamp(13px,3.7vw,18px)!important;
+        font-weight:800!important;
+        line-height:1.15!important;
+        padding:5px 7px!important;
+        border-radius:12px!important;
+        background:rgba(4,25,30,.67)!important;
+        text-shadow:0 1px 8px #061d1b!important;
+        text-align:center!important;
+        overflow-wrap:normal!important;
+        word-break:normal!important;
+        white-space:normal!important;
+      }
+      #breath.breath-immersive #orb.mur-breath-particle-orb {box-shadow:none!important;}
+      #breath.breath-immersive #orb.mur-breath-particle-orb #phaseText {font-size:18px!important;}
+    `;
+    document.head.appendChild(css);
+    const canvas = document.createElement('canvas');
+    canvas.className = 'mur-breath-points-v51';
+    canvas.setAttribute('aria-hidden','true');
+    const ctx = canvas.getContext('2d', {alpha:true});
+    if (!ctx) return;
+    orb.insertBefore(canvas,orb.firstChild);
+    orb.classList.add('mur-breath-particle-orb');
+    let raf = 0;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    function render(t){
+      raf = requestAnimationFrame(render);
+      if (document.hidden || !page.classList.contains('active')) return;
+      const rect = orb.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const sz = Math.max(64,orb.offsetWidth);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.round(sz*dpr);
+      if (canvas.width!==width || canvas.height!==width) {
+        canvas.width=width;canvas.height=width;
+      }
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.clearRect(0,0,sz,sz);
+      const center=sz*.5, radius=sz*.415;
+      const angle = reduced?.matches ? .36 : t*.00021;
+      const cos = Math.cos(angle), sin = Math.sin(angle);
+      const tilt = .17;
+      const ct=Math.cos(tilt),st=Math.sin(tilt);
+      const near=[188,255,220], far=[18,172,116];
+      ctx.globalCompositeOperation='lighter';
+      for(const p of points){
+        const x = p.x*cos - p.z*sin;
+        const z = p.x*sin + p.z*cos;
+        const y2 = p.y*ct-z*st;
+        const z2 = p.y*st+z*ct;
+        const perspective = 2.9/(2.9-z2*.30);
+        const sx=center+x*radius*perspective;
+        const sy=center+y2*radius*perspective;
+        const depth=(z2+1)*.5;
+        const glow=.26+depth*.72;
+        const rr=Math.round(far[0]+(near[0]-far[0])*depth);
+        const gg=Math.round(far[1]+(near[1]-far[1])*depth);
+        const bb=Math.round(far[2]+(near[2]-far[2])*depth);
+        ctx.globalAlpha=glow;
+        ctx.fillStyle=`rgb(${rr},${gg},${bb})`;
+        ctx.beginPath();
+        ctx.arc(sx,sy,.55+depth*.92,0,TWO_PI);
+        ctx.fill();
+      }
+      ctx.globalAlpha=1;
+      ctx.globalCompositeOperation='source-over';
+    }
+    raf=requestAnimationFrame(render);
+    window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);raf=0;},{once:true});
+    window.MUR_BREATH_PARTICLE_ORB_V51={points:COUNT, breathingAnimation:'native-orb-transform', rotation:'slow'};
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
