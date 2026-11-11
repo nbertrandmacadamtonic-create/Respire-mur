@@ -1572,14 +1572,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V50 — SPHERES FIXES, LABELS LISIBLES, ARCS ORBITAUX
+   M.U.R. V54 — SPHERES FIXES, RESPIRER BLANC, SANS LIAISONS
    La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V50)return;
+  if(window.MUR_HOME_FIVE_V54)return;
   const N=2400, PER=350, CENTER_PER=650, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
@@ -1607,10 +1607,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV50)return;
-    circle.dataset.murFiveV50='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV54)return;
+    circle.dataset.murFiveV54='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v50-css';
+    style.id='mur-five-spheres-v54-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1639,7 +1639,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const pictogram=b.querySelector('.mur-five-icon');
       if(g.key==='breath'){
         pictogram.innerHTML='<svg viewBox="0 0 32 32" width="31" height="31" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5v17"/><path d="M16 11c-3-4-5-5-7-4-4 2-6 9-4 14 1.5 4 6 5 9 2l2-3"/><path d="M16 11c3-4 5-5 7-4 4 2 6 9 4 14-1.5 4-6 5-9 2l-2-3"/><path d="M12 14c-2 1-3 3-3 6M20 14c2 1 3 3 3 6"/></svg>';
-        pictogram.style.color='#00ff9c';
+        pictogram.style.color='#ffffff';
       }else{
         pictogram.textContent=g.icon;
       }
@@ -1720,58 +1720,6 @@ if (typeof window.installPresentationFallback !== 'function') {
           ctx.globalAlpha=(.35+.60*depth)*(1-scatter);
           ctx.fillStyle=`rgb(${color.join(',')})`;
           ctx.beginPath();ctx.arc(x,y,.85+depth*1.3,0,TAU);ctx.fill();
-        }
-        ctx.restore();
-      }
-      // Halo vivant de micro-particules autour de la sphère centrale.
-      if(progress>.18){
-        ctx.save();ctx.globalCompositeOperation='lighter';
-        const haloVis=Math.min(1,(progress-.18)/.45);
-        const haloCount=140;
-        for(let i=0;i<haloCount;i++){
-          const a=time*.0007 + i*TAU/haloCount;
-          const rr=centerRadius + 10 + 8*Math.sin(time*.0012 + i*.37);
-          const x=coords[0][0] + Math.cos(a)*rr;
-          const y=coords[0][1] + Math.sin(a)*rr*0.88;
-          const alpha=(.12 + .22*((i%7)/6))*haloVis;
-          ctx.fillStyle=`rgba(255,92,108,${alpha.toFixed(3)})`;
-          ctx.beginPath();ctx.arc(x,y,.9 + (i%5)*.16,0,TAU);ctx.fill();
-        }
-        ctx.restore();
-      }
-      // V46 : cercle de petits points parfaitement régulier, sans onde ni vagues.
-      // Les points restent à distance fixe du centre et accompagnent uniquement
-      // la rotation naturelle des quatre sphères périphériques.
-      if(progress>.035){
-        ctx.save();
-        ctx.globalCompositeOperation='lighter';
-        const visible=ease(Math.min(1,Math.max(0,(progress-.035)/.55)));
-        const count=360;
-        const angleOffset=0;
-        for(let j=0;j<count;j++){
-          const angle=angleOffset+TAU*j/count;
-          const x=cx+orbitR*Math.cos(angle);
-          const y=cy+orbitR*Math.sin(angle);
-          // Anneau interrompu aux quatre sphères : marge de 8 px autour
-          // de leur silhouette, même lorsqu'elles tournent.
-          const clearRadius=radius+8;
-          if(coords.slice(1).some(([bx,by])=>Math.hypot(x-bx,y-by)<clearRadius))continue;
-          // Quatre quartiers aux couleurs franches ; transition très courte seulement.
-          const sector=(angle-angleOffset+TAU)%TAU/(TAU/4);
-          const index=Math.floor(sector);
-          const fraction=sector-index;
-          // Ordre des sphères sur l'anneau : droite, bas, gauche, haut.
-          const order=[3,4,2,1];
-          const aColor=GROUPS[order[index%4]].rgb;
-          const bColor=GROUPS[order[(index+1)%4]].rgb;
-          // Couleur pure pour 94 % de chaque quartier : aucun dégradé pastel.
-          // Petit raccord adouci uniquement sur les 6 % finaux.
-          const blend=ease(Math.max(0,Math.min(1,(fraction-.94)/.06)));
-          const rgb=aColor.map((v,k)=>Math.round(v+(bColor[k]-v)*blend));
-          ctx.fillStyle=`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${(.98*visible).toFixed(3)})`;
-          ctx.beginPath();
-          ctx.arc(x,y,1.30,0,TAU);
-          ctx.fill();
         }
         ctx.restore();
       }
@@ -1860,7 +1808,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V50={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'static-four-spheres-readable-labels-rotating-small-arcs'};
+    window.MUR_HOME_FIVE_V54={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'static-four-spheres-no-links-white-breath-no-red-halo'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
@@ -1906,15 +1854,15 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ============================================================
-   M.U.R. V52 — BOULE RESPIRATION ALLEGEE ET TEXTE HORS BOULE
-   2400 particules, 3D en rotation lente, dilatation pilotee par
+   M.U.R. V53 — RESPIRATION AERIENNE, TEXTE INDEPENDANT ET AMPLITUDE
+   950 particules, 3D en rotation lente, dilatation pilotee par
    les phases de respiration existantes (sans modifier les cycles,
    l'audio, les pauses, les commandes ou index.html).
    ============================================================ */
 (() => {
   'use strict';
-  if (window.MUR_BREATH_PARTICLE_ORB_V52) return;
-  const COUNT = 1200;
+  if (window.MUR_BREATH_PARTICLE_ORB_V53) return;
+  const COUNT = 950;
   const GOLDEN = Math.PI * (3 - Math.sqrt(5));
   const TWO_PI = Math.PI * 2;
   const points = Array.from({length: COUNT}, (_, i) => {
@@ -1926,9 +1874,9 @@ if (typeof window.installPresentationFallback !== 'function') {
   function init(){
     const orb = document.getElementById('orb');
     const page = document.getElementById('breath');
-    if (!orb || !page || orb.querySelector('.mur-breath-points-v52')) return;
+    if (!orb || !page || orb.querySelector('.mur-breath-points-v53')) return;
     const css = document.createElement('style');
-    css.id = 'mur-breath-particle-v52-css';
+    css.id = 'mur-breath-particle-v53-css';
     css.textContent = `
       #breath #orb.mur-breath-particle-orb {
         position:relative!important;
@@ -1938,7 +1886,7 @@ if (typeof window.installPresentationFallback !== 'function') {
         overflow:visible!important;
         border:0!important;
       }
-      #breath #orb.mur-breath-particle-orb .mur-breath-points-v52 {
+      #breath #orb.mur-breath-particle-orb .mur-breath-points-v53 {
         position:absolute!important;
         inset:0!important;
         width:100%!important;
@@ -1947,42 +1895,66 @@ if (typeof window.installPresentationFallback !== 'function') {
         pointer-events:none!important;
         border-radius:50%!important;
       }
-      #breath #orb.mur-breath-particle-orb #phaseText {
-        position:absolute!important;
-        left:50%!important;
-        top:calc(100% + 14px)!important;
-        transform:translateX(-50%)!important;
-        z-index:3!important;
-        display:block!important;
-        min-width:120px!important;
-        max-width:220px!important;
-        color:#f4fffb!important;
-        font-size:clamp(14px,3.9vw,19px)!important;
-        font-weight:900!important;
-        line-height:1.1!important;
-        letter-spacing:.01em!important;
-        padding:7px 12px!important;
+      /* Texte réellement séparé de la sphère pour éviter les variations de taille. */
+      #breath #phaseText.mur-breath-label-v53 {
+        position:relative!important;
+        display:table!important;
+        margin:22px auto 14px!important;
+        max-width:min(90vw,260px)!important;
+        width:max-content!important;
+        min-width:132px!important;
+        padding:9px 18px!important;
         border-radius:999px!important;
-        background:rgba(4,25,30,.78)!important;
-        border:1px solid rgba(123,255,214,.28)!important;
-        text-shadow:0 1px 8px #061d1b!important;
+        background:rgba(4,25,30,.80)!important;
+        border:1px solid rgba(123,255,214,.35)!important;
+        color:#f4fffb!important;
+        font-size:clamp(16px,4.2vw,20px)!important;
+        font-weight:900!important;
+        line-height:1.2!important;
+        letter-spacing:.015em!important;
         text-align:center!important;
-        overflow-wrap:normal!important;
-        word-break:normal!important;
         white-space:nowrap!important;
+        text-shadow:0 1px 8px #061d1b!important;
         box-shadow:0 6px 18px rgba(0,0,0,.16)!important;
+        z-index:3!important;
       }
       #breath.breath-immersive #orb.mur-breath-particle-orb {box-shadow:none!important;}
-      #breath.breath-immersive #orb.mur-breath-particle-orb #phaseText {top:calc(100% + 18px)!important;font-size:19px!important;}
+      #breath.breath-immersive #phaseText.mur-breath-label-v53 {margin-top:26px!important;font-size:20px!important;}
     `;
     document.head.appendChild(css);
     const canvas = document.createElement('canvas');
-    canvas.className = 'mur-breath-points-v52';
+    canvas.className = 'mur-breath-points-v53';
     canvas.setAttribute('aria-hidden','true');
     const ctx = canvas.getContext('2d', {alpha:true});
     if (!ctx) return;
     orb.insertBefore(canvas,orb.firstChild);
     orb.classList.add('mur-breath-particle-orb');
+    // Déplace le vrai libellé hors du bouton-orbe ; il reste piloté par
+    // tous les cycles natifs et par le mode rapide via son id d'origine.
+    const phaseText=document.getElementById('phaseText');
+    const stage=orb.closest('.breath-stage');
+    if(phaseText && stage && phaseText.parentElement===orb){
+      stage.insertAdjacentElement('afterend',phaseText);
+      phaseText.classList.add('mur-breath-label-v53');
+    }
+    // Renforce légèrement l'amplitude sans changer ni la durée ni les pauses.
+    // Les scripts de respiration écrivent transform=scale(...) sur l'orbe.
+    const boostBreathAmplitude=()=>{
+      const value=orb.style.transform||'';
+      const match=value.match(/^scale\(\s*([0-9.]+)\s*\)$/);
+      if(!match)return;
+      const scale=Number(match[1]);
+      let desired=null;
+      if(scale>=1.32 && scale<=1.36)desired=1.44;
+      else if(scale>=.66 && scale<=.70)desired=.61;
+      if(desired!==null && Math.abs(scale-desired)>.005)
+        orb.style.transform='scale('+desired+')';
+    };
+    const breathingObserver=new MutationObserver(boostBreathAmplitude);
+    breathingObserver.observe(orb,{attributes:true,attributeFilter:['style']});
+    boostBreathAmplitude();
+    window.addEventListener('pagehide',()=>breathingObserver.disconnect(),{once:true});
+
     let raf = 0;
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     function parseRGB(str){
@@ -2043,7 +2015,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     }
     raf=requestAnimationFrame(render);
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);raf=0;},{once:true});
-    window.MUR_BREATH_PARTICLE_ORB_V52={points:COUNT, breathingAnimation:'native-orb-transform', rotation:'slow', phaseText:'below-orb', color:'trend'};
+    window.MUR_BREATH_PARTICLE_ORB_V53={points:COUNT, breathingAnimation:'native-orb-transform-enhanced', rotation:'slow', phaseText:'separate-below-orb', color:'trend'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
