@@ -1,4 +1,4 @@
-/* M.U.R. V57 — Souffle vivant, inspiration silencieuse.
+/* M.U.R. V67 — Souffle vivant harmonisé, inspiration silencieuse.
    Déploiement non destructif : surcharge uniquement l'entrée murStartQuickMode.
    1200 points 3D : surface régulière + cœur structuré en couronnes concentriques, inertie au relâchement.
    Score provisoire : 7 expirations de 8 s (56 s cumulées) = 100 %.
@@ -7,7 +7,7 @@
 (()=>{
   'use strict';
   if(window.MURSOUFFLEVIVANT21)return;
-  const VERSION='22.9-score-bonus-inspiration-silencieuse-V57';
+  const VERSION='22.9-score-bonus-inspiration-silencieuse-mise-en-page-V67';
   const COUNT=1200, REFERENCE_EXHALE_SECONDS=8, REFERENCE_EXHALES=7;
   const GOAL=REFERENCE_EXHALE_SECONDS*REFERENCE_EXHALES; // 56 s = 100 % du score ; en mode 90 s, bonus possible au-delà.
   const fingerprint='<svg aria-hidden="true" viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M10 23c0-9 6-15 14-15s14 6 14 15"/><path d="M15 26v-3c0-6 4-10 9-10s9 4 9 10v5"/><path d="M20 30v-7a4 4 0 0 1 8 0v9"/><path d="M11 31v-7"/><path d="M16 35c3-4 3-7 3-11"/><path d="M24 22v8c0 6-2 10-5 13"/><path d="M32 34c-1 5-3 8-5 10"/><path d="M37 29c0 6-2 11-5 15"/></svg>';
@@ -126,6 +126,116 @@
      body.mur-sv-active #murSV21 .sv-foot{gap:3px;margin-top:3px}
    }
    @media(prefers-reduced-motion:reduce){#murSV21 .sv-finger{transition:none}}
+
+   /* V67 — Habillage harmonisé avec les rubriques M.U.R., sans changer le moteur */
+   #murSV21 {
+     background:radial-gradient(ellipse at 50% 9%,rgba(37,78,111,.62),transparent 56%),#081523!important;
+     color:#f1f7fc!important;
+   }
+   body.mur-sv-active #murSV21 .sv-shell {
+     width:min(100%,520px)!important;
+     padding:calc(12px + env(safe-area-inset-top)) 14px 6px!important;
+     gap:9px!important;
+   }
+   #murSV21 .sv-top{
+     width:100%!important;min-height:48px!important;height:48px!important;
+     margin-bottom:1px!important;padding:0 2px 9px!important;
+     border-bottom:1px solid rgba(177,213,232,.22)!important;
+   }
+   #murSV21 .sv-mark{
+     min-width:0!important;gap:11px!important;
+     color:#f2f7fc!important;font-size:clamp(12px,3.3vw,15px)!important;
+     letter-spacing:.015em!important;font-weight:800!important;
+   }
+   #murSV21 .sv-mark span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+   #murSV21 .sv-brand-orb{
+     position:relative!important;flex:0 0 34px!important;
+     width:34px!important;height:34px!important;
+     color:#fff!important;font-size:18px!important;
+     background:radial-gradient(circle at 32% 26%,#ffc2c9 0%,#ff495a 25%,#c71e39 68%,#661122 100%)!important;
+     border:1px solid rgba(255,141,153,.8)!important;
+     box-shadow:0 0 13px rgba(255,56,80,.24), inset 0 -4px 9px rgba(40,2,11,.38)!important;
+   }
+   #murSV21 .sv-info-trigger{
+     flex:0 0 38px!important;width:38px!important;height:38px!important;
+     min-width:38px!important;min-height:38px!important;
+     border-radius:10px!important;border:1px solid rgba(255,255,255,.36)!important;
+     color:#fff!important;background:rgba(10,32,52,.84)!important;
+     font:800 19px/1 Arial,sans-serif!important;
+     box-shadow:0 5px 18px rgba(0,0,0,.30)!important;
+   }
+   #murSV21 .sv-main-card{
+     width:100%!important;max-width:none!important;min-height:0!important;
+     padding:12px clamp(9px,3vw,18px) 10px!important;
+     background:linear-gradient(165deg,rgba(25,49,71,.93),rgba(12,28,46,.88))!important;
+     border:1px solid rgba(168,202,222,.26)!important;
+     border-radius:20px!important;
+     box-shadow:0 10px 30px rgba(0,0,0,.17),inset 0 1px 0 rgba(255,255,255,.07)!important;
+   }
+   #murSV21 .sv-main-card h2{
+     font-size:clamp(19px,4.4vw,24px)!important;font-weight:850!important;
+     color:#fff!important;margin:0!important;letter-spacing:-.025em!important;
+   }
+   #murSV21 .sv-sub{font-size:12px!important;line-height:1.3!important;color:#b9cfe1!important;margin:4px 0 3px!important}
+   #murSV21 .sv-options{margin:7px 0 5px!important;gap:9px!important}
+   #murSV21 .sv-option{
+     border-radius:12px!important;min-height:38px!important;
+     padding:7px 13px!important;font-size:12px!important;font-weight:700!important;
+     color:#d9e7f3!important;background:#132b42!important;
+     border:1px solid rgba(174,202,221,.32)!important;
+   }
+   #murSV21 .sv-option[aria-pressed="true"]{
+     color:#fff!important;background:#245b58!important;
+     border-color:#67d7b7!important;box-shadow:inset 0 0 0 1px rgba(140,255,204,.12)!important;
+   }
+   #murSV21 .sv-timer{font-size:24px!important;font-weight:700!important;letter-spacing:.04em!important;color:#eef7ff!important;margin:5px 0 3px!important}
+   #murSV21 .sv-scorebox{
+     margin:5px auto 4px!important;padding:8px 11px 10px!important;
+     max-width:390px!important;border-radius:13px!important;
+     background:rgba(6,22,37,.45)!important;border:1px solid rgba(190,224,236,.13)!important;
+   }
+   #murSV21 .sv-scoreline{font-size:12px!important;color:#d2e2ee!important;margin-bottom:7px!important}
+   #murSV21 .sv-track{height:6px!important;background:#274256!important}
+   #murSV21 .sv-state{font-size:12px!important;color:#d0e3ec!important}
+   #murSV21 .sv-finger{
+     border:1px solid rgba(128,236,197,.8)!important;
+     box-shadow:0 0 24px rgba(48,211,154,.22),inset 0 0 18px rgba(102,214,172,.15)!important;
+   }
+   #murSV21 .sv-cta{font-size:14px!important;font-weight:800!important;margin-top:5px!important}
+   #murSV21 .sv-hint{font-size:12px!important;color:#bfd3df!important;margin-top:4px!important}
+   #murSV21 .sv-foot{
+     margin-top:7px!important;padding:8px 0 0!important;
+     border-top:1px solid rgba(180,212,226,.18)!important;gap:7px!important;
+   }
+   #murSV21 .sv-meta{font-size:12px!important;color:#c9dbe7!important;text-align:center!important}
+   #murSV21 .sv-action.sv-icon-action{
+     width:42px!important;height:40px!important;flex-basis:42px!important;
+     background:#18334d!important;border:1px solid rgba(195,219,235,.34)!important;
+     border-radius:11px!important;color:#f1f7fd!important;
+   }
+   #murSV21 .sv-info-card,#murSV21 .sv-results-card{
+     border-radius:20px!important;background:linear-gradient(145deg,#132a41,#081522)!important;
+     border:1px solid rgba(155,223,225,.32)!important;
+   }
+   #murSV21 .sv-info-heading h3{font-size:19px!important;font-weight:800!important}
+   #murSV21 .sv-info-card p{line-height:1.55!important}
+   @media(max-height:720px){
+     body.mur-sv-active #murSV21 .sv-shell{gap:5px!important;padding-top:calc(5px + env(safe-area-inset-top))!important}
+     #murSV21 .sv-main-card{padding-top:6px!important;padding-bottom:5px!important}
+     #murSV21 .sv-options{margin:3px 0!important}
+     #murSV21 .sv-scorebox{padding:5px 9px!important;margin:2px auto!important}
+     #murSV21 .sv-foot{padding-top:4px!important;margin-top:3px!important;gap:4px!important}
+     #murSV21 .sv-sub{margin:1px 0!important}
+   }
+   @media(max-height:590px){
+     #murSV21 .sv-top{height:40px!important;min-height:40px!important}
+     #murSV21 .sv-option{min-height:29px!important;padding:4px 10px!important}
+     #murSV21 .sv-timer{font-size:19px!important;margin:2px 0!important}
+     #murSV21 .sv-scorebox{padding:3px 7px!important}
+     #murSV21 .sv-finger{width:52px!important;height:52px!important}
+     #murSV21 .sv-cta{margin-top:2px!important;font-size:12px!important}
+     #murSV21 .sv-hint{font-size:11px!important;margin-top:1px!important}
+   }
   `;
   let escaped=[],lastGreen=0,clock=0;
   let activeTabbar=null;
