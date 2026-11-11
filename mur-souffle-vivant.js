@@ -44,7 +44,7 @@
    #murSV21 .sv-mark{font-size:11px;letter-spacing:.13em;color:#b5d4dc}
    #murSV21 .sv-top-actions{display:flex;align-items:center;gap:6px;flex:none}
    #murSV21 .sv-top-link{border:1px solid #456b7f;border-radius:999px;color:#dcecf5;background:#102b3e;padding:5px 9px;min-height:30px;font-size:10px;white-space:nowrap;cursor:pointer}
-   #murSV21 .sv-info-trigger{width:30px;height:30px;border:1px solid #79dabb;border-radius:50%;background:#153b46;color:#bdfae4;font-weight:750;font-size:16px;flex:none;cursor:pointer}
+   #murSV21 .sv-info-trigger{width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;border:1px solid rgba(255,255,255,.36)!important;border-radius:10px!important;background:rgba(10,32,52,.84)!important;color:#fff!important;font-family:Arial,sans-serif!important;font-weight:800!important;font-size:19px!important;line-height:1!important;display:grid!important;place-items:center!important;box-shadow:0 5px 18px rgba(0,0,0,.30)!important;flex:none!important;cursor:pointer;touch-action:manipulation}
    #murSV21 .sv-close{border:1px solid #567b89;border-radius:50%;color:#e2f3f9;background:#112b3d;width:30px;height:30px;font-size:19px;flex:none}
    #murSV21 h2{margin:3px 0 0;font-size:clamp(19px,3.5vh,25px);font-weight:500;letter-spacing:-.03em;text-align:center;line-height:1.12;flex:none}
    #murSV21 .sv-sub{font-size:11px;color:#a6c5d2;text-align:center;margin:2px 0 0;line-height:1.2;flex:none}
