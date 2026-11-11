@@ -1572,18 +1572,18 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V39 — DISSOLUTION A LA SOURCE ET ORBITES DENSES
+   M.U.R. V41 — DISSOLUTION LENTE, URGENCE ROUGE, PICTOGRAMME RESPIRER
    La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V39)return;
-  const N=2400, PER=680, OPEN_MS=1200, CLOSE_MS=900;
+  if(window.MUR_HOME_FIVE_V41)return;
+  const N=2400, PER=1050, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
-    {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[176,134,255]},
+    {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[255,67,87]},
     {key:'tests',fr:'Mesurer',en:'Measure',icon:'⌁',rgb:[60,160,255]},
     {key:'breath',fr:'Respirer',en:'Breathe',icon:'◌',rgb:[55,226,166]},
     {key:'exercises',fr:'Exercices',en:'Exercises',icon:'✦',rgb:[255,166,70]},
@@ -1591,7 +1591,7 @@ if (typeof window.installPresentationFallback !== 'function') {
   ];
   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
   // Deux populations distinctes : 2400 points de la sphère source et
-  // 5 x 680 points de condensation (aucune scission en cinq morceaux).
+  // 5 x 1050 points de condensation (aucune scission en cinq morceaux).
   const sourcePoints=Array.from({length:N},(_,i)=>{
     const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),a=i*GOLD;
     return {x:r*Math.cos(a),y,z:r*Math.sin(a),seed:((i*67)%1009)/1009};
@@ -1604,10 +1604,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV39)return;
-    circle.dataset.murFiveV39='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV41)return;
+    circle.dataset.murFiveV41='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v39-css';
+    style.id='mur-five-spheres-v41-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1633,7 +1633,14 @@ if (typeof window.installPresentationFallback !== 'function') {
     const buttons=GROUPS.map((g,i)=>{
       const b=document.createElement('button');b.type='button';b.className='mur-five-target';
       b.dataset.key=g.key;b.innerHTML='<span class="mur-five-icon"></span><span class="mur-five-label"></span>';
-      b.querySelector('.mur-five-icon').textContent=g.icon;
+      const pictogram=b.querySelector('.mur-five-icon');
+      if(g.key==='breath'){
+        pictogram.innerHTML='<svg viewBox="0 0 32 32" width="31" height="31" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5v17"/><path d="M16 11c-3-4-5-5-7-4-4 2-6 9-4 14 1.5 4 6 5 9 2l2-3"/><path d="M16 11c3-4 5-5 7-4 4 2 6 9 4 14-1.5 4-6 5-9 2l-2-3"/><path d="M12 14c-2 1-3 3-3 6M20 14c2 1 3 3 3 6"/></svg>';
+        pictogram.style.color='#a7ffe8';
+      }else{
+        pictogram.textContent=g.icon;
+      }
+
       b.addEventListener('pointerdown',e=>e.stopPropagation());
       b.addEventListener('click',e=>{
         e.preventDefault();e.stopPropagation();
@@ -1655,11 +1662,11 @@ if (typeof window.installPresentationFallback !== 'function') {
       const rect=circle.getBoundingClientRect();
       const cx=rect.left+rect.width/2;
       const cy=rect.top+rect.height/2;
-      const radius=small?35:42;
-      const centerRadius=small?39:46;
+      const radius=small?33:39;
+      const centerRadius=small?37:44;
       // Adaptation à la place disponible autour de la sphère sur mobile.
       const edge=Math.min(cx,w-cx,cy,h-cy);
-      const orbitR=Math.max(75,Math.min(small?120:150,edge-radius-10));
+      const orbitR=Math.max(82,Math.min(small?119:147,edge-radius-10));
       const a=time*.00018;
       const coords=[
         [cx,cy]
@@ -1692,30 +1699,33 @@ if (typeof window.installPresentationFallback !== 'function') {
       const color=homeColor();
       const ca=Math.cos(time*.00023),sa=Math.sin(time*.00023);
       const cb=Math.cos(time*.00030),sb=Math.sin(time*.00030);
-      const sourceFade=ease(Math.min(1,progress/.76));
-      // La sphère mère perd progressivement ses points, de façon irrégulière.
-      // Les points ne sont PAS transportés chacun vers une petite sphère.
+      // Phase 1: la grande sphère demeure à sa place et perd ses points,
+      // en ordre irrégulier, avec un léger envol radial puis extinction.
+      // Aucune division en cinq sous-ensembles.
+      const sourceFade=ease(Math.min(1,progress/.79));
       if(sourceFade<1){
         ctx.save();ctx.globalCompositeOperation='lighter';
         for(const p of sourcePoints){
-          const threshold=.06+p.seed*.88;
-          if(sourceFade>=threshold)continue;
-          const remaining=Math.max(0,Math.min(1,(threshold-sourceFade)/.15));
+          const threshold=.035+p.seed*.91;
+          const life=(sourceFade-threshold);
+          if(life>.19)continue;
           const xx=p.x*ca-p.z*sa,zz=p.x*sa+p.z*ca;
           const perspective=2.9/(2.9-zz*.26);
-          const drift=1+sourceFade*(.13+.17*p.seed);
-          const x=hx+xx*hr*perspective*drift,y=hy+p.y*hr*perspective*drift;
+          const scatter=life>0?Math.min(1,life/.19):0;
+          const drift=1+scatter*(.27+.33*p.seed);
+          const x=hx+xx*hr*perspective*drift;
+          const y=hy+p.y*hr*perspective*drift;
           const depth=(zz+1)/2;
-          ctx.globalAlpha=(.35+.56*depth)*remaining;
+          ctx.globalAlpha=(.35+.60*depth)*(1-scatter);
           ctx.fillStyle=`rgb(${color.join(',')})`;
-          ctx.beginPath();ctx.arc(x,y,.7+depth*1.1,0,TAU);ctx.fill();
+          ctx.beginPath();ctx.arc(x,y,.85+depth*1.3,0,TAU);ctx.fill();
         }
         ctx.restore();
       }
       // Un courant de points se détache du coeur et nourrit chaque orbite.
-      if(progress>.06){
+      if(progress>.035){
         ctx.save();ctx.globalCompositeOperation='lighter';
-        const visible=Math.min(1,(progress-.06)/.43);
+        const visible=Math.min(1,(progress-.035)/.48);
         for(let k=1;k<5;k++){
           const target=coords[k],startPoint=coords[0],rgb=GROUPS[k].rgb;
           const dx=target[0]-startPoint[0],dy=target[1]-startPoint[1];
@@ -1723,23 +1733,23 @@ if (typeof window.installPresentationFallback !== 'function') {
           const nx=-dy/length,ny=dx/length;
           const midX=(startPoint[0]+target[0])*.5+nx*(k%2?16:-16);
           const midY=(startPoint[1]+target[1])*.5+ny*(k%2?16:-16);
-          for(let j=0;j<120;j++){
+          for(let j=0;j<195;j++){
             const seed=(j*.61803398875+k*.173)%1;
-            const q=(time*.00027*(.65+(j%9)*.025)+seed)%1;
+            const q=(time*.00032*(.65+(j%9)*.025)+seed)%1;
             const u=q*q*(3-2*q);
-            const spread=Math.sin(Math.PI*u)*((j%17)-8)*1.35;
+            const spread=Math.sin(Math.PI*u)*((j%19)-9)*1.95;
             const x=(1-u)*(1-u)*startPoint[0]+2*(1-u)*u*midX+u*u*target[0]+nx*spread;
             const y=(1-u)*(1-u)*startPoint[1]+2*(1-u)*u*midY+u*u*target[1]+ny*spread;
-            const alpha=visible*(.22+.56*Math.sin(Math.PI*u))*(.72+.28*(j%7)/6);
+            const alpha=visible*(.30+.64*Math.sin(Math.PI*u))*(.72+.28*(j%7)/6);
             ctx.fillStyle=`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha.toFixed(3)})`;
-            ctx.beginPath();ctx.arc(x,y,.75+((j*5)%9)/9,0,TAU);ctx.fill();
+            ctx.beginPath();ctx.arc(x,y,.95+((j*5)%9)/8,0,TAU);ctx.fill();
           }
         }
         ctx.restore();
       }
-      // Condensation indépendante : chaque mini-sphère compte 680 points,
+      // Condensation indépendante : chaque mini-sphère compte 1050 points,
       // plus serrés et plus lumineux que dans la V38.
-      const grown=ease(Math.max(0,Math.min(1,(progress-.18)/.70)));
+      const grown=ease(Math.max(0,Math.min(1,(progress-.22)/.73)));
       if(grown>0){
         ctx.save();ctx.globalCompositeOperation='lighter';
         for(const p of miniPoints){
@@ -1750,19 +1760,19 @@ if (typeof window.installPresentationFallback !== 'function') {
           const xx=p.x*cb-p.z*sb,zz=p.x*sb+p.z*cb;
           const perspective=2.9/(2.9-zz*.22);
           const R=p.g===0?centerRadius:radius;
-          const cloudScale=1+(1-appear)*(.55+.50*p.seed);
+          const cloudScale=1+(1-appear)*(.62+.46*p.seed);
           const x=c[0]+xx*R*perspective*cloudScale;
           const y=c[1]+p.y*R*perspective*cloudScale;
           const depth=(zz+1)/2;
-          ctx.globalAlpha=appear*(.54+.43*depth);
+          ctx.globalAlpha=appear*(.71+.28*depth);
           ctx.fillStyle=`rgb(${g.rgb.join(',')})`;
-          ctx.beginPath();ctx.arc(x,y,.85+depth*1.25,0,TAU);ctx.fill();
+          ctx.beginPath();ctx.arc(x,y,1.0+depth*1.3,0,TAU);ctx.fill();
         }
         ctx.restore();
       }
       ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
       buttons.forEach((b,i)=>{
-        const show=progress>.68;
+        const show=progress>.76;
         b.classList.toggle('ready',show);
         b.style.pointerEvents=(show&&open)?'auto':'none';
         const locked=(i>0&&typeof window.testsAreUnlocked==='function'&&!window.testsAreUnlocked());
@@ -1795,7 +1805,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V39={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'anchored-dissolving-cloud-orbits'};
+    window.MUR_HOME_FIVE_V41={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'anchored-dissolving-cloud-orbits-red-urgent-breath-symbol'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
