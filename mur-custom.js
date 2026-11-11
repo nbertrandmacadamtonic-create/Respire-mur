@@ -1546,7 +1546,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)');
     function draw(t){
       raf=requestAnimationFrame(draw);
-      if(!circle.isConnected || !document.getElementById('home')?.classList.contains('active')){previous=t;return;}
+      if(!circle.isConnected || document.hidden || !document.getElementById('home')?.classList.contains('active') || document.body.classList.contains('mur-five-open')){previous=t;return;}
       const dt=Math.max(0,Math.min(.05,(t-(previous||t))/1000));previous=t;
       if(!reduce.matches&&!circle.classList.contains('mur-menu-open')) phase+=dt*.23;
       const w=canvas.clientWidth||310,h=canvas.clientHeight||310;
@@ -1831,7 +1831,12 @@ if (typeof window.installPresentationFallback !== 'function') {
       if(!open){layer.classList.remove('is-visible');document.body.classList.remove('mur-five-open');}
       else{raf=requestAnimationFrame(idle);}
     }
-    function idle(t){if(!open)return;draw(t);raf=requestAnimationFrame(idle)}
+    function idle(t){
+      if(!open)return;
+      if(document.hidden){raf=requestAnimationFrame(idle);return;}
+      if(!home.classList.contains('active')){setOpen(false);return;}
+      draw(t);raf=requestAnimationFrame(idle);
+    }
     function setOpen(value){
       if(!home.classList.contains('active')&&value)return;
       if(raf)cancelAnimationFrame(raf);
@@ -2175,4 +2180,77 @@ if (typeof window.installPresentationFallback !== 'function') {
   }
   window.MUR_PAGE_INFO_V59={open,close,reload:load,pages:Object.keys(PAGES)};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+})();
+
+
+/* =============================================================
+   M.U.R. V66 — STABILISATION ANTI-DOUBLONS
+   Neutralisation ciblée de l'ancien visuel V24 et des contrôles
+   redondants. Les scripts de navigation, les données, l'audio,
+   le back-office et la respiration sont conservés.
+   ============================================================= */
+(() => {
+  'use strict';
+  if (window.MUR_STABILISATION_V66) return;
+  window.MUR_STABILISATION_V66 = {version:'66', scope:'visual-and-navigation-compatibility'};
+
+  function install(){
+    if (document.getElementById('mur-stabilisation-v66-css')) return;
+    const style=document.createElement('style');
+    style.id='mur-stabilisation-v66-css';
+    style.textContent=`
+      /* Ancienne photographie animée V24 : aucun rendu concurrent de la sphère multipoints. */
+      #home #homeCircle > .mur-sphere-photo-v24,
+      #home #homeCircle.mur-menu-open > .mur-sphere-photo-v24{
+        display:none!important;visibility:hidden!important;opacity:0!important;
+        animation:none!important;pointer-events:none!important
+      }
+      /* Conserver le moteur natif comme routeur invisible du menu à cinq sphères. */
+      body.mur-five-open .mur-orb-menu,
+      body.mur-five-open .mur-orb-connectors,
+      body.mur-five-open .mur-orbit-line,
+      body.mur-five-open .mur-orb-quick-center,
+      body.mur-five-open .mur-orb-choice{
+        opacity:0!important;visibility:hidden!important;pointer-events:none!important
+      }
+      body.mur-five-open .mur-home-particle-burst{display:none!important}
+      /* Seul le bouton d'information unifié est affiché sur les pages standard. */
+      #home #appInfoBtn,#tests #testsInfoBtn{display:none!important;visibility:hidden!important;pointer-events:none!important}
+      .mur-info-page-button{border-radius:10px!important}
+      /* L'ancienne croix de Réglages n'a plus de rôle face au bouton i. */
+      #settings > section.card:first-child > .status > button.icon-btn[onclick*="showPage"]{
+        display:none!important;visibility:hidden!important;pointer-events:none!important
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Supprimer uniquement l'ancien graphique de la V24, jamais l'orbe multipoints.
+    const oldImages=document.querySelectorAll('#home #homeCircle > .mur-sphere-photo-v24');
+    oldImages.forEach(image=>image.remove());
+
+    // Supprimer précisément l'ancienne croix de la page Réglages,
+    // y compris si cet écran est reconstruit plus tard par l'application.
+    const settings=document.getElementById('settings');
+    if(settings){
+      const obsoleteSelector=':scope > section.card:first-child > .status > button.icon-btn[onclick*="showPage"]';
+      const cleanup=()=>settings.querySelectorAll(obsoleteSelector).forEach(btn=>btn.remove());
+      cleanup();
+      const observer=new MutationObserver(mutations=>{
+        if(mutations.some(m=>m.addedNodes.length)) cleanup();
+      });
+      observer.observe(settings,{subtree:true,childList:true});
+      window.addEventListener('pagehide',()=>observer.disconnect(),{once:true});
+    }
+
+    // Les fenêtres d'aide historiques ne doivent pas se retrouver au-dessus
+    // d'un autre écran après une navigation. Ne touche pas à la présentation.
+    const unified=document.getElementById('murInfoUnifiedModalV58');
+    if(unified){
+      document.querySelector('.tabbar')?.addEventListener('click',()=>{
+        if(!unified.hidden) window.MUR_PAGE_INFO_V59?.close?.();
+      },true);
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
 })();
