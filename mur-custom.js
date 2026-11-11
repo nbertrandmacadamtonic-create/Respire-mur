@@ -1572,14 +1572,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V37 — CINQ SPHERES RELIEES, URGENCE AU CENTRE
+   M.U.R. V38 — FLUX DE PARTICULES DEPUIS URGENCE
    2400 points repartis en 5 x 480. Retour inverse.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V37)return;
+  if(window.MUR_HOME_FIVE_V38)return;
   const N=2400, PER=480, OPEN_MS=1000, CLOSE_MS=800;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
@@ -1602,7 +1602,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     if(!circle||!home||!nativeMenu||circle.dataset.murFiveV36)return;
     circle.dataset.murFiveV36='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v37-css';
+    style.id='mur-five-spheres-v38-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open #homeCircle .mur-home-2400-canvas{opacity:0!important}
@@ -1679,20 +1679,35 @@ if (typeof window.installPresentationFallback !== 'function') {
       const hx=rect.left+rect.width*.5,hy=rect.top+rect.height*.5;
       const hr=Math.min(rect.width,rect.height)*.405;
       const color=homeColor();
-      if(progress>.12){
+      // Quatre courants de particules, sans trait rigide.
+      // Chaque particule part du coeur Urgence, suit un léger arc,
+      // puis rejoint une sphère orbitale. Les courants suivent leur rotation.
+      if(progress>.08){
         ctx.save();
-        ctx.lineWidth=2.2;
-        ctx.globalAlpha=.16+.36*progress;
-        for(let i=1;i<coords.length;i++){
-          const g=GROUPS[i].rgb;
-          const grad=ctx.createLinearGradient(coords[0][0],coords[0][1],coords[i][0],coords[i][1]);
-          grad.addColorStop(0,`rgba(${g[0]},${g[1]},${g[2]},.55)`);
-          grad.addColorStop(1,`rgba(${g[0]},${g[1]},${g[2]},.18)`);
-          ctx.strokeStyle=grad;
-          ctx.beginPath();
-          ctx.moveTo(coords[0][0],coords[0][1]);
-          ctx.lineTo(coords[i][0],coords[i][1]);
-          ctx.stroke();
+        ctx.globalCompositeOperation='lighter';
+        const visible=Math.min(1,(progress-.08)/.56);
+        const flowTime=time*.00024;
+        for(let k=1;k<5;k++){
+          const target=coords[k], startPoint=coords[0], rgb=GROUPS[k].rgb;
+          const dx=target[0]-startPoint[0], dy=target[1]-startPoint[1];
+          const length=Math.max(1,Math.hypot(dx,dy));
+          const nx=-dy/length, ny=dx/length;
+          const middleX=(startPoint[0]+target[0])*.5 + nx*(k%2?13:-13);
+          const middleY=(startPoint[1]+target[1])*.5 + ny*(k%2?13:-13);
+          const count=86;
+          for(let j=0;j<count;j++){
+            const seed=(j*0.61803398875+k*.173)%1;
+            const q=(flowTime*(.67+(j%7)*.035)+seed)%1;
+            const u=q*q*(3-2*q);
+            // Nuage plus large au milieu, resserré aux extrémités.
+            const spread=Math.sin(Math.PI*u)*((j%13)-6)*1.55;
+            const x=(1-u)*(1-u)*startPoint[0]+2*(1-u)*u*middleX+u*u*target[0]+nx*spread;
+            const y=(1-u)*(1-u)*startPoint[1]+2*(1-u)*u*middleY+u*u*target[1]+ny*spread;
+            const alpha=visible*(.24+.52*Math.sin(Math.PI*u))*(.65+.35*((j*7)%11)/10);
+            const radius=.65+((j*5)%9)/10;
+            ctx.fillStyle=`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha.toFixed(3)})`;
+            ctx.beginPath();ctx.arc(x,y,radius,0,TAU);ctx.fill();
+          }
         }
         ctx.restore();
       }
@@ -1706,7 +1721,8 @@ if (typeof window.installPresentationFallback !== 'function') {
         const g=GROUPS[p.g],c=coords[p.g];
         const gx=p.gx*cb-p.gz*sb,gz=p.gx*sb+p.gz*cb;
         const gk=2.9/(2.9-gz*.25);
-        const x1=c[0]+gx*radius*gk,y1=c[1]+p.gy*radius*gk;
+        const targetRadius=p.g===0?centerRadius:radius;
+        const x1=c[0]+gx*targetRadius*gk,y1=c[1]+p.gy*targetRadius*gk;
         const x=x0+(x1-x0)*progress,y=y0+(y1-y0)*progress;
         if(x<0||y<0||x>w||y>h)continue;
         const rgb=g.rgb.map((v,i)=>Math.round(color[i]*(1-progress)+v*progress));
@@ -1761,7 +1777,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V37={particles:N,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'center-urgent-orbits'};
+    window.MUR_HOME_FIVE_V38={particles:N,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'living-particle-cloud-orbits'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
