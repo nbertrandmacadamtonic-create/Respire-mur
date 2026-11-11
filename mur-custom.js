@@ -1572,15 +1572,15 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V48 — ANNEAU DEGAGE ET SPHERES ALLEGEES
+   M.U.R. V49 — SPHERES PERIPHERIQUES PLUS AEREES
    La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V48)return;
-  const N=2400, PER=650, OPEN_MS=2350, CLOSE_MS=1550;
+  if(window.MUR_HOME_FIVE_V49)return;
+  const N=2400, PER=350, CENTER_PER=650, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
     {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[255,45,67]},
@@ -1591,23 +1591,26 @@ if (typeof window.installPresentationFallback !== 'function') {
   ];
   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
   // Deux populations distinctes : 2400 points de la sphère source et
-  // 5 x 650 points de condensation (aucune scission en cinq morceaux).
+  // 650 points au centre, 350 par sphère périphérique (sans scission).
   const sourcePoints=Array.from({length:N},(_,i)=>{
     const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),a=i*GOLD;
     return {x:r*Math.cos(a),y,z:r*Math.sin(a),seed:((i*67)%1009)/1009};
   });
-  const miniPoints=Array.from({length:PER*5},(_,i)=>{
-    const j=i%PER,y=1-2*(j+.5)/PER,r=Math.sqrt(1-y*y),a=j*GOLD;
-    return {x:r*Math.cos(a),y,z:r*Math.sin(a),g:Math.floor(i/PER),seed:((i*127)%1021)/1021};
+  const miniPoints=GROUPS.flatMap((g,index)=>{
+    const count=index===0?CENTER_PER:PER;
+    return Array.from({length:count},(_,j)=>{
+      const y=1-2*(j+.5)/count,r=Math.sqrt(1-y*y),a=j*GOLD;
+      return {x:r*Math.cos(a),y,z:r*Math.sin(a),g:index,seed:(((j+index*127)*127)%1021)/1021};
+    });
   });
   function init(){
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV48)return;
-    circle.dataset.murFiveV48='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV49)return;
+    circle.dataset.murFiveV49='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v48-css';
+    style.id='mur-five-spheres-v49-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1774,7 +1777,7 @@ if (typeof window.installPresentationFallback !== 'function') {
         }
         ctx.restore();
       }
-      // Condensation indépendante : chaque mini-sphère compte 650 points,
+      // Condensation indépendante : centre à 650 points, satellites à 350 points,
       // plus serrés et plus lumineux que dans la V38.
       const grown=ease(Math.max(0,Math.min(1,(progress-.22)/.73)));
       if(grown>0){
@@ -1837,7 +1840,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V48={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'ring-with-four-gaps-lighter-spheres'};
+    window.MUR_HOME_FIVE_V49={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'ring-with-four-gaps-peripheral-350-points'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
