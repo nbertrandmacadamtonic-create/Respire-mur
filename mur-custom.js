@@ -1572,14 +1572,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V45 — ANNEAU CIRCULAIRE ET DISSOLUTION CENTRALE
+   M.U.R. V46 — ANNEAU DE POINTS REGULIERS
    La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V45)return;
+  if(window.MUR_HOME_FIVE_V46)return;
   const N=2400, PER=1050, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
@@ -1604,10 +1604,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV45)return;
-    circle.dataset.murFiveV45='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV46)return;
+    circle.dataset.murFiveV46='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v45-css';
+    style.id='mur-five-spheres-v46-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1738,36 +1738,32 @@ if (typeof window.installPresentationFallback !== 'function') {
         }
         ctx.restore();
       }
-      // ANNEAU ORBITAL : particules sur une trajectoire véritablement circulaire.
-      // Aucun faisceau radial ; les quatre satellites sont reliés par leur orbite.
+      // V46 : cercle de petits points parfaitement régulier, sans onde ni vagues.
+      // Les points restent à distance fixe du centre et accompagnent uniquement
+      // la rotation naturelle des quatre sphères périphériques.
       if(progress>.035){
-        ctx.save();ctx.globalCompositeOperation='lighter';
+        ctx.save();
+        ctx.globalCompositeOperation='lighter';
         const visible=ease(Math.min(1,Math.max(0,(progress-.035)/.55)));
-        const phase=time*.00018;
-        const satellites=[1,2,3,4].map(i=>({
-          i,angle:(Math.atan2(coords[i][1]-cy,coords[i][0]-cx)+TAU)%TAU
-        })).sort((a,b)=>a.angle-b.angle);
-        for(let side=0;side<4;side++){
-          const first=satellites[side],next=satellites[(side+1)%4];
-          let arc=next.angle-first.angle;
-          if(arc<=0)arc+=TAU;
-          const aColor=GROUPS[first.i].rgb,bColor=GROUPS[next.i].rgb;
-          for(let j=0;j<290;j++){
-            // Des points se déplacent le long du cercle, pas sur une corde.
-            const seed=((j*113+side*73)%293)/293;
-            const motion=time*.000115*(.75+(j%7)*.055);
-            const t=(seed+motion)%1;
-            const angle=first.angle+arc*t;
-            const softness=Math.sin(Math.PI*t);
-            const wobble=(Math.sin(j*9.7+time*.0011)*4.2+
-                          Math.cos(j*3.17-time*.0008)*2.0)*(.35+.65*softness);
-            const r=orbitR+wobble;
-            const x=cx+Math.cos(angle)*r,y=cy+Math.sin(angle)*r;
-            const rgb=aColor.map((v,c)=>Math.round(v*(1-t)+bColor[c]*t));
-            const light=visible*(.35+.54*softness)*(.7+.3*((j*7)%13)/12);
-            ctx.fillStyle=`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${light.toFixed(3)})`;
-            ctx.beginPath();ctx.arc(x,y,.75+(j%6)*.22,0,TAU);ctx.fill();
-          }
+        const count=360;
+        const angleOffset=time*.00018;
+        for(let j=0;j<count;j++){
+          const angle=angleOffset+TAU*j/count;
+          const x=cx+orbitR*Math.cos(angle);
+          const y=cy+orbitR*Math.sin(angle);
+          // Quatre quartiers, dégradés entre les couleurs des sphères.
+          const sector=(angle-angleOffset+TAU)%TAU/(TAU/4);
+          const index=Math.floor(sector);
+          const fraction=sector-index;
+          // Ordre des sphères sur l'anneau : droite, bas, gauche, haut.
+          const order=[3,4,2,1];
+          const aColor=GROUPS[order[index%4]].rgb;
+          const bColor=GROUPS[order[(index+1)%4]].rgb;
+          const rgb=aColor.map((v,k)=>Math.round(v+(bColor[k]-v)*fraction));
+          ctx.fillStyle=`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${(.76*visible).toFixed(3)})`;
+          ctx.beginPath();
+          ctx.arc(x,y,1.0,0,TAU);
+          ctx.fill();
         }
         ctx.restore();
       }
@@ -1834,7 +1830,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V45={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'circular-particle-orbit-eroding-center'};
+    window.MUR_HOME_FIVE_V46={sourceParticles:N,particlesPerSphere:PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'regular-dotted-ring-no-waves'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
