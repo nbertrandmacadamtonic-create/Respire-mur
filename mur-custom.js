@@ -2652,3 +2652,106 @@ if (typeof window.installPresentationFallback !== 'function') {
   document.head.appendChild(css);
   window.MUR_BREATH_DESKTOP_FIT_V81={version:81,base:79,maxInhaleScale:1.44};
 })();
+
+
+/* ================================================================
+   M.U.R. V82 — CORRECTION DE POSITIONNEMENT PLEIN ECRAN DESKTOP
+   La séance est provisoirement placée directement sous <body>.
+   Cela évite les repères de positionnement et les décrochages du
+   conteneur .app après défilement. Retour à sa place en sortie.
+   Aucun changement d'index.html, des cycles ni de la couleur.
+   ================================================================ */
+(() => {
+  'use strict';
+  if (window.MUR_BREATH_VIEWPORT_V82) return;
+  const state={version:82,active:false};
+  window.MUR_BREATH_VIEWPORT_V82=state;
+  function init(){
+    const page=document.getElementById('breath');
+    if(!page)return;
+    const anchor=document.createComment('M.U.R. V82 : emplacement Respiration');
+    page.parentNode.insertBefore(anchor,page);
+    let moving=false;
+    let origBodyOverflow='';
+    let origHtmlOverflow='';
+    let origBodyOverflowX='';
+    const active=()=>page.classList.contains('active') && page.classList.contains('breath-immersive');
+    function sync(){
+      if(moving)return;
+      moving=true;
+      try{
+        if(active()){
+          if(!state.active){
+            origBodyOverflow=document.body.style.overflow;
+            origHtmlOverflow=document.documentElement.style.overflow;
+            origBodyOverflowX=document.body.style.overflowX;
+          }
+          if(page.parentElement!==document.body)document.body.appendChild(page);
+          document.body.classList.add('mur-breath-viewport-v82');
+          document.body.style.setProperty('overflow','hidden');
+          document.documentElement.style.setProperty('overflow','hidden');
+          document.body.style.setProperty('overflow-x','hidden');
+          state.active=true;
+        }else{
+          if(page.parentNode!==anchor.parentNode && anchor.parentNode){anchor.parentNode.insertBefore(page,anchor.nextSibling);}
+          document.body.classList.remove('mur-breath-viewport-v82');
+          if(state.active){
+            document.body.style.overflow=origBodyOverflow;
+            document.documentElement.style.overflow=origHtmlOverflow;
+            document.body.style.overflowX=origBodyOverflowX;
+          }
+          state.active=false;
+        }
+      }finally{moving=false;}
+    }
+    const observer=new MutationObserver(sync);
+    observer.observe(page,{attributes:true,attributeFilter:['class']});
+    // Lorsque la navigation change d'onglet, l'original doit rester
+    // dans le DOM de l'application après disparition de l'immersion.
+    sync();
+    window.addEventListener('pagehide',()=>{
+      observer.disconnect();
+      page.classList.remove('breath-immersive');
+      sync();
+    },{once:true});
+  }
+  const css=document.createElement('style');
+  css.id='mur-breath-viewport-v82-css';
+  css.textContent=`
+    body > #breath.page.active.breath-immersive {
+      position:fixed!important;inset:0!important;top:0!important;left:0!important;
+      right:0!important;bottom:0!important;
+      width:100vw!important;height:100vh!important;height:100dvh!important;
+      margin:0!important;transform:none!important;translate:none!important;
+      overflow:hidden!important;z-index:2147482000!important;
+      padding:clamp(12px,2.4dvh,26px)!important;
+      background:radial-gradient(ellipse at 50% 43%,#142e45 0%,#071525 65%,#050c18 100%)!important;
+      box-sizing:border-box!important;
+    }
+    body > #breath.page.active.breath-immersive > section.card:last-child {
+      position:relative!important;left:auto!important;top:auto!important;
+      width:min(100%,760px)!important;height:100%!important;
+      margin:0 auto!important;transform:none!important;
+      overflow:hidden!important;
+    }
+    body > #breath.page.active.breath-immersive .breath-stage {
+      left:50%!important;top:44%!important;
+      transform:translate(-50%,-50%)!important;
+      height:var(--mur-breath-v79-size)!important;
+    }
+    /* Force la taille du conteneur en restant sous la marge d'expansion x1,44. */
+    @media(min-width:768px){
+      body > #breath.page.active.breath-immersive {
+        --mur-breath-v79-size:min(32vw,27dvh,260px,calc((100dvh - 235px) / 1.44))!important;
+      }
+    }
+    @media(max-width:767px){
+      body > #breath.page.active.breath-immersive {
+        --mur-breath-v79-size:min(58vw,35dvh,280px)!important;
+      }
+    }
+  `;
+  document.head.appendChild(css);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
