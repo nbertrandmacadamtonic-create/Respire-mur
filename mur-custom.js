@@ -2589,3 +2589,66 @@ if (typeof window.installPresentationFallback !== 'function') {
   `;
   document.head.appendChild(css);
 })();
+
+
+/* ================================================================
+   M.U.R. V81 — CORRECTION DU DEBORDEMENT PLEIN ECRAN SUR ORDINATEUR
+   Base : V79, sans les changements de couleur V80.
+   L'inspiration peut agrandir l'orbe jusqu'a scale(1.44) :
+   la taille au repos et son anneau tiennent compte de cette amplitude.
+   Aucune modification sur les telephones ni sur les autres pages.
+   ================================================================ */
+(() => {
+  'use strict';
+  if (document.getElementById('mur-breath-desktop-fit-v81')) return;
+  const css = document.createElement('style');
+  css.id = 'mur-breath-desktop-fit-v81';
+  css.textContent = `
+    @media (min-width: 768px) and (min-height: 430px) {
+      #breath.page.active.breath-immersive {
+        /* 1.44 x la taille au repos doit tenir dans la zone centrale. */
+        --mur-breath-v79-size: min(34vw, 28dvh, 255px, calc((100dvh - 240px) / 1.44)) !important;
+        --mur-breath-v79-middle: 44%;
+      }
+      #breath.page.active.breath-immersive .breath-stage {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: var(--mur-breath-v79-size) !important;
+        max-height: var(--mur-breath-v79-size) !important;
+        overflow: visible !important;
+      }
+      #breath.page.active.breath-immersive #orb.mur-breath-particle-orb {
+        width: var(--mur-breath-v79-size) !important;
+        height: var(--mur-breath-v79-size) !important;
+        flex: 0 0 auto !important;
+        transform-origin: center center !important;
+      }
+      #breath.page.active.breath-immersive .breath-stage > svg.ring {
+        width: calc(var(--mur-breath-v79-size) * 1.40) !important;
+        height: calc(var(--mur-breath-v79-size) * 1.40) !important;
+        max-width: calc(100vw - 40px) !important;
+        max-height: calc(100dvh - 180px) !important;
+      }
+      #breath.page.active.breath-immersive #phaseText.mur-breath-label-v53 {
+        top: calc(44% + var(--mur-breath-v79-size) * .78 + 10px) !important;
+      }
+      #breath.page.active.breath-immersive #phaseHint {
+        top: calc(44% + var(--mur-breath-v79-size) * .78 + 61px) !important;
+      }
+    }
+    @media (min-width: 768px) and (max-height: 600px) {
+      #breath.page.active.breath-immersive {
+        --mur-breath-v79-size: min(30vw, 23dvh, 190px) !important;
+        --mur-breath-v79-middle: 42%;
+      }
+      #breath.page.active.breath-immersive #phaseText.mur-breath-label-v53 {
+        top: calc(42% + var(--mur-breath-v79-size) * .78 + 9px) !important;
+      }
+      #breath.page.active.breath-immersive #phaseHint {
+        top: calc(42% + var(--mur-breath-v79-size) * .78 + 50px) !important;
+      }
+    }
+  `;
+  document.head.appendChild(css);
+  window.MUR_BREATH_DESKTOP_FIT_V81={version:81,base:79,maxInhaleScale:1.44};
+})();
