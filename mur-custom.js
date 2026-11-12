@@ -2312,446 +2312,128 @@ if (typeof window.installPresentationFallback !== 'function') {
 })();
 
 
+
+
 /* ================================================================
-   M.U.R. V77 — RESPIRATION IMMERSIVE PLEIN ECRAN
-   Ne s'active QUE pendant une séance native (#breath.breath-immersive).
-   L'orbe multipoints NeuroFlex conserve son mouvement, son son et ses
-   commandes : pas de changement des durées ou de la navigation JS.
+   M.U.R. V84 — RESPIRATION PLEIN ECRAN, UN SEUL LAYOUT
+   Rétablit la carte native : aucun portail ni déplacement DOM.
+   Remplace les couches de styles V77/V79/V81/V82/V83 ; conserve
+   la couleur NeuroFlex, les rythmes, les sons et le geste tactile.
    ================================================================ */
 (() => {
   'use strict';
-  if (window.MUR_BREATH_FULLSCREEN_V77) return;
-  window.MUR_BREATH_FULLSCREEN_V77 = {version:77,mode:'immersive-full-viewport',color:'NeuroFlex'};
-  if (document.getElementById('mur-breath-fullscreen-v77-css')) return;
-  const style = document.createElement('style');
-  style.id = 'mur-breath-fullscreen-v77-css';
-  style.textContent = `
-    /* Aucun impact sur les pages tant que Respiration n'est pas en cours. */
+  if(window.MUR_BREATH_FULLSCREEN_V84) return;
+  window.MUR_BREATH_FULLSCREEN_V84={version:84,mode:'fixed-native-card',reparenting:false};
+  const style=document.createElement('style');
+  style.id='mur-breath-fullscreen-v84-css';
+  style.textContent=`
+    /* Le premier panneau de réglages est seulement masqué en séance. */
     #breath.page.active.breath-immersive{
-      position:fixed!important;
-      inset:0!important;
-      width:100vw!important;
-      height:100dvh!important;
-      min-height:0!important;
-      max-height:100dvh!important;
-      margin:0!important;
-      padding:calc(11px + env(safe-area-inset-top, 0px)) 12px
-              calc(11px + env(safe-area-inset-bottom, 0px))!important;
-      z-index:11020!important;
-      overflow:hidden!important;
-      box-sizing:border-box!important;
-      background:radial-gradient(ellipse at 50% 43%,#142e45 0%,#071525 65%,#050c18 100%)!important;
-      overscroll-behavior:contain!important;
+      position:relative!important;inset:auto!important;
+      transform:none!important;overflow:visible!important;
+      z-index:auto!important;
     }
-    /* Le paramétrage se replie uniquement durant la séance. */
-    #breath.page.active.breath-immersive > section.card:first-child{
-      display:none!important;
-    }
+    /* Une UNIQUE carte de séance, fixée à la fenêtre (sans la déplacer). */
     #breath.page.active.breath-immersive > section.card:last-child{
-      position:relative!important;
-      display:flex!important;
-      flex-direction:column!important;
-      align-items:center!important;
-      justify-content:space-between!important;
-      width:100%!important;
-      max-width:760px!important;
-      height:100%!important;
-      min-height:0!important;
-      max-height:100%!important;
-      margin:0 auto!important;
-      padding:clamp(10px,2.3dvh,22px) 8px clamp(8px,1.5dvh,16px)!important;
-      gap:clamp(4px,1.1dvh,11px)!important;
-      overflow:hidden!important;
-      border-radius:24px!important;
+      position:fixed!important;
+      top:0!important;left:0!important;right:0!important;bottom:0!important;
+      inset:0!important;
+      transform:none!important;
+      width:100vw!important;height:100vh!important;height:100dvh!important;
+      min-width:0!important;min-height:0!important;
+      max-width:none!important;max-height:none!important;
+      margin:0!important;
+      padding:clamp(12px,2dvh,22px)!important;
       box-sizing:border-box!important;
-      background:radial-gradient(ellipse at center,rgba(255,255,255,.055),rgba(255,255,255,.012) 65%)!important;
+      display:flex!important;flex-direction:column!important;
+      justify-content:space-between!important;align-items:center!important;
+      gap:clamp(6px,1.4dvh,14px)!important;
+      overflow:hidden!important;
+      z-index:12040!important;
+      border:0!important;border-radius:0!important;
+      background:radial-gradient(ellipse at 50% 45%,#152f46 0%,#091b2e 65%,#050c18 100%)!important;
+      box-shadow:none!important;
+      isolation:isolate!important;
     }
-    #breath.page.active.breath-immersive .mini-info{
-      order:0!important;
-      flex:0 0 auto!important;
-      width:min(100%,360px)!important;
-      max-width:360px!important;
-      margin:0 auto!important;
-      gap:10px!important;
+    #breath.page.active.breath-immersive > section.card:last-child > .mini-info{
+      position:relative!important;inset:auto!important;transform:none!important;
+      display:grid!important;grid-template-columns:1fr 1fr!important;
+      flex:0 0 auto!important;order:0!important;
+      width:min(100%,370px)!important;max-width:370px!important;
+      height:auto!important;margin:0 auto!important;z-index:5!important;
     }
     #breath.page.active.breath-immersive .mini-info .info-box{
-      padding:9px 12px!important;
+      padding:8px 12px!important;
     }
     #breath.page.active.breath-immersive .breath-stage{
-      order:1!important;
-      display:grid!important;
-      place-items:center!important;
-      position:relative!important;
-      flex:1 1 0!important;
-      width:100%!important;
-      height:auto!important;
-      min-height:190px!important;
-      max-height:none!important;
-      padding:0!important;
-      margin:0!important;
-      overflow:visible!important;
+      position:relative!important;inset:auto!important;top:auto!important;left:auto!important;
+      transform:none!important;translate:none!important;
+      order:1!important;flex:1 1 0!important;
+      display:flex!important;align-items:center!important;justify-content:center!important;
+      width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
+      margin:0!important;padding:0!important;
+      overflow:visible!important;z-index:2!important;
     }
-    /* Plus aucune petite taille forcée par les anciens styles d'immersion. */
+    /* L'orb natif est animé par transform:scale() : marge pour scale(1.44). */
     #breath.page.active.breath-immersive #orb.mur-breath-particle-orb{
-      width:min(59vw,38dvh,340px)!important;
-      height:min(59vw,38dvh,340px)!important;
-      min-width:0!important;
-      min-height:0!important;
-      max-width:none!important;
-      max-height:none!important;
-      flex:0 0 auto!important;
-      margin:0!important;
-      padding:0!important;
-      background:transparent!important;
-      box-shadow:none!important;
-      border:0!important;
-      touch-action:manipulation!important;
+      position:relative!important;inset:auto!important;
+      width:min(59vw,39dvh,350px)!important;
+      height:min(59vw,39dvh,350px)!important;
+      min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;
+      flex:0 0 auto!important;margin:0!important;padding:0!important;
+      transform-origin:center center!important;
+      border:0!important;background:transparent!important;box-shadow:none!important;
+      overflow:visible!important;isolation:isolate!important;
     }
-    /* Le suivi circulaire existant est discret : place à la sphère. */
     #breath.page.active.breath-immersive .breath-stage > svg.ring{
-      opacity:.14!important;
-      width:min(83vw,56dvh,500px)!important;
-      height:min(83vw,56dvh,500px)!important;
-      pointer-events:none!important;
+      position:absolute!important;top:50%!important;left:50%!important;
+      width:min(80vw,54dvh,500px)!important;
+      height:min(80vw,54dvh,500px)!important;
+      max-width:none!important;max-height:none!important;
+      transform:translate(-50%,-50%) rotate(-90deg)!important;
+      opacity:.15!important;pointer-events:none!important;
     }
     #breath.page.active.breath-immersive #phaseText.mur-breath-label-v53{
-      order:2!important;
-      flex:0 0 auto!important;
-      margin:0 auto!important;
-      padding:9px 18px!important;
-      font-size:clamp(18px,4.5vw,23px)!important;
-      max-width:90%!important;
-      text-align:center!important;
+      position:relative!important;inset:auto!important;top:auto!important;left:auto!important;
+      transform:none!important;translate:none!important;
+      order:2!important;flex:0 0 auto!important;display:block!important;
+      width:max-content!important;min-width:132px!important;max-width:90%!important;
+      margin:0 auto!important;padding:9px 18px!important;
+      text-align:center!important;font-size:clamp(16px,2.3vw,22px)!important;
+      white-space:nowrap!important;z-index:5!important;
     }
     #breath.page.active.breath-immersive #phaseHint{
-      order:3!important;
-      flex:0 0 auto!important;
-      margin:0 auto!important;
-      width:min(100%,410px)!important;
-      max-width:410px!important;
-      padding:0 4px!important;
-      font-size:clamp(12px,3.2vw,15px)!important;
-      line-height:1.4!important;
-      text-align:center!important;
+      position:relative!important;inset:auto!important;top:auto!important;left:auto!important;
+      transform:none!important;order:3!important;flex:0 0 auto!important;
+      margin:0 auto!important;padding:0 4px!important;
+      width:min(92%,430px)!important;max-width:430px!important;
+      text-align:center!important;font-size:clamp(12px,1.7vw,15px)!important;
+      line-height:1.35!important;z-index:4!important;
     }
     #breath.page.active.breath-immersive .breath-action-row{
-      order:4!important;
-      flex:0 0 auto!important;
-      width:min(100%,360px)!important;
-      max-width:360px!important;
-      margin:0 auto!important;
-      padding:0!important;
-      min-height:42px!important;
-      display:flex!important;
-      justify-content:center!important;
-      align-items:center!important;
+      position:relative!important;inset:auto!important;top:auto!important;left:auto!important;
+      transform:none!important;order:4!important;flex:0 0 auto!important;
+      display:flex!important;justify-content:center!important;align-items:center!important;
+      width:min(100%,380px)!important;min-height:44px!important;
+      margin:0 auto!important;padding:0!important;z-index:5!important;
     }
     #breath.page.active.breath-immersive #stopBreathBtn:not([hidden]){
-      display:block!important;
-      min-height:44px!important;
-      min-width:140px!important;
-      padding:10px 18px!important;
-      border-radius:999px!important;
-      font-weight:800!important;
+      display:block!important;min-height:44px!important;min-width:140px!important;
     }
-    /* Les autres sections ne sont pas modifiées ; la barre s'efface
-       pendant la seule séance plein écran et revient à la fermeture. */
-    body.breath-immersive-global:has(#breath.page.active.breath-immersive) .tabbar{
-      opacity:0!important;
-      visibility:hidden!important;
-      pointer-events:none!important;
-    }
-    /* Le son demeure accessible, au-dessus des particules. */
     #breath.page.active.breath-immersive .orb-sound-btn{
-      z-index:15!important;
-      top:8px!important;
-      right:10px!important;
+      position:absolute!important;top:8px!important;right:8px!important;z-index:7!important;
     }
-    @media (max-height:680px){
+    body.breath-immersive-global .tabbar{
+      opacity:0!important;visibility:hidden!important;pointer-events:none!important;
+    }
+    @media(max-height:560px){
       #breath.page.active.breath-immersive > section.card:last-child{
-        padding:8px 6px!important;
-        gap:3px!important;
+        padding:7px!important;gap:3px!important;
       }
       #breath.page.active.breath-immersive #orb.mur-breath-particle-orb{
-        width:min(58vw,35dvh,300px)!important;
-        height:min(58vw,35dvh,300px)!important;
-      }
-      #breath.page.active.breath-immersive .mini-info .info-box{
-        padding:5px 9px!important;
-      }
-      #breath.page.active.breath-immersive #phaseHint{
-        font-size:12px!important;
-      }
-    }
-    @media (prefers-reduced-motion:reduce){
-      #breath.page.active.breath-immersive .breath-stage > svg.ring{
-        transition:none!important;
+        width:min(48vw,31dvh,230px)!important;height:min(48vw,31dvh,230px)!important;
       }
     }
   `;
   document.head.appendChild(style);
-})();
-
-/* ================================================================
-   M.U.R. V79 — CENTRAGE IMMERSIF RESPIRATION
-   Ne cible que le mode plein écran actif. La sphère est ancrée
-   au centre optique, les informations restent en haut et les
-   commandes en bas. Aucun changement de cycles ni de scores.
-   ================================================================ */
-(() => {
-  'use strict';
-  if (document.getElementById('mur-breath-center-v79-css')) return;
-  const css = document.createElement('style');
-  css.id='mur-breath-center-v79-css';
-  css.textContent=`
-    #breath.page.active.breath-immersive{
-      --mur-breath-v79-size:min(64vw,38dvh,350px);
-      --mur-breath-v79-middle:44%;
-    }
-    #breath.page.active.breath-immersive > section.card:last-child{
-      position:relative!important;
-      display:block!important;
-      padding:0!important;
-      width:100%!important;
-      height:100%!important;
-      overflow:hidden!important;
-    }
-    #breath.page.active.breath-immersive .mini-info{
-      position:absolute!important;
-      top:clamp(10px,2.5dvh,25px)!important;
-      left:50%!important;
-      transform:translateX(-50%)!important;
-      margin:0!important;
-      z-index:4!important;
-    }
-    #breath.page.active.breath-immersive .breath-stage{
-      position:absolute!important;
-      top:var(--mur-breath-v79-middle)!important;
-      left:50%!important;
-      transform:translate(-50%,-50%)!important;
-      display:grid!important;
-      place-items:center!important;
-      width:100%!important;
-      height:var(--mur-breath-v79-size)!important;
-      min-height:0!important;
-      max-height:none!important;
-      margin:0!important;
-      padding:0!important;
-      overflow:visible!important;
-      z-index:2!important;
-    }
-    #breath.page.active.breath-immersive #orb.mur-breath-particle-orb{
-      width:var(--mur-breath-v79-size)!important;
-      height:var(--mur-breath-v79-size)!important;
-      max-width:none!important;
-      max-height:none!important;
-      min-width:0!important;
-      min-height:0!important;
-    }
-    #breath.page.active.breath-immersive .breath-stage > svg.ring{
-      width:calc(var(--mur-breath-v79-size) * 1.40)!important;
-      height:calc(var(--mur-breath-v79-size) * 1.40)!important;
-    }
-    #breath.page.active.breath-immersive #phaseText.mur-breath-label-v53{
-      position:absolute!important;
-      top:calc(var(--mur-breath-v79-middle) + var(--mur-breath-v79-size) * .74 + 10px)!important;
-      left:50%!important;
-      transform:translateX(-50%)!important;
-      margin:0!important;
-      z-index:5!important;
-    }
-    #breath.page.active.breath-immersive #phaseHint{
-      position:absolute!important;
-      top:calc(var(--mur-breath-v79-middle) + var(--mur-breath-v79-size) * .74 + 65px)!important;
-      left:50%!important;
-      transform:translateX(-50%)!important;
-      margin:0!important;
-      width:min(92%,410px)!important;
-      z-index:4!important;
-    }
-    #breath.page.active.breath-immersive .breath-action-row{
-      position:absolute!important;
-      left:50%!important;
-      bottom:clamp(8px,2dvh,22px)!important;
-      transform:translateX(-50%)!important;
-      margin:0!important;
-      z-index:6!important;
-    }
-    @media(max-height:700px){
-      #breath.page.active.breath-immersive{
-        --mur-breath-v79-size:min(63vw,34dvh,300px);
-        --mur-breath-v79-middle:43%;
-      }
-      #breath.page.active.breath-immersive #phaseHint{
-        top:calc(var(--mur-breath-v79-middle) + var(--mur-breath-v79-size) * .74 + 58px)!important;
-      }
-    }
-  `;
-  document.head.appendChild(css);
-})();
-
-
-/* ================================================================
-   M.U.R. V81 — CORRECTION DU DEBORDEMENT PLEIN ECRAN SUR ORDINATEUR
-   Base : V79, sans les changements de couleur V80.
-   L'inspiration peut agrandir l'orbe jusqu'a scale(1.44) :
-   la taille au repos et son anneau tiennent compte de cette amplitude.
-   Aucune modification sur les telephones ni sur les autres pages.
-   ================================================================ */
-(() => {
-  'use strict';
-  if (document.getElementById('mur-breath-desktop-fit-v81')) return;
-  const css = document.createElement('style');
-  css.id = 'mur-breath-desktop-fit-v81';
-  css.textContent = `
-    @media (min-width: 768px) and (min-height: 430px) {
-      #breath.page.active.breath-immersive {
-        /* 1.44 x la taille au repos doit tenir dans la zone centrale. */
-        --mur-breath-v79-size: min(34vw, 28dvh, 255px, calc((100dvh - 240px) / 1.44)) !important;
-        --mur-breath-v79-middle: 44%;
-      }
-      #breath.page.active.breath-immersive .breath-stage {
-        width: 100% !important;
-        max-width: 100% !important;
-        height: var(--mur-breath-v79-size) !important;
-        max-height: var(--mur-breath-v79-size) !important;
-        overflow: visible !important;
-      }
-      #breath.page.active.breath-immersive #orb.mur-breath-particle-orb {
-        width: var(--mur-breath-v79-size) !important;
-        height: var(--mur-breath-v79-size) !important;
-        flex: 0 0 auto !important;
-        transform-origin: center center !important;
-      }
-      #breath.page.active.breath-immersive .breath-stage > svg.ring {
-        width: calc(var(--mur-breath-v79-size) * 1.40) !important;
-        height: calc(var(--mur-breath-v79-size) * 1.40) !important;
-        max-width: calc(100vw - 40px) !important;
-        max-height: calc(100dvh - 180px) !important;
-      }
-      #breath.page.active.breath-immersive #phaseText.mur-breath-label-v53 {
-        top: calc(44% + var(--mur-breath-v79-size) * .78 + 10px) !important;
-      }
-      #breath.page.active.breath-immersive #phaseHint {
-        top: calc(44% + var(--mur-breath-v79-size) * .78 + 61px) !important;
-      }
-    }
-    @media (min-width: 768px) and (max-height: 600px) {
-      #breath.page.active.breath-immersive {
-        --mur-breath-v79-size: min(30vw, 23dvh, 190px) !important;
-        --mur-breath-v79-middle: 42%;
-      }
-      #breath.page.active.breath-immersive #phaseText.mur-breath-label-v53 {
-        top: calc(42% + var(--mur-breath-v79-size) * .78 + 9px) !important;
-      }
-      #breath.page.active.breath-immersive #phaseHint {
-        top: calc(42% + var(--mur-breath-v79-size) * .78 + 50px) !important;
-      }
-    }
-  `;
-  document.head.appendChild(css);
-  window.MUR_BREATH_DESKTOP_FIT_V81={version:81,base:79,maxInhaleScale:1.44};
-})();
-
-
-/* ================================================================
-   M.U.R. V82 — CORRECTION DE POSITIONNEMENT PLEIN ECRAN DESKTOP
-   La séance est provisoirement placée directement sous <body>.
-   Cela évite les repères de positionnement et les décrochages du
-   conteneur .app après défilement. Retour à sa place en sortie.
-   Aucun changement d'index.html, des cycles ni de la couleur.
-   ================================================================ */
-(() => {
-  'use strict';
-  if (window.MUR_BREATH_VIEWPORT_V82) return;
-  const state={version:82,active:false};
-  window.MUR_BREATH_VIEWPORT_V82=state;
-  function init(){
-    const page=document.getElementById('breath');
-    if(!page)return;
-    const anchor=document.createComment('M.U.R. V82 : emplacement Respiration');
-    page.parentNode.insertBefore(anchor,page);
-    let moving=false;
-    let origBodyOverflow='';
-    let origHtmlOverflow='';
-    let origBodyOverflowX='';
-    const active=()=>page.classList.contains('active') && page.classList.contains('breath-immersive');
-    function sync(){
-      if(moving)return;
-      moving=true;
-      try{
-        if(active()){
-          if(!state.active){
-            origBodyOverflow=document.body.style.overflow;
-            origHtmlOverflow=document.documentElement.style.overflow;
-            origBodyOverflowX=document.body.style.overflowX;
-          }
-          if(page.parentElement!==document.body)document.body.appendChild(page);
-          document.body.classList.add('mur-breath-viewport-v82');
-          document.body.style.setProperty('overflow','hidden');
-          document.documentElement.style.setProperty('overflow','hidden');
-          document.body.style.setProperty('overflow-x','hidden');
-          state.active=true;
-        }else{
-          if(page.parentNode!==anchor.parentNode && anchor.parentNode){anchor.parentNode.insertBefore(page,anchor.nextSibling);}
-          document.body.classList.remove('mur-breath-viewport-v82');
-          if(state.active){
-            document.body.style.overflow=origBodyOverflow;
-            document.documentElement.style.overflow=origHtmlOverflow;
-            document.body.style.overflowX=origBodyOverflowX;
-          }
-          state.active=false;
-        }
-      }finally{moving=false;}
-    }
-    const observer=new MutationObserver(sync);
-    observer.observe(page,{attributes:true,attributeFilter:['class']});
-    // Lorsque la navigation change d'onglet, l'original doit rester
-    // dans le DOM de l'application après disparition de l'immersion.
-    sync();
-    window.addEventListener('pagehide',()=>{
-      observer.disconnect();
-      page.classList.remove('breath-immersive');
-      sync();
-    },{once:true});
-  }
-  const css=document.createElement('style');
-  css.id='mur-breath-viewport-v82-css';
-  css.textContent=`
-    body > #breath.page.active.breath-immersive {
-      position:fixed!important;inset:0!important;top:0!important;left:0!important;
-      right:0!important;bottom:0!important;
-      width:100vw!important;height:100vh!important;height:100dvh!important;
-      margin:0!important;transform:none!important;translate:none!important;
-      overflow:hidden!important;z-index:2147482000!important;
-      padding:clamp(12px,2.4dvh,26px)!important;
-      background:radial-gradient(ellipse at 50% 43%,#142e45 0%,#071525 65%,#050c18 100%)!important;
-      box-sizing:border-box!important;
-    }
-    body > #breath.page.active.breath-immersive > section.card:last-child {
-      position:relative!important;left:auto!important;top:auto!important;
-      width:min(100%,760px)!important;height:100%!important;
-      margin:0 auto!important;transform:none!important;
-      overflow:hidden!important;
-    }
-    body > #breath.page.active.breath-immersive .breath-stage {
-      left:50%!important;top:44%!important;
-      transform:translate(-50%,-50%)!important;
-      height:var(--mur-breath-v79-size)!important;
-    }
-    /* Force la taille du conteneur en restant sous la marge d'expansion x1,44. */
-    @media(min-width:768px){
-      body > #breath.page.active.breath-immersive {
-        --mur-breath-v79-size:min(32vw,27dvh,260px,calc((100dvh - 235px) / 1.44))!important;
-      }
-    }
-    @media(max-width:767px){
-      body > #breath.page.active.breath-immersive {
-        --mur-breath-v79-size:min(58vw,35dvh,280px)!important;
-      }
-    }
-  `;
-  document.head.appendChild(css);
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
-  else init();
 })();
