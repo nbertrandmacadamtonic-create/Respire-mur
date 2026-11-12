@@ -2491,3 +2491,101 @@ if (typeof window.installPresentationFallback !== 'function') {
   `;
   document.head.appendChild(style);
 })();
+
+/* ================================================================
+   M.U.R. V79 — CENTRAGE IMMERSIF RESPIRATION
+   Ne cible que le mode plein écran actif. La sphère est ancrée
+   au centre optique, les informations restent en haut et les
+   commandes en bas. Aucun changement de cycles ni de scores.
+   ================================================================ */
+(() => {
+  'use strict';
+  if (document.getElementById('mur-breath-center-v79-css')) return;
+  const css = document.createElement('style');
+  css.id='mur-breath-center-v79-css';
+  css.textContent=`
+    #breath.page.active.breath-immersive{
+      --mur-breath-v79-size:min(64vw,38dvh,350px);
+      --mur-breath-v79-middle:44%;
+    }
+    #breath.page.active.breath-immersive > section.card:last-child{
+      position:relative!important;
+      display:block!important;
+      padding:0!important;
+      width:100%!important;
+      height:100%!important;
+      overflow:hidden!important;
+    }
+    #breath.page.active.breath-immersive .mini-info{
+      position:absolute!important;
+      top:clamp(10px,2.5dvh,25px)!important;
+      left:50%!important;
+      transform:translateX(-50%)!important;
+      margin:0!important;
+      z-index:4!important;
+    }
+    #breath.page.active.breath-immersive .breath-stage{
+      position:absolute!important;
+      top:var(--mur-breath-v79-middle)!important;
+      left:50%!important;
+      transform:translate(-50%,-50%)!important;
+      display:grid!important;
+      place-items:center!important;
+      width:100%!important;
+      height:var(--mur-breath-v79-size)!important;
+      min-height:0!important;
+      max-height:none!important;
+      margin:0!important;
+      padding:0!important;
+      overflow:visible!important;
+      z-index:2!important;
+    }
+    #breath.page.active.breath-immersive #orb.mur-breath-particle-orb{
+      width:var(--mur-breath-v79-size)!important;
+      height:var(--mur-breath-v79-size)!important;
+      max-width:none!important;
+      max-height:none!important;
+      min-width:0!important;
+      min-height:0!important;
+    }
+    #breath.page.active.breath-immersive .breath-stage > svg.ring{
+      width:calc(var(--mur-breath-v79-size) * 1.40)!important;
+      height:calc(var(--mur-breath-v79-size) * 1.40)!important;
+    }
+    #breath.page.active.breath-immersive #phaseText.mur-breath-label-v53{
+      position:absolute!important;
+      top:calc(var(--mur-breath-v79-middle) + var(--mur-breath-v79-size) * .74 + 10px)!important;
+      left:50%!important;
+      transform:translateX(-50%)!important;
+      margin:0!important;
+      z-index:5!important;
+    }
+    #breath.page.active.breath-immersive #phaseHint{
+      position:absolute!important;
+      top:calc(var(--mur-breath-v79-middle) + var(--mur-breath-v79-size) * .74 + 65px)!important;
+      left:50%!important;
+      transform:translateX(-50%)!important;
+      margin:0!important;
+      width:min(92%,410px)!important;
+      z-index:4!important;
+    }
+    #breath.page.active.breath-immersive .breath-action-row{
+      position:absolute!important;
+      left:50%!important;
+      bottom:clamp(8px,2dvh,22px)!important;
+      transform:translateX(-50%)!important;
+      margin:0!important;
+      z-index:6!important;
+    }
+    @media(max-height:700px){
+      #breath.page.active.breath-immersive{
+        --mur-breath-v79-size:min(63vw,34dvh,300px);
+        --mur-breath-v79-middle:43%;
+      }
+      #breath.page.active.breath-immersive #phaseHint{
+        top:calc(var(--mur-breath-v79-middle) + var(--mur-breath-v79-size) * .74 + 58px)!important;
+      }
+    }
+  `;
+  document.head.appendChild(css);
+})();
