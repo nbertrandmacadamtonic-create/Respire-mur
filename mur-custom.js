@@ -1893,14 +1893,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ============================================================
-   M.U.R. V76 — RESPIRATION COULEUR NEUROFLEX EXACTE
+   M.U.R. V85 — RESPIRATION NEUROFLEX PUIS COULEUR DU PROTOCOLE
    950 particules, 3D en rotation lente, dilatation pilotee par
    les phases de respiration existantes (sans modifier les cycles,
    l'audio, les pauses, les commandes ou index.html).
    ============================================================ */
 (() => {
   'use strict';
-  if (window.MUR_BREATH_PARTICLE_ORB_V76) return;
+  if (window.MUR_BREATH_PARTICLE_ORB_V85) return;
   const COUNT = 950;
   const GOLDEN = Math.PI * (3 - Math.sqrt(5));
   const TWO_PI = Math.PI * 2;
@@ -2036,6 +2036,56 @@ if (typeof window.installPresentationFallback !== 'function') {
       if(key.includes('vert')||key.includes('green'))return scorePalette.vert;
       return scorePalette.vert;
     }
+    // V85 — La couleur NeuroFlex est celle d'arrivée sur Respiration.
+    // Une sélection volontaire sur la barre/les cartes prend la couleur du protocole.
+    // La navigation seule ne doit jamais simuler une sélection.
+    const protocolPalette={
+      boost:[59,130,246], '365':[34,197,94], coherence:[34,197,94],
+      square:[34,197,94], regulate:[245,158,11],
+      frein:[239,68,68], '478':[239,68,68], sleep:[99,102,241]
+    };
+    const slider=document.getElementById('breathSlider');
+    const protocol=document.getElementById('protocolSelect');
+    let selectedProtocolColor=null;
+    let displayColor=null,fromColor=null,toColor=null,colorChangedAt=0;
+    function colorForProtocol(){
+      const key=protocol?.value || '365';
+      const activeCard=document.getElementById('breathCard_'+key);
+      const css=activeCard ? getComputedStyle(activeCard).getPropertyValue('--family-color') : '';
+      const rgb=parseRGB(css);
+      if(rgb&&rgb.length===3&&rgb.every(Number.isFinite))return rgb;
+      return protocolPalette[key]||neuroFlexColor();
+    }
+    function beginColorChange(target,now=performance.now()){
+      const next=[...target];
+      if(toColor && next.every((v,i)=>v===toColor[i]))return;
+      fromColor=[...(displayColor||neuroFlexColor())];
+      toColor=next;
+      colorChangedAt=now;
+    }
+    function intentionalSelection(){
+      // Les fonctions natives changeSlider/selectBreath ont mis à jour le select.
+      queueMicrotask(()=>{
+        if(!page.classList.contains('active'))return;
+        selectedProtocolColor=colorForProtocol();
+        beginColorChange(selectedProtocolColor);
+      });
+    }
+    slider?.addEventListener('input',intentionalSelection);
+    slider?.addEventListener('change',intentionalSelection);
+    protocol?.addEventListener('change',intentionalSelection);
+    page.addEventListener('click',e=>{
+      if(e.target.closest?.('.breath-choice'))intentionalSelection();
+    });
+    let pageWasActive=page.classList.contains('active');
+    new MutationObserver(()=>{
+      const active=page.classList.contains('active');
+      if(active&&!pageWasActive){
+        selectedProtocolColor=null;
+        beginColorChange(neuroFlexColor());
+      }
+      pageWasActive=active;
+    }).observe(page,{attributes:true,attributeFilter:['class']});
     function render(t){
       raf = requestAnimationFrame(render);
       if (document.hidden || !page.classList.contains('active')) return;
@@ -2054,8 +2104,15 @@ if (typeof window.installPresentationFallback !== 'function') {
       const cos = Math.cos(angle), sin = Math.sin(angle);
       const tilt = .17;
       const ct=Math.cos(tilt),st=Math.sin(tilt);
-      const base = neuroFlexColor();
-      orb.dataset.murNeuroflexColor=base.join(',');
+      const targetColor=selectedProtocolColor||neuroFlexColor();
+      if(!displayColor){displayColor=[...targetColor];fromColor=[...targetColor];toColor=[...targetColor];}
+      if(targetColor.some((v,i)=>v!==toColor[i]))beginColorChange(targetColor,t);
+      const t01=colorChangedAt ? Math.max(0,Math.min(1,(t-colorChangedAt)/450)) : 1;
+      const smooth=t01*t01*(3-2*t01);
+      displayColor=mix(fromColor,toColor,smooth);
+      const base=displayColor;
+      orb.dataset.murBreathColorMode=selectedProtocolColor?'protocol':'neuroflex';
+      orb.dataset.murNeuroflexColor=neuroFlexColor().join(',');
       const near=tint(base,.42), far=shade(base,.18);
       ctx.globalCompositeOperation='lighter';
       for(const p of points){
@@ -2082,7 +2139,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     }
     raf=requestAnimationFrame(render);
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);raf=0;},{once:true});
-    window.MUR_BREATH_PARTICLE_ORB_V76={points:COUNT, breathingAnimation:'native-orb-transform-enhanced', rotation:'slow', phaseText:'separate-below-orb', color:'neuroflex-score'};
+    window.MUR_BREATH_PARTICLE_ORB_V85={points:COUNT, breathingAnimation:'native-orb-transform-enhanced', rotation:'slow', phaseText:'separate-below-orb', color:'neuroflex-then-user-selected-protocol'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
@@ -2315,17 +2372,17 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ================================================================
-   M.U.R. V84 — RESPIRATION PLEIN ECRAN, UN SEUL LAYOUT
+   M.U.R. V85 — RESPIRATION PLEIN ECRAN AGRANDIE, UN SEUL LAYOUT
    Rétablit la carte native : aucun portail ni déplacement DOM.
    Remplace les couches de styles V77/V79/V81/V82/V83 ; conserve
    la couleur NeuroFlex, les rythmes, les sons et le geste tactile.
    ================================================================ */
 (() => {
   'use strict';
-  if(window.MUR_BREATH_FULLSCREEN_V84) return;
-  window.MUR_BREATH_FULLSCREEN_V84={version:84,mode:'fixed-native-card',reparenting:false};
+  if(window.MUR_BREATH_FULLSCREEN_V85) return;
+  window.MUR_BREATH_FULLSCREEN_V85={version:84,mode:'fixed-native-card',reparenting:false};
   const style=document.createElement('style');
-  style.id='mur-breath-fullscreen-v84-css';
+  style.id='mur-breath-fullscreen-v85-css';
   style.textContent=`
     /* Le premier panneau de réglages est seulement masqué en séance. */
     #breath.page.active.breath-immersive{
@@ -2359,11 +2416,11 @@ if (typeof window.installPresentationFallback !== 'function') {
       position:relative!important;inset:auto!important;transform:none!important;
       display:grid!important;grid-template-columns:1fr 1fr!important;
       flex:0 0 auto!important;order:0!important;
-      width:min(100%,370px)!important;max-width:370px!important;
+      width:min(92%,540px)!important;max-width:540px!important;
       height:auto!important;margin:0 auto!important;z-index:5!important;
     }
     #breath.page.active.breath-immersive .mini-info .info-box{
-      padding:8px 12px!important;
+      padding:clamp(9px,1.5dvh,15px) clamp(14px,2vw,22px)!important;
     }
     #breath.page.active.breath-immersive .breath-stage{
       position:relative!important;inset:auto!important;top:auto!important;left:auto!important;
@@ -2377,8 +2434,8 @@ if (typeof window.installPresentationFallback !== 'function') {
     /* L'orb natif est animé par transform:scale() : marge pour scale(1.44). */
     #breath.page.active.breath-immersive #orb.mur-breath-particle-orb{
       position:relative!important;inset:auto!important;
-      width:min(59vw,39dvh,350px)!important;
-      height:min(59vw,39dvh,350px)!important;
+      width:min(65vw,43dvh,450px)!important;
+      height:min(65vw,43dvh,450px)!important;
       min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;
       flex:0 0 auto!important;margin:0!important;padding:0!important;
       transform-origin:center center!important;
@@ -2406,7 +2463,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       position:relative!important;inset:auto!important;top:auto!important;left:auto!important;
       transform:none!important;order:3!important;flex:0 0 auto!important;
       margin:0 auto!important;padding:0 4px!important;
-      width:min(92%,430px)!important;max-width:430px!important;
+      width:min(92%,620px)!important;max-width:620px!important;
       text-align:center!important;font-size:clamp(12px,1.7vw,15px)!important;
       line-height:1.35!important;z-index:4!important;
     }
@@ -2414,7 +2471,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       position:relative!important;inset:auto!important;top:auto!important;left:auto!important;
       transform:none!important;order:4!important;flex:0 0 auto!important;
       display:flex!important;justify-content:center!important;align-items:center!important;
-      width:min(100%,380px)!important;min-height:44px!important;
+      width:min(92%,520px)!important;min-height:50px!important;
       margin:0 auto!important;padding:0!important;z-index:5!important;
     }
     #breath.page.active.breath-immersive #stopBreathBtn:not([hidden]){
@@ -2432,6 +2489,19 @@ if (typeof window.installPresentationFallback !== 'function') {
       }
       #breath.page.active.breath-immersive #orb.mur-breath-particle-orb{
         width:min(48vw,31dvh,230px)!important;height:min(48vw,31dvh,230px)!important;
+      }
+    }
+
+    @media(max-width:720px){
+      #breath.page.active.breath-immersive #orb.mur-breath-particle-orb{
+        width:min(59vw,39dvh,350px)!important;
+        height:min(59vw,39dvh,350px)!important;
+      }
+      #breath.page.active.breath-immersive > section.card:last-child > .mini-info{
+        width:min(100%,370px)!important;max-width:370px!important;
+      }
+      #breath.page.active.breath-immersive .breath-action-row{
+        width:min(100%,380px)!important;
       }
     }
   `;
