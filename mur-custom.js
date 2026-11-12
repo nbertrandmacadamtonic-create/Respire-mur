@@ -1610,22 +1610,22 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V54 — SPHERES FIXES, RESPIRER BLANC, SANS LIAISONS
+   M.U.R. V86 — ACCUEIL SPHERES HARMONISEES RESPIRATION
    La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V54)return;
+  if(window.MUR_HOME_FIVE_V86)return;
   const N=2400, PER=350, CENTER_PER=650, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
-    {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[255,45,67]},
-    {key:'tests',fr:'Mesurer',en:'Measure',icon:'⌁',rgb:[24,135,255]},
-    {key:'breath',fr:'Respirer',en:'Breathe',icon:'◌',rgb:[0,235,137]},
-    {key:'exercises',fr:'Exercices',en:'Exercises',icon:'✦',rgb:[255,127,20]},
-    {key:'stats',fr:'Stats',en:'Stats',icon:'▥',rgb:[255,46,138]}
+    {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[239,78,91]},
+    {key:'tests',fr:'Mesurer',en:'Measure',icon:'⌁',rgb:[59,130,246]},
+    {key:'breath',fr:'Respirer',en:'Breathe',icon:'◌',rgb:[34,197,128]},
+    {key:'exercises',fr:'Exercices',en:'Exercises',icon:'✦',rgb:[245,158,68]},
+    {key:'stats',fr:'Stats',en:'Stats',icon:'▥',rgb:[218,94,156]}
   ];
   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
   // Deux populations distinctes : 2400 points de la sphère source et
@@ -1645,10 +1645,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV54)return;
-    circle.dataset.murFiveV54='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV86)return;
+    circle.dataset.murFiveV86='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v54-css';
+    style.id='mur-five-spheres-v86-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1801,9 +1801,14 @@ if (typeof window.installPresentationFallback !== 'function') {
           const x=c[0]+xx*R*perspective*cloudScale;
           const y=c[1]+p.y*R*perspective*cloudScale;
           const depth=(zz+1)/2;
-          ctx.globalAlpha=appear*(.88+.12*depth);
-          ctx.fillStyle=`rgb(${g.rgb.join(',')})`;
-          ctx.beginPath();ctx.arc(x,y,1.0+depth*1.3,0,TAU);ctx.fill();
+          // Profondeur et lumière identiques au langage visuel de Respiration :
+          // points lointains plus sombres, points proches adoucis.
+          const tone=.64+.36*depth;
+          const shade=g.rgb.map(v=>Math.round(v*tone));
+          const lit=shade.map(v=>Math.round(v+(255-v)*(.05+.19*depth)));
+          ctx.globalAlpha=appear*(.50+.42*depth);
+          ctx.fillStyle=`rgb(${lit.join(',')})`;
+          ctx.beginPath();ctx.arc(x,y,.85+depth*1.28,0,TAU);ctx.fill();
         }
         ctx.restore();
       }
@@ -1847,7 +1852,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V54={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'static-four-spheres-no-links-white-breath-no-red-halo'};
+    window.MUR_HOME_FIVE_V86={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'static-four-spheres-no-links-white-breath-no-red-halo'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
