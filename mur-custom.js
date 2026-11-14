@@ -2651,7 +2651,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const first=page.querySelector('.card');if(first)first.appendChild(box);}
     if(!state){box.innerHTML='<p class="help" style="margin-top:15px">Votre avatar apparaîtra après le test ki.S.</p>';return}
     const status=state.zone?'Ici & Maintenant : zone '+state.zone+'.':'Réalisez Ici & Maintenant pour colorer votre avatar.';
-    box.innerHTML=`<div class="mur-v90-profile">${avatarHTML(state)}<div><small>MON PROFIL ki.S</small><strong>${state.title}</strong><p>${status}</p><small>${state.legacy?'Ancien résultat : refaites ki.S pour un calcul sur les 15 réponses.':'Profil de fond : évolue lorsque vous refaites ki.S.'}</small></div></div>`;
+    box.innerHTML=`<div class="mur-v90-profile">${avatarHTML(state)}<div><small>MON PROFIL ki.S</small><strong>${state.title}</strong><p>${status}</p><small>${state.legacy?'Ancien résultat : refaites ki.S pour un calcul sur les 15 réponses.':'Profil de fond : évolue lorsque vous refaites ki.S.'}</small><button type="button" class="mur-v95-open" data-mur-v95-open>Voir ma carte ki.S</button></div></div>`;
   }
   window.MUR_KIS_V90_RENDER_AVATAR=renderAvatar;
   // Interception minimale : on garde le moteur et les fonctions de synthèse existants.
@@ -2966,4 +2966,194 @@ if (typeof window.installPresentationFallback !== 'function') {
     }
   `;
   document.head.appendChild(css);
+})();
+
+
+/* M.U.R. V95 — carte complète accessible depuis Mon profil ki.S.
+   Dialogue autonome: recto/verso, retour vers Profil, sans relancer le test. */
+(function(){
+  'use strict';
+  if(document.getElementById('mur-v95-profile-style'))return;
+  const names={pose:'Le Posé',funambule:'Le Funambule',fonceur:'Le Fonceur',pose_funambule:'Le Posé–Funambule',pose_fonceur:'Le Posé–Fonceur',funambule_fonceur:'Le Funambule–Fonceur',equilibre:'L’Équilibré'};
+  const legacy=n=>n>=8?'pose':n>2?'pose_funambule':n<=-8?'fonceur':n<-2?'funambule_fonceur':'funambule';
+  function profile(){
+    let k;try{k=JSON.parse(localStorage.getItem('murKis')||'null')}catch(_){return null}
+    if(!k)return null;
+    const key=names[k.cardKey]?k.cardKey:legacy(Number(k.score)||0);
+    return {key,title:names[key]};
+  }
+  const css=document.createElement('style');css.id='mur-v95-profile-style';css.textContent=`
+    #mur-v90-profile-card .mur-v95-open{display:block;margin:11px 0 0;padding:9px 13px;min-height:42px;border-radius:12px;background:#15495c;color:#f2fbff;border:1px solid #639cae;cursor:pointer;font-size:14px;font-weight:650}
+    #mur-v90-profile-card .mur-v95-open:focus-visible{outline:2px solid #9ce9ed;outline-offset:3px}
+    #mur-v95-profile-modal{position:fixed!important;inset:0!important;z-index:2147483000!important;display:none;align-items:center;justify-content:center;background:rgba(4,13,23,.97);padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(10px + env(safe-area-inset-bottom,0px));box-sizing:border-box;overscroll-behavior:contain}
+    #mur-v95-profile-modal.mur-v95-visible{display:flex!important}
+    #mur-v95-profile-modal .mur-v95-content{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:8px;width:min(100%,480px);height:100%;max-height:100%;min-height:0;box-sizing:border-box;color:#eaf7fc}
+    #mur-v95-profile-modal .mur-v95-head{width:100%;flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px}
+    #mur-v95-profile-modal .mur-v95-title{font-size:clamp(14px,2.3vh,19px);line-height:1.2;margin:0;text-align:center;color:#edf8fb}
+    #mur-v95-profile-modal button{appearance:none;border:1px solid rgba(105,182,199,.7);background:#123a4e;color:#fff;border-radius:11px;min-height:40px;padding:9px 14px;font:600 14px/1.2 inherit;cursor:pointer}
+    #mur-v95-profile-modal button:focus-visible{outline:2px solid #b0e9f5;outline-offset:2px}
+    #mur-v95-profile-modal .mur-v95-image-btn{flex:1 1 auto;min-height:0;min-width:0;max-width:100%;padding:0;border:0;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    #mur-v95-profile-modal .mur-v95-image{display:block;width:auto;height:auto;max-height:100%;max-width:100%;object-fit:contain;border-radius:16px;box-shadow:0 8px 28px #0007}
+    #mur-v95-profile-modal .mur-v95-foot{width:100%;display:flex;justify-content:center;flex:0 0 auto;padding-bottom:2px}
+    #mur-v95-profile-modal .mur-v95-flip{min-width:135px}
+    @media(max-height:600px){#mur-v95-profile-modal{padding-top:6px;padding-bottom:6px}#mur-v95-profile-modal .mur-v95-head button,#mur-v95-profile-modal .mur-v95-foot button{min-height:34px;padding:5px 10px}}
+  `;document.head.appendChild(css);
+  const modal=document.createElement('section');modal.id='mur-v95-profile-modal';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','Ma carte de personnalité ki.S');modal.setAttribute('aria-hidden','true');
+  modal.innerHTML=`<div class="mur-v95-content"><div class="mur-v95-head"><button type="button" data-v95-close aria-label="Retour au profil">← Mon profil</button><h2 class="mur-v95-title"></h2><span style="width:80px;flex:none"></span></div><button type="button" class="mur-v95-image-btn" data-v95-flip aria-label="Retourner la carte"><img class="mur-v95-image" alt="Carte ki.S"></button><div class="mur-v95-foot"><button type="button" class="mur-v95-flip" data-v95-flip>Voir le verso</button></div></div>`;
+  document.body.appendChild(modal);
+  let current=null,side='recto',previousFocus=null;
+  function update(){
+    if(!current)return;
+    const img=modal.querySelector('.mur-v95-image');
+    img.src='images/kis/'+current.key+'-'+side+'.webp';
+    img.alt=(side==='recto'?'Recto':'Verso')+' de la carte '+current.title;
+    modal.querySelector('.mur-v95-title').textContent=current.title;
+    modal.querySelector('.mur-v95-flip').textContent=side==='recto'?'Voir le verso':'Voir le recto';
+  }
+  function open(){
+    current=profile();if(!current)return;
+    previousFocus=document.activeElement;
+    side='recto';update();
+    modal.classList.add('mur-v95-visible');modal.setAttribute('aria-hidden','false');
+    modal.querySelector('[data-v95-close]').focus();
+  }
+  function close(){
+    modal.classList.remove('mur-v95-visible');modal.setAttribute('aria-hidden','true');
+    current=null;
+    if(previousFocus&&previousFocus.isConnected&&typeof previousFocus.focus==='function')previousFocus.focus();
+  }
+  document.addEventListener('click',function(e){
+    const openBtn=e.target.closest('[data-mur-v95-open]');
+    if(openBtn){e.preventDefault();e.stopImmediatePropagation();open();return;}
+    if(!modal.classList.contains('mur-v95-visible'))return;
+    if(e.target.closest('[data-v95-close]')){e.preventDefault();e.stopImmediatePropagation();close();return;}
+    if(e.target.closest('[data-v95-flip]')){e.preventDefault();e.stopImmediatePropagation();side=side==='recto'?'verso':'recto';update();return;}
+    if(e.target===modal){e.preventDefault();close();}
+  },true);
+  document.addEventListener('keydown',function(e){
+    if(!modal.classList.contains('mur-v95-visible'))return;
+    if(e.key==='Escape'){e.preventDefault();close();return;}
+    if(e.key==='Tab'){
+      const controls=Array.from(modal.querySelectorAll('button'));
+      if(e.shiftKey&&document.activeElement===controls[0]){e.preventDefault();controls[controls.length-1].focus()}
+      else if(!e.shiftKey&&document.activeElement===controls[controls.length-1]){e.preventDefault();controls[0].focus()}
+    }
+  });
+})();
+
+
+/* ==============================================================
+   M.U.R. V96 — Ici & Maintenant : quatre panneaux et sphères
+   multipoints (pur habillage ; valeurs, calcul et validation intacts).
+   ============================================================== */
+(function(){
+ 'use strict';
+ if(window.MUR_NOW_V96)return;
+ window.MUR_NOW_V96=true;
+ const specs=[
+   {id:'nowEnergy',box:'nowIntensity_energy',cls:'energy',name:'Énergie',color:'#d9a46c'},
+   {id:'nowBreath',box:'nowIntensity_breath',cls:'breath',name:'Respiration',color:'#61c4bc'},
+   {id:'nowMind',box:'nowIntensity_mind',cls:'mind',name:'Mental',color:'#9884cb'},
+   {id:'nowBody',box:'nowIntensity_body',cls:'body',name:'Corps',color:'#78b994'}
+ ];
+ const css=document.createElement('style');css.id='mur-now-v96-style';
+ css.textContent=`
+   #testNow .card{background:linear-gradient(160deg,#0a243b 0%,#0a1b2e 58%,#0b2135 100%)!important;border:1px solid rgba(89,160,200,.3)!important;box-shadow:inset 0 0 30px rgba(40,124,177,.055)!important}
+   #testNow .test-page-status{position:relative;isolation:isolate;padding:2px 5px 8px!important;margin-bottom:5px!important}
+   #testNow .test-page-status::after{content:'';position:absolute;pointer-events:none;right:12px;top:-7px;width:112px;height:82px;border-radius:50%;background:radial-gradient(ellipse,rgba(48,126,193,.16),transparent 72%);z-index:-1}
+   #testNow .page-title h2{font-weight:850!important;letter-spacing:-.035em!important;font-size:clamp(26px,5.7vw,36px)!important}
+   #testNow .page-title .title-sub{font-size:13px!important;opacity:.8}
+   #testNow .mur-now-v96-grid{display:flex;flex-direction:column;gap:8px}
+   #testNow .mur-now-v96-panel{--mur-panel-color:#65bcc6;display:grid;grid-template-columns:58px minmax(0,1fr);column-gap:10px;align-items:center;position:relative;padding:9px 11px!important;border-radius:20px;border:1px solid rgba(111,170,211,.26);background:linear-gradient(135deg,rgba(19,53,80,.82),rgba(9,33,55,.9));box-shadow:inset 0 1px 0 rgba(255,255,255,.035);min-width:0}
+   #testNow .mur-now-v96-panel::after{content:'';pointer-events:none;position:absolute;right:10px;top:7px;width:52px;height:28px;opacity:.26;background:radial-gradient(ellipse,var(--mur-panel-color),transparent 65%);filter:blur(12px)}
+   #testNow .mur-now-v96-symbol{width:56px;height:56px;display:flex;align-items:center;justify-content:center;grid-column:1;grid-row:1/3;align-self:center;overflow:hidden;position:relative}
+   #testNow .mur-now-v96-symbol canvas{display:block;width:56px;height:56px}
+   #testNow .mur-now-v96-panel .scale{grid-column:2;grid-row:1;min-width:0;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;position:relative}
+   #testNow .mur-now-v96-panel .scale label.mini-label{display:block!important;font-size:15px!important;line-height:1.15!important;font-weight:760!important;color:#f0f6fa!important;margin:0 0 11px!important;letter-spacing:0!important}
+   #testNow .mur-now-v96-slider-wrap{position:relative;width:100%;height:22px;display:flex;align-items:center}
+   #testNow .mur-now-v96-slider-wrap input[type=range]{position:relative;z-index:2;display:block;width:100%;height:12px!important;margin:0!important;padding:0!important;cursor:pointer;border-radius:999px;background:linear-gradient(90deg,#368cf1 0%,#21b7a9 24%,#32c66a 42%,#d0cc3c 57%,#f19d36 76%,#e9545c 100%)!important;outline-offset:6px}
+   #testNow .mur-now-v96-slider-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none!important;appearance:none!important;width:31px!important;height:31px!important;border-radius:50%!important;background:transparent!important;border:0!important;box-shadow:none!important}
+   #testNow .mur-now-v96-slider-wrap input[type=range]::-moz-range-thumb{width:31px!important;height:31px!important;border-radius:50%!important;background:transparent!important;border:0!important;box-shadow:none!important}
+   #testNow .mur-now-v96-thumb{position:absolute;top:50%;left:50%;width:40px;height:40px;transform:translate(-50%,-50%);pointer-events:none;z-index:3;filter:drop-shadow(0 0 5px rgba(75,160,246,.55));transition:left .12s ease-out}
+   #testNow .mur-now-v96-thumb canvas{display:block;width:40px;height:40px}
+   #testNow .mur-now-v96-panel .now-intensity{grid-column:2;grid-row:2;min-width:0;display:block!important;margin:9px 0 0!important;padding:6px 10px!important;border:1px solid rgba(139,183,213,.2)!important;border-radius:12px!important;background:rgba(188,209,237,.085)!important;box-shadow:none!important;line-height:1.23!important}
+   #testNow .mur-now-v96-panel .now-intensity-top{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:0!important}
+   #testNow .mur-now-v96-panel .now-intensity-top span:first-child{font-size:12.5px!important;font-weight:800!important;color:#f7fbff!important;line-height:1.2!important}
+   #testNow .mur-now-v96-panel .now-intensity-top span:last-child{font-size:11px!important;color:#b9cbd8!important;line-height:1.2!important;opacity:1!important}
+   #testNow .mur-now-v96-panel:focus-within{border-color:rgba(142,202,242,.6)}
+   #testNow .mur-now-v96-panel .scale input[type=range]:focus-visible{outline:2px solid #e0f9ff}
+   @media(min-width:680px){#testNow .mur-now-v96-panel{grid-template-columns:74px minmax(0,1fr);padding:12px 18px!important;column-gap:14px}#testNow .mur-now-v96-symbol,#testNow .mur-now-v96-symbol canvas{width:70px;height:70px}#testNow .mur-now-v96-panel .scale label.mini-label{font-size:17px!important}#testNow .mur-now-v96-panel .now-intensity{padding:8px 12px!important}}
+   @media(max-width:390px){#testNow .mur-now-v96-grid{gap:6px}#testNow .mur-now-v96-panel{grid-template-columns:45px minmax(0,1fr);column-gap:8px;padding:7px 9px!important;border-radius:16px}#testNow .mur-now-v96-symbol,#testNow .mur-now-v96-symbol canvas{width:45px;height:45px}#testNow .mur-now-v96-panel .scale label.mini-label{margin-bottom:8px!important;font-size:14px!important}#testNow .mur-now-v96-panel .now-intensity{margin-top:7px!important;padding:5px 8px!important}#testNow .mur-now-v96-thumb,#testNow .mur-now-v96-thumb canvas{height:35px;width:35px}}
+   @media(prefers-reduced-motion:reduce){#testNow .mur-now-v96-thumb{transition:none}}
+ `;
+ document.head.appendChild(css);
+ let drawings=[];
+ function init(){
+   const root=document.querySelector('#testNow .card');
+   if(!root||root.querySelector('.mur-now-v96-grid'))return;
+   const first=document.getElementById(specs[0].id)?.closest('.scale');
+   if(!first)return;
+   const grid=document.createElement('div');grid.className='mur-now-v96-grid';root.insertBefore(grid,first);
+   for(const spec of specs){
+     const input=document.getElementById(spec.id),scale=input?.closest('.scale'),info=document.getElementById(spec.box);
+     if(!input||!scale||!info)continue;
+     const panel=document.createElement('div');panel.className='mur-now-v96-panel mur-now-v96-'+spec.cls;
+     panel.style.setProperty('--mur-panel-color',spec.color);
+     const icon=document.createElement('div');icon.className='mur-now-v96-symbol';icon.setAttribute('aria-hidden','true');
+     const ic=document.createElement('canvas');ic.width=140;ic.height=140;icon.appendChild(ic);
+     const wrap=document.createElement('div');wrap.className='mur-now-v96-slider-wrap';
+     input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
+     const thumb=document.createElement('span');thumb.className='mur-now-v96-thumb';thumb.setAttribute('aria-hidden','true');
+     const tc=document.createElement('canvas');tc.width=96;tc.height=96;thumb.appendChild(tc);wrap.appendChild(thumb);
+     grid.appendChild(panel);panel.append(icon,scale,info);
+     const label=scale.querySelector('label');if(label){label.setAttribute('for',spec.id);label.textContent=spec.name;}
+     const update=()=>{
+       const min=Number(input.min)||0,max=Number(input.max)||4,range=Math.max(.001,max-min);
+       const pct=Math.max(0,Math.min(1,(Number(input.value)-min)/range));
+       // The visual thumb centre travels from half of native thumb width to the other edge.
+       thumb.style.left='calc('+ (pct*100).toFixed(2)+'% + '+ (15.5-31*pct).toFixed(2)+'px)';
+     };
+     input.addEventListener('input',update);input.addEventListener('change',update);
+     drawings.push({ctx:ic.getContext('2d'),canvas:ic, color:spec.color,seed:spec.cls,thumb:false});
+     drawings.push({ctx:tc.getContext('2d'),canvas:tc,color:'#7bc5f4',seed:spec.cls+'thumb',thumb:true});
+     update();
+   }
+   if(!drawings.length)return;
+   const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+   let raf=0,last=0;
+   function frame(t){
+     const active=document.querySelector('#testNow')?.offsetParent!==null&&!document.hidden;
+     if(active&&(t-last>45||reduced)){
+       last=t;
+       for(const d of drawings)draw(d,reduced?0:t*.00020);
+     }
+     if(!reduced)raf=requestAnimationFrame(frame);
+   }
+   if(reduced){for(const d of drawings)draw(d,0)}
+   else raf=requestAnimationFrame(frame);
+ }
+ function draw(d,phase){
+   const {ctx,canvas,color,thumb,seed}=d;if(!ctx)return;
+   const s=canvas.width,cx=s/2,cy=s/2,R=s*(thumb?.39:.38);
+   ctx.clearRect(0,0,s,s);
+   const glow=ctx.createRadialGradient(cx,cy,3,cx,cy,R*1.23);
+   glow.addColorStop(0,'rgba(15,54,83,.45)');glow.addColorStop(.65,'rgba(11,31,54,.27)');glow.addColorStop(1,'rgba(11,31,54,0)');
+   ctx.fillStyle=glow;ctx.beginPath();ctx.arc(cx,cy,R*1.21,0,Math.PI*2);ctx.fill();
+   const n=thumb?92:220;let lum=[];
+   const rotate=phase+(seed.length*.49), cs=Math.cos(rotate),sn=Math.sin(rotate);
+   for(let i=0;i<n;i++){
+     const y=1-2*(i+.5)/n, rr=Math.sqrt(1-y*y),a=i*2.39996323;
+     const x=rr*Math.cos(a),z=rr*Math.sin(a),xx=x*cs-z*sn,zz=x*sn+z*cs;
+     lum.push({x:cx+R*xx,y:cy+R*y,z:zz});
+   }
+   lum.sort((a,b)=>a.z-b.z);
+   for(const p of lum){
+     const front=(p.z+1)/2;ctx.globalAlpha=.15+.78*front;ctx.fillStyle=color;
+     ctx.beginPath();ctx.arc(p.x,p.y,(thumb?1.4:1.3)+front*(thumb?1.5:1.05),0,Math.PI*2);ctx.fill();
+   }
+   ctx.globalAlpha=1;
+   ctx.strokeStyle=color;ctx.globalAlpha=thumb?.48:.22;ctx.lineWidth=thumb?1.8:1.2;
+   ctx.beginPath();ctx.arc(cx,cy,R*1.045,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
