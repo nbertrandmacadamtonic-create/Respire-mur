@@ -2694,69 +2694,59 @@ if (typeof window.installPresentationFallback !== 'function') {
 })();
 
 
-/* M.U.R. V91 — ki.S : selection explicite puis validation par « Suivant ».
- * Remplace l'avancee automatique apres le choix, sans modifier les scores,
- * les sept cartes, les avatars, ni les autres tests.
- */
+/* M.U.R. V93 — ki.S : une reponse suffit, avance automatique, zero saut sans reponse.
+   Aucun clic de validation supplementaire, resultat affiche apres la 15e reponse. */
 (function(){
   'use strict';
   if(typeof window.answerKis!=='function')return;
+  let transitionPending=false;
   window.answerKis=function(value){
-    if(typeof kisResult!=='undefined' && kisResult){
+    if(typeof kisResult!=='undefined'&&kisResult){
       if(typeof renderKisLocked==='function')renderKisLocked();
       return;
     }
-    if(value!==-1 && value!==0 && value!==1)return;
-    if(typeof kisAnswers==='undefined' || typeof kisIndex==='undefined')return;
-    kisAnswers[kisIndex]=value;
+    if(transitionPending)return;
+    if(value!==-1&&value!==0&&value!==1)return;
+    if(typeof kisAnswers==='undefined'||typeof kisIndex==='undefined')return;
+    const questionIndex=kisIndex;
+    kisAnswers[questionIndex]=value;
     const buttons=Array.from(document.querySelectorAll('#kisBox .kis-choice'));
-    buttons.forEach((button,index)=>{
-      const active=(index===(value===-1?0:value===0?1:2));
-      button.classList.toggle('selected',active);
-      button.setAttribute('aria-pressed',String(active));
+    buttons.forEach((btn,i)=>{
+      const selected=i===(value===-1?0:value===0?1:2);
+      btn.classList.toggle('selected',selected);
+      btn.setAttribute('aria-pressed',String(selected));
     });
     const warning=document.getElementById('kisMissingAnswer');
     if(warning)warning.textContent='';
     if(typeof updateKisValidateState==='function')updateKisValidateState();
-    const nav=document.getElementById('kisNavRow');
-    if(nav){
-      const next=nav.querySelectorAll('button')[1];
-      if(next && kisIndex<14){
-        next.textContent='Valider et continuer';
-        next.disabled=false;
-      }
-    }
+    transitionPending=true;
+    setTimeout(function(){
+      try{
+        if(typeof kisResult!=='undefined'&&kisResult)return;
+        if(kisIndex!==questionIndex)return;
+        if(kisAnswers[questionIndex]===null)return;
+        if(questionIndex<14){
+          kisIndex=questionIndex+1;
+          if(typeof renderKis==='function')renderKis();
+        }else if(kisAnswers.length===15&&kisAnswers.every(v=>v!==null)){
+          if(typeof finishKis==='function')finishKis();
+        }
+      }finally{transitionPending=false;}
+    },240);
   };
-  // La validation reste un geste distinct : appuyer sur le bouton « Suivant ».
-  // Le dernier choix active la validation finale du test par le bouton natif.
+  // Les controles natifs prevKis/nextKis bloquent toujours une question non repondue.
   if(typeof window.renderKis==='function'){
-    const originalRender=window.renderKis;
+    const previous=window.renderKis;
     window.renderKis=function(){
-      const result=originalRender.apply(this,arguments);
-      if(typeof kisResult!=='undefined' && kisResult)return result;
-      const box=document.getElementById('kisBox');
-      if(box && !box.querySelector('.mur-v91-kis-instruction')){
-        const hint=document.createElement('p');
-        hint.className='mur-v91-kis-instruction';
-        hint.style.cssText='font-size:13px;opacity:.78;text-align:center;margin:12px auto 0;line-height:1.4';
-        hint.textContent='Choisissez une réponse, puis validez-la pour continuer.';
-        box.appendChild(hint);
-      }
-      const nav=document.getElementById('kisNavRow');
-      if(nav){
-        const next=nav.querySelectorAll('button')[1];
-        if(next && typeof kisIndex!=='undefined' && kisIndex<14)
-          next.textContent='Valider et continuer';
-      }
-      const finish=document.getElementById('kisValidateBtn');
-      if(finish && typeof kisIndex!=='undefined')
-        finish.style.display=kisIndex===14?'block':'none';
-      return result;
+      const ret=previous.apply(this,arguments);
+      const label=document.querySelector('#kisNavRow button:nth-child(2)');
+      if(label&&typeof kisIndex!=='undefined')label.textContent=kisIndex===14?'Dernière question':'Suivant';
+      const validate=document.getElementById('kisValidateBtn');
+      if(validate&&!((typeof kisResult!=='undefined')&&kisResult))validate.style.display='none';
+      return ret;
     };
   }
 })();
-
-
 
 /* M.U.R. V92 — Cartes ki.S reconstruites et interaction fiable.
    Les sept categories et les avatars V90 restent inchanges. */
