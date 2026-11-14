@@ -3296,7 +3296,7 @@ if (typeof window.installPresentationFallback !== 'function') {
    const glow=ctx.createRadialGradient(cx,cy,3,cx,cy,R*1.23);
    glow.addColorStop(0,'rgba(15,54,83,.45)');glow.addColorStop(.65,'rgba(11,31,54,.27)');glow.addColorStop(1,'rgba(11,31,54,0)');
    ctx.fillStyle=glow;ctx.beginPath();ctx.arc(cx,cy,R*1.21,0,Math.PI*2);ctx.fill();
-   const n=thumb?92:220;let lum=[];
+   const n=thumb?320:220;let lum=[];
    const rotate=phase+(seed.length*.49), cs=Math.cos(rotate),sn=Math.sin(rotate);
    for(let i=0;i<n;i++){
      const y=1-2*(i+.5)/n, rr=Math.sqrt(1-y*y),a=i*2.39996323;
@@ -3306,7 +3306,7 @@ if (typeof window.installPresentationFallback !== 'function') {
    lum.sort((a,b)=>a.z-b.z);
    for(const p of lum){
      const front=(p.z+1)/2;ctx.globalAlpha=.15+.78*front;ctx.fillStyle=color;
-     ctx.beginPath();ctx.arc(p.x,p.y,(thumb?1.4:1.3)+front*(thumb?1.5:1.05),0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(p.x,p.y,(thumb?.78:1.3)+front*(thumb?.82:1.05),0,Math.PI*2);ctx.fill();
    }
    ctx.globalAlpha=1;
    ctx.strokeStyle=color;ctx.globalAlpha=thumb?.48:.22;ctx.lineWidth=thumb?1.8:1.2;
