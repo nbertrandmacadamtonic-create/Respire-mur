@@ -3070,8 +3070,8 @@ if (typeof window.installPresentationFallback !== 'function') {
    ============================================================== */
 (function(){
  'use strict';
- if(window.MUR_NOW_V110)return;
- window.MUR_NOW_V110=true;
+ if(window.MUR_NOW_V112)return;
+ window.MUR_NOW_V112=true;
  const specs=[
    {id:'nowEnergy',box:'nowIntensity_energy',cls:'energy',name:'Énergie',color:'#d9a46c'},
    {id:'nowBreath',box:'nowIntensity_breath',cls:'breath',name:'Respiration',color:'#61c4bc'},
@@ -3223,7 +3223,7 @@ if (typeof window.installPresentationFallback !== 'function') {
  const sliderPalette=['#4a93f0','#2eb8b2','#6dc76a','#eeab3e','#eb5b5d'];
  function hexToRgb(hex){const m=String(hex).trim().match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);return m?{r:parseInt(m[1],16),g:parseInt(m[2],16),b:parseInt(m[3],16)}:{r:123,g:197,b:244};}
  function rgba(hex,a){const c=hexToRgb(hex);return 'rgba('+c.r+','+c.g+','+c.b+','+a+')';}
- function sliderAccent(input){const min=Number(input.min)||0,max=Number(input.max)||4,v=Math.max(min,Math.min(max,Number(input.value)||0));const idx=Math.round(v-min);return sliderPalette[Math.max(0,Math.min(sliderPalette.length-1,idx))];}
+ function sliderAccent(input){const min=Number(input.min)||0,max=Number(input.max)||4,v=Math.max(min,Math.min(max,Number(input.value)||0)),idx=Math.max(0,Math.min(4,Math.round(v-min)));const colours=input.id==='nowBody'?[0,1,2,3,4].map(i=>['#4a93f0','#6dc76a','#6dc76a','#eeab3e','#eb5b5d'][i]):['#4a93f0','#4a93f0','#6dc76a','#eeab3e','#eb5b5d'];return colours[idx];}
  function init(){
    const root=document.querySelector('#testNow .card');
    if(!root||root.querySelector('.mur-now-v96-grid'))return;
@@ -3396,4 +3396,99 @@ if (typeof window.installPresentationFallback !== 'function') {
     refresh();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+
+
+/* ============================================================
+   M.U.R. V112 — Ici & Maintenant: colour specificity and FR/EN
+   20 level labels and 20 hints; scores remain unchanged.
+   ============================================================ */
+(function(){
+  'use strict';
+  if(window.MUR_NOW_TEXT_V112)return;
+  window.MUR_NOW_TEXT_V112=true;
+  const css=document.createElement('style');
+  css.id='mur-now-level-colours-v112';
+  css.textContent=`
+   #testNow .mur-now-v96-panel .now-intensity .now-intensity-top span:first-child {
+     color: var(--mur-panel-color, #6dc76a) !important;
+     text-shadow:0 0 8px color-mix(in srgb, var(--mur-panel-color, #6dc76a) 25%, transparent) !important;
+   }
+   #testNow .mur-now-v96-panel .now-intensity .now-intensity-top span:last-child {
+     color: var(--mur-panel-color, #6dc76a) !important;
+     opacity:.85 !important;
+     text-shadow:none !important;
+   }
+  `;
+  document.head.appendChild(css);
+  const levels={
+    nowEnergy:[
+      ['Très bas','Besoin d’activation douce','Very low','Gentle activation needed'],
+      ['Bas','Relance progressive','Low','Gradual activation'],
+      ['Stable','Zone d’équilibre','Steady','Balanced zone'],
+      ['Élevé','Activation présente','High','Feeling activated'],
+      ['Très élevé','Trop d’activation possible','Very high','Possible overactivation']
+    ],
+    nowBreath:[
+      ['Très lente','Ralentissement marqué','Very slow','Marked slowing'],
+      ['Lente','Respiration basse','Slow','Slow breathing'],
+      ['Stable','Rythme disponible','Steady','Comfortable rhythm'],
+      ['Courte','Tension qui monte','Shallow','Rising tension'],
+      ['Très courte','Alerte respiratoire','Very shallow','Breathing feels strained']
+    ],
+    nowMind:[
+      ['Éteint','Peu d’élan mental','Drained','Low mental energy'],
+      ['Ralenti','Attention basse','Slowed down','Low alertness'],
+      ['Clair','Mental stable','Clear','Steady mind'],
+      ['Chargé','Pensées rapides','Busy','Racing thoughts'],
+      ['Saturé','Trop de bruit intérieur','Overloaded','Mental overload']
+    ],
+    nowBody:[
+      ['Lourd','Tonus bas','Heavy','Low muscle tone'],
+      ['Relâché','Corps calme','Relaxed','Body feels calm'],
+      ['Disponible','Bon appui corporel','Ready','Feeling physically ready'],
+      ['Tendu','Tension présente','Tense','Physical tension'],
+      ['Crispé','Alerte corporelle','Tight','Body feels on alert']
+    ]
+  };
+  const keys={nowEnergy:'nowIntensity_energy',nowBreath:'nowIntensity_breath',nowMind:'nowIntensity_mind',nowBody:'nowIntensity_body'};
+  function isEnglish(){
+    let stored='';
+    try{stored=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||'';}catch(_e){}
+    const choice=document.querySelector('[data-language="en"]');
+    if(choice&&(choice.getAttribute('aria-pressed')==='true'||choice.classList.contains('active')||choice.classList.contains('selected')))return true;
+    const lang=String(stored||document.documentElement.lang||'fr').toLowerCase();
+    return lang.startsWith('en');
+  }
+  let scheduled=false;
+  function refresh(){
+    scheduled=false;
+    const en=isEnglish();
+    for(const [inputId,boxId] of Object.entries(keys)){
+      const input=document.getElementById(inputId),box=document.getElementById(boxId);
+      if(!input||!box)continue;
+      const idx=Math.max(0,Math.min(4,Math.round(Number(input.value)||0)));
+      const item=levels[inputId][idx];
+      const spans=box.querySelectorAll('.now-intensity-top span');
+      const title=en?item[2]:item[0],hint=en?item[3]:item[1];
+      if(spans[0]&&spans[0].textContent!==title)spans[0].textContent=title;
+      if(spans[1]&&spans[1].textContent!==hint)spans[1].textContent=hint;
+      const label=document.querySelector('label[for="'+inputId+'"]');
+      const names={nowEnergy:['Énergie','Energy'],nowBreath:['Respiration','Breathing'],nowMind:['Mental','Mind'],nowBody:['Corps','Body']};
+      if(label){const name=names[inputId][en?1:0];if(label.textContent!==name)label.textContent=name;}
+    }
+  }
+  function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(refresh);}
+  function init(){
+    for(const [inputId,boxId] of Object.entries(keys)){
+      const input=document.getElementById(inputId),box=document.getElementById(boxId);
+      if(input){input.addEventListener('input',schedule);input.addEventListener('change',schedule);}
+      if(box)new MutationObserver(schedule).observe(box,{childList:true,subtree:true,characterData:true});
+    }
+    new MutationObserver(schedule).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    document.addEventListener('click',event=>{if(event.target.closest('[data-language], [data-lang], [onclick*="lang"], [onclick*="Lang"]'))setTimeout(schedule,0);},true);
+    window.addEventListener('storage',schedule);
+    schedule();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
