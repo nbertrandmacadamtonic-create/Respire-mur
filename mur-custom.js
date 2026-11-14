@@ -2830,3 +2830,140 @@ if (typeof window.installPresentationFallback !== 'function') {
  // Sécurité au chargement : miniature aussi pour un résultat ki.S déjà enregistré.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',miniature);else miniature();
 })();
+
+
+/* M.U.R. V94 — ki.S : carte résultat compacte, sans défilement.
+   Miniature dans le bloc réduit uniquement ; la grande carte s'ajuste à la fenêtre.
+   Conserve la navigation V93, le calcul à sept profils et le retournement V92. */
+(function(){
+  'use strict';
+  if(document.getElementById('mur-kis-compact-v94'))return;
+  const css=document.createElement('style');
+  css.id='mur-kis-compact-v94';
+  css.textContent=`
+    /* Répare la règle V92 qui laissait le contenu sortir de la fenêtre. */
+    #testResultView #resultKisBlock.result-step.open{
+      display:flex!important;
+      flex-direction:column!important;
+      align-items:stretch!important;
+      overflow:hidden!important;
+      height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 16px)!important;
+      min-height:0!important;
+      max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 16px)!important;
+      top:calc(env(safe-area-inset-top,0px) + 4px)!important;
+      bottom:auto!important;
+      box-sizing:border-box!important;
+      padding:12px 16px!important;
+      gap:0!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .result-step-side{display:none!important;}
+    #testResultView #resultKisBlock.result-step.open .result-step-body{
+      display:flex!important;
+      flex-direction:column!important;
+      min-height:0!important;
+      flex:1 1 auto!important;
+      overflow:hidden!important;
+      max-height:100%!important;
+      width:100%!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .result-step-top{
+      flex:0 0 auto!important;
+      padding-right:32px!important;
+      gap:5px!important;
+      min-height:28px!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .result-step-top h3{font-size:clamp(16px,2.8vh,22px)!important;line-height:1.1!important;}
+    #testResultView #resultKisBlock.result-step.open .result-main{
+      flex:0 0 auto!important;
+      font-size:clamp(15px,2.8vh,23px)!important;
+      line-height:1.08!important;
+      margin:3px 0!important;
+    }
+    /* Les explications restent sur le verso ; pas de doublons au-dessus. */
+    #testResultView #resultKisBlock.result-step.open #resultKisText,
+    #testResultView #resultKisBlock.result-step.open .result-profile-line{display:none!important;}
+    #testResultView #resultKisBlock.result-step.open #resultKisDetail{
+      display:flex!important;
+      flex:1 1 auto!important;
+      min-height:0!important;
+      width:100%!important;
+      max-height:none!important;
+      overflow:hidden!important;
+      border-top:0!important;
+      padding:0!important;
+      margin:0!important;
+      justify-content:center!important;
+      align-items:stretch!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-card{
+      display:flex!important;
+      flex:1 1 auto!important;
+      flex-direction:column!important;
+      align-items:center!important;
+      justify-content:center!important;
+      min-height:0!important;
+      max-height:100%!important;
+      margin:0 auto!important;
+      padding:3px 0 2px!important;
+      gap:clamp(4px,1vh,9px)!important;
+      box-sizing:border-box!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip{
+      display:flex!important;
+      align-items:center!important;
+      justify-content:center!important;
+      flex:0 1 auto!important;
+      min-height:0!important;
+      max-height:calc(100% - 77px)!important;
+      max-width:min(100%,420px)!important;
+      width:auto!important;
+      height:auto!important;
+      box-shadow:0 9px 20px #0005!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip img{
+      display:block!important;
+      height:auto!important;
+      width:auto!important;
+      max-height:min(58dvh,calc(100dvh - 205px))!important;
+      max-width:min(100%,420px)!important;
+      object-fit:contain!important;
+      aspect-ratio:720/1060!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-hint{
+      flex:0 0 auto!important;
+      font-size:11px!important;
+      line-height:1.15!important;
+      margin:0!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-actions{
+      display:flex!important;
+      flex:0 0 auto!important;
+      gap:7px!important;
+      width:100%!important;
+      margin:0!important;
+      flex-wrap:nowrap!important;
+      justify-content:center!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-actions button{
+      font-size:clamp(10px,1.8vh,13px)!important;
+      padding:6px 9px!important;
+      min-height:36px!important;
+      max-width:55%!important;
+      line-height:1.2!important;
+    }
+    /* Masquer la miniature en grand écran, l'afficher dans le résultat condensé. */
+    #testResultView #resultKisBlock.open .mur-kis-v92-mini{display:none!important;}
+    #testResultView #resultKisBlock:not(.open) .mur-kis-v92-mini{display:inline-flex!important;}
+    @media(max-height:690px){
+      #testResultView #resultKisBlock.result-step.open{padding:7px 12px!important;}
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip img{max-height:min(52dvh,calc(100dvh - 165px))!important;}
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-hint{display:none!important;}
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-actions button{min-height:32px!important;}
+    }
+    @media(max-width:420px){
+      #testResultView #resultKisBlock.result-step.open{width:calc(100vw - 12px)!important;max-width:calc(100vw - 12px)!important;padding:10px 11px!important;}
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip img{max-width:min(78vw,350px)!important;}
+    }
+  `;
+  document.head.appendChild(css);
+})();
