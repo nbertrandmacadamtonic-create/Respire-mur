@@ -3136,6 +3136,63 @@ if (typeof window.installPresentationFallback !== 'function') {
       #testNow .mur-now-v96-panel .mur-now-v96-symbol{width:45px!important;height:45px!important}
    }
  `;
+ css.textContent+=`
+   /* V104 : colonne reservee et centrage reel, independants de la grille native. */
+   #testNow .mur-now-v96-panel{
+     display:block!important;
+     position:relative!important;
+     padding:10px 12px 10px 85px!important;
+     min-height:102px!important;
+     box-sizing:border-box!important;
+   }
+   #testNow .mur-now-v96-panel .mur-now-v96-symbol{
+     position:absolute!important;
+     left:12px!important;
+     top:50%!important;
+     transform:translateY(-50%)!important;
+     width:60px!important;
+     height:60px!important;
+     display:flex!important;
+     align-items:center!important;
+     justify-content:center!important;
+     margin:0!important;
+     padding:0!important;
+     overflow:hidden!important;
+     box-sizing:border-box!important;
+     z-index:1!important;
+   }
+   #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{
+     position:static!important;
+     transform:none!important;
+     display:block!important;
+     width:60px!important;
+     height:60px!important;
+     min-width:60px!important;
+     min-height:60px!important;
+     object-fit:contain!important;
+     object-position:50% 50%!important;
+     margin:0!important;
+     padding:0!important;
+   }
+   #testNow .mur-now-v96-panel .scale,
+   #testNow .mur-now-v96-panel .now-intensity{
+     display:block!important;
+     width:100%!important;
+     max-width:100%!important;
+     min-width:0!important;
+     box-sizing:border-box!important;
+   }
+   @media(min-width:680px){
+     #testNow .mur-now-v96-panel{padding-left:106px!important;min-height:114px!important}
+     #testNow .mur-now-v96-panel .mur-now-v96-symbol{left:18px!important;width:75px!important;height:75px!important}
+     #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{width:75px!important;height:75px!important;min-width:75px!important;min-height:75px!important}
+   }
+   @media(max-width:390px){
+     #testNow .mur-now-v96-panel{padding:8px 9px 8px 65px!important;min-height:95px!important}
+     #testNow .mur-now-v96-panel .mur-now-v96-symbol{left:9px!important;width:46px!important;height:46px!important}
+     #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important}
+   }
+ `;
  document.head.appendChild(css);
  let drawings=[];
  const sliderPalette=['#4a93f0','#2eb8b2','#6dc76a','#eeab3e','#eb5b5d'];
