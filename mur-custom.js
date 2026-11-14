@@ -3065,20 +3065,20 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ==============================================================
-   M.U.R. V105 — Ici & Maintenant : logos alignés sur Énergie, curseurs colorés
+   M.U.R. V108 — Ici & Maintenant : logos sur axe réel des curseurs
    multipoints, avec curseurs qui changent de couleur selon la valeur.
    ============================================================== */
 (function(){
  'use strict';
- if(window.MUR_NOW_V107)return;
- window.MUR_NOW_V107=true;
+ if(window.MUR_NOW_V108)return;
+ window.MUR_NOW_V108=true;
  const specs=[
    {id:'nowEnergy',box:'nowIntensity_energy',cls:'energy',name:'Énergie',color:'#d9a46c'},
    {id:'nowBreath',box:'nowIntensity_breath',cls:'breath',name:'Respiration',color:'#61c4bc'},
    {id:'nowMind',box:'nowIntensity_mind',cls:'mind',name:'Mental',color:'#9884cb'},
    {id:'nowBody',box:'nowIntensity_body',cls:'body',name:'Corps',color:'#78b994'}
  ];
- const css=document.createElement('style');css.id='mur-now-v107-style';
+ const css=document.createElement('style');css.id='mur-now-v108-style';
  css.textContent=`
    /* V107 : disposition unique, sans superposition de règles successives. */
    #testNow .card{background:linear-gradient(160deg,#0a243b 0%,#0a1b2e 58%,#0b2135 100%)!important;border:1px solid rgba(89,160,200,.3)!important;box-shadow:inset 0 0 30px rgba(40,124,177,.055)!important}
@@ -3124,7 +3124,8 @@ if (typeof window.installPresentationFallback !== 'function') {
      margin:0!important;
      padding:0!important;
      overflow:hidden!important;
-     transform:none!important;
+     transform:translateY(var(--mur-icon-axis-shift, 0px))!important;
+     will-change:transform;
    }
    #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{
      position:static!important;
@@ -3202,6 +3203,23 @@ if (typeof window.installPresentationFallback !== 'function') {
  `;
  document.head.appendChild(css);
  let drawings=[];
+ const axes=[];
+ function alignLogoAxes(){
+   for(const entry of axes){
+     const logo=entry.icon,bar=entry.wrap;
+     if(!logo.isConnected||!bar.isConnected)continue;
+     const a=logo.getBoundingClientRect(),b=bar.getBoundingClientRect();
+     if(!a.width||!a.height||!b.width||!b.height)continue;
+     // Undo the current transform before computing a new one, to prevent cumulative drift.
+     const previous=Number(logo.dataset.murAxisShift||0);
+     const unshiftedCenter=a.top+a.height/2-previous;
+     const delta=Math.round((b.top+b.height/2-unshiftedCenter)*10)/10;
+     if(Math.abs(delta-previous)>.3){
+       logo.dataset.murAxisShift=String(delta);
+       logo.style.setProperty('--mur-icon-axis-shift',delta+'px');
+     }
+   }
+ }
  const sliderPalette=['#4a93f0','#2eb8b2','#6dc76a','#eeab3e','#eb5b5d'];
  function hexToRgb(hex){const m=String(hex).trim().match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);return m?{r:parseInt(m[1],16),g:parseInt(m[2],16),b:parseInt(m[3],16)}:{r:123,g:197,b:244};}
  function rgba(hex,a){const c=hexToRgb(hex);return 'rgba('+c.r+','+c.g+','+c.b+','+a+')';}
@@ -3228,6 +3246,7 @@ if (typeof window.installPresentationFallback !== 'function') {
      const thumb=document.createElement('span');thumb.className='mur-now-v96-thumb';thumb.setAttribute('aria-hidden','true');
      const tc=document.createElement('canvas');tc.width=96;tc.height=96;thumb.appendChild(tc);wrap.appendChild(thumb);
      grid.appendChild(panel);panel.append(icon,scale,info);
+     axes.push({icon,wrap});
      const label=scale.querySelector('label');if(label){label.setAttribute('for',spec.id);label.textContent=spec.name;}
      const thumbDraw={ctx:tc.getContext('2d'),canvas:tc,color:'#7bc5f4',seed:spec.cls+'thumb',thumb:true};
      drawings.push(thumbDraw);
@@ -3252,17 +3271,21 @@ if (typeof window.installPresentationFallback !== 'function') {
      update();
    }
    if(!drawings.length)return;
+   // Recalculate when the test page appears and on resize / orientation changes.
+   window.addEventListener('resize',alignLogoAxes,{passive:true});
+   document.addEventListener('visibilitychange',alignLogoAxes,{passive:true});
    const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-   let raf=0,last=0;
+   let raf=0,last=0,lastAlign=-1000;
    function frame(t){
      const active=document.querySelector('#testNow')?.offsetParent!==null&&!document.hidden;
+     if(active&&t-lastAlign>250){lastAlign=t;alignLogoAxes();}
      if(active&&(t-last>45||reduced)){
        last=t;
        for(const d of drawings)draw(d,reduced?0:t*.00020);
      }
      if(!reduced)raf=requestAnimationFrame(frame);
    }
-   if(reduced){for(const d of drawings)draw(d,0)}
+   if(reduced){alignLogoAxes();for(const d of drawings)draw(d,0)}
    else raf=requestAnimationFrame(frame);
  }
  function draw(d,phase){
