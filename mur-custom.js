@@ -3070,8 +3070,8 @@ if (typeof window.installPresentationFallback !== 'function') {
    ============================================================== */
 (function(){
  'use strict';
- if(window.MUR_NOW_V108)return;
- window.MUR_NOW_V108=true;
+ if(window.MUR_NOW_V110)return;
+ window.MUR_NOW_V110=true;
  const specs=[
    {id:'nowEnergy',box:'nowIntensity_energy',cls:'energy',name:'Énergie',color:'#d9a46c'},
    {id:'nowBreath',box:'nowIntensity_breath',cls:'breath',name:'Respiration',color:'#61c4bc'},
@@ -3258,7 +3258,8 @@ if (typeof window.installPresentationFallback !== 'function') {
        info.style.borderColor=rgba(accent,.28);
        info.style.background=rgba(accent,.09);
        const spans=info.querySelectorAll('.now-intensity-top span');
-       if(spans[0])spans[0].style.color=accent;
+       if(spans[0]){spans[0].style.color=accent;spans[0].style.textShadow='0 0 10px '+rgba(accent,.18);}
+       if(spans[1]){spans[1].style.color=rgba(accent,.88);spans[1].style.textShadow='0 0 8px '+rgba(accent,.12);}
      };
      const update=()=>{
        const min=Number(input.min)||0,max=Number(input.max)||4,range=Math.max(.001,max-min);
