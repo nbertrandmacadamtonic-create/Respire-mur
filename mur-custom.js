@@ -2755,3 +2755,88 @@ if (typeof window.installPresentationFallback !== 'function') {
     };
   }
 })();
+
+
+
+/* M.U.R. V92 — Cartes ki.S reconstruites et interaction fiable.
+   Les sept categories et les avatars V90 restent inchanges. */
+(function(){
+ 'use strict';
+ const names={pose:'Le Posé',funambule:'Le Funambule',fonceur:'Le Fonceur',pose_funambule:'Posé–Funambule',pose_fonceur:'Posé–Fonceur',funambule_fonceur:'Funambule–Fonceur',equilibre:'L’Équilibré'};
+ const legacy=n=>n>=8?'pose':n>2?'pose_funambule':n<=-8?'fonceur':n<-2?'funambule_fonceur':'funambule';
+ function cardState(){
+   let k=null;try{k=(typeof kisResult!=='undefined'&&kisResult)||JSON.parse(localStorage.getItem('murKis')||'null')}catch(_){}
+   if(!k)return null;
+   const key=names[k.cardKey]?k.cardKey:legacy(Number(k.score)||0);
+   return {key,name:names[key]};
+ }
+ const style=document.createElement('style');style.id='mur-kis-v92-style';style.textContent=`
+ #testResultView #resultKisBlock.open{height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important;}
+ #testResultView #resultKisBlock.open .result-step-body{overflow:visible!important;max-height:none!important;}
+ #testResultView #resultKisBlock.open #resultKisDetail{display:block!important;overflow:visible!important;max-height:none!important;}
+ .mur-kis-v92-card{max-width:460px;width:100%;margin:14px auto;display:flex;flex-direction:column;align-items:center;gap:12px;}
+ .mur-kis-v92-flip{display:block;width:min(100%,375px);border:0;background:none;padding:0;cursor:pointer;line-height:0;border-radius:22px;overflow:hidden;box-shadow:0 12px 35px #0008;}
+ .mur-kis-v92-flip img{display:block;width:100%;height:auto;aspect-ratio:720/1060;object-fit:fill;}
+ .mur-kis-v92-card .mur-kis-v92-actions{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;}
+ .mur-kis-v92-actions button{cursor:pointer;border-radius:12px;min-height:43px;padding:9px 15px;border:1px solid #83aeb9;background:#143d50;color:#f4f9fc;font-size:14px;font-weight:650;}
+ .mur-kis-v92-actions .mur-kis-v92-next{background:#286075;}
+ .mur-kis-v92-hint{font-size:13px;color:#bfd3dc;text-align:center;margin:0;line-height:1.4;}
+ .mur-kis-v92-mini{display:inline-flex;align-items:center;flex:none;border:1px solid #5a8997;background:#0b2535;border-radius:10px;padding:3px;margin:3px 5px 3px auto;cursor:pointer;}
+ .mur-kis-v92-mini img{width:47px;height:66px;display:block;object-fit:contain;border-radius:6px;}
+ @media(max-width:480px){.mur-kis-v92-flip{width:min(100%,310px)}.mur-kis-v92-mini img{width:38px;height:54px}}
+ `;document.head.appendChild(style);
+ // Remplace la carte issue de la vieille planche et évite l'ancien calcul à cinq sorties.
+ window.profileCardHTML=function(){
+  const state=cardState();if(!state)return '';
+  const path='images/kis/'+state.key;
+  return `<div class="mur-kis-v92-card" data-mur-kis-v92="${state.key}" data-side="recto">
+    <button type="button" class="mur-kis-v92-flip" data-mur-v92-flip aria-label="Retourner la carte ${state.name}">
+     <img src="${path}-recto.webp" data-front="${path}-recto.webp" data-back="${path}-verso.webp" alt="Recto ${state.name}" loading="eager" />
+    </button>
+    <p class="mur-kis-v92-hint">Touchez la carte pour découvrir votre profil.</p>
+    <div class="mur-kis-v92-actions"><button type="button" data-mur-v92-flip>Voir le verso</button><button type="button" class="mur-kis-v92-next" data-mur-v92-next>Continuer vers Ici & Maintenant</button></div>
+   </div>`;
+ };
+ // Capture avant le stopPropagation des boutons natifs et l'onclick du bloc résultat.
+ document.addEventListener('click',function(e){
+   const flip=e.target.closest('[data-mur-v92-flip]');
+   const next=e.target.closest('[data-mur-v92-next]');
+   const thumb=e.target.closest('[data-mur-v92-mini]');
+   if(!flip&&!next&&!thumb)return;
+   e.preventDefault();e.stopImmediatePropagation();
+   if(next){if(typeof openTestStep==='function')openTestStep('now');return;}
+   if(thumb){
+      if(typeof resultStepOpen!=='undefined')resultStepOpen.kis=true;
+      const block=document.getElementById('resultKisBlock');if(block)block.classList.add('open');
+      if(typeof renderResultStepDetails==='function')renderResultStepDetails();
+      return;
+   }
+   const root=flip.closest('.mur-kis-v92-card');if(!root)return;
+   const img=root.querySelector('img');if(!img)return;
+   const back=root.dataset.side!=='verso';root.dataset.side=back?'verso':'recto';
+   img.src=back?img.dataset.back:img.dataset.front;
+   img.alt=(back?'Verso ':'Recto ')+(cardState()?.name||'ki.S');
+   root.querySelector('.mur-kis-v92-hint').textContent=back?'Touchez pour revoir le recto.':'Touchez la carte pour découvrir votre profil.';
+   root.querySelector('.mur-kis-v92-actions [data-mur-v92-flip]').textContent=back?'Voir le recto':'Voir le verso';
+ },true);
+ function miniature(){
+   const state=cardState(), block=document.getElementById('resultKisBlock');if(!block)return;
+   const header=block.querySelector('.result-step-top');if(!header)return;
+   let mini=header.querySelector('.mur-kis-v92-mini');
+   if(!state){if(mini)mini.remove();return;}
+   if(!mini){mini=document.createElement('button');mini.type='button';mini.className='mur-kis-v92-mini';mini.setAttribute('data-mur-v92-mini','');header.appendChild(mini)}
+   mini.setAttribute('aria-label','Voir la carte '+state.name);
+   mini.innerHTML=`<img src="images/kis/${state.key}-recto.webp" alt="Miniature ${state.name}" loading="eager">`;
+   if(typeof resultStepOpen!=='undefined'&&resultStepOpen.kis)block.classList.add('open');
+ }
+ if(typeof window.renderProgressiveResult==='function'){
+   const prev=window.renderProgressiveResult;
+   window.renderProgressiveResult=function(){const ret=prev.apply(this,arguments);miniature();return ret};
+ }
+ if(typeof window.renderResultStepDetails==='function'){
+   const prev=window.renderResultStepDetails;
+   window.renderResultStepDetails=function(){const ret=prev.apply(this,arguments);miniature();return ret};
+ }
+ // Sécurité au chargement : miniature aussi pour un résultat ki.S déjà enregistré.
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',miniature);else miniature();
+})();
