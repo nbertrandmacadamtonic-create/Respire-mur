@@ -3109,6 +3109,33 @@ if (typeof window.installPresentationFallback !== 'function') {
    @media(max-width:390px){#testNow .mur-now-v96-grid{gap:6px}#testNow .mur-now-v96-panel{grid-template-columns:45px minmax(0,1fr);column-gap:8px;padding:7px 9px!important;border-radius:16px}#testNow .mur-now-v96-symbol,#testNow .mur-now-v96-symbol canvas{width:45px;height:45px}#testNow .mur-now-v96-panel .scale label.mini-label{margin-bottom:8px!important;font-size:14px!important}#testNow .mur-now-v96-panel .now-intensity{margin-top:7px!important;padding:5px 8px!important}#testNow .mur-now-v96-thumb,#testNow .mur-now-v96-thumb canvas{height:35px;width:35px}}
    @media(prefers-reduced-motion:reduce){#testNow .mur-now-v96-thumb{transition:none}}
  `;
+ css.textContent+=`
+   /* V103 : logo parfaitement centre dans sa colonne, quelle que soit la hauteur du texte */
+   #testNow .mur-now-v96-panel{align-items:stretch!important}
+   #testNow .mur-now-v96-panel .mur-now-v96-symbol{
+      grid-column:1!important;grid-row:1 / 3!important;
+      width:56px!important;height:56px!important;
+      justify-self:center!important;align-self:center!important;
+      display:grid!important;place-items:center!important;
+      margin:0!important;padding:0!important;
+      flex:none!important;box-sizing:border-box!important;
+      position:relative!important;overflow:visible!important;
+   }
+   #testNow .mur-now-v96-panel .mur-now-v102-emblem{
+      position:absolute!important;left:50%!important;top:50%!important;
+      transform:translate(-50%,-50%)!important;
+      width:100%!important;height:100%!important;max-width:none!important;
+      object-fit:contain!important;object-position:center center!important;
+      display:block!important;margin:0!important;padding:0!important;
+      border-radius:50%!important;
+   }
+   @media(min-width:680px){
+      #testNow .mur-now-v96-panel .mur-now-v96-symbol{width:70px!important;height:70px!important}
+   }
+   @media(max-width:390px){
+      #testNow .mur-now-v96-panel .mur-now-v96-symbol{width:45px!important;height:45px!important}
+   }
+ `;
  document.head.appendChild(css);
  let drawings=[];
  const sliderPalette=['#4a93f0','#2eb8b2','#6dc76a','#eeab3e','#eb5b5d'];
