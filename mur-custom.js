@@ -2555,8 +2555,8 @@ if (typeof window.installPresentationFallback !== 'function') {
     const key=value>=8?'pose':value>2?'fun_pose':value<=-8?'fonceur':value<-2?'fun_fonceur':'fun_equilibre';
     const stored=(typeof kisResult!=='undefined' && kisResult && kisResult.cardKey) ? kisResult.cardKey : null;
     const card=cards[stored]||cards[key];
-    const front=path+card.key+'-recto.webp';
-    const back=path+card.key+'-verso.webp';
+    const front=path+card.key+'-recto.png';
+    const back=path+card.key+'-verso.png';
     return `<section class="mur-kis-flip-v89" data-mur-kis-card="${card.key}" data-mur-kis-side="recto" aria-label="Carte ki.S : ${card.title}">
       <button class="mur-kis-card-btn" type="button" data-mur-kis-flip aria-label="Retourner la carte ${card.title}">
         <img class="mur-kis-card-image" src="${front}" data-front="${front}" data-back="${back}" alt="Recto de la carte ki.S ${card.title}" loading="eager" decoding="async">
@@ -2781,7 +2781,7 @@ if (typeof window.installPresentationFallback !== 'function') {
   const path='images/kis/'+state.key;
   return `<div class="mur-kis-v92-card" data-mur-kis-v92="${state.key}" data-side="recto">
     <button type="button" class="mur-kis-v92-flip" data-mur-v92-flip aria-label="Retourner la carte ${state.name}">
-     <img src="${path}-recto.webp" data-front="${path}-recto.webp" data-back="${path}-verso.webp" alt="Recto ${state.name}" loading="eager" />
+     <img src="${path}-recto.png" data-front="${path}-recto.png" data-back="${path}-verso.png" alt="Recto ${state.name}" loading="eager" />
     </button>
     <p class="mur-kis-v92-hint">Touchez la carte pour découvrir votre profil.</p>
     <div class="mur-kis-v92-actions"><button type="button" data-mur-v92-flip>Voir le verso</button><button type="button" class="mur-kis-v92-next" data-mur-v92-next>Continuer vers Ici & Maintenant</button></div>
@@ -2816,7 +2816,7 @@ if (typeof window.installPresentationFallback !== 'function') {
    if(!state){if(mini)mini.remove();return;}
    if(!mini){mini=document.createElement('button');mini.type='button';mini.className='mur-kis-v92-mini';mini.setAttribute('data-mur-v92-mini','');header.appendChild(mini)}
    mini.setAttribute('aria-label','Voir la carte '+state.name);
-   mini.innerHTML=`<img src="images/kis/${state.key}-recto.webp" alt="Miniature ${state.name}" loading="eager">`;
+   mini.innerHTML=`<img src="images/kis/${state.key}-recto.png" alt="Miniature ${state.name}" loading="eager">`;
    if(typeof resultStepOpen!=='undefined'&&resultStepOpen.kis)block.classList.add('open');
  }
  if(typeof window.renderProgressiveResult==='function'){
@@ -3008,7 +3008,7 @@ if (typeof window.installPresentationFallback !== 'function') {
   const img=modal.querySelector('.mur-v97-image');
   function render(){
     if(!current)return;
-    img.src='images/kis/'+current.key+'-'+side+'.webp';
+    img.src='images/kis/'+current.key+'-'+side+'.png';
     img.alt=(side==='recto'?'Recto':'Verso')+' de '+current.name;
     modal.querySelector('.mur-v97-title').textContent=current.name;
     modal.querySelector('.mur-v97-flip').textContent=side==='recto'?'Voir le verso':'Voir le recto';
@@ -3065,7 +3065,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ==============================================================
-   M.U.R. V99 — Ici & Maintenant : quatre panneaux et sphères
+   M.U.R. V102 — Ici & Maintenant : quatre panneaux, nouveaux logos en points, curseurs colorés
    multipoints, avec curseurs qui changent de couleur selon la valeur.
    ============================================================== */
 (function(){
@@ -3090,6 +3090,7 @@ if (typeof window.installPresentationFallback !== 'function') {
    #testNow .mur-now-v96-panel::after{content:'';pointer-events:none;position:absolute;right:10px;top:7px;width:52px;height:28px;opacity:.26;background:radial-gradient(ellipse,var(--mur-panel-color),transparent 65%);filter:blur(12px)}
    #testNow .mur-now-v96-symbol{width:56px;height:56px;display:flex;align-items:center;justify-content:center;grid-column:1;grid-row:1/3;align-self:center;overflow:hidden;position:relative}
    #testNow .mur-now-v96-symbol canvas{display:block;width:56px;height:56px}
+   #testNow .mur-now-v96-symbol img.mur-now-v102-emblem{display:block;width:100%;height:100%;object-fit:contain;border-radius:50%;filter:drop-shadow(0 0 3px rgba(100,190,215,.16))}
    #testNow .mur-now-v96-panel .scale{grid-column:2;grid-row:1;min-width:0;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;position:relative}
    #testNow .mur-now-v96-panel .scale label.mini-label{display:block!important;font-size:15px!important;line-height:1.15!important;font-weight:760!important;color:#f0f6fa!important;margin:0 0 11px!important;letter-spacing:0!important}
    #testNow .mur-now-v96-slider-wrap{position:relative;width:100%;height:22px;display:flex;align-items:center}
@@ -3126,16 +3127,18 @@ if (typeof window.installPresentationFallback !== 'function') {
      const panel=document.createElement('div');panel.className='mur-now-v96-panel mur-now-v96-'+spec.cls;
      panel.style.setProperty('--mur-panel-color',spec.color);
      const icon=document.createElement('div');icon.className='mur-now-v96-symbol';icon.setAttribute('aria-hidden','true');
-     const ic=document.createElement('canvas');ic.width=140;ic.height=140;icon.appendChild(ic);
+     const emblem=document.createElement('img');
+     emblem.className='mur-now-v102-emblem';
+     emblem.src='images/ici-maintenant/'+spec.cls+'.png';
+     emblem.alt='';emblem.decoding='async';emblem.loading='eager';
+     icon.appendChild(emblem);
      const wrap=document.createElement('div');wrap.className='mur-now-v96-slider-wrap';
      input.parentNode.insertBefore(wrap,input);wrap.appendChild(input);
      const thumb=document.createElement('span');thumb.className='mur-now-v96-thumb';thumb.setAttribute('aria-hidden','true');
      const tc=document.createElement('canvas');tc.width=96;tc.height=96;thumb.appendChild(tc);wrap.appendChild(thumb);
      grid.appendChild(panel);panel.append(icon,scale,info);
      const label=scale.querySelector('label');if(label){label.setAttribute('for',spec.id);label.textContent=spec.name;}
-     const iconDraw={ctx:ic.getContext('2d'),canvas:ic, color:spec.color,seed:spec.cls,thumb:false};
      const thumbDraw={ctx:tc.getContext('2d'),canvas:tc,color:'#7bc5f4',seed:spec.cls+'thumb',thumb:true};
-     drawings.push(iconDraw);
      drawings.push(thumbDraw);
      const applyAccent=(accent)=>{
        panel.style.setProperty('--mur-panel-color',accent);
