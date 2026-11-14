@@ -2651,7 +2651,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const first=page.querySelector('.card');if(first)first.appendChild(box);}
     if(!state){box.innerHTML='<p class="help" style="margin-top:15px">Votre avatar apparaîtra après le test ki.S.</p>';return}
     const status=state.zone?'Ici & Maintenant : zone '+state.zone+'.':'Réalisez Ici & Maintenant pour colorer votre avatar.';
-    box.innerHTML=`<div class="mur-v90-profile">${avatarHTML(state)}<div><small>MON PROFIL ki.S</small><strong>${state.title}</strong><p>${status}</p><small>${state.legacy?'Ancien résultat : refaites ki.S pour un calcul sur les 15 réponses.':'Profil de fond : évolue lorsque vous refaites ki.S.'}</small><button type="button" class="mur-v95-open" data-mur-v95-open>Voir ma carte ki.S</button></div></div>`;
+    box.innerHTML=`<div class="mur-v90-profile" data-mur-v95-open role="button" tabindex="0" aria-label="Voir la carte complète de mon profil ki.S">${avatarHTML(state)}<div><small>MON PROFIL ki.S</small><strong>${state.title}</strong><p>${status}</p><small>${state.legacy?'Ancien résultat : refaites ki.S pour un calcul sur les 15 réponses.':'Profil de fond : évolue lorsque vous refaites ki.S.'}</small><button type="button" class="mur-v95-open" data-mur-v95-open>Voir ma carte ki.S</button></div></div>`;
   }
   window.MUR_KIS_V90_RENDER_AVATAR=renderAvatar;
   // Interception minimale : on garde le moteur et les fonctions de synthèse existants.
@@ -2969,76 +2969,98 @@ if (typeof window.installPresentationFallback !== 'function') {
 })();
 
 
-/* M.U.R. V95 — carte complète accessible depuis Mon profil ki.S.
-   Dialogue autonome: recto/verso, retour vers Profil, sans relancer le test. */
+/* M.U.R. V97 — Liaison directe entre Réglages > Mon profil ki.S et la carte complète.
+   La fiche entière est cliquable. Carte affichée dans un dialogue autonome sous body.
+   Aucun changement des scores, questionnaires, assets ou des pages existantes. */
 (function(){
   'use strict';
-  if(document.getElementById('mur-v95-profile-style'))return;
+  if(window.MUR_PROFILE_CARD_V97)return;
   const names={pose:'Le Posé',funambule:'Le Funambule',fonceur:'Le Fonceur',pose_funambule:'Le Posé–Funambule',pose_fonceur:'Le Posé–Fonceur',funambule_fonceur:'Le Funambule–Fonceur',equilibre:'L’Équilibré'};
   const legacy=n=>n>=8?'pose':n>2?'pose_funambule':n<=-8?'fonceur':n<-2?'funambule_fonceur':'funambule';
-  function profile(){
-    let k;try{k=JSON.parse(localStorage.getItem('murKis')||'null')}catch(_){return null}
-    if(!k)return null;
-    const key=names[k.cardKey]?k.cardKey:legacy(Number(k.score)||0);
-    return {key,title:names[key]};
-  }
-  const css=document.createElement('style');css.id='mur-v95-profile-style';css.textContent=`
-    #mur-v90-profile-card .mur-v95-open{display:block;margin:11px 0 0;padding:9px 13px;min-height:42px;border-radius:12px;background:#15495c;color:#f2fbff;border:1px solid #639cae;cursor:pointer;font-size:14px;font-weight:650}
-    #mur-v90-profile-card .mur-v95-open:focus-visible{outline:2px solid #9ce9ed;outline-offset:3px}
-    #mur-v95-profile-modal{position:fixed!important;inset:0!important;z-index:2147483000!important;display:none;align-items:center;justify-content:center;background:rgba(4,13,23,.97);padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(10px + env(safe-area-inset-bottom,0px));box-sizing:border-box;overscroll-behavior:contain}
-    #mur-v95-profile-modal.mur-v95-visible{display:flex!important}
-    #mur-v95-profile-modal .mur-v95-content{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:8px;width:min(100%,480px);height:100%;max-height:100%;min-height:0;box-sizing:border-box;color:#eaf7fc}
-    #mur-v95-profile-modal .mur-v95-head{width:100%;flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px}
-    #mur-v95-profile-modal .mur-v95-title{font-size:clamp(14px,2.3vh,19px);line-height:1.2;margin:0;text-align:center;color:#edf8fb}
-    #mur-v95-profile-modal button{appearance:none;border:1px solid rgba(105,182,199,.7);background:#123a4e;color:#fff;border-radius:11px;min-height:40px;padding:9px 14px;font:600 14px/1.2 inherit;cursor:pointer}
-    #mur-v95-profile-modal button:focus-visible{outline:2px solid #b0e9f5;outline-offset:2px}
-    #mur-v95-profile-modal .mur-v95-image-btn{flex:1 1 auto;min-height:0;min-width:0;max-width:100%;padding:0;border:0;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden}
-    #mur-v95-profile-modal .mur-v95-image{display:block;width:auto;height:auto;max-height:100%;max-width:100%;object-fit:contain;border-radius:16px;box-shadow:0 8px 28px #0007}
-    #mur-v95-profile-modal .mur-v95-foot{width:100%;display:flex;justify-content:center;flex:0 0 auto;padding-bottom:2px}
-    #mur-v95-profile-modal .mur-v95-flip{min-width:135px}
-    @media(max-height:600px){#mur-v95-profile-modal{padding-top:6px;padding-bottom:6px}#mur-v95-profile-modal .mur-v95-head button,#mur-v95-profile-modal .mur-v95-foot button{min-height:34px;padding:5px 10px}}
-  `;document.head.appendChild(css);
-  const modal=document.createElement('section');modal.id='mur-v95-profile-modal';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','Ma carte de personnalité ki.S');modal.setAttribute('aria-hidden','true');
-  modal.innerHTML=`<div class="mur-v95-content"><div class="mur-v95-head"><button type="button" data-v95-close aria-label="Retour au profil">← Mon profil</button><h2 class="mur-v95-title"></h2><span style="width:80px;flex:none"></span></div><button type="button" class="mur-v95-image-btn" data-v95-flip aria-label="Retourner la carte"><img class="mur-v95-image" alt="Carte ki.S"></button><div class="mur-v95-foot"><button type="button" class="mur-v95-flip" data-v95-flip>Voir le verso</button></div></div>`;
-  document.body.appendChild(modal);
-  let current=null,side='recto',previousFocus=null;
-  function update(){
+  const read=()=>{try{return JSON.parse(localStorage.getItem('murKis')||'null')}catch(_){return null}};
+  let current=null, side='recto', previousFocus=null;
+  const modal=document.createElement('section');
+  modal.id='mur-v97-profile-modal';
+  modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+  modal.setAttribute('aria-label','Carte de mon profil ki.S');
+  modal.setAttribute('aria-hidden','true');
+  modal.hidden=true;
+  modal.innerHTML=`<div class="mur-v97-inner"><div class="mur-v97-header"><button type="button" data-v97-back>← Mon profil</button><strong class="mur-v97-title"></strong><span aria-hidden="true"></span></div><button type="button" class="mur-v97-image-button" data-v97-flip aria-label="Retourner la carte"><img class="mur-v97-image" alt="Carte ki.S"></button><div class="mur-v97-footer"><button type="button" data-v97-flip class="mur-v97-flip">Voir le verso</button></div></div>`;
+  const style=document.createElement('style');style.id='mur-v97-profile-css';style.textContent=`
+    #mur-v90-profile-card .mur-v90-profile[data-mur-v95-open]{cursor:pointer;transition:border-color .2s,box-shadow .2s;position:relative}
+    #mur-v90-profile-card .mur-v90-profile[data-mur-v95-open]:hover{border-color:rgba(140,226,229,.77);box-shadow:0 0 17px rgba(82,170,193,.12)}
+    #mur-v90-profile-card .mur-v90-profile[data-mur-v95-open]:focus-visible{outline:2px solid #a1d8e8;outline-offset:3px}
+    #mur-v90-profile-card [data-mur-v95-open].mur-v95-open{display:inline-block;margin:12px 0 0;padding:10px 14px;min-height:42px;border:1px solid #689cac;background:#133e53;color:white;border-radius:12px;font-size:14px;font-weight:650;cursor:pointer}
+    #mur-v97-profile-modal[hidden]{display:none!important}
+    #mur-v97-profile-modal{position:fixed!important;inset:0!important;width:100vw!important;width:100dvw!important;height:100vh!important;height:100dvh!important;z-index:2147483640!important;background:rgba(4,13,24,.98)!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:calc(9px + env(safe-area-inset-top,0px)) 12px calc(9px + env(safe-area-inset-bottom,0px))!important;box-sizing:border-box!important;isolation:isolate;overflow:hidden!important}
+    #mur-v97-profile-modal .mur-v97-inner{display:flex;flex-direction:column;gap:9px;align-items:center;max-width:480px;width:100%;height:100%;min-height:0;color:#e9f5fa}
+    #mur-v97-profile-modal .mur-v97-header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;width:100%;align-items:center;flex:none}
+    #mur-v97-profile-modal .mur-v97-title{text-align:center;font-size:clamp(14px,2.2vh,20px);font-weight:600;line-height:1.2}
+    #mur-v97-profile-modal button{font-family:inherit;cursor:pointer;color:#f4fbff;border-radius:11px}
+    #mur-v97-profile-modal [data-v97-back],#mur-v97-profile-modal .mur-v97-flip{border:1px solid #588da0;background:#143b50;padding:9px 11px;min-height:39px;font-size:14px;font-weight:600}
+    #mur-v97-profile-modal .mur-v97-image-button{display:flex;justify-content:center;align-items:center;min-height:0;min-width:0;flex:1 1 auto;width:100%;background:transparent;border:0;padding:0;overflow:hidden}
+    #mur-v97-profile-modal .mur-v97-image{display:block;max-height:100%;max-width:100%;width:auto;height:auto;object-fit:contain;border-radius:13px;box-shadow:0 12px 30px #0007}
+    #mur-v97-profile-modal .mur-v97-footer{display:flex;justify-content:center;flex:none;width:100%}
+    #mur-v97-profile-modal button:focus-visible{outline:2px solid #ade6ed;outline-offset:2px}
+    @media(max-height:570px){#mur-v97-profile-modal{padding-top:4px!important;padding-bottom:4px!important}#mur-v97-profile-modal [data-v97-back],#mur-v97-profile-modal .mur-v97-flip{padding:5px 8px;min-height:32px}}
+  `;
+  document.head.appendChild(style);document.body.appendChild(modal);
+  const img=modal.querySelector('.mur-v97-image');
+  function render(){
     if(!current)return;
-    const img=modal.querySelector('.mur-v95-image');
     img.src='images/kis/'+current.key+'-'+side+'.webp';
-    img.alt=(side==='recto'?'Recto':'Verso')+' de la carte '+current.title;
-    modal.querySelector('.mur-v95-title').textContent=current.title;
-    modal.querySelector('.mur-v95-flip').textContent=side==='recto'?'Voir le verso':'Voir le recto';
+    img.alt=(side==='recto'?'Recto':'Verso')+' de '+current.name;
+    modal.querySelector('.mur-v97-title').textContent=current.name;
+    modal.querySelector('.mur-v97-flip').textContent=side==='recto'?'Voir le verso':'Voir le recto';
   }
   function open(){
-    current=profile();if(!current)return;
-    previousFocus=document.activeElement;
-    side='recto';update();
-    modal.classList.add('mur-v95-visible');modal.setAttribute('aria-hidden','false');
-    modal.querySelector('[data-v95-close]').focus();
+    const k=read();if(!k){return false}
+    const key=names[k.cardKey]?k.cardKey:legacy(Number(k.score)||0);
+    current={key,name:names[key]};side='recto';previousFocus=document.activeElement;
+    render();
+    modal.hidden=false;modal.setAttribute('aria-hidden','false');
+    modal.querySelector('[data-v97-back]').focus({preventScroll:true});
+    return true;
   }
   function close(){
-    modal.classList.remove('mur-v95-visible');modal.setAttribute('aria-hidden','true');
-    current=null;
-    if(previousFocus&&previousFocus.isConnected&&typeof previousFocus.focus==='function')previousFocus.focus();
+    modal.hidden=true;modal.setAttribute('aria-hidden','true');current=null;
+    // Conserver la navigation Réglages, même si le contenu a été mis à jour.
+    if(document.getElementById('settings') && !document.getElementById('settings').classList.contains('active') && typeof window.showPage==='function'){
+      window.showPage('settings');
+    }
+    if(previousFocus?.isConnected && typeof previousFocus.focus==='function')previousFocus.focus({preventScroll:true});
   }
+  function flip(){if(!current)return;side=side==='recto'?'verso':'recto';render()}
+  // Capture du clic AVANT les gestionnaires historiques de la page Réglages.
   document.addEventListener('click',function(e){
-    const openBtn=e.target.closest('[data-mur-v95-open]');
-    if(openBtn){e.preventDefault();e.stopImmediatePropagation();open();return;}
-    if(!modal.classList.contains('mur-v95-visible'))return;
-    if(e.target.closest('[data-v95-close]')){e.preventDefault();e.stopImmediatePropagation();close();return;}
-    if(e.target.closest('[data-v95-flip]')){e.preventDefault();e.stopImmediatePropagation();side=side==='recto'?'verso':'recto';update();return;}
-    if(e.target===modal){e.preventDefault();close();}
+    if(!modal.hidden){
+      if(e.target.closest('[data-v97-back]')){e.preventDefault();e.stopImmediatePropagation();close();return}
+      if(e.target.closest('[data-v97-flip]')){e.preventDefault();e.stopImmediatePropagation();flip();return}
+      if(e.target===modal){e.preventDefault();e.stopImmediatePropagation();close()}
+      return;
+    }
+    if(e.target.closest('#mur-v90-profile-card [data-mur-v95-open]')){
+      e.preventDefault();e.stopImmediatePropagation();open();
+    }
   },true);
   document.addEventListener('keydown',function(e){
-    if(!modal.classList.contains('mur-v95-visible'))return;
-    if(e.key==='Escape'){e.preventDefault();close();return;}
-    if(e.key==='Tab'){
-      const controls=Array.from(modal.querySelectorAll('button'));
-      if(e.shiftKey&&document.activeElement===controls[0]){e.preventDefault();controls[controls.length-1].focus()}
-      else if(!e.shiftKey&&document.activeElement===controls[controls.length-1]){e.preventDefault();controls[0].focus()}
+    if(!modal.hidden){
+      if(e.key==='Escape'){e.preventDefault();close();return}
+      if(e.key==='Tab'){
+        const buttons=[...modal.querySelectorAll('button')];
+        if(e.shiftKey&&document.activeElement===buttons[0]){e.preventDefault();buttons[buttons.length-1].focus()}
+        else if(!e.shiftKey&&document.activeElement===buttons[buttons.length-1]){e.preventDefault();buttons[0].focus()}
+      }
+      return;
+    }
+    if((e.key==='Enter'||e.key===' ')&&document.activeElement?.matches('#mur-v90-profile-card .mur-v90-profile[data-mur-v95-open]')){
+      e.preventDefault();open();
     }
   });
+  img.addEventListener('error',function(){
+    console.warn('M.U.R. V97: image de carte introuvable',img.src);
+  });
+  window.MUR_PROFILE_CARD_V97={open,close,flip};
 })();
 
 
