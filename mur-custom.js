@@ -3070,15 +3070,15 @@ if (typeof window.installPresentationFallback !== 'function') {
    ============================================================== */
 (function(){
  'use strict';
- if(window.MUR_NOW_V99)return;
- window.MUR_NOW_V99=true;
+ if(window.MUR_NOW_V106)return;
+ window.MUR_NOW_V106=true;
  const specs=[
    {id:'nowEnergy',box:'nowIntensity_energy',cls:'energy',name:'Énergie',color:'#d9a46c'},
    {id:'nowBreath',box:'nowIntensity_breath',cls:'breath',name:'Respiration',color:'#61c4bc'},
    {id:'nowMind',box:'nowIntensity_mind',cls:'mind',name:'Mental',color:'#9884cb'},
    {id:'nowBody',box:'nowIntensity_body',cls:'body',name:'Corps',color:'#78b994'}
  ];
- const css=document.createElement('style');css.id='mur-now-v99-style';
+ const css=document.createElement('style');css.id='mur-now-v106-style';
  css.textContent=`
    #testNow .card{background:linear-gradient(160deg,#0a243b 0%,#0a1b2e 58%,#0b2135 100%)!important;border:1px solid rgba(89,160,200,.3)!important;box-shadow:inset 0 0 30px rgba(40,124,177,.055)!important}
    #testNow .test-page-status{position:relative;isolation:isolate;padding:2px 5px 8px!important;margin-bottom:5px!important}
@@ -3110,30 +3110,27 @@ if (typeof window.installPresentationFallback !== 'function') {
    @media(prefers-reduced-motion:reduce){#testNow .mur-now-v96-thumb{transition:none}}
  `;
  css.textContent+=`
-   /* V105 : disposition unique pour les quatre rubriques, sans V103/V104.
-      Chaque logo occupe la meme colonne horizontale que celui d'Energie. */
+   /* V106 : une seule ancre géométrique pour les quatre images.
+      La colonne logo est indépendante des hauteurs des champs. */
    #testNow .mur-now-v96-panel{
-     display:grid!important;
-     grid-template-columns:60px minmax(0,1fr)!important;
-     grid-template-rows:auto auto!important;
-     gap:0 12px!important;
-     align-items:center!important;
-     padding:10px 12px!important;
-     min-height:106px!important;
+     display:block!important;
      box-sizing:border-box!important;
      position:relative!important;
+     padding:10px 12px 10px 84px!important;
+     min-height:110px!important;
    }
    #testNow .mur-now-v96-panel .mur-now-v96-symbol{
-     position:relative!important;
-     grid-column:1!important;
-     grid-row:1 / span 2!important;
-     justify-self:center!important;
-     align-self:center!important;
-     inset:auto!important;
-     transform:none!important;
+     position:absolute!important;
+     left:12px!important;
+     top:50%!important;
+     right:auto!important;
+     bottom:auto!important;
+     grid-column:auto!important;
+     grid-row:auto!important;
      display:flex!important;
      align-items:center!important;
      justify-content:center!important;
+     transform:translateY(-50%)!important;
      width:60px!important;
      height:60px!important;
      min-width:60px!important;
@@ -3145,42 +3142,38 @@ if (typeof window.installPresentationFallback !== 'function') {
    }
    #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{
      position:static!important;
-     inset:auto!important;
-     transform:none!important;
      display:block!important;
-     width:100%!important;
-     height:100%!important;
-     min-width:0!important;
-     min-height:0!important;
+     width:60px!important;
+     height:60px!important;
      max-width:100%!important;
      max-height:100%!important;
+     min-width:0!important;
+     min-height:0!important;
      object-fit:contain!important;
-     object-position:center!important;
+     object-position:center center!important;
+     transform:none!important;
      margin:0!important;
      padding:0!important;
    }
-   #testNow .mur-now-v96-panel .scale{
-     position:relative!important;
-     grid-column:2!important;
-     grid-row:1!important;
-     width:100%!important;
-     min-width:0!important;
-     margin:0!important;
-   }
+   #testNow .mur-now-v96-panel .scale,
    #testNow .mur-now-v96-panel .now-intensity{
-     grid-column:2!important;
-     grid-row:2!important;
+     position:relative!important;
+     display:block!important;
+     grid-column:auto!important;
+     grid-row:auto!important;
      width:100%!important;
      min-width:0!important;
      box-sizing:border-box!important;
    }
    @media(min-width:680px){
-     #testNow .mur-now-v96-panel{grid-template-columns:75px minmax(0,1fr)!important;column-gap:14px!important;padding:12px 18px!important;min-height:120px!important}
-     #testNow .mur-now-v96-panel .mur-now-v96-symbol{width:75px!important;height:75px!important;min-width:75px!important;min-height:75px!important}
+     #testNow .mur-now-v96-panel{padding:12px 18px 12px 110px!important;min-height:122px!important}
+     #testNow .mur-now-v96-panel .mur-now-v96-symbol{left:18px!important;width:75px!important;height:75px!important;min-width:75px!important;min-height:75px!important}
+     #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{width:75px!important;height:75px!important}
    }
    @media(max-width:390px){
-     #testNow .mur-now-v96-panel{grid-template-columns:46px minmax(0,1fr)!important;column-gap:8px!important;padding:8px 9px!important;min-height:94px!important}
-     #testNow .mur-now-v96-panel .mur-now-v96-symbol{width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important}
+     #testNow .mur-now-v96-panel{padding:8px 9px 8px 64px!important;min-height:96px!important}
+     #testNow .mur-now-v96-panel .mur-now-v96-symbol{left:9px!important;width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important}
+     #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{width:46px!important;height:46px!important}
    }
  `;
  document.head.appendChild(css);
