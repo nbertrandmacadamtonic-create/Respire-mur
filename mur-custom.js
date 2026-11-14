@@ -3065,7 +3065,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* ==============================================================
-   M.U.R. V102 — Ici & Maintenant : quatre panneaux, nouveaux logos en points, curseurs colorés
+   M.U.R. V105 — Ici & Maintenant : logos alignés sur Énergie, curseurs colorés
    multipoints, avec curseurs qui changent de couleur selon la valeur.
    ============================================================== */
 (function(){
@@ -3110,87 +3110,77 @@ if (typeof window.installPresentationFallback !== 'function') {
    @media(prefers-reduced-motion:reduce){#testNow .mur-now-v96-thumb{transition:none}}
  `;
  css.textContent+=`
-   /* V103 : logo parfaitement centre dans sa colonne, quelle que soit la hauteur du texte */
-   #testNow .mur-now-v96-panel{align-items:stretch!important}
-   #testNow .mur-now-v96-panel .mur-now-v96-symbol{
-      grid-column:1!important;grid-row:1 / 3!important;
-      width:56px!important;height:56px!important;
-      justify-self:center!important;align-self:center!important;
-      display:grid!important;place-items:center!important;
-      margin:0!important;padding:0!important;
-      flex:none!important;box-sizing:border-box!important;
-      position:relative!important;overflow:visible!important;
-   }
-   #testNow .mur-now-v96-panel .mur-now-v102-emblem{
-      position:absolute!important;left:50%!important;top:50%!important;
-      transform:translate(-50%,-50%)!important;
-      width:100%!important;height:100%!important;max-width:none!important;
-      object-fit:contain!important;object-position:center center!important;
-      display:block!important;margin:0!important;padding:0!important;
-      border-radius:50%!important;
-   }
-   @media(min-width:680px){
-      #testNow .mur-now-v96-panel .mur-now-v96-symbol{width:70px!important;height:70px!important}
-   }
-   @media(max-width:390px){
-      #testNow .mur-now-v96-panel .mur-now-v96-symbol{width:45px!important;height:45px!important}
-   }
- `;
- css.textContent+=`
-   /* V104 : colonne reservee et centrage reel, independants de la grille native. */
+   /* V105 : disposition unique pour les quatre rubriques, sans V103/V104.
+      Chaque logo occupe la meme colonne horizontale que celui d'Energie. */
    #testNow .mur-now-v96-panel{
-     display:block!important;
-     position:relative!important;
-     padding:10px 12px 10px 85px!important;
-     min-height:102px!important;
+     display:grid!important;
+     grid-template-columns:60px minmax(0,1fr)!important;
+     grid-template-rows:auto auto!important;
+     gap:0 12px!important;
+     align-items:center!important;
+     padding:10px 12px!important;
+     min-height:106px!important;
      box-sizing:border-box!important;
+     position:relative!important;
    }
    #testNow .mur-now-v96-panel .mur-now-v96-symbol{
-     position:absolute!important;
-     left:12px!important;
-     top:50%!important;
-     transform:translateY(-50%)!important;
-     width:60px!important;
-     height:60px!important;
+     position:relative!important;
+     grid-column:1!important;
+     grid-row:1 / span 2!important;
+     justify-self:center!important;
+     align-self:center!important;
+     inset:auto!important;
+     transform:none!important;
      display:flex!important;
      align-items:center!important;
      justify-content:center!important;
-     margin:0!important;
-     padding:0!important;
-     overflow:hidden!important;
-     box-sizing:border-box!important;
-     z-index:1!important;
-   }
-   #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{
-     position:static!important;
-     transform:none!important;
-     display:block!important;
      width:60px!important;
      height:60px!important;
      min-width:60px!important;
      min-height:60px!important;
+     margin:0!important;
+     padding:0!important;
+     overflow:hidden!important;
+     box-sizing:border-box!important;
+   }
+   #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{
+     position:static!important;
+     inset:auto!important;
+     transform:none!important;
+     display:block!important;
+     width:100%!important;
+     height:100%!important;
+     min-width:0!important;
+     min-height:0!important;
+     max-width:100%!important;
+     max-height:100%!important;
      object-fit:contain!important;
-     object-position:50% 50%!important;
+     object-position:center!important;
      margin:0!important;
      padding:0!important;
    }
-   #testNow .mur-now-v96-panel .scale,
-   #testNow .mur-now-v96-panel .now-intensity{
-     display:block!important;
+   #testNow .mur-now-v96-panel .scale{
+     position:relative!important;
+     grid-column:2!important;
+     grid-row:1!important;
      width:100%!important;
-     max-width:100%!important;
+     min-width:0!important;
+     margin:0!important;
+   }
+   #testNow .mur-now-v96-panel .now-intensity{
+     grid-column:2!important;
+     grid-row:2!important;
+     width:100%!important;
      min-width:0!important;
      box-sizing:border-box!important;
    }
    @media(min-width:680px){
-     #testNow .mur-now-v96-panel{padding-left:106px!important;min-height:114px!important}
-     #testNow .mur-now-v96-panel .mur-now-v96-symbol{left:18px!important;width:75px!important;height:75px!important}
-     #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{width:75px!important;height:75px!important;min-width:75px!important;min-height:75px!important}
+     #testNow .mur-now-v96-panel{grid-template-columns:75px minmax(0,1fr)!important;column-gap:14px!important;padding:12px 18px!important;min-height:120px!important}
+     #testNow .mur-now-v96-panel .mur-now-v96-symbol{width:75px!important;height:75px!important;min-width:75px!important;min-height:75px!important}
    }
    @media(max-width:390px){
-     #testNow .mur-now-v96-panel{padding:8px 9px 8px 65px!important;min-height:95px!important}
-     #testNow .mur-now-v96-panel .mur-now-v96-symbol{left:9px!important;width:46px!important;height:46px!important}
-     #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important}
+     #testNow .mur-now-v96-panel{grid-template-columns:46px minmax(0,1fr)!important;column-gap:8px!important;padding:8px 9px!important;min-height:94px!important}
+     #testNow .mur-now-v96-panel .mur-now-v96-symbol{width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important}
    }
  `;
  document.head.appendChild(css);
