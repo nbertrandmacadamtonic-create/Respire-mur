@@ -2512,3 +2512,183 @@ if (typeof window.installPresentationFallback !== 'function') {
   `;
   document.head.appendChild(style);
 })();
+
+
+/* M.U.R. V89 — cartes symboliques ki.S: recto/verso après les 15 réponses.
+   Ne modifie pas les seuils/score ki.S, ni les conseils après Ici & Maintenant.
+   La version actuelle du calcul détermine CINQ catégories, non sept.
+   Les deux autres visuels sont fournis pour une future évolution du questionnaire. */
+(function(){
+  'use strict';
+  const cards={
+    pose:{title:'Le Posé',key:'pose'},
+    fun_pose:{title:'Le Posé–Funambule',key:'pose_funambule'},
+    fun_equilibre:{title:'Le Funambule',key:'funambule'},
+    fun_fonceur:{title:'Le Funambule–Fonceur',key:'funambule_fonceur'},
+    fonceur:{title:'Le Fonceur',key:'fonceur'},
+    pose_fonceur:{title:'Le Posé–Fonceur',key:'pose_fonceur'},
+    equilibre:{title:'L’Équilibré',key:'equilibre'}
+  };
+  const path='images/kis/';
+  const css=document.createElement('style');
+  css.id='mur-kis-cards-v89';
+  css.textContent=`
+    .mur-kis-flip-v89{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;margin:10px auto 2px;max-width:470px}
+    .mur-kis-flip-v89 .mur-kis-card-btn{display:block;appearance:none;background:transparent;border:0;padding:0;margin:0 auto;cursor:pointer;max-width:100%;width:min(100%,335px);border-radius:20px;box-shadow:0 12px 32px rgba(0,0,0,.22);overflow:hidden}
+    .mur-kis-flip-v89 .mur-kis-card-btn:focus-visible{outline:3px solid #8ac8d2;outline-offset:4px}
+    .mur-kis-flip-v89 .mur-kis-card-image{display:block;width:100%;height:auto;object-fit:contain}
+    .mur-kis-flip-v89 .mur-kis-card-hint{font-size:12px;letter-spacing:.025em;color:#c8d7e2;text-align:center;margin:0!important}
+    .mur-kis-flip-v89 .mur-kis-card-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;width:100%}
+    .mur-kis-flip-v89 .mur-kis-card-actions button{min-height:42px;padding:10px 15px;border:1px solid rgba(125,198,207,.46);border-radius:12px;background:rgba(12,41,62,.9);color:#effbff;font-size:14px;font-weight:600;cursor:pointer}
+    .mur-kis-flip-v89 .mur-kis-card-actions button.mur-kis-next{background:#1e6472;color:#fff}
+    #resultKisDetail .mur-kis-flip-v89,#kisResult .mur-kis-flip-v89{max-width:430px}
+    @media(max-width:490px){.mur-kis-flip-v89 .mur-kis-card-btn{width:min(80vw,330px)}}
+    @media(prefers-reduced-motion:reduce){.mur-kis-flip-v89 *{transition:none!important;animation:none!important}}
+  `;
+  document.head.appendChild(css);
+  const original=typeof window.profileCardHTML==='function'?window.profileCardHTML:null;
+  window.profileCardHTML=function(score){
+    // ki.S current scalar score: >=8 Posé; 3..7 Posé–Funambule;
+    // -2..2 Funambule; -7..-3 Funambule–Fonceur; <=-8 Fonceur.
+    const value=Number(score);
+    if(!Number.isFinite(value)) return original?original(score):'';
+    const key=value>=8?'pose':value>2?'fun_pose':value<=-8?'fonceur':value<-2?'fun_fonceur':'fun_equilibre';
+    const stored=(typeof kisResult!=='undefined' && kisResult && kisResult.cardKey) ? kisResult.cardKey : null;
+    const card=cards[stored]||cards[key];
+    const front=path+card.key+'-recto.webp';
+    const back=path+card.key+'-verso.webp';
+    return `<section class="mur-kis-flip-v89" data-mur-kis-card="${card.key}" data-mur-kis-side="recto" aria-label="Carte ki.S : ${card.title}">
+      <button class="mur-kis-card-btn" type="button" data-mur-kis-flip aria-label="Retourner la carte ${card.title}">
+        <img class="mur-kis-card-image" src="${front}" data-front="${front}" data-back="${back}" alt="Recto de la carte ki.S ${card.title}" loading="eager" decoding="async">
+      </button>
+      <p class="mur-kis-card-hint">Votre profil de fond · Touchez la carte pour découvrir son verso</p>
+      <div class="mur-kis-card-actions"><button type="button" data-mur-kis-flip>Voir le verso</button><button class="mur-kis-next" type="button" data-mur-kis-next>Continuer vers Ici & Maintenant</button></div>
+    </section>`;
+  };
+  document.addEventListener('click',function(e){
+    const next=e.target.closest('[data-mur-kis-next]');
+    if(next){if(typeof window.openTestStep==='function')window.openTestStep('now');return;}
+    const flip=e.target.closest('[data-mur-kis-flip]');
+    if(!flip)return;
+    const root=flip.closest('.mur-kis-flip-v89');if(!root)return;
+    const img=root.querySelector('.mur-kis-card-image');if(!img)return;
+    const verso=root.dataset.murKisSide!=='verso';
+    img.src=verso?img.dataset.back:img.dataset.front;
+    img.alt=(verso?'Verso':'Recto')+' de la carte ki.S '+cards[Object.keys(cards).find(k=>cards[k].key===root.dataset.murKisCard)]?.title;
+    root.dataset.murKisSide=verso?'verso':'recto';
+    root.querySelector('.mur-kis-card-hint').textContent=verso?'Votre profil de fond · Touchez pour revoir le recto':'Votre profil de fond · Touchez la carte pour découvrir son verso';
+    const btn=root.querySelector('.mur-kis-card-actions [data-mur-kis-flip]');btn.textContent=verso?'Voir le recto':'Voir le verso';
+  });
+})();
+
+
+/* M.U.R. V90 — sept cartes ki.S et avatars évolutifs.
+ * Le score historique reste inchangé. Le profil symbolique utilise les 15 réponses.
+ * L'état Ici & Maintenant ne modifie que le halo coloré de l'avatar.
+ * Un ancien résultat sans les réponses détaillées conserve sa catégorie héritée.
+ */
+(function(){
+  'use strict';
+  const profiles={
+    pose:'Le Posé', funambule:'Le Funambule', fonceur:'Le Fonceur',
+    pose_funambule:'Le Posé–Funambule', pose_fonceur:'Le Posé–Fonceur',
+    funambule_fonceur:'Le Funambule–Fonceur', equilibre:'L’Équilibré'
+  };
+  const reference=[
+    ['pose',[10,2.5,2.5]],['funambule',[2.5,10,2.5]],
+    ['fonceur',[2.5,2.5,10]],['pose_funambule',[6.5,6.5,2]],
+    ['pose_fonceur',[6.5,2,6.5]],['funambule_fonceur',[2,6.5,6.5]],
+    ['equilibre',[5,5,5]]
+  ];
+  function calculate(responses){
+    if(!Array.isArray(responses)||responses.length!==15||
+       responses.some(v=>v!==-1&&v!==0&&v!==1))return null;
+    const counts=[responses.filter(v=>v===1).length,responses.filter(v=>v===0).length,responses.filter(v=>v===-1).length];
+    const d=ref=>ref.reduce((sum,value,i)=>sum+(counts[i]-value)**2,0);
+    const chosen=reference.reduce((best,item)=>d(item[1])<d(best[1])?item:best);
+    return {cardKey:chosen[0],counts:{pose:counts[0],funambule:counts[1],fonceur:counts[2]},scoreHistorique:counts[0]-counts[2]};
+  }
+  window.MUR_KIS_V90_CALCULATE=calculate;
+  const legacyFromScore=score=>score>=8?'pose':score>2?'pose_funambule':score<=-8?'fonceur':score<-2?'funambule_fonceur':'funambule';
+  function saved(){try{return JSON.parse(localStorage.getItem('murKis')||'null')}catch(_){return null}}
+  function now(){try{return JSON.parse(localStorage.getItem('murNow')||'null')}catch(_){return null}}
+  const colors={bleu:'#538fc6',vert:'#5baf96',orange:'#d0a067',rouge:'#c96e72'};
+  function getState(){
+    const k=saved();if(!k)return null;
+    const key=profiles[k.cardKey]?k.cardKey:legacyFromScore(Number(k.score)||0);
+    const n=now();const zone=n && n.zone;
+    const zk=zone && String(zone.key||'').toLowerCase();
+    return {key,title:profiles[key],zone:colors[zk]?zk:null,color:colors[zk]||'#619db4',counts:k.counts||null,legacy:!k.cardKey};
+  }
+  function avatarHTML(s,cls){
+    return `<span class="mur-v90-avatar ${cls||''}" style="--mur-v90-halo:${s.color}">
+      <img src="images/kis/avatars/${s.key}.webp" alt="Avatar ${s.title}" loading="lazy" />
+    </span>`;
+  }
+  const css=document.createElement('style');css.id='mur-kis-v90-style';css.textContent=`
+    .mur-v90-avatar{display:inline-flex;position:relative;align-items:center;justify-content:center;flex:none;width:104px;height:104px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--mur-v90-halo) 25%,#061522) 0%,#061522 72%);box-shadow:0 0 0 2px var(--mur-v90-halo),0 0 20px color-mix(in srgb,var(--mur-v90-halo) 45%,transparent);overflow:hidden}
+    .mur-v90-avatar img{display:block;width:100%;height:100%;object-fit:contain}
+    .mur-v90-profile{margin-top:16px;padding:18px;display:flex;align-items:center;gap:18px;border:1px solid rgba(117,174,185,.35);border-radius:18px;background:linear-gradient(120deg,rgba(7,32,48,.88),rgba(15,49,65,.55));color:#ecf7fa}
+    .mur-v90-profile strong{display:block;font-size:20px;font-weight:600}
+    .mur-v90-profile p{margin:5px 0!important;font-size:13px;color:#c1d6e0;line-height:1.45}
+    .mur-v90-profile small{display:block;color:#b3cbd6;font-size:11px}
+    #homeProfileBtn.mur-v90-has-avatar{padding:2px;overflow:visible}
+    #homeProfileBtn.mur-v90-has-avatar>svg{display:none!important}
+    #homeProfileBtn .mur-v90-avatar{width:100%;height:100%;min-width:32px;min-height:32px;box-shadow:0 0 0 1px var(--mur-v90-halo),0 0 9px var(--mur-v90-halo)}
+    @media(max-width:520px){.mur-v90-profile{gap:12px;padding:12px}.mur-v90-avatar{width:74px;height:74px}.mur-v90-profile strong{font-size:17px}}
+  `;document.head.appendChild(css);
+  function renderAvatar(){
+    const state=getState();
+    const home=document.getElementById('homeProfileBtn');
+    if(home){
+      const old=home.querySelector('.mur-v90-avatar');if(old)old.remove();
+      home.classList.toggle('mur-v90-has-avatar',!!state);
+      if(state){home.insertAdjacentHTML('beforeend',avatarHTML(state,'mur-v90-home-avatar'));home.setAttribute('aria-label','Profil : '+state.title)}
+    }
+    const page=document.getElementById('settings');if(!page)return;
+    let box=document.getElementById('mur-v90-profile-card');
+    if(!box){box=document.createElement('div');box.id='mur-v90-profile-card';
+      const first=page.querySelector('.card');if(first)first.appendChild(box);}
+    if(!state){box.innerHTML='<p class="help" style="margin-top:15px">Votre avatar apparaîtra après le test ki.S.</p>';return}
+    const status=state.zone?'Ici & Maintenant : zone '+state.zone+'.':'Réalisez Ici & Maintenant pour colorer votre avatar.';
+    box.innerHTML=`<div class="mur-v90-profile">${avatarHTML(state)}<div><small>MON PROFIL ki.S</small><strong>${state.title}</strong><p>${status}</p><small>${state.legacy?'Ancien résultat : refaites ki.S pour un calcul sur les 15 réponses.':'Profil de fond : évolue lorsque vous refaites ki.S.'}</small></div></div>`;
+  }
+  window.MUR_KIS_V90_RENDER_AVATAR=renderAvatar;
+  // Interception minimale : on garde le moteur et les fonctions de synthèse existants.
+  if(typeof window.finishKis==='function'){
+    const oldFinish=window.finishKis;
+    window.finishKis=function(){
+      let details=null;
+      try{details=calculate(kisAnswers.slice())}catch(_){details=null}
+      const previous=(typeof kisResult!=='undefined' && !!kisResult);
+      const ret=oldFinish.apply(this,arguments);
+      if(details&&!previous){
+        try{
+          const current=saved();
+          if(current&&Number(current.score)===details.scoreHistorique){
+            const enriched={...current,...details,cardVersion:7};
+            localStorage.setItem('murKis',JSON.stringify(enriched));
+            if(typeof kisResult!=='undefined')kisResult=enriched;
+            if(typeof renderProgressiveResult==='function')renderProgressiveResult();
+          }
+        }catch(e){console.warn('ki.S V90: sauvegarde carte',e)}
+      }
+      renderAvatar();return ret;
+    };
+  }
+  if(typeof window.finishNow==='function'){
+    const oldNow=window.finishNow;
+    window.finishNow=function(){const ret=oldNow.apply(this,arguments);renderAvatar();return ret};
+  }
+  if(typeof window.showPage==='function'){
+    const oldShow=window.showPage;
+    window.showPage=function(){const ret=oldShow.apply(this,arguments);renderAvatar();return ret};
+  }
+  // Rafraîchir également après récupération éventuelle des données locales/du compte.
+  if(typeof window.loadAll==='function'){
+    const oldLoad=window.loadAll;
+    window.loadAll=function(){const ret=oldLoad.apply(this,arguments);renderAvatar();return ret};
+  }
+  window.addEventListener('storage',e=>{if(['murKis','murNow'].includes(e.key))renderAvatar()});
+  renderAvatar();
+})();
