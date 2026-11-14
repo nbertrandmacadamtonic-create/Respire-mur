@@ -2692,3 +2692,66 @@ if (typeof window.installPresentationFallback !== 'function') {
   window.addEventListener('storage',e=>{if(['murKis','murNow'].includes(e.key))renderAvatar()});
   renderAvatar();
 })();
+
+
+/* M.U.R. V91 — ki.S : selection explicite puis validation par « Suivant ».
+ * Remplace l'avancee automatique apres le choix, sans modifier les scores,
+ * les sept cartes, les avatars, ni les autres tests.
+ */
+(function(){
+  'use strict';
+  if(typeof window.answerKis!=='function')return;
+  window.answerKis=function(value){
+    if(typeof kisResult!=='undefined' && kisResult){
+      if(typeof renderKisLocked==='function')renderKisLocked();
+      return;
+    }
+    if(value!==-1 && value!==0 && value!==1)return;
+    if(typeof kisAnswers==='undefined' || typeof kisIndex==='undefined')return;
+    kisAnswers[kisIndex]=value;
+    const buttons=Array.from(document.querySelectorAll('#kisBox .kis-choice'));
+    buttons.forEach((button,index)=>{
+      const active=(index===(value===-1?0:value===0?1:2));
+      button.classList.toggle('selected',active);
+      button.setAttribute('aria-pressed',String(active));
+    });
+    const warning=document.getElementById('kisMissingAnswer');
+    if(warning)warning.textContent='';
+    if(typeof updateKisValidateState==='function')updateKisValidateState();
+    const nav=document.getElementById('kisNavRow');
+    if(nav){
+      const next=nav.querySelectorAll('button')[1];
+      if(next && kisIndex<14){
+        next.textContent='Valider et continuer';
+        next.disabled=false;
+      }
+    }
+  };
+  // La validation reste un geste distinct : appuyer sur le bouton « Suivant ».
+  // Le dernier choix active la validation finale du test par le bouton natif.
+  if(typeof window.renderKis==='function'){
+    const originalRender=window.renderKis;
+    window.renderKis=function(){
+      const result=originalRender.apply(this,arguments);
+      if(typeof kisResult!=='undefined' && kisResult)return result;
+      const box=document.getElementById('kisBox');
+      if(box && !box.querySelector('.mur-v91-kis-instruction')){
+        const hint=document.createElement('p');
+        hint.className='mur-v91-kis-instruction';
+        hint.style.cssText='font-size:13px;opacity:.78;text-align:center;margin:12px auto 0;line-height:1.4';
+        hint.textContent='Choisissez une réponse, puis validez-la pour continuer.';
+        box.appendChild(hint);
+      }
+      const nav=document.getElementById('kisNavRow');
+      if(nav){
+        const next=nav.querySelectorAll('button')[1];
+        if(next && typeof kisIndex!=='undefined' && kisIndex<14)
+          next.textContent='Valider et continuer';
+      }
+      const finish=document.getElementById('kisValidateBtn');
+      if(finish && typeof kisIndex!=='undefined')
+        finish.style.display=kisIndex===14?'block':'none';
+      return result;
+    };
+  }
+})();
