@@ -3179,3 +3179,86 @@ if (typeof window.installPresentationFallback !== 'function') {
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
+
+
+/* ============================================================
+   M.U.R. V98 — Texte de résultat Ici & Maintenant adaptatif
+   à la zone colorée, sans changer le calcul ni les exercices.
+   ============================================================ */
+(function(){
+  'use strict';
+  if(window.MUR_NOW_RESULT_V98)return;
+  window.MUR_NOW_RESULT_V98=true;
+
+  const messages={
+    bleu:{
+      short:"Votre énergie semble basse aujourd’hui. Accordez-vous une relance progressive, sans vous brusquer.",
+      long:"Vous êtes dans une phase de faible mobilisation. Votre priorité du moment : retrouver progressivement de l’élan et de la disponibilité, à votre rythme."
+    },
+    vert:{
+      short:"Vous semblez disposer d’un bon équilibre aujourd’hui. Profitez de cette stabilité et entretenez-la.",
+      long:"Votre état du moment paraît relativement stable et disponible. C’est une bonne occasion de préserver vos repères et votre régularité."
+    },
+    orange:{
+      short:"La tension semble monter. Un moment pour ralentir peut vous aider à retrouver de la marge.",
+      long:"Votre état suggère une activation plus importante. Votre priorité : réduire progressivement la pression et vous accorder une pause avant de poursuivre."
+    },
+    rouge:{
+      short:"Votre niveau de tension semble élevé. Donnez-vous la priorité de ralentir et de souffler.",
+      long:"Vous rapportez un état de forte activation. Privilégiez une pause et un rythme confortable, sans forcer. Si un exercice vous gêne, arrêtez-le."
+    }
+  };
+  const style=document.createElement('style');
+  style.id='mur-now-result-v98-style';
+  style.textContent=`
+    #resultNowBlock.mur-now-v98-ready #resultNowText{
+      color:#ecf4fb!important;
+      border-left:3px solid var(--result-color,#6aaec7);
+      background:color-mix(in srgb,var(--result-color,#6aaec7) 10%,transparent);
+      border-radius:0 10px 10px 0;
+      padding:9px 11px!important;
+      line-height:1.45!important;
+      font-size:clamp(12px,2.6vw,14px)!important;
+    }
+    #resultNowBlock.mur-now-v98-ready #resultNowScore{
+      color:var(--result-color,#eaf3f8)!important;
+    }
+    #resultNowBlock.mur-now-v98-ready .result-detail-grid .result-detail-chip:first-child{
+      border-color:var(--result-color,#6aaec7);
+    }
+  `;
+  document.head.appendChild(style);
+  function refresh(){
+    const block=document.getElementById('resultNowBlock');
+    const target=document.getElementById('resultNowText');
+    if(!block||!target)return;
+    let stored=null;
+    try{stored=JSON.parse(localStorage.getItem('murNow')||'null')}catch(e){}
+    const zone=stored?.zone;
+    const key=String(zone?.key||'').toLowerCase();
+    const msg=messages[key];
+    if(!msg){block.classList.remove('mur-now-v98-ready');return;}
+    const color=(typeof zone.color==='string'&&/^#[0-9a-f]{3,8}$/i.test(zone.color))?zone.color:'#6aaec7';
+    if(block.style.getPropertyValue('--result-color')!==color)block.style.setProperty('--result-color',color);
+    if(!block.classList.contains('mur-now-v98-ready'))block.classList.add('mur-now-v98-ready');
+    const open=block.classList.contains('open');
+    const wanted=open?msg.long:msg.short;
+    if(target.textContent!==wanted)target.textContent=wanted;
+  }
+  function start(){
+    const block=document.getElementById('resultNowBlock');
+    if(!block)return;
+    let scheduled=false;
+    const schedule=()=>{
+      if(scheduled)return;
+      scheduled=true;
+      requestAnimationFrame(()=>{scheduled=false;refresh()});
+    };
+    new MutationObserver(schedule).observe(block,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','style']});
+    document.addEventListener('click',schedule,true);
+    document.addEventListener('change',schedule,true);
+    window.addEventListener('storage',schedule);
+    refresh();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
