@@ -3786,3 +3786,147 @@ if (typeof window.installPresentationFallback !== 'function') {
   `;
   document.head.appendChild(style);
 })();
+
+
+/* ===============================================================
+   M.U.R. V117 — Etapes 1/2/3 du menu Mesurer : orbes multipoints.
+   Une seule tendance NeuroFlex pour les trois pastilles ;
+   sans resultat NeuroFlex enregistre : couleur verte.
+   Ne modifie pas la navigation ni le calcul des tests.
+   =============================================================== */
+(function(){
+  'use strict';
+  if(window.MUR_TEST_STEP_ORBS_V117)return;
+  window.MUR_TEST_STEP_ORBS_V117=true;
+  const style=document.createElement('style');
+  style.id='mur-test-step-orbs-v117';
+  style.textContent=`
+    #tests #testMenuKis .test-menu-num.mur-step-orb-v117,
+    #tests #testMenuNow .test-menu-num.mur-step-orb-v117,
+    #tests #testMenuResult .test-menu-num.mur-step-orb-v117{
+      width:44px!important;height:44px!important;min-width:44px!important;
+      border-radius:50%!important;display:grid!important;place-items:center!important;
+      position:relative!important;overflow:visible!important;
+      border:1px solid color-mix(in srgb,var(--mur-orb-color,#55b994) 45%,transparent)!important;
+      background:radial-gradient(circle,rgba(8,28,44,.9),rgba(5,20,34,.74))!important;
+      box-shadow:0 0 16px color-mix(in srgb,var(--mur-orb-color,#55b994) 27%,transparent)!important;
+      color:transparent!important;font-size:0!important;line-height:0!important;
+      padding:0!important;margin:0!important;
+    }
+    #tests #testMenuKis .test-menu-num.mur-step-orb-v117::before,
+    #tests #testMenuNow .test-menu-num.mur-step-orb-v117::before,
+    #tests #testMenuResult .test-menu-num.mur-step-orb-v117::before,
+    #tests #testMenuKis .test-menu-num.mur-step-orb-v117::after,
+    #tests #testMenuNow .test-menu-num.mur-step-orb-v117::after,
+    #tests #testMenuResult .test-menu-num.mur-step-orb-v117::after{
+      content:none!important;display:none!important;
+    }
+    #tests .test-menu-num.mur-step-orb-v117 > svg{display:none!important}
+    #tests .test-menu-num.mur-step-orb-v117 > canvas{
+      display:block!important;width:42px!important;height:42px!important;
+      position:relative!important;inset:auto!important;margin:0!important;
+      pointer-events:none!important;opacity:1!important;
+    }
+    #tests .test-menu-card:has(.mur-step-orb-v117){
+      grid-template-columns:48px minmax(0,1fr) 22px!important;
+    }
+    @media(max-width:400px){
+      #tests .test-menu-card:has(.mur-step-orb-v117){
+        grid-template-columns:46px minmax(0,1fr) 22px!important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+  const targets=['testMenuKis','testMenuNow','testMenuResult'];
+  const palette={
+    bleu:'#538fc6',blue:'#538fc6',
+    vert:'#5baf96',verte:'#5baf96',green:'#5baf96',
+    orange:'#d0a067',
+    rouge:'#c96e72',red:'#c96e72'
+  };
+  function currentColor(){
+    let saved=null;
+    try{saved=JSON.parse(localStorage.getItem('murLastNeuro')||'null');}catch(_){return palette.vert;}
+    if(!saved||!saved.zone)return palette.vert;
+    const zone=saved.zone;
+    const key=String(zone.key||zone.name||zone||'').trim().toLowerCase();
+    // Le résultat est déterminé par sa zone, pas par la position du curseur.
+    for(const k of Object.keys(palette))if(key===k||key.includes(k))return palette[k];
+    const color=String(zone.color||'');
+    if(/^#[0-9a-f]{6}$/i.test(color))return color;
+    return palette.vert;
+  }
+  const dots=[];
+  for(let i=0;i<280;i++){
+    const y=1-2*(i+.5)/280;
+    const a=i*2.399963229728653;
+    const r=Math.sqrt(Math.max(0,1-y*y));
+    dots.push([r*Math.cos(a),y,r*Math.sin(a)]);
+  }
+  const views=[];
+  function mount(){
+    for(const id of targets){
+      const marker=document.querySelector('#'+id+' .test-menu-num');
+      if(!marker||marker.querySelector('canvas.mur-step-orb-canvas-v117'))continue;
+      marker.classList.add('mur-step-orb-v117');
+      const canvas=document.createElement('canvas');
+      canvas.className='mur-step-orb-canvas-v117';
+      canvas.width=112;canvas.height=112;
+      canvas.setAttribute('aria-hidden','true');
+      marker.appendChild(canvas);
+      views.push({marker,ctx:canvas.getContext('2d'),id});
+    }
+  }
+  function paint(ctx,color,time,offset){
+    if(!ctx)return;
+    const w=112, cx=56,cy=56,R=46;
+    ctx.clearRect(0,0,w,w);
+    let rgb=[91,175,150];
+    const match=color.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if(match)rgb=[1,2,3].map(i=>parseInt(match[i],16));
+    const glow=ctx.createRadialGradient(cx,cy,3,cx,cy,53);
+    glow.addColorStop(0,'rgba('+rgb.join(',')+',.15)');
+    glow.addColorStop(1,'rgba('+rgb.join(',')+',0)');
+    ctx.fillStyle=glow;ctx.fillRect(0,0,w,w);
+    const angle=time*.00012+offset;
+    const cos=Math.cos(angle),sin=Math.sin(angle);
+    const pts=dots.map(([x,y,z])=>({x:cx+R*(x*cos-z*sin),y:cy+R*y,z:x*sin+z*cos}));
+    pts.sort((a,b)=>a.z-b.z);
+    ctx.fillStyle=color;
+    for(const p of pts){
+      const front=(p.z+1)/2;
+      ctx.globalAlpha=.22+.74*front;
+      ctx.beginPath();ctx.arc(p.x,p.y,.8+front*.55,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+  let color='';
+  function sync(){
+    mount();
+    const next=currentColor();
+    if(next===color)return;
+    color=next;
+    for(const view of views)view.marker.style.setProperty('--mur-orb-color',color);
+  }
+  function start(){
+    sync();
+    let last=0;
+    function animate(t){
+      if(t-last>55){
+        last=t;
+        if(document.getElementById('tests')?.classList.contains('active')&&!document.hidden){
+          sync();
+          views.forEach((view,i)=>paint(view.ctx,color,t,i*.5));
+        }
+      }
+      window.requestAnimationFrame(animate);
+    }
+    if(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches){
+      views.forEach((view,i)=>paint(view.ctx,color,0,i*.5));
+    }else window.requestAnimationFrame(animate);
+    window.addEventListener('storage',sync);
+    window.addEventListener('focus',sync);
+    document.addEventListener('click',sync,true);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
