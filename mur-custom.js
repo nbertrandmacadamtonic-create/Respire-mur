@@ -4702,19 +4702,16 @@ if (typeof window.installPresentationFallback !== 'function') {
   else init();
 })();
 
-/* ===================================================================
-   M.U.R. V128 — Nuances visuelles Ici & Maintenant (base stable V126)
-   Les quatre curseurs déterminent SEULS le score et la couleur.
-   Un choix de pictogramme multipoints est proposé APRES validation,
-   uniquement pour la zone actuelle BLEUE ou ROUGE.
-   Nuance et recommandation conservées LOCALLEMENT; pas de Supabase.
-   Aucun MutationObserver supplémentaire : évite les blocages Chrome.
-   =================================================================== */
+/* ================================================================
+   M.U.R. V129 — Écran de choix obligatoire avant Résultat NeuroFlex
+   Base V126 après correction du blocage. Aucun changement Supabase.
+   La couleur est déterminée uniquement par les quatre curseurs.
+   ================================================================ */
 (function(){
-  'use strict';
-  if(window.MUR_NUANCES_V128)return;
-  window.MUR_NUANCES_V128=true;
-  const KEY='murNowNuanceV128';
+'use strict';
+if(window.MUR_NUANCES_V129) return;
+window.MUR_NUANCES_V129=true;
+const KEY='murNowNuanceV129';
   const DATA={
     blue_calm:{zone:'bleu',color:'#36b6ef',fr:'Calme et détendu',en:'Calm and relaxed',shortFr:'Bleu calme',shortEn:'Calm blue',
       descriptionFr:'Vous décrivez un état calme, confortable, avec une disponibilité préservée. Un niveau d’activation bas n’est pas nécessairement un manque d’énergie.',
@@ -4741,7 +4738,6 @@ if (typeof window.installPresentationFallback !== 'function') {
       adviceEn:'Use external grounding: look around, notice reassuring objects, feel the ground beneath your feet, and move gently if possible. Do not force breathing. Sudden genuine inability to move needs urgent medical assessment.',
       exerciseFr:'Ancrage — retrouver des repères concrets',exerciseEn:'Grounding — find concrete points of reference',exercise:'ancrage',exerciseZone:'rouge',symbol:'pause'}
   };
-  const keysByZone={bleu:['blue_calm','blue_tired'],rouge:['red_tense','red_frozen']};
   const profiles={
     pose:['Votre tendance ki.S invite à observer le passage entre repos et mobilisation.','Your ki.S profile invites you to notice changes between rest and action.'],
     funambule:['Observez vos fluctuations et ce qui vous aide à retrouver une sensation de stabilité.','Notice changes in your state and what helps you regain steadiness.'],
@@ -4751,57 +4747,43 @@ if (typeof window.installPresentationFallback !== 'function') {
     funambule_fonceur:['Soyez attentif aux variations et à la possibilité de ralentir.','Notice changes in activation and opportunities to slow down.'],
     equilibre:['Comparez ce ressenti avec votre disponibilité habituelle.','Compare this experience with your usual sense of availability.']
   };
-  const css=document.createElement('style');css.id='mur-v128-nuances-style';
-  css.textContent=`
-  #mur-v128-chooser{padding:11px 12px;margin:6px 0 12px;border:1px solid rgba(108,184,202,.34);border-radius:15px;background:linear-gradient(115deg,rgba(10,30,48,.94),rgba(20,43,63,.88));color:#f1fafc;max-width:100%;box-sizing:border-box}
-  #mur-v128-chooser .mur-v128-question{font-weight:750;font-size:14px;line-height:1.3;margin:0 0 5px}
-  #mur-v128-chooser .mur-v128-sub{font-size:11px;color:#bdcedb;line-height:1.4;margin:0 0 9px}
-  #mur-v128-chooser .mur-v128-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-  #mur-v128-chooser button.mur-v128-choice{min-height:104px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:9px 5px;border-radius:12px;border:1px solid rgba(106,150,174,.4);background:rgba(10,29,46,.55);color:#e5f3fa;font-size:12px;line-height:1.25;text-align:center;cursor:pointer;white-space:normal}
-  #mur-v128-chooser button.mur-v128-choice[aria-pressed="true"]{border:2px solid var(--mur-nuance-accent,#61b6ec);background:color-mix(in srgb,var(--mur-nuance-accent,#61b6ec) 14%,#0b2236);box-shadow:0 0 12px color-mix(in srgb,var(--mur-nuance-accent,#61b6ec) 16%,transparent)}
-  #mur-v128-chooser .mur-v128-icon{display:block;width:54px;height:54px;flex:none}
-  #mur-v128-chooser .mur-v128-selected{margin-top:8px;font-size:11px;color:#c1e0e9}
-  #testResultView .mur-v128-mini{display:inline-flex;align-items:center;gap:4px;padding:2px 5px;border:1px solid rgba(120,173,195,.25);border-radius:9px;color:#ebf5fb;font-size:11px;line-height:1.1;white-space:nowrap}
-  #testResultView .mur-v128-mini .mur-v128-icon{width:27px;height:27px;display:block;flex:none}
-  #testResultView .mur-v128-insight{margin:8px 0 4px;padding:10px 11px;background:rgba(12,32,49,.74);border:1px solid rgba(113,160,190,.34);border-left:3px solid var(--mur-nuance-accent,#67bbda);border-radius:11px;color:#e4f1f7;line-height:1.45;font-size:12px;overflow-wrap:anywhere}
-  #testResultView .mur-v128-insight .mur-v128-top{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:750;margin-bottom:5px}
-  #testResultView .mur-v128-insight .mur-v128-top .mur-v128-icon{width:39px;height:39px;flex:none}
-  #testResultView .mur-v128-insight p{margin:5px 0!important}
-  #testResultView .mur-v128-insight .mur-v128-disclaimer{font-size:10px;line-height:1.4;color:#abc2d1;margin-top:7px}
-  #testResultView .mur-v128-open-exercise{width:100%;min-height:38px;padding:8px;margin-top:7px;background:#1b5365;border-radius:9px;border:1px solid rgba(120,204,209,.35);color:#fff;cursor:pointer;font-weight:650;font-size:12px}
-  #testResultView .result-step-side{position:relative}
-  #testResultView .mur-v128-side-icon{position:absolute;right:-4px;bottom:-8px;width:21px;height:21px;padding:2px;background:#092032;border-radius:50%;border:1px solid rgba(140,178,194,.4);pointer-events:none;z-index:3}
-  #testResultView .mur-v128-side-icon .mur-v128-icon{display:block;width:100%;height:100%}
-  @media(max-width:440px){#mur-v128-chooser{padding:9px 8px}#mur-v128-chooser button.mur-v128-choice{font-size:11px;min-height:93px}#mur-v128-chooser .mur-v128-icon{width:44px;height:44px}#testResultView .mur-v128-mini{font-size:10px}}
-  `;
-  document.head.appendChild(css);
 
-  function english(){
-    try{
-      const s=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||document.documentElement.lang||'fr';
-      return String(s).toLowerCase().startsWith('en');
-    }catch(_){return false;}
-  }
-  const t=(fr,en)=>english()?en:fr;
-  function read(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(_){return null}}
-  function zoneKey(obj){
-    const z=obj?.zone;const k=String(z?.key||z?.name||z||'').toLowerCase();
-    if(k.includes('bleu')||k.includes('blue'))return 'bleu';
-    if(k.includes('rouge')||k.includes('red'))return 'rouge';
-    if(k.includes('orange'))return 'orange';
-    if(k.includes('vert')||k.includes('green'))return 'vert';
-    return null;
-  }
-  function current(){
-    const now=read('murNow');const zone=zoneKey(now);
-    if(!now||!zone||!keysByZone[zone])return null;
-    const saved=read(KEY);
-    const stored=saved?.choice||now?.nuanceV128?.choice;
-    const meta=saved||now?.nuanceV128;
-    if(!DATA[stored]||DATA[stored].zone!==zone)return null;
-    if(Number(meta?.score)!==Number(now.score))return null;
-    return DATA[stored] ? stored : null;
-  }
+const keysByZone={bleu:['blue_calm','blue_tired'],rouge:['red_tense','red_frozen']};
+const css=document.createElement('style');css.id='mur-v129-style';
+css.textContent=`
+ #mur-v129-gate{position:fixed!important;inset:0!important;z-index:2147483000!important;display:flex!important;align-items:center;justify-content:center;overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(155deg,#061526,#0c263c 68%,#09182a);color:#eaf7fb;box-sizing:border-box;padding:max(18px,env(safe-area-inset-top)) 15px max(18px,env(safe-area-inset-bottom));}
+ #mur-v129-gate .mur-v129-panel{width:min(100%,470px);max-height:100%;overflow-y:auto;padding:19px 15px;background:linear-gradient(135deg,#102940,#0a1c2d);border:1px solid rgba(106,177,194,.5);border-radius:21px;box-shadow:0 20px 80px #0009;box-sizing:border-box;}
+ #mur-v129-gate .mur-v129-overline{font-size:11px;font-weight:800;letter-spacing:.15em;color:#69cfb3;text-transform:uppercase;}
+ #mur-v129-gate h2{color:#fff;font-size:clamp(21px,5vw,27px);line-height:1.18;margin:7px 0 7px!important;}
+ #mur-v129-gate p{font-size:13px;color:#c5dce8;line-height:1.5;margin:7px 0 13px!important;}
+ #mur-v129-gate .mur-v129-zone{display:inline-flex;padding:5px 10px;margin-bottom:9px;border:1px solid var(--mur-zone-color);color:var(--mur-zone-color);border-radius:20px;font-weight:750;font-size:12px;}
+ #mur-v129-gate .mur-v129-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0;}
+ #mur-v129-gate .mur-v129-choice{background:#091c2e;border:1px solid #416279;border-radius:16px;color:#fff;padding:12px 7px;min-height:170px;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;cursor:pointer;box-sizing:border-box;}
+ #mur-v129-gate .mur-v129-choice[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 15%,#091c2e);border:2px solid var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
+ #mur-v129-gate .mur-v128-icon{width:70px;height:70px;flex:none;}
+ #mur-v129-gate .mur-v129-choice strong{font-size:13px;line-height:1.3;}
+ #mur-v129-gate .mur-v129-choice small{color:#b0c5d4;font-size:10px;line-height:1.35;}
+ #mur-v129-gate .mur-v129-confirm{width:100%;background:linear-gradient(100deg,#43d694,#35b6c8);color:#07182a;border:0;border-radius:13px;min-height:48px;font-size:15px;font-weight:800;cursor:pointer;}
+ #mur-v129-gate .mur-v129-confirm:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(1);}
+ #mur-v129-gate .mur-v129-note{font-size:10px;color:#a9bfcb;margin-top:10px;line-height:1.45;}
+ #testResultView .mur-v129-tag,#exercises .mur-v129-tag{display:inline-flex;align-items:center;gap:6px;border-radius:12px;padding:5px 9px;border:1px solid color-mix(in srgb,var(--accent) 60%,transparent);color:#f1fbff;background:#10283b;font-size:12px;font-weight:750;line-height:1.2;}
+ #testResultView .mur-v129-tag .mur-v128-icon,#exercises .mur-v129-tag .mur-v128-icon{width:30px;height:30px;display:block;flex:none;}
+ #testResultView .mur-v129-side{position:absolute;right:-3px;bottom:-8px;width:24px;height:24px;display:grid;place-items:center;border:1px solid var(--accent);border-radius:50%;background:#081b2d;pointer-events:none;}
+ #testResultView .mur-v129-side .mur-v128-icon{width:20px;height:20px;}
+ #testResultView .mur-v129-insight,#exercises .mur-v129-exercise-banner{padding:12px;margin:8px 0;border:1px solid color-mix(in srgb,var(--accent) 50%,#547286);border-left:3px solid var(--accent);border-radius:13px;background:rgba(9,28,44,.93);color:#e8f5fa;line-height:1.45;font-size:12px;}
+ #testResultView .mur-v129-insight p,#exercises .mur-v129-exercise-banner p{margin:7px 0!important;}
+ #testResultView .mur-v129-insight button,#exercises .mur-v129-exercise-banner button{display:block;width:100%;margin-top:9px;border:1px solid #4b9aa0;background:#1a5969;color:white;border-radius:10px;padding:10px;font-weight:700;cursor:pointer;}
+ #exercises .mur-v129-exercise-banner{margin:12px auto;max-width:520px;box-sizing:border-box;}
+ #exercises .mur-v129-detail-tag{margin:8px!important;}
+ @media(max-width:400px){#mur-v129-gate .mur-v129-panel{padding:14px 10px}#mur-v129-gate .mur-v129-choice{min-height:153px;padding:10px 4px}#mur-v129-gate .mur-v128-icon{width:59px;height:59px}}
+ @media(prefers-reduced-motion:reduce){#mur-v129-gate *{animation:none!important;transition:none!important}}
+`;
+document.head.appendChild(css);
+function lang(){try{return String(localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||document.documentElement.lang||'fr').toLowerCase().startsWith('en')}catch(_){return false}}
+const txt=(fr,en)=>lang()?en:fr;
+function read(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(_){return null}}
+function zoneKey(o){let z=o?.zone,k=String(z?.key||z?.name||z||'').toLowerCase();if(k.includes('bleu')||k.includes('blue'))return 'bleu';if(k.includes('rouge')||k.includes('red'))return 'rouge';if(k.includes('vert')||k.includes('green'))return 'vert';if(k.includes('orange'))return 'orange';return null;}
+function current(){const n=read('murNow'),info=n?.nuanceV129;if(!info||!DATA[info.choice]||DATA[info.choice].zone!==zoneKey(n)||Number(info.score)!==Number(n.score))return null;return info.choice;}
   function makeSVG(symbol,color){
     // Les traits sont construits intégralement avec des points lumineux.
     // Aucun cercle de fond : ces pictogrammes ne copient pas les orbes.
@@ -4826,167 +4808,114 @@ if (typeof window.installPresentationFallback !== 'function') {
     return svg;
   }
   function icon(choice){const d=DATA[choice];return makeSVG(d.symbol,d.color)}
-  function save(choice){
-    const d=DATA[choice],now=read('murNow');
-    if(!d||!now||zoneKey(now)!==d.zone)return;
-    const info={choice,zone:d.zone,score:Number(now.score),chosenAt:new Date().toISOString()};
-    localStorage.setItem(KEY,JSON.stringify(info));
-    now.nuanceV128=info;
-    localStorage.setItem('murNow',JSON.stringify(now));
+
+function save(choice){const n=read('murNow');if(!n||!DATA[choice]||zoneKey(n)!==DATA[choice].zone)return;const entry={choice,zone:DATA[choice].zone,score:Number(n.score),chosenAt:new Date().toISOString()};n.nuanceV129=entry;localStorage.setItem('murNow',JSON.stringify(n));localStorage.setItem(KEY,JSON.stringify(entry));}
+function label(choice){const d=DATA[choice];return txt(d.shortFr,d.shortEn)}
+function makeTag(choice){const d=DATA[choice],tag=document.createElement('span');tag.className='mur-v129-tag';tag.style.setProperty('--accent',d.color);const name=document.createElement('span');name.textContent=label(choice);tag.append(icon(choice),name);return tag;}
+let pending=false;
+function showGate(zone,commit){
+  document.getElementById('mur-v129-gate')?.remove();
+  const screen=document.createElement('section');screen.id='mur-v129-gate';screen.setAttribute('role','dialog');screen.setAttribute('aria-modal','true');screen.setAttribute('aria-label',txt('Préciser votre état','Specify how you feel'));
+  const pane=document.createElement('div');pane.className='mur-v129-panel';
+  const over=document.createElement('div');over.className='mur-v129-overline';over.textContent=txt('Ici & Maintenant · Étape suivante','Here & Now · Next step');
+  const z=document.createElement('div');z.className='mur-v129-zone';z.textContent=zone==='bleu'?txt('Votre résultat : bleu','Your result: blue'):txt('Votre résultat : rouge','Your result: red');z.style.setProperty('--mur-zone-color',zone==='bleu'?'#50b9f2':'#f36a72');
+  const title=document.createElement('h2');title.textContent=zone==='bleu'?txt('Comment vous sentez-vous dans cette zone bleue ?','How do you feel in this blue zone?'):txt('Comment vivez-vous cette zone rouge ?','How do you experience this red zone?');
+  const description=document.createElement('p');description.textContent=txt('Choisissez le symbole qui correspond à votre ressenti. Ce choix précise les conseils, sans modifier votre score.','Choose the symbol that best matches your experience. This refines the guidance without changing your score.');
+  const options=document.createElement('div');options.className='mur-v129-choices';let selected=null;
+  const confirm=document.createElement('button');confirm.type='button';confirm.className='mur-v129-confirm';confirm.disabled=true;confirm.textContent=txt('Choisissez un état pour continuer','Choose a state to continue');
+  for(const choice of keysByZone[zone]){
+    const d=DATA[choice];const button=document.createElement('button');button.type='button';button.className='mur-v129-choice';button.style.setProperty('--accent',d.color);button.setAttribute('aria-pressed','false');
+    const name=document.createElement('strong');name.textContent=txt(d.fr,d.en);
+    const hint=document.createElement('small');hint.textContent=txt(d.descriptionFr,d.descriptionEn);
+    button.append(icon(choice),name,hint);
+    button.addEventListener('click',()=>{selected=choice;for(const b of options.children)b.setAttribute('aria-pressed',String(b===button));confirm.disabled=false;confirm.textContent=txt('Valider et voir mon résultat','Confirm and view my result');});
+    options.appendChild(button);
   }
-  function renderChooser(){
-    const view=document.getElementById('testResultView');const list=view?.querySelector('.result-progress-list');
-    if(!list)return;
-    const now=read('murNow'),zone=zoneKey(now);
-    let root=document.getElementById('mur-v128-chooser');
-    if(!now||!keysByZone[zone]){if(root)root.remove();return;}
-    if(!root){root=document.createElement('section');root.id='mur-v128-chooser';root.setAttribute('aria-live','polite');list.parentNode.insertBefore(root,list);}
-    const chosen=current(),language=english()?'en':'fr';
-    const sig=zone+'|'+(chosen||'')+'|'+language;
-    if(root.dataset.sig===sig)return;
-    root.dataset.sig=sig;
-    root.replaceChildren();
-    const question=document.createElement('p');question.className='mur-v128-question';
-    question.textContent=zone==='bleu'?t('Comment vous sentez-vous dans cette zone bleue ?','How do you feel in this blue zone?'):
-      t('Comment vivez-vous cette zone rouge ?','How do you experience this red zone?');
-    const sub=document.createElement('p');sub.className='mur-v128-sub';
-    sub.textContent=t('La couleur et le score ne changent pas. Choisissez seulement la nuance qui vous correspond.','Your colour and score stay the same. Choose the description that fits best.');
-    const opts=document.createElement('div');opts.className='mur-v128-options';
-    for(const k of keysByZone[zone]){
-      const d=DATA[k],button=document.createElement('button');button.type='button';button.className='mur-v128-choice';button.dataset.murNuance=k;
-      button.style.setProperty('--mur-nuance-accent',d.color);button.setAttribute('aria-pressed',String(chosen===k));
-      const label=document.createElement('span');label.textContent=english()?d.en:d.fr;
-      button.append(icon(k),label);opts.appendChild(button);
-    }
-    root.append(question,sub,opts);
-    if(chosen){const note=document.createElement('div');note.className='mur-v128-selected';note.textContent=t('✓ Nuance enregistrée. Vous pouvez changer de choix.','✓ Nuance saved. You can change your choice.');root.appendChild(note);}
-  }
-  function addSmallIcon(blockId,choice){
-    const block=document.getElementById(blockId);if(!block)return;
-    block.querySelectorAll('.mur-v128-mini,.mur-v128-side-icon').forEach(x=>x.remove());
-    if(!choice)return;
-    const d=DATA[choice];
-    const head=block.querySelector('.result-step-top');if(head){
-      const tag=document.createElement('span');tag.className='mur-v128-mini';
-      const text=document.createElement('span');text.textContent=english()?d.shortEn:d.shortFr;
-      tag.append(icon(choice),text);head.appendChild(tag);
-    }
-    const side=block.querySelector('.result-step-side');if(side){
-      const dot=document.createElement('span');dot.className='mur-v128-side-icon';dot.appendChild(icon(choice));side.appendChild(dot);
-    }
-  }
-  function decorate(){
-    const choice=current();
-    for(const id of ['resultNowBlock','resultSynthesisBlock'])addSmallIcon(id,choice);
-    for(const [id,kind] of [['resultNowDetail','now'],['resultSynthDetail','synth']]){
-      const detail=document.getElementById(id);if(!detail)continue;
-      detail.querySelectorAll('.mur-v128-insight').forEach(el=>el.remove());
-      if(!choice||!detail.parentElement?.closest('.result-step.open'))continue;
-      const d=DATA[choice],card=document.createElement('section');card.className='mur-v128-insight';
-      card.style.setProperty('--mur-nuance-accent',d.color);
-      const top=document.createElement('div');top.className='mur-v128-top';
-      const title=document.createElement('span');title.textContent=english()?d.shortEn:d.shortFr;top.append(icon(choice),title);
-      const description=document.createElement('p');description.textContent=english()?d.descriptionEn:d.descriptionFr;
-      const advice=document.createElement('p');advice.textContent=english()?d.adviceEn:d.adviceFr;
-      const recommendation=document.createElement('p');recommendation.textContent=t('Exercice suggéré : ','Suggested exercise: ')+(english()?d.exerciseEn:d.exerciseFr);
-      const btn=document.createElement('button');btn.className='mur-v128-open-exercise';btn.type='button';btn.dataset.murNuanceExercise=choice;
-      btn.textContent=t('Découvrir cet exercice','Explore this exercise');
-      const note=document.createElement('p');note.className='mur-v128-disclaimer';
-      note.textContent=t('Interprétation descriptive inspirée du tableau de B. Rothschild ; elle ne mesure pas directement l’activité autonome et ne constitue pas un diagnostic.','Descriptive interpretation inspired by B. Rothschild’s chart; it does not directly measure autonomic activity or constitute a diagnosis.');
-      card.append(top,description,advice,recommendation);
-      if(kind==='synth'){
-        const key=read('murKis')?.cardKey;
-        if(profiles[key]){const p=document.createElement('p');p.textContent=(english()?profiles[key][1]:profiles[key][0]);card.appendChild(p);}
-      }
-      card.append(btn,note);detail.appendChild(card);
-      // Aligner les rubriques historiques avec la recommandation affinée.
-      const mapping=kind==='now'?{
-        'objectif':t('Adapter la régulation','Adapt regulation'),
-        'respiration':choice==='red_frozen'?t('Libre, sans apnée ni effort','Natural, no breath holding'):
-          choice==='blue_calm'?t('Naturelle, sans contrainte','Natural, unforced'):null,
-        'exercices':english()?d.exerciseEn:d.exerciseFr,
-        'conseil':english()?d.adviceEn:d.adviceFr
-      }:{
-        'réponse conseillée':t('Régulation ajustée au ressenti','Response adapted to your experience'),
-        'respiration conseillée':choice==='red_frozen'?t('Non imposée, sans apnée','Optional, no breath holding'):
-          choice==='blue_calm'?t('Naturelle, sans contrainte','Natural, unforced'):null,
-        'exercices conseillés':english()?d.exerciseEn:d.exerciseFr,
-        'logique':english()?d.adviceEn:d.adviceFr
-      };
-      for(const chip of detail.querySelectorAll('.result-detail-grid .result-detail-chip')){
-        const key=chip.querySelector('small')?.textContent.trim().toLowerCase();
-        const value=Object.prototype.hasOwnProperty.call(mapping,key)?mapping[key]:null;
-        const target=chip.querySelector('b');
-        if(value&&target)target.textContent=value;
-      }
-    }
-  }
-  function refresh(){renderChooser();decorate();}
-  function openSuggested(choice){
-    const d=DATA[choice];if(!d)return;
-    if(typeof window.openRecommendedExercises==='function'){
-      window.openRecommendedExercises();
-      window.setTimeout(()=>{if(typeof window.openExercise==='function')window.openExercise(d.exercise)},650);
-    }
-  }
-  function init(){
-    // Aucun changement des calculs : nous observons seulement le résultat final.
-    if(typeof window.finishNow==='function'){
-      const previous=window.finishNow;
-      window.finishNow=function(){
-        localStorage.removeItem(KEY); // nouveau passage : aucun choix ancien ne doit être réutilisé
-        const out=previous.apply(this,arguments);
-        try{const n=read('murNow');if(n?.nuanceV128){delete n.nuanceV128;localStorage.setItem('murNow',JSON.stringify(n));}}catch(_){ }
-        refresh();window.setTimeout(refresh,420);
+  confirm.addEventListener('click',()=>{
+    if(!selected||pending)return;
+    pending=true;confirm.disabled=true;
+    try{commit();if(zoneKey(read('murNow'))===zone)save(selected);screen.remove();refresh();setTimeout(refresh,400);}
+    finally{pending=false;}
+  });
+  const note=document.createElement('div');note.className='mur-v129-note';note.textContent=txt('Cette étape est obligatoire pour préciser votre zone bleue ou rouge. Les états sont descriptifs et ne constituent pas un diagnostic.','This step is required to refine your blue or red zone. These states are descriptive, not diagnostic.');
+  pane.append(over,z,title,description,options,confirm,note);screen.appendChild(pane);document.body.appendChild(screen);
+  screen.querySelector('button')?.focus({preventScroll:true});
+}
+function scoreFromSliders(){const ids=['nowEnergy','nowBreath','nowMind','nowBody'],map=[-2,-1,0,1,2];const values=ids.map(id=>Number(document.getElementById(id)?.value));if(values.some(v=>!Number.isInteger(v)||v<0||v>4))return null;return Math.round(values.reduce((a,v)=>a+map[v],0)/8*50);}
+function decideZone(score){if(score<=-22)return 'bleu';if(score>=28)return 'rouge';if(score>=10)return 'orange';return 'vert';}
+function decorateResults(){
+ const choice=current();
+ for(const id of ['resultNowBlock','resultSynthesisBlock']){
+  const block=document.getElementById(id);if(!block)continue;
+  block.querySelectorAll('.mur-v129-tag,.mur-v129-side').forEach(n=>n.remove());
+  if(!choice)continue;
+  const top=block.querySelector('.result-step-top');if(top)top.appendChild(makeTag(choice));
+  const side=block.querySelector('.result-step-side');if(side){side.style.position='relative';const sm=document.createElement('span');sm.className='mur-v129-side';sm.style.setProperty('--accent',DATA[choice].color);sm.appendChild(icon(choice));side.appendChild(sm);}
+ }
+ for(const id of ['resultNowDetail','resultSynthDetail']){
+  const detail=document.getElementById(id);if(!detail)continue;
+  detail.querySelectorAll('.mur-v129-insight').forEach(n=>n.remove());
+  if(!choice || !detail.parentElement?.closest('.result-step.open'))continue;
+  const d=DATA[choice];const card=document.createElement('section');card.className='mur-v129-insight';card.style.setProperty('--accent',d.color);card.appendChild(makeTag(choice));
+  for(const content of [txt(d.descriptionFr,d.descriptionEn),txt(d.adviceFr,d.adviceEn),txt('Exercice suggéré : '+d.exerciseFr,'Suggested exercise: '+d.exerciseEn)]){const p=document.createElement('p');p.textContent=content;card.appendChild(p);}
+  if(id==='resultSynthDetail'){const k=read('murKis')?.cardKey;if(profiles[k]){const p=document.createElement('p');p.textContent=profiles[k][lang()?1:0];card.appendChild(p);}}
+  const btn=document.createElement('button');btn.type='button';btn.textContent=txt('Voir l’exercice conseillé','Open recommended exercise');btn.addEventListener('click',()=>openSuggested(choice));card.appendChild(btn);
+  const note=document.createElement('p');note.style.opacity='.7';note.style.fontSize='10px';note.textContent=txt('Proposition descriptive inspirée du tableau de B. Rothschild, sans diagnostic du système nerveux.','Descriptive guidance inspired by B. Rothschild’s chart, not a nervous-system diagnosis.');card.appendChild(note);
+  detail.appendChild(card);
+ }
+ const final=document.getElementById('resultFinalExerciseBtn');if(final&&choice){final.textContent=txt('Exercice conseillé : '+DATA[choice].exerciseFr,'Recommended: '+DATA[choice].exerciseEn);}
+}
+function decorateExercises(){
+ const choice=current(),page=document.getElementById('exercises');if(!page)return;
+ page.querySelectorAll('.mur-v129-exercise-banner,.mur-v129-detail-tag').forEach(n=>n.remove());
+ if(!choice)return;
+ const d=DATA[choice],banner=document.createElement('section');banner.className='mur-v129-exercise-banner';banner.style.setProperty('--accent',d.color);
+ banner.appendChild(makeTag(choice));
+ const advice=document.createElement('p');advice.textContent=txt(d.adviceFr,d.adviceEn);banner.appendChild(advice);
+ const label=document.createElement('p');label.textContent=txt('Exercice proposé : '+d.exerciseFr,'Suggested exercise: '+d.exerciseEn);banner.appendChild(label);
+ const button=document.createElement('button');button.type='button';button.textContent=txt('Ouvrir cet exercice','Open this exercise');button.addEventListener('click',()=>{if(typeof window.openExercise==='function')window.openExercise(d.exercise);});banner.appendChild(button);
+ const anchor=document.getElementById('exerciseRecommendationNote')||document.getElementById('exerciseList')||page.firstElementChild;
+ if(anchor)anchor.insertAdjacentElement('beforebegin',banner);else page.prepend(banner);
+ const detail=document.getElementById('exerciseDetail');
+ if(detail && detail.innerHTML.trim()){const tag=makeTag(choice);tag.classList.add('mur-v129-detail-tag');detail.prepend(tag);}
+}
+function openSuggested(choice){const d=DATA[choice];if(!d)return;if(typeof window.openRecommendedExercises==='function')window.openRecommendedExercises();if(typeof window.openExercise==='function')window.openExercise(d.exercise);decorateExercises();}
+let scheduled=false;
+function refresh(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;decorateResults();decorateExercises();});}
+function init(){
+  // Capture la fonction stable V126, mais ne lance pas son calcul avant le choix.
+  if(typeof window.finishNow==='function'){
+    const old=window.finishNow;
+    window.finishNow=function(){
+      if(document.getElementById('mur-v129-gate'))return;
+      const score=scoreFromSliders(),zone=score===null?null:decideZone(score);
+      const args=arguments,self=this;
+      // Zone verte et orange : fonctionnement historique, aucune sélection.
+      if(!keysByZone[zone]){const out=old.apply(self,args);refresh();return out;}
+      showGate(zone,()=>{
+        const out=old.apply(self,args);
+        const saved=read('murNow');if(zoneKey(saved)!==zone){console.warn('M.U.R. V129: zone calculée différente, choix non conservé');return out;}
         return out;
-      };
-    }
-    if(typeof window.renderResultStepDetails==='function'){
-      const previous=window.renderResultStepDetails;
-      window.renderResultStepDetails=function(){const out=previous.apply(this,arguments);decorate();return out;};
-    }
-    if(typeof window.renderProgressiveResult==='function'){
-      const previous=window.renderProgressiveResult;
-      window.renderProgressiveResult=function(){const out=previous.apply(this,arguments);refresh();return out;};
-    }
-    // Les suggestions affichées par les boutons de la page Exercices suivent la nuance.
-    if(typeof window.getRecommendedExerciseZoneKey==='function'){
-      const previous=window.getRecommendedExerciseZoneKey;
-      window.getRecommendedExerciseZoneKey=function(){const c=current();return c?DATA[c].exerciseZone:previous.apply(this,arguments);};
-    }
-    if(typeof window.getPersonalizedBreathKey==='function'){
-      const previous=window.getPersonalizedBreathKey;
-      window.getPersonalizedBreathKey=function(zone){
-        const c=current();
-        // Pour le calme et le blocage ressenti : pas de frein 3/8 imposé.
-        if(c==='blue_calm'||c==='red_frozen')return '365';
-        return previous.apply(this,arguments);
-      };
-    }
-    if(typeof window.refreshResultActionButtons==='function'){
-      const previous=window.refreshResultActionButtons;
-      window.refreshResultActionButtons=function(){const out=previous.apply(this,arguments);const c=current();if(c){
-        const button=document.getElementById('resultFinalExerciseBtn');
-        if(button)button.textContent=t('Exercice suggéré : ','Suggested: ')+(english()?DATA[c].exerciseEn:DATA[c].exerciseFr);
-        if(c==='red_frozen'||c==='blue_calm'){
-          const breath=document.getElementById('resultFinalBreathBtn');
-          if(breath)breath.textContent=t('Respiration douce, facultative','Gentle breathing, optional');
-        }
-      }return out;};
-    }
-    document.addEventListener('click',event=>{
-      const target=event.target instanceof Element?event.target:null;
-      const choice=target?.closest('[data-mur-nuance]');
-      if(choice){event.stopPropagation();event.preventDefault();save(choice.dataset.murNuance);refresh();return;}
-      const exercise=target?.closest('[data-mur-nuance-exercise]');
-      if(exercise){event.stopPropagation();event.preventDefault();openSuggested(exercise.dataset.murNuanceExercise);return;}
-      if(target?.closest('#resultNowBlock,#resultSynthesisBlock'))window.requestAnimationFrame(decorate);
-      if(target?.closest('[data-language],[data-lang]'))window.setTimeout(refresh,0);
-    });
-    window.addEventListener('focus',refresh);
-    window.addEventListener('storage',ev=>{if(['murNow',KEY,'murKis'].includes(ev.key))refresh();});
-    refresh();
-    window.MUR_V128_REFRESH=refresh;
+      });
+    };
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+  if(typeof window.renderProgressiveResult==='function'){const old=window.renderProgressiveResult;window.renderProgressiveResult=function(){const r=old.apply(this,arguments);refresh();return r;};}
+  if(typeof window.renderResultStepDetails==='function'){const old=window.renderResultStepDetails;window.renderResultStepDetails=function(){const r=old.apply(this,arguments);refresh();return r;};}
+  if(typeof window.renderExerciseList==='function'){const old=window.renderExerciseList;window.renderExerciseList=function(){const r=old.apply(this,arguments);refresh();return r;};}
+  if(typeof window.openExercise==='function'){const old=window.openExercise;window.openExercise=function(){const r=old.apply(this,arguments);refresh();return r;};}
+  if(typeof window.getRecommendedExerciseZoneKey==='function'){const old=window.getRecommendedExerciseZoneKey;window.getRecommendedExerciseZoneKey=function(){const c=current();return c?DATA[c].exerciseZone:old.apply(this,arguments);};}
+  // Le bouton principal du résultat ouvre directement l'exercice personnalisé.
+  document.addEventListener('click',e=>{
+    const target=e.target instanceof Element?e.target:null;
+    if(target?.closest('#resultFinalExerciseBtn') && current()){
+      e.preventDefault();e.stopImmediatePropagation();openSuggested(current());return;
+    }
+    if(target?.closest('#resultNowBlock,#resultSynthesisBlock'))setTimeout(refresh,50);
+  },true);
+  window.addEventListener('focus',refresh);
+  window.addEventListener('storage',e=>{if(e.key==='murNow'||e.key===KEY)refresh();});
+  window.MUR_V129_REFRESH=refresh;
+  refresh();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
