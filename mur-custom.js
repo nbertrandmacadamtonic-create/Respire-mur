@@ -3726,3 +3726,63 @@ if (typeof window.installPresentationFallback !== 'function') {
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
+
+/* M.U.R. V116 — Carte ki.S uniquement : affichage compact dans Résultat et Profil.
+   Les illustrations, la navigation et la carte Tendance de l'accueil restent inchangées. */
+(function(){
+  'use strict';
+  if(document.getElementById('mur-kis-compact-v116'))return;
+  const style=document.createElement('style');
+  style.id='mur-kis-compact-v116';
+  style.textContent=`
+    /* Fiche ki.S après le questionnaire : garder l'image entière sans scrolling. */
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-card{
+      width:100%!important;max-width:350px!important;
+      gap:5px!important;margin:0 auto!important;padding:0!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip{
+      width:auto!important;max-width:min(100%,290px)!important;
+      height:auto!important;max-height:min(47dvh,calc(100dvh - 225px))!important;
+      flex:0 1 auto!important;box-shadow:0 5px 13px rgba(0,0,0,.25)!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip img{
+      display:block!important;width:auto!important;height:auto!important;
+      max-width:min(100%,290px)!important;
+      max-height:min(47dvh,calc(100dvh - 225px))!important;
+      object-fit:contain!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-hint{
+      font-size:10px!important;line-height:1.1!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-actions{
+      gap:6px!important;margin:0!important;
+    }
+    /* Même principe quand la carte ki.S est ouverte depuis Mon profil. */
+    #mur-v97-profile-modal .mur-v97-inner{max-width:390px!important;gap:7px!important;}
+    #mur-v97-profile-modal .mur-v97-image-button{min-height:0!important;flex:1 1 auto!important;}
+    #mur-v97-profile-modal .mur-v97-image{
+      max-width:min(72vw,310px)!important;
+      max-height:min(66dvh,calc(100dvh - 155px))!important;
+      width:auto!important;height:auto!important;object-fit:contain!important;
+    }
+    @media(max-width:520px){
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip,
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip img{
+        max-width:min(64vw,245px)!important;
+        max-height:min(42dvh,calc(100dvh - 205px))!important;
+      }
+      #mur-v97-profile-modal .mur-v97-image{
+        max-width:min(72vw,290px)!important;
+        max-height:min(62dvh,calc(100dvh - 150px))!important;
+      }
+    }
+    @media(max-height:650px){
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip,
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip img{
+        max-height:39dvh!important;
+      }
+      #mur-v97-profile-modal .mur-v97-image{max-height:56dvh!important;}
+    }
+  `;
+  document.head.appendChild(style);
+})();
