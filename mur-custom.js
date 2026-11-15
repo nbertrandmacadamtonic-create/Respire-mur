@@ -4506,8 +4506,8 @@ if (typeof window.installPresentationFallback !== 'function') {
   }
   function sync(){
     const c=trendColor();
-    document.querySelectorAll('#testResultView .result-step-number.mur-v120-number').forEach(el=>{
-      el.style.setProperty('--mur-v120-orb-color',c);
+    document.querySelectorAll('#testResultView #resultNowBlock .result-step-number.mur-v120-number, #testResultView #resultSynthesisBlock .result-step-number.mur-v120-number').forEach(el=>{
+      if(el.style.getPropertyValue('--mur-v120-orb-color')!==c) el.style.setProperty('--mur-v120-orb-color',c);
     });
     document.querySelectorAll('#testResultView .result-progress-list.mur-v120-steps > .mur-v120-arrow').forEach(el=>el.remove());
   }
@@ -4516,7 +4516,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     const root=document.getElementById('testResultView');
     if(root){
       const obs=new MutationObserver(sync);
-      obs.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+      obs.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
     }
     window.addEventListener('focus',sync);
     window.addEventListener('storage',sync);
@@ -4644,7 +4644,7 @@ if (typeof window.installPresentationFallback !== 'function') {
   function updateColor(hexColor){
     currentColor=hexColor || currentColor || '#5baf96';
     const pair=ensureCanvas();
-    if(pair) pair.badge.style.setProperty('--mur-v120-orb-color', currentColor);
+    if(pair && pair.badge.style.getPropertyValue('--mur-v120-orb-color')!==currentColor) pair.badge.style.setProperty('--mur-v120-orb-color', currentColor);
     ready=true;
   }
   function resolveKisColor(){
@@ -4665,8 +4665,12 @@ if (typeof window.installPresentationFallback !== 'function') {
       img.src=sources[i++];
     })();
   }
+  let lastImageSignature='';
   function sync(){
     ensureCanvas();
+    const signature=cardKey()+'|'+candidateImages().join('|');
+    if(signature===lastImageSignature)return;
+    lastImageSignature=signature;
     resolveKisColor();
   }
   function init(){
@@ -4674,7 +4678,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     const root=document.getElementById('testResultView');
     if(root){
       const obs=new MutationObserver(sync);
-      obs.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','src','style']});
+      obs.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','src']});
     }
     window.addEventListener('focus',sync);
     window.addEventListener('storage',sync);
@@ -4685,7 +4689,8 @@ if (typeof window.installPresentationFallback !== 'function') {
         const pair=ensureCanvas();
         if(pair && ready && t-last>55){
           last=t;
-          pair.badge.style.setProperty('--mur-v120-orb-color', currentColor);
+          if(pair.badge.style.getPropertyValue('--mur-v120-orb-color')!==currentColor)
+            pair.badge.style.setProperty('--mur-v120-orb-color', currentColor);
           draw(pair.ctx,currentColor,t,0);
         }
       }
