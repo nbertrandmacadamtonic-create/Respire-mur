@@ -4454,3 +4454,75 @@ if (typeof window.installPresentationFallback !== 'function') {
     }, time);
   }, true);
 })();
+
+
+/* ===============================================================
+   M.U.R. V123 — Résultat NeuroFlex : couleur des sphères calée
+   sur la tendance NeuroFlex et suppression des petites flèches.
+   Garde les sphères numérotées de la V120.
+   =============================================================== */
+(function(){
+  'use strict';
+  if(window.MUR_RESULT_STEPS_V123)return;
+  window.MUR_RESULT_STEPS_V123=true;
+
+  const style=document.createElement('style');
+  style.id='mur-result-steps-v123';
+  style.textContent=`
+    #testResultView .result-progress-list.mur-v120-steps > .mur-v120-arrow{
+      display:none!important;
+      width:0!important;height:0!important;min-height:0!important;
+      padding:0!important;margin:0!important;overflow:hidden!important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  function parseRGB(str){
+    const s=String(str||'').trim();
+    if(/^#[0-9a-f]{6}$/i.test(s)) return [1,3,5].map(i=>parseInt(s.slice(i,i+2),16));
+    if(/^#[0-9a-f]{3}$/i.test(s)) return [1,2,3].map(i=>parseInt(s[i]+s[i],16));
+    if(/^rgba?\(/i.test(s)) return (s.match(/[\d.]+/g)||[]).slice(0,3).map(Number);
+    return null;
+  }
+  function toHex(rgb){
+    return '#'+rgb.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+  }
+  function trendColor(){
+    const palette={bleu:[59,150,247],vert:[85,233,153],orange:[255,165,63],rouge:[255,88,100]};
+    let zone=null;
+    try{ zone=JSON.parse(localStorage.getItem('murLastNeuro')||'null')?.zone||null; }catch(_){ }
+    if(!zone){
+      try{ zone=window.getCurrentNeuroRecommendation?.()?.zone || null; }catch(_){ }
+    }
+    const key=String(zone?.key||zone?.name||zone||'').toLowerCase();
+    const c=String(zone?.color||'').trim();
+    const parsed=parseRGB(c);
+    if(parsed && parsed.length===3 && parsed.every(Number.isFinite)) return toHex(parsed);
+    if(key.includes('bleu')||key.includes('blue')) return toHex(palette.bleu);
+    if(key.includes('orange')) return toHex(palette.orange);
+    if(key.includes('rouge')||key.includes('red')) return toHex(palette.rouge);
+    if(key.includes('vert')||key.includes('green')) return toHex(palette.vert);
+    return toHex(palette.vert);
+  }
+  function sync(){
+    const c=trendColor();
+    document.querySelectorAll('#testResultView .result-step-number.mur-v120-number').forEach(el=>{
+      el.style.setProperty('--mur-v120-orb-color',c);
+    });
+    document.querySelectorAll('#testResultView .result-progress-list.mur-v120-steps > .mur-v120-arrow').forEach(el=>el.remove());
+  }
+  function init(){
+    sync();
+    const root=document.getElementById('testResultView');
+    if(root){
+      const obs=new MutationObserver(sync);
+      obs.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+    }
+    window.addEventListener('focus',sync);
+    window.addEventListener('storage',sync);
+    document.addEventListener('click',sync,true);
+    document.addEventListener('visibilitychange',sync);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
