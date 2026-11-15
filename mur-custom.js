@@ -4056,3 +4056,98 @@ if (typeof window.installPresentationFallback !== 'function') {
   `;
   document.head.appendChild(style);
 })();
+
+
+/* ============================================================
+   M.U.R. V119 — Parcours Mesurer : étapes numérotées et flèches.
+   1 / 2 / 3 au centre des sphères multipoints existantes.
+   Suppression des traits verticaux (y compris progression) ;
+   deux flèches descendantes entre les étapes.
+   ============================================================ */
+(function(){
+  'use strict';
+  if(window.MUR_TEST_STEPS_V119)return;
+  window.MUR_TEST_STEPS_V119=true;
+  const style=document.createElement('style');
+  style.id='mur-test-steps-arrows-v119';
+  style.textContent=`
+    /* Neutraliser tous les traits de la frise, même ceux de progression. */
+    #tests .test-menu-grid::before,
+    #tests .test-menu-grid::after,
+    #tests.tests-screen-menu .test-menu-grid::before,
+    #tests.tests-screen-menu .test-menu-grid::after,
+    #tests #testsMenu .test-menu-grid::before,
+    #tests #testsMenu .test-menu-grid::after,
+    #tests #testsMenu.progress-0 .test-menu-grid::after,
+    #tests #testsMenu.progress-1 .test-menu-grid::after,
+    #tests #testsMenu.progress-2 .test-menu-grid::after,
+    #tests #testsMenu.progress-3 .test-menu-grid::after{
+      content:none!important;display:none!important;width:0!important;
+      height:0!important;background:none!important;box-shadow:none!important;
+    }
+    /* Faire de la place entre les 3 étapes pour les flèches. */
+    #tests.tests-screen-menu #testsMenu .test-menu-grid,
+    #tests #testsMenu .test-menu-grid{
+      row-gap:27px!important;
+      overflow:visible!important;
+    }
+    /* Flèches entre étapes : le lien est un sens de progression, pas un trait. */
+    #tests.tests-screen-menu #testMenuKis::after,
+    #tests.tests-screen-menu #testMenuNow::after,
+    #tests #testMenuKis::after,
+    #tests #testMenuNow::after{
+      content:'↓'!important;
+      position:absolute!important;
+      display:flex!important;align-items:center!important;justify-content:center!important;
+      left:25px!important;bottom:-27px!important;
+      width:24px!important;height:25px!important;
+      color:#71c4bd!important;font-family:Arial,sans-serif!important;
+      font-size:25px!important;font-weight:500!important;line-height:1!important;
+      text-shadow:0 0 9px rgba(93,184,176,.35)!important;
+      background:none!important;border:0!important;box-shadow:none!important;
+      opacity:1!important;pointer-events:none!important;
+      transform:none!important;z-index:10!important;
+    }
+    /* Numéro centré par-dessus le canvas animé : couleur de l'orb conservée. */
+    #tests .test-menu-num.mur-step-orb-v117{
+      isolation:isolate!important;position:relative!important;
+      overflow:hidden!important;
+    }
+    #tests .test-menu-num.mur-step-orb-v117 > canvas{
+      position:absolute!important;inset:0!important;z-index:1!important;
+      width:100%!important;height:100%!important;
+    }
+    #tests .test-menu-num .mur-v119-step-number{
+      position:absolute!important;inset:0!important;z-index:3!important;
+      display:flex!important;justify-content:center!important;align-items:center!important;
+      margin:0!important;padding:0!important;
+      font-size:17px!important;font-weight:800!important;line-height:1!important;
+      font-family:inherit!important;letter-spacing:0!important;
+      color:#f9fdff!important;
+      text-shadow:0 1px 5px #061b2f,0 0 9px #061b2f!important;
+      pointer-events:none!important;
+    }
+    @media(max-width:390px){
+      #tests.tests-screen-menu #testMenuKis::after,
+      #tests.tests-screen-menu #testMenuNow::after{
+        left:23px!important;
+      }
+      #tests .test-menu-num .mur-v119-step-number{font-size:16px!important;}
+    }
+  `;
+  document.head.appendChild(style);
+  function mount(){
+    const ids=['testMenuKis','testMenuNow','testMenuResult'];
+    ids.forEach((id,i)=>{
+      const marker=document.querySelector('#'+id+' .test-menu-num');
+      if(!marker||marker.querySelector('.mur-v119-step-number'))return;
+      const label=document.createElement('span');
+      label.className='mur-v119-step-number';
+      label.textContent=String(i+1);
+      label.setAttribute('aria-hidden','true');
+      marker.appendChild(label);
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});
+  else mount();
+})();
