@@ -4151,3 +4151,149 @@ if (typeof window.installPresentationFallback !== 'function') {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});
   else mount();
 })();
+
+
+/* =============================================================
+   M.U.R. V120 — Résultat NeuroFlex : trois sphères numérotées
+   et deux flèches de progression. Même logique que le menu V119.
+   Présentation uniquement : ne touche ni aux scores ni aux clics.
+   ============================================================= */
+(function(){
+  'use strict';
+  if(window.MUR_RESULT_STEPS_V120)return;
+  window.MUR_RESULT_STEPS_V120=true;
+  const css=document.createElement('style');
+  css.id='mur-result-steps-v120';
+  css.textContent=`
+    #testResultView .result-progress-list.mur-v120-steps{gap:0!important;}
+    #testResultView .result-progress-list.mur-v120-steps > .mur-v120-arrow{
+      height:28px!important;min-height:28px!important;
+      display:flex!important;align-items:center!important;justify-content:flex-start!important;
+      padding-left:25px!important;box-sizing:border-box!important;
+      color:#71c4bd!important;font-size:24px!important;line-height:1!important;
+      text-shadow:0 0 8px rgba(113,196,189,.28);
+      pointer-events:none!important;user-select:none!important;
+    }
+    #testResultView .result-progress-list.mur-v120-steps > .mur-v120-arrow > span{
+      width:29px!important;height:27px!important;display:grid!important;place-items:center!important;
+    }
+    #testResultView .result-step:not(.open) .result-step-side{gap:0!important;padding-top:0!important;}
+    #testResultView .result-step:not(.open) .result-step-number.mur-v120-number{
+      position:relative!important;display:grid!important;place-items:center!important;
+      width:44px!important;height:44px!important;min-width:44px!important;
+      overflow:hidden!important;border-radius:50%!important;padding:0!important;
+      background:radial-gradient(circle,#0b2b37 0%,#061723 78%)!important;
+      border:1px solid color-mix(in srgb,var(--mur-v120-orb-color,#5baf96) 48%,transparent)!important;
+      box-shadow:0 0 13px color-mix(in srgb,var(--mur-v120-orb-color,#5baf96) 22%,transparent)!important;
+      font-size:0!important;line-height:0!important;color:transparent!important;
+      filter:none!important;
+    }
+    #testResultView .result-step:not(.open) .result-step-number.mur-v120-number::before,
+    #testResultView .result-step:not(.open) .result-step-number.mur-v120-number::after{
+      display:none!important;content:none!important;
+    }
+    #testResultView .result-step-number.mur-v120-number > canvas{
+      display:block!important;position:absolute!important;inset:0!important;
+      width:100%!important;height:100%!important;pointer-events:none!important;
+    }
+    #testResultView .result-step-number.mur-v120-number > .mur-v120-digit{
+      position:absolute!important;inset:0!important;display:flex!important;
+      align-items:center!important;justify-content:center!important;
+      color:#f7fcff!important;font-size:17px!important;font-weight:800!important;
+      line-height:1!important;text-shadow:0 1px 5px #071d2b,0 0 7px #071d2b!important;
+      pointer-events:none!important;
+    }
+    #testResultView .result-step:not(.open) .result-step-state{display:none!important;}
+    #testResultView .result-progress-list.mur-v120-steps:has(.result-step.open) > .mur-v120-arrow{
+      display:none!important;height:0!important;min-height:0!important;
+    }
+    @media(max-width:390px){
+      #testResultView .result-progress-list.mur-v120-steps > .mur-v120-arrow{padding-left:23px!important;}
+      #testResultView .result-step-number.mur-v120-number > .mur-v120-digit{font-size:16px!important;}
+    }
+  `;
+  document.head.appendChild(css);
+  const ids=['resultKisBlock','resultNowBlock','resultSynthesisBlock'];
+  const palette={bleu:'#538fc6',blue:'#538fc6',vert:'#5baf96',verte:'#5baf96',green:'#5baf96',orange:'#d0a067',rouge:'#c96e72',red:'#c96e72'};
+  const views=[];
+  const dots=Array.from({length:280},(_,i)=>{
+    const y=1-2*(i+.5)/280,a=i*2.399963229728653,r=Math.sqrt(Math.max(0,1-y*y));
+    return [r*Math.cos(a),y,r*Math.sin(a)];
+  });
+  function color(){
+    try{
+      const saved=JSON.parse(localStorage.getItem('murLastNeuro')||'null');
+      if(!saved||!saved.zone)return palette.vert;
+      const z=saved.zone,key=String(z.key||z.name||z||'').toLowerCase();
+      for(const name of Object.keys(palette))if(key===name||key.includes(name))return palette[name];
+      if(/^#[\da-f]{6}$/i.test(z.color||''))return z.color;
+    }catch(_){}
+    return palette.vert;
+  }
+  function mount(){
+    const list=document.querySelector('#testResultView .result-progress-list');
+    if(!list)return;
+    list.classList.add('mur-v120-steps');
+    ids.forEach((id,i)=>{
+      const card=document.getElementById(id),badge=card?.querySelector('.result-step-number');
+      if(!card||!badge||badge.classList.contains('mur-v120-number'))return;
+      badge.classList.add('mur-v120-number');
+      badge.textContent='';
+      const canvas=document.createElement('canvas');canvas.width=112;canvas.height=112;
+      canvas.setAttribute('aria-hidden','true');
+      const digit=document.createElement('span');digit.className='mur-v120-digit';
+      digit.textContent=String(i+1);digit.setAttribute('aria-hidden','true');
+      badge.append(canvas,digit);
+      views.push({badge,ctx:canvas.getContext('2d'),offset:i*.5});
+    });
+    ['resultKisBlock','resultNowBlock'].forEach(id=>{
+      const card=document.getElementById(id);
+      if(!card||card.nextElementSibling?.classList.contains('mur-v120-arrow'))return;
+      const arrow=document.createElement('div');arrow.className='mur-v120-arrow';
+      arrow.setAttribute('aria-hidden','true');arrow.innerHTML='<span>↓</span>';
+      card.insertAdjacentElement('afterend',arrow);
+    });
+  }
+  function draw(ctx,hex,t,offset){
+    if(!ctx)return;
+    const W=112,C=56,R=46;ctx.clearRect(0,0,W,W);
+    const m=hex.match(/^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
+    const rgb=m?[1,2,3].map(i=>parseInt(m[i],16)):[91,175,150];
+    const glow=ctx.createRadialGradient(C,C,2,C,C,53);
+    glow.addColorStop(0,'rgba('+rgb.join(',')+',.13)');
+    glow.addColorStop(1,'rgba('+rgb.join(',')+',0)');
+    ctx.fillStyle=glow;ctx.fillRect(0,0,W,W);
+    const a=t*.00012+offset,cs=Math.cos(a),sn=Math.sin(a);
+    const pts=dots.map(([x,y,z])=>({x:C+R*(x*cs-z*sn),y:C+R*y,z:x*sn+z*cs}));
+    pts.sort((p,q)=>p.z-q.z);ctx.fillStyle=hex;
+    for(const p of pts){const v=(p.z+1)/2;ctx.globalAlpha=.2+.76*v;
+      ctx.beginPath();ctx.arc(p.x,p.y,.8+v*.58,0,Math.PI*2);ctx.fill();}
+    ctx.globalAlpha=1;
+  }
+  let previous='';
+  function sync(){
+    mount();const c=color();if(c===previous)return;previous=c;
+    views.forEach(v=>v.badge.style.setProperty('--mur-v120-orb-color',c));
+  }
+  function init(){
+    sync();
+    const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if(reduced){views.forEach(v=>draw(v.ctx,previous,0,v.offset));}
+    else{
+      let last=0;
+      function frame(t){
+        if(t-last>55){last=t;
+          if(!document.hidden && document.querySelector('#testResultView')?.offsetParent!==null){
+            sync();views.forEach(v=>draw(v.ctx,previous,t,v.offset));
+          }
+        }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+    window.addEventListener('focus',sync);
+    window.addEventListener('storage',sync);
+    document.addEventListener('click',sync,true);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
