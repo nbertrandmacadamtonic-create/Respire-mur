@@ -4365,3 +4365,92 @@ if (typeof window.installPresentationFallback !== 'function') {
   `;
   document.head.appendChild(st);
 })();
+
+
+/* ===========================================================
+   M.U.R. V122 — Retournement 3D des cartes ki.S.
+   Anime le bouton-carte existant sans changer son cadre,
+   ses dimensions, ses images ni ses gestionnaires recto/verso.
+   =========================================================== */
+(function(){
+  'use strict';
+  if(window.MUR_KIS_FLIP_3D_V122) return;
+  window.MUR_KIS_FLIP_3D_V122 = true;
+
+  const css = document.createElement('style');
+  css.id = 'mur-kis-flip-3d-v122';
+  css.textContent = `
+    .mur-kis-v92-card, #mur-v97-profile-modal .mur-v97-inner {
+      perspective: 1000px;
+    }
+    .mur-kis-v92-flip, #mur-v97-profile-modal .mur-v97-image-button {
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform-origin: center center;
+      will-change: transform;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .mur-kis-v92-flip, #mur-v97-profile-modal .mur-v97-image-button {
+        transition: none !important;
+        will-change: auto;
+      }
+    }
+  `;
+  document.head.appendChild(css);
+
+  let replaying = false;
+  const busy = new WeakSet();
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  // La capture sur window précède les gestionnaires historiques sur document.
+  window.addEventListener('click', function(e){
+    if(replaying || reduced.matches) return;
+    const trigger = e.target instanceof Element
+      ? e.target.closest('[data-mur-v92-flip], [data-v97-flip]')
+      : null;
+    if(!trigger) return;
+
+    const result = trigger.closest('.mur-kis-v92-card');
+    const profileModal = trigger.closest('#mur-v97-profile-modal');
+    if(!result && (!profileModal || profileModal.hidden)) return;
+
+    const visual = result
+      ? result.querySelector('.mur-kis-v92-flip')
+      : profileModal.querySelector('.mur-v97-image-button');
+    if(!visual) return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if(busy.has(visual)) return;
+    busy.add(visual);
+
+    const time = 230;
+    const easing = 'cubic-bezier(.42,0,.58,1)';
+    visual.style.transition = 'transform ' + time + 'ms ' + easing;
+    visual.style.transform = 'rotateY(90deg)';
+
+    window.setTimeout(function(){
+      // Le gestionnaire existant change l'image et le libellé à mi-rotation.
+      visual.style.transition = 'none';
+      visual.style.transform = 'rotateY(-90deg)';
+      replaying = true;
+      try {
+        trigger.click();
+      } finally {
+        replaying = false;
+      }
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+          visual.style.transition = 'transform ' + time + 'ms ' + easing;
+          visual.style.transform = 'rotateY(0deg)';
+          window.setTimeout(function(){
+            visual.style.transition = '';
+            visual.style.transform = '';
+            busy.delete(visual);
+          }, time + 35);
+        });
+      });
+    }, time);
+  }, true);
+})();
