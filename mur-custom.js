@@ -4701,3 +4701,292 @@ if (typeof window.installPresentationFallback !== 'function') {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
+
+/* ===================================================================
+   M.U.R. V128 — Nuances visuelles Ici & Maintenant (base stable V126)
+   Les quatre curseurs déterminent SEULS le score et la couleur.
+   Un choix de pictogramme multipoints est proposé APRES validation,
+   uniquement pour la zone actuelle BLEUE ou ROUGE.
+   Nuance et recommandation conservées LOCALLEMENT; pas de Supabase.
+   Aucun MutationObserver supplémentaire : évite les blocages Chrome.
+   =================================================================== */
+(function(){
+  'use strict';
+  if(window.MUR_NUANCES_V128)return;
+  window.MUR_NUANCES_V128=true;
+  const KEY='murNowNuanceV128';
+  const DATA={
+    blue_calm:{zone:'bleu',color:'#36b6ef',fr:'Calme et détendu',en:'Calm and relaxed',shortFr:'Bleu calme',shortEn:'Calm blue',
+      descriptionFr:'Vous décrivez un état calme, confortable, avec une disponibilité préservée. Un niveau d’activation bas n’est pas nécessairement un manque d’énergie.',
+      descriptionEn:'You describe a calm, comfortable state with preserved availability. Low activation does not necessarily mean low energy.',
+      adviceFr:'Préservez cet état : respiration naturelle, pause agréable, récupération et attention à vos sensations. Il n’est pas utile de vous stimuler systématiquement.',
+      adviceEn:'Preserve this state with natural breathing, comfortable breaks and recovery. There is no need to increase activation systematically.',
+      exerciseFr:'Lac tranquille — maintien de la stabilité',exerciseEn:'Quiet lake — maintain steadiness',exercise:'lac',exerciseZone:'vert',symbol:'lotus'},
+    blue_tired:{zone:'bleu',color:'#478fec',fr:'Fatigué, en manque d’énergie',en:'Tired, low on energy',shortFr:'Bleu ralenti',shortEn:'Slowed blue',
+      descriptionFr:'Vous décrivez un ralentissement ressenti, un manque d’élan ou de disponibilité. Le tableau de référence recommande ici une augmentation progressive de l’énergie.',
+      descriptionEn:'You describe feeling slowed or lacking energy. The source chart suggests gently increasing activation in such a state.',
+      adviceFr:'Commencez par le repos si nécessaire, puis privilégiez la lumière du jour et une mobilisation douce, sans effort brutal. Une fatigue inhabituelle ou persistante mérite une évaluation.',
+      adviceEn:'Rest if needed; try daylight and gentle movement without forcing. Unusual or persistent fatigue needs assessment.',
+      exerciseFr:'Lumière du matin — activation progressive',exerciseEn:'Morning light — gentle activation',exercise:'lumiere',exerciseZone:'bleu',symbol:'battery'},
+    red_tense:{zone:'rouge',color:'#ff9150',fr:'En surtension',en:'Highly tense',shortFr:'Rouge activé',shortEn:'Activated red',
+      descriptionFr:'Vous décrivez une mobilisation intense avec tension corporelle, agitation ou impression d’être débordé. La priorité est de réduire progressivement la sollicitation.',
+      descriptionEn:'You describe intense activation, physical tension or feeling overwhelmed. The priority is to gradually reduce demands.',
+      adviceFr:'Ralentissez si cela vous convient : appuis stables, relâchement des épaules et expiration naturelle, sans apnée ni respiration forcée. Arrêtez en cas d’inconfort.',
+      adviceEn:'Slow down comfortably: stable support, relaxing the shoulders and natural, unforced exhalation. Stop if uncomfortable.',
+      exerciseFr:'Pause vagale — ralentissement confortable',exerciseEn:'Vagal pause — comfortable slowing',exercise:'pause',exerciseZone:'rouge',symbol:'chevrons'},
+    red_frozen:{zone:'rouge',color:'#f25b7b',fr:'Figé, bloqué',en:'Frozen, unable to act',shortFr:'Rouge figé',shortEn:'Frozen red',
+      descriptionFr:'Vous décrivez un sentiment de blocage malgré une forte surcharge ressentie. Cela ne démontre ni une réponse nerveuse particulière ni une crise de panique.',
+      descriptionEn:'You describe feeling unable to act despite intense distress. This does not establish a specific neural response or a panic attack.',
+      adviceFr:'Privilégiez les repères extérieurs : regarder autour de vous, identifier des éléments rassurants, sentir le sol sous les pieds, puis bouger doucement si possible. Ne forcez pas la respiration. Une incapacité réelle et soudaine à bouger nécessite une évaluation médicale urgente.',
+      adviceEn:'Use external grounding: look around, notice reassuring objects, feel the ground beneath your feet, and move gently if possible. Do not force breathing. Sudden genuine inability to move needs urgent medical assessment.',
+      exerciseFr:'Ancrage — retrouver des repères concrets',exerciseEn:'Grounding — find concrete points of reference',exercise:'ancrage',exerciseZone:'rouge',symbol:'pause'}
+  };
+  const keysByZone={bleu:['blue_calm','blue_tired'],rouge:['red_tense','red_frozen']};
+  const profiles={
+    pose:['Votre tendance ki.S invite à observer le passage entre repos et mobilisation.','Your ki.S profile invites you to notice changes between rest and action.'],
+    funambule:['Observez vos fluctuations et ce qui vous aide à retrouver une sensation de stabilité.','Notice changes in your state and what helps you regain steadiness.'],
+    fonceur:['Tenez compte des signaux corporels et de vos besoins de récupération, sans viser la performance.','Pay attention to bodily signals and recovery needs rather than performance.'],
+    pose_funambule:['Observez la différence entre votre recherche de stabilité et votre état du moment.','Notice the contrast between your wish for steadiness and your current state.'],
+    pose_fonceur:['Explorez les transitions entre disponibilité et mobilisation.','Explore transitions between availability and activation.'],
+    funambule_fonceur:['Soyez attentif aux variations et à la possibilité de ralentir.','Notice changes in activation and opportunities to slow down.'],
+    equilibre:['Comparez ce ressenti avec votre disponibilité habituelle.','Compare this experience with your usual sense of availability.']
+  };
+  const css=document.createElement('style');css.id='mur-v128-nuances-style';
+  css.textContent=`
+  #mur-v128-chooser{padding:11px 12px;margin:6px 0 12px;border:1px solid rgba(108,184,202,.34);border-radius:15px;background:linear-gradient(115deg,rgba(10,30,48,.94),rgba(20,43,63,.88));color:#f1fafc;max-width:100%;box-sizing:border-box}
+  #mur-v128-chooser .mur-v128-question{font-weight:750;font-size:14px;line-height:1.3;margin:0 0 5px}
+  #mur-v128-chooser .mur-v128-sub{font-size:11px;color:#bdcedb;line-height:1.4;margin:0 0 9px}
+  #mur-v128-chooser .mur-v128-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  #mur-v128-chooser button.mur-v128-choice{min-height:104px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:9px 5px;border-radius:12px;border:1px solid rgba(106,150,174,.4);background:rgba(10,29,46,.55);color:#e5f3fa;font-size:12px;line-height:1.25;text-align:center;cursor:pointer;white-space:normal}
+  #mur-v128-chooser button.mur-v128-choice[aria-pressed="true"]{border:2px solid var(--mur-nuance-accent,#61b6ec);background:color-mix(in srgb,var(--mur-nuance-accent,#61b6ec) 14%,#0b2236);box-shadow:0 0 12px color-mix(in srgb,var(--mur-nuance-accent,#61b6ec) 16%,transparent)}
+  #mur-v128-chooser .mur-v128-icon{display:block;width:54px;height:54px;flex:none}
+  #mur-v128-chooser .mur-v128-selected{margin-top:8px;font-size:11px;color:#c1e0e9}
+  #testResultView .mur-v128-mini{display:inline-flex;align-items:center;gap:4px;padding:2px 5px;border:1px solid rgba(120,173,195,.25);border-radius:9px;color:#ebf5fb;font-size:11px;line-height:1.1;white-space:nowrap}
+  #testResultView .mur-v128-mini .mur-v128-icon{width:27px;height:27px;display:block;flex:none}
+  #testResultView .mur-v128-insight{margin:8px 0 4px;padding:10px 11px;background:rgba(12,32,49,.74);border:1px solid rgba(113,160,190,.34);border-left:3px solid var(--mur-nuance-accent,#67bbda);border-radius:11px;color:#e4f1f7;line-height:1.45;font-size:12px;overflow-wrap:anywhere}
+  #testResultView .mur-v128-insight .mur-v128-top{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:750;margin-bottom:5px}
+  #testResultView .mur-v128-insight .mur-v128-top .mur-v128-icon{width:39px;height:39px;flex:none}
+  #testResultView .mur-v128-insight p{margin:5px 0!important}
+  #testResultView .mur-v128-insight .mur-v128-disclaimer{font-size:10px;line-height:1.4;color:#abc2d1;margin-top:7px}
+  #testResultView .mur-v128-open-exercise{width:100%;min-height:38px;padding:8px;margin-top:7px;background:#1b5365;border-radius:9px;border:1px solid rgba(120,204,209,.35);color:#fff;cursor:pointer;font-weight:650;font-size:12px}
+  #testResultView .result-step-side{position:relative}
+  #testResultView .mur-v128-side-icon{position:absolute;right:-4px;bottom:-8px;width:21px;height:21px;padding:2px;background:#092032;border-radius:50%;border:1px solid rgba(140,178,194,.4);pointer-events:none;z-index:3}
+  #testResultView .mur-v128-side-icon .mur-v128-icon{display:block;width:100%;height:100%}
+  @media(max-width:440px){#mur-v128-chooser{padding:9px 8px}#mur-v128-chooser button.mur-v128-choice{font-size:11px;min-height:93px}#mur-v128-chooser .mur-v128-icon{width:44px;height:44px}#testResultView .mur-v128-mini{font-size:10px}}
+  `;
+  document.head.appendChild(css);
+
+  function english(){
+    try{
+      const s=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||document.documentElement.lang||'fr';
+      return String(s).toLowerCase().startsWith('en');
+    }catch(_){return false;}
+  }
+  const t=(fr,en)=>english()?en:fr;
+  function read(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(_){return null}}
+  function zoneKey(obj){
+    const z=obj?.zone;const k=String(z?.key||z?.name||z||'').toLowerCase();
+    if(k.includes('bleu')||k.includes('blue'))return 'bleu';
+    if(k.includes('rouge')||k.includes('red'))return 'rouge';
+    if(k.includes('orange'))return 'orange';
+    if(k.includes('vert')||k.includes('green'))return 'vert';
+    return null;
+  }
+  function current(){
+    const now=read('murNow');const zone=zoneKey(now);
+    if(!now||!zone||!keysByZone[zone])return null;
+    const saved=read(KEY);
+    const stored=saved?.choice||now?.nuanceV128?.choice;
+    const meta=saved||now?.nuanceV128;
+    if(!DATA[stored]||DATA[stored].zone!==zone)return null;
+    if(Number(meta?.score)!==Number(now.score))return null;
+    return DATA[stored] ? stored : null;
+  }
+  function makeSVG(symbol,color){
+    // Les traits sont construits intégralement avec des points lumineux.
+    // Aucun cercle de fond : ces pictogrammes ne copient pas les orbes.
+    const NS='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox','0 0 80 80');svg.setAttribute('class','mur-v128-icon');svg.setAttribute('aria-hidden','true');
+    const add=(x,y,r=1.45)=>{const dot=document.createElementNS(NS,'circle');dot.setAttribute('cx',x.toFixed(2));dot.setAttribute('cy',y.toFixed(2));dot.setAttribute('r',String(r));dot.setAttribute('fill',color);dot.setAttribute('opacity','.96');svg.appendChild(dot);};
+    const line=(x1,y1,x2,y2,step=3)=>{const length=Math.hypot(x2-x1,y2-y1),n=Math.max(2,Math.ceil(length/step));for(let i=0;i<=n;i++){const q=i/n;add(x1+(x2-x1)*q,y1+(y2-y1)*q)}};
+    const bezier=(a,b,c,d,n=32)=>{for(let i=0;i<=n;i++){const q=i/n,k=1-q;add(k*k*k*a[0]+3*k*k*q*b[0]+3*k*q*q*c[0]+q*q*q*d[0],k*k*k*a[1]+3*k*k*q*b[1]+3*k*q*q*c[1]+q*q*q*d[1],1.35)}};
+    if(symbol==='lotus'){
+      bezier([40,57],[24,43],[29,26],[40,14]);bezier([40,14],[51,26],[56,43],[40,57]);
+      bezier([40,57],[18,56],[11,42],[14,30]);bezier([14,30],[30,32],[37,43],[40,57]);
+      bezier([40,57],[62,56],[69,42],[66,30]);bezier([66,30],[50,32],[43,43],[40,57]);
+      bezier([14,62],[26,66],[54,66],[66,62],22);
+    }else if(symbol==='battery'){
+      line(14,25,63,25);line(14,55,63,55);line(14,25,14,55);line(63,25,63,55);line(66,35,70,35);line(70,35,70,45);line(66,45,70,45);
+      for(let y=32;y<=48;y+=3.3)for(let x=21;x<=28;x+=3.3)add(x,y,1.5);
+    }else if(symbol==='chevrons'){
+      line(13,44,40,17,2.6);line(40,17,67,44,2.6);line(13,63,40,36,2.6);line(40,36,67,63,2.6);
+    }else if(symbol==='pause'){
+      for(let y=20;y<=60;y+=3.2)for(let x of [29,33,47,51])add(x,y,1.4);
+    }
+    return svg;
+  }
+  function icon(choice){const d=DATA[choice];return makeSVG(d.symbol,d.color)}
+  function save(choice){
+    const d=DATA[choice],now=read('murNow');
+    if(!d||!now||zoneKey(now)!==d.zone)return;
+    const info={choice,zone:d.zone,score:Number(now.score),chosenAt:new Date().toISOString()};
+    localStorage.setItem(KEY,JSON.stringify(info));
+    now.nuanceV128=info;
+    localStorage.setItem('murNow',JSON.stringify(now));
+  }
+  function renderChooser(){
+    const view=document.getElementById('testResultView');const list=view?.querySelector('.result-progress-list');
+    if(!list)return;
+    const now=read('murNow'),zone=zoneKey(now);
+    let root=document.getElementById('mur-v128-chooser');
+    if(!now||!keysByZone[zone]){if(root)root.remove();return;}
+    if(!root){root=document.createElement('section');root.id='mur-v128-chooser';root.setAttribute('aria-live','polite');list.parentNode.insertBefore(root,list);}
+    const chosen=current(),language=english()?'en':'fr';
+    const sig=zone+'|'+(chosen||'')+'|'+language;
+    if(root.dataset.sig===sig)return;
+    root.dataset.sig=sig;
+    root.replaceChildren();
+    const question=document.createElement('p');question.className='mur-v128-question';
+    question.textContent=zone==='bleu'?t('Comment vous sentez-vous dans cette zone bleue ?','How do you feel in this blue zone?'):
+      t('Comment vivez-vous cette zone rouge ?','How do you experience this red zone?');
+    const sub=document.createElement('p');sub.className='mur-v128-sub';
+    sub.textContent=t('La couleur et le score ne changent pas. Choisissez seulement la nuance qui vous correspond.','Your colour and score stay the same. Choose the description that fits best.');
+    const opts=document.createElement('div');opts.className='mur-v128-options';
+    for(const k of keysByZone[zone]){
+      const d=DATA[k],button=document.createElement('button');button.type='button';button.className='mur-v128-choice';button.dataset.murNuance=k;
+      button.style.setProperty('--mur-nuance-accent',d.color);button.setAttribute('aria-pressed',String(chosen===k));
+      const label=document.createElement('span');label.textContent=english()?d.en:d.fr;
+      button.append(icon(k),label);opts.appendChild(button);
+    }
+    root.append(question,sub,opts);
+    if(chosen){const note=document.createElement('div');note.className='mur-v128-selected';note.textContent=t('✓ Nuance enregistrée. Vous pouvez changer de choix.','✓ Nuance saved. You can change your choice.');root.appendChild(note);}
+  }
+  function addSmallIcon(blockId,choice){
+    const block=document.getElementById(blockId);if(!block)return;
+    block.querySelectorAll('.mur-v128-mini,.mur-v128-side-icon').forEach(x=>x.remove());
+    if(!choice)return;
+    const d=DATA[choice];
+    const head=block.querySelector('.result-step-top');if(head){
+      const tag=document.createElement('span');tag.className='mur-v128-mini';
+      const text=document.createElement('span');text.textContent=english()?d.shortEn:d.shortFr;
+      tag.append(icon(choice),text);head.appendChild(tag);
+    }
+    const side=block.querySelector('.result-step-side');if(side){
+      const dot=document.createElement('span');dot.className='mur-v128-side-icon';dot.appendChild(icon(choice));side.appendChild(dot);
+    }
+  }
+  function decorate(){
+    const choice=current();
+    for(const id of ['resultNowBlock','resultSynthesisBlock'])addSmallIcon(id,choice);
+    for(const [id,kind] of [['resultNowDetail','now'],['resultSynthDetail','synth']]){
+      const detail=document.getElementById(id);if(!detail)continue;
+      detail.querySelectorAll('.mur-v128-insight').forEach(el=>el.remove());
+      if(!choice||!detail.parentElement?.closest('.result-step.open'))continue;
+      const d=DATA[choice],card=document.createElement('section');card.className='mur-v128-insight';
+      card.style.setProperty('--mur-nuance-accent',d.color);
+      const top=document.createElement('div');top.className='mur-v128-top';
+      const title=document.createElement('span');title.textContent=english()?d.shortEn:d.shortFr;top.append(icon(choice),title);
+      const description=document.createElement('p');description.textContent=english()?d.descriptionEn:d.descriptionFr;
+      const advice=document.createElement('p');advice.textContent=english()?d.adviceEn:d.adviceFr;
+      const recommendation=document.createElement('p');recommendation.textContent=t('Exercice suggéré : ','Suggested exercise: ')+(english()?d.exerciseEn:d.exerciseFr);
+      const btn=document.createElement('button');btn.className='mur-v128-open-exercise';btn.type='button';btn.dataset.murNuanceExercise=choice;
+      btn.textContent=t('Découvrir cet exercice','Explore this exercise');
+      const note=document.createElement('p');note.className='mur-v128-disclaimer';
+      note.textContent=t('Interprétation descriptive inspirée du tableau de B. Rothschild ; elle ne mesure pas directement l’activité autonome et ne constitue pas un diagnostic.','Descriptive interpretation inspired by B. Rothschild’s chart; it does not directly measure autonomic activity or constitute a diagnosis.');
+      card.append(top,description,advice,recommendation);
+      if(kind==='synth'){
+        const key=read('murKis')?.cardKey;
+        if(profiles[key]){const p=document.createElement('p');p.textContent=(english()?profiles[key][1]:profiles[key][0]);card.appendChild(p);}
+      }
+      card.append(btn,note);detail.appendChild(card);
+      // Aligner les rubriques historiques avec la recommandation affinée.
+      const mapping=kind==='now'?{
+        'objectif':t('Adapter la régulation','Adapt regulation'),
+        'respiration':choice==='red_frozen'?t('Libre, sans apnée ni effort','Natural, no breath holding'):
+          choice==='blue_calm'?t('Naturelle, sans contrainte','Natural, unforced'):null,
+        'exercices':english()?d.exerciseEn:d.exerciseFr,
+        'conseil':english()?d.adviceEn:d.adviceFr
+      }:{
+        'réponse conseillée':t('Régulation ajustée au ressenti','Response adapted to your experience'),
+        'respiration conseillée':choice==='red_frozen'?t('Non imposée, sans apnée','Optional, no breath holding'):
+          choice==='blue_calm'?t('Naturelle, sans contrainte','Natural, unforced'):null,
+        'exercices conseillés':english()?d.exerciseEn:d.exerciseFr,
+        'logique':english()?d.adviceEn:d.adviceFr
+      };
+      for(const chip of detail.querySelectorAll('.result-detail-grid .result-detail-chip')){
+        const key=chip.querySelector('small')?.textContent.trim().toLowerCase();
+        const value=Object.prototype.hasOwnProperty.call(mapping,key)?mapping[key]:null;
+        const target=chip.querySelector('b');
+        if(value&&target)target.textContent=value;
+      }
+    }
+  }
+  function refresh(){renderChooser();decorate();}
+  function openSuggested(choice){
+    const d=DATA[choice];if(!d)return;
+    if(typeof window.openRecommendedExercises==='function'){
+      window.openRecommendedExercises();
+      window.setTimeout(()=>{if(typeof window.openExercise==='function')window.openExercise(d.exercise)},650);
+    }
+  }
+  function init(){
+    // Aucun changement des calculs : nous observons seulement le résultat final.
+    if(typeof window.finishNow==='function'){
+      const previous=window.finishNow;
+      window.finishNow=function(){
+        localStorage.removeItem(KEY); // nouveau passage : aucun choix ancien ne doit être réutilisé
+        const out=previous.apply(this,arguments);
+        try{const n=read('murNow');if(n?.nuanceV128){delete n.nuanceV128;localStorage.setItem('murNow',JSON.stringify(n));}}catch(_){ }
+        refresh();window.setTimeout(refresh,420);
+        return out;
+      };
+    }
+    if(typeof window.renderResultStepDetails==='function'){
+      const previous=window.renderResultStepDetails;
+      window.renderResultStepDetails=function(){const out=previous.apply(this,arguments);decorate();return out;};
+    }
+    if(typeof window.renderProgressiveResult==='function'){
+      const previous=window.renderProgressiveResult;
+      window.renderProgressiveResult=function(){const out=previous.apply(this,arguments);refresh();return out;};
+    }
+    // Les suggestions affichées par les boutons de la page Exercices suivent la nuance.
+    if(typeof window.getRecommendedExerciseZoneKey==='function'){
+      const previous=window.getRecommendedExerciseZoneKey;
+      window.getRecommendedExerciseZoneKey=function(){const c=current();return c?DATA[c].exerciseZone:previous.apply(this,arguments);};
+    }
+    if(typeof window.getPersonalizedBreathKey==='function'){
+      const previous=window.getPersonalizedBreathKey;
+      window.getPersonalizedBreathKey=function(zone){
+        const c=current();
+        // Pour le calme et le blocage ressenti : pas de frein 3/8 imposé.
+        if(c==='blue_calm'||c==='red_frozen')return '365';
+        return previous.apply(this,arguments);
+      };
+    }
+    if(typeof window.refreshResultActionButtons==='function'){
+      const previous=window.refreshResultActionButtons;
+      window.refreshResultActionButtons=function(){const out=previous.apply(this,arguments);const c=current();if(c){
+        const button=document.getElementById('resultFinalExerciseBtn');
+        if(button)button.textContent=t('Exercice suggéré : ','Suggested: ')+(english()?DATA[c].exerciseEn:DATA[c].exerciseFr);
+        if(c==='red_frozen'||c==='blue_calm'){
+          const breath=document.getElementById('resultFinalBreathBtn');
+          if(breath)breath.textContent=t('Respiration douce, facultative','Gentle breathing, optional');
+        }
+      }return out;};
+    }
+    document.addEventListener('click',event=>{
+      const target=event.target instanceof Element?event.target:null;
+      const choice=target?.closest('[data-mur-nuance]');
+      if(choice){event.stopPropagation();event.preventDefault();save(choice.dataset.murNuance);refresh();return;}
+      const exercise=target?.closest('[data-mur-nuance-exercise]');
+      if(exercise){event.stopPropagation();event.preventDefault();openSuggested(exercise.dataset.murNuanceExercise);return;}
+      if(target?.closest('#resultNowBlock,#resultSynthesisBlock'))window.requestAnimationFrame(decorate);
+      if(target?.closest('[data-language],[data-lang]'))window.setTimeout(refresh,0);
+    });
+    window.addEventListener('focus',refresh);
+    window.addEventListener('storage',ev=>{if(['murNow',KEY,'murKis'].includes(ev.key))refresh();});
+    refresh();
+    window.MUR_V128_REFRESH=refresh;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
