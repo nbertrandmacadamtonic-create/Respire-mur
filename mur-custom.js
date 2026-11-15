@@ -3930,3 +3930,129 @@ if (typeof window.installPresentationFallback !== 'function') {
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
+
+
+/* ============================================================
+   M.U.R. V118 — Fiches de détail NeuroFlex compactes sur mobile.
+   Corrige les hauteurs forcées de index.html (notamment Synthèse)
+   sans modifier l'état des étapes, les scores, ni les cartes ki.S.
+   ============================================================ */
+(function(){
+  'use strict';
+  if(document.getElementById('mur-result-details-mobile-v118'))return;
+  const style=document.createElement('style');
+  style.id='mur-result-details-mobile-v118';
+  style.textContent=`
+    @media (max-width: 600px){
+      /* Même fenêtre compacte pour le détail des 3 étapes. */
+      #testResultView #resultKisBlock.result-step.open,
+      #testResultView #resultNowBlock.result-step.open,
+      #testResultView #resultSynthesisBlock.result-step.open{
+        position:fixed!important;
+        box-sizing:border-box!important;
+        left:50%!important;
+        right:auto!important;
+        top:calc(env(safe-area-inset-top, 0px) + 7dvh)!important;
+        bottom:auto!important;
+        transform:translateX(-50%)!important;
+        width:min(90vw,370px)!important;
+        max-width:min(90vw,370px)!important;
+        height:auto!important;
+        min-height:0!important;
+        max-height:min(78dvh,660px)!important;
+        padding:12px 12px 15px!important;
+        margin:0!important;
+        border-radius:21px!important;
+        display:block!important;
+        overflow-x:hidden!important;
+        overflow-y:auto!important;
+        -webkit-overflow-scrolling:touch!important;
+        overscroll-behavior:contain!important;
+      }
+      #testResultView .result-step.open .result-step-body,
+      #testResultView #resultSynthesisBlock.result-step.open .result-step-body{
+        min-height:0!important;height:auto!important;
+        width:100%!important;max-width:100%!important;
+        padding-bottom:4px!important;
+        display:block!important;
+      }
+      #testResultView .result-step.open .result-step-top{
+        margin:0 0 7px!important;
+        padding:0 0 7px!important;
+      }
+      #testResultView .result-step.open .result-step-top h3{
+        font-size:clamp(17px,4.8vw,21px)!important;
+        line-height:1.14!important;
+      }
+      #testResultView .result-step.open .result-step-top::before{
+        margin-bottom:3px!important;font-size:9px!important;
+      }
+      #testResultView .result-step.open .result-step-top::after{
+        margin-top:4px!important;
+      }
+      #testResultView .result-step.open .result-badge{
+        padding:3px 7px!important;margin-top:3px!important;font-size:9px!important;
+      }
+      #testResultView .result-step.open .result-main{
+        font-size:clamp(17px,5vw,23px)!important;
+        line-height:1.15!important;
+        margin-top:3px!important;
+      }
+      #testResultView .result-step.open .result-text{
+        font-size:11px!important;line-height:1.28!important;
+        margin:5px 0!important;
+      }
+      #testResultView .result-step.open .result-step-detail{
+        margin-top:6px!important;padding-top:6px!important;
+        min-height:0!important;flex:none!important;
+      }
+      #testResultView .result-step.open .result-detail-grid{
+        gap:6px!important;margin-top:6px!important;
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+      }
+      #testResultView .result-step.open .result-detail-chip{
+        min-width:0!important;padding:7px!important;border-radius:11px!important;
+      }
+      #testResultView .result-step.open .result-detail-chip b{
+        font-size:11px!important;line-height:1.23!important;
+      }
+      #testResultView .result-step.open .result-detail-chip small{
+        font-size:9px!important;line-height:1.2!important;
+      }
+      #testResultView #resultSynthesisBlock.result-step.open .result-gauge{
+        margin-top:4px!important;padding-top:0!important;
+      }
+      #testResultView #resultSynthesisBlock.result-step.open .result-score-row{
+        margin-top:5px!important;padding:7px!important;
+      }
+      #testResultView #resultSynthesisBlock.result-step.open .result-final-actions.ready{
+        margin-top:8px!important;padding-top:6px!important;
+      }
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip,
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip img{
+        max-height:min(38dvh,300px)!important;
+        max-width:min(62vw,240px)!important;
+      }
+      #testResultView .result-step.open .result-close-btn{
+        position:sticky!important;float:right!important;
+        top:0!important;right:0!important;z-index:10!important;
+      }
+    }
+    @media(max-width:600px) and (max-height:700px){
+      #testResultView #resultKisBlock.result-step.open,
+      #testResultView #resultNowBlock.result-step.open,
+      #testResultView #resultSynthesisBlock.result-step.open{
+        top:calc(env(safe-area-inset-top,0px) + 4dvh)!important;
+        max-height:77dvh!important;
+      }
+      #testResultView .result-step.open .result-detail-grid{
+        gap:5px!important;
+      }
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip,
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip img{
+        max-height:34dvh!important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+})();
