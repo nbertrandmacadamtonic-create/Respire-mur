@@ -4526,3 +4526,173 @@ if (typeof window.installPresentationFallback !== 'function') {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
+
+
+/* ===============================================================
+   M.U.R. V124 — Dans Résultat NeuroFlex, la sphère n°1 prend la
+   même couleur que le résultat ki.S. Les sphères 2 et 3 gardent
+   la couleur de la tendance NeuroFlex.
+   =============================================================== */
+(function(){
+  'use strict';
+  if(window.MUR_RESULT_KIS_COLOR_V124)return;
+  window.MUR_RESULT_KIS_COLOR_V124=true;
+
+  const style=document.createElement('style');
+  style.id='mur-result-kis-color-v124';
+  style.textContent=`
+    #testResultView #resultKisBlock .result-step-number.mur-v120-number > canvas:first-of-type{
+      visibility:hidden!important;
+    }
+    #testResultView #resultKisBlock .result-step-number.mur-v120-number > canvas.mur-v124-kis-canvas{
+      visibility:visible!important;display:block!important;position:absolute!important;inset:0!important;
+      width:100%!important;height:100%!important;pointer-events:none!important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  const fallback={
+    pose:'#538fc6',
+    pose_funambule:'#4ea7b2',
+    funambule:'#5baf96',
+    pose_fonceur:'#7a87c9',
+    funambule_fonceur:'#d0a067',
+    fonceur:'#c96e72',
+    equilibre:'#5baf96'
+  };
+  const dots=Array.from({length:280},(_,i)=>{
+    const y=1-2*(i+.5)/280,a=i*2.399963229728653,r=Math.sqrt(Math.max(0,1-y*y));
+    return [r*Math.cos(a),y,r*Math.sin(a)];
+  });
+  let currentColor='#5baf96';
+  let ready=false;
+
+  function hex(n){return Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,'0');}
+  function rgbToHex(r,g,b){return '#'+hex(r)+hex(g)+hex(b);}
+  function parseRGB(str){
+    const s=String(str||'').trim();
+    if(/^#[0-9a-f]{6}$/i.test(s)) return [1,3,5].map(i=>parseInt(s.slice(i,i+2),16));
+    if(/^#[0-9a-f]{3}$/i.test(s)) return [1,2,3].map(i=>parseInt(s[i]+s[i],16));
+    if(/^rgba?\(/i.test(s)) return (s.match(/[\d.]+/g)||[]).slice(0,3).map(Number);
+    return null;
+  }
+  function sampleAccent(img){
+    try{
+      const c=document.createElement('canvas');
+      const w=32,h=48;c.width=w;c.height=h;
+      const ctx=c.getContext('2d',{willReadFrequently:true});
+      ctx.drawImage(img,0,0,w,h);
+      const data=ctx.getImageData(0,0,w,h).data;
+      let sr=0,sg=0,sb=0,sw=0;
+      for(let i=0;i<data.length;i+=4){
+        const a=data[i+3]; if(a<80) continue;
+        const r=data[i],g=data[i+1],b=data[i+2];
+        const max=Math.max(r,g,b), min=Math.min(r,g,b), sat=max-min;
+        if(max<58 || sat<18) continue; // ignore dark grey background
+        const weight=(sat/255)*0.9 + (max/255)*0.7;
+        sr+=r*weight; sg+=g*weight; sb+=b*weight; sw+=weight;
+      }
+      if(sw>0) return rgbToHex(sr/sw,sg/sw,sb/sw);
+    }catch(_){ }
+    return null;
+  }
+  function cardKey(){
+    try{
+      const k=JSON.parse(localStorage.getItem('murKis')||'null');
+      return k?.cardKey || null;
+    }catch(_){ return null; }
+  }
+  function candidateImages(){
+    const key=cardKey();
+    const list=[];
+    const visible=document.querySelector('#resultKisBlock .mur-kis-v92-mini img, #resultKisBlock .mur-kis-v92-flip img, #kisResult .mur-kis-card-image');
+    if(visible?.currentSrc || visible?.src) list.push(visible.currentSrc || visible.src);
+    if(key){
+      list.push('images/kis/'+key+'-recto.png');
+      list.push('images/kis/'+key+'-recto.webp');
+    }
+    return [...new Set(list.filter(Boolean))];
+  }
+  function draw(ctx,hexColor,t,offset){
+    if(!ctx)return;
+    const W=112,C=56,R=46;ctx.clearRect(0,0,W,W);
+    const rgb=parseRGB(hexColor)||[91,175,150];
+    const glow=ctx.createRadialGradient(C,C,2,C,C,53);
+    glow.addColorStop(0,'rgba('+rgb.join(',')+',.13)');
+    glow.addColorStop(1,'rgba('+rgb.join(',')+',0)');
+    ctx.fillStyle=glow;ctx.fillRect(0,0,W,W);
+    const a=t*.00012+offset,cs=Math.cos(a),sn=Math.sin(a);
+    const pts=dots.map(([x,y,z])=>({x:C+R*(x*cs-z*sn),y:C+R*y,z:x*sn+z*cs}));
+    pts.sort((p,q)=>p.z-q.z);ctx.fillStyle=hexColor;
+    for(const p of pts){const v=(p.z+1)/2;ctx.globalAlpha=.2+.76*v;ctx.beginPath();ctx.arc(p.x,p.y,.8+v*.58,0,Math.PI*2);ctx.fill();}
+    ctx.globalAlpha=1;
+  }
+  function ensureCanvas(){
+    const badge=document.querySelector('#testResultView #resultKisBlock .result-step-number.mur-v120-number');
+    if(!badge) return null;
+    let cnv=badge.querySelector('canvas.mur-v124-kis-canvas');
+    if(!cnv){
+      cnv=document.createElement('canvas');
+      cnv.className='mur-v124-kis-canvas';
+      cnv.width=112; cnv.height=112; cnv.setAttribute('aria-hidden','true');
+      const digit=badge.querySelector('.mur-v120-digit');
+      if(digit) badge.insertBefore(cnv,digit);
+      else badge.appendChild(cnv);
+    }
+    return {badge, ctx:cnv.getContext('2d')};
+  }
+  function updateColor(hexColor){
+    currentColor=hexColor || currentColor || '#5baf96';
+    const pair=ensureCanvas();
+    if(pair) pair.badge.style.setProperty('--mur-v120-orb-color', currentColor);
+    ready=true;
+  }
+  function resolveKisColor(){
+    const key=cardKey();
+    const visible=document.querySelector('#resultKisBlock .mur-kis-v92-mini img, #resultKisBlock .mur-kis-v92-flip img, #kisResult .mur-kis-card-image');
+    if(visible && visible.complete && visible.naturalWidth){
+      const c=sampleAccent(visible);
+      if(c){ updateColor(c); return; }
+    }
+    const sources=candidateImages();
+    if(!sources.length){ updateColor(fallback[key]||'#5baf96'); return; }
+    let i=0;
+    (function tryNext(){
+      if(i>=sources.length){ updateColor(fallback[key]||'#5baf96'); return; }
+      const img=new Image();
+      img.onload=()=>{ updateColor(sampleAccent(img) || fallback[key] || '#5baf96'); };
+      img.onerror=()=>{ i++; tryNext(); };
+      img.src=sources[i++];
+    })();
+  }
+  function sync(){
+    ensureCanvas();
+    resolveKisColor();
+  }
+  function init(){
+    sync();
+    const root=document.getElementById('testResultView');
+    if(root){
+      const obs=new MutationObserver(sync);
+      obs.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','src','style']});
+    }
+    window.addEventListener('focus',sync);
+    window.addEventListener('storage',sync);
+    document.addEventListener('click',sync,true);
+    let last=0;
+    function frame(t){
+      if(!document.hidden){
+        const pair=ensureCanvas();
+        if(pair && ready && t-last>55){
+          last=t;
+          pair.badge.style.setProperty('--mur-v120-orb-color', currentColor);
+          draw(pair.ctx,currentColor,t,0);
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
