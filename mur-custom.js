@@ -3492,3 +3492,49 @@ if (typeof window.installPresentationFallback !== 'function') {
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
+
+
+/* ============================================================
+   M.U.R. V113 — Réparation des liens vers les images ki.S.
+   Accepte les cartes en PNG (V101) ou WebP (V89/V92), sans
+   renommer ni modifier les images déjà installées.
+   L'avatar reste au format WebP. Les chemins restent ancrés à
+   l'emplacement de mur-custom.js pour GitHub Pages.
+   ============================================================ */
+(function(){
+ 'use strict';
+ if(window.MUR_KIS_IMAGES_V113)return;
+ window.MUR_KIS_IMAGES_V113=true;
+ const scriptElement=[...document.querySelectorAll('script[src]')].reverse().find(s=>/mur-custom(?:\.min)?\.js(?:\?|$)/i.test(s.getAttribute('src')||''));
+ const root=new URL('./',scriptElement?.src||document.baseURI);
+ const keys=new Set(['pose','funambule','fonceur','pose_funambule','pose_fonceur','funambule_fonceur','equilibre']);
+ function normalizedPath(url){try{return new URL(url,document.baseURI).pathname;}catch(_){return '';}}
+ const pathPrefix='/images/kis/';
+ const tried=new WeakMap();
+ document.addEventListener('error',function(event){
+   const img=event.target;
+   if(!(img instanceof HTMLImageElement))return;
+   const pathname=normalizedPath(img.src);
+   const pos=pathname.lastIndexOf(pathPrefix);
+   if(pos<0)return;
+   const basename=pathname.substring(pos+pathPrefix.length);
+   const match=/^(?:avatars\/)?([a-z_]+?)(?:-(recto|verso))?\.(png|webp)$/i.exec(basename);
+   if(!match||!keys.has(match[1]))return;
+   const name=match[1],side=match[2],ext=match[3].toLowerCase();
+   const candidates=side
+     ? [`images/kis/${name}-${side}.png`,`images/kis/${name}-${side}.webp`]
+     : [`images/kis/avatars/${name}.webp`,`images/kis/avatars/${name}.png`];
+   const attempted=tried.get(img)||new Set();
+   attempted.add(new URL(img.src,document.baseURI).href);
+   for(const relative of candidates){
+     const absolute=new URL(relative,root).href;
+     if(!attempted.has(absolute)){
+       tried.set(img,attempted);
+       img.src=absolute;
+       return;
+     }
+   }
+   // No matching file was located. Leave a visible clue for troubleshooting.
+   console.warn('[M.U.R. ki.S V113] Image non trouvée :',basename,'— vérifier images/kis/ et les extensions .png/.webp sur GitHub.');
+ },true);
+})();
