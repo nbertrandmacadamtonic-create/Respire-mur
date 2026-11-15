@@ -3223,7 +3223,7 @@ if (typeof window.installPresentationFallback !== 'function') {
  const sliderPalette=['#4a93f0','#2eb8b2','#6dc76a','#eeab3e','#eb5b5d'];
  function hexToRgb(hex){const m=String(hex).trim().match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);return m?{r:parseInt(m[1],16),g:parseInt(m[2],16),b:parseInt(m[3],16)}:{r:123,g:197,b:244};}
  function rgba(hex,a){const c=hexToRgb(hex);return 'rgba('+c.r+','+c.g+','+c.b+','+a+')';}
- function sliderAccent(input){const min=Number(input.min)||0,max=Number(input.max)||4,v=Math.max(min,Math.min(max,Number(input.value)||0)),idx=Math.max(0,Math.min(4,Math.round(v-min)));const colours=input.id==='nowBody'?[0,1,2,3,4].map(i=>['#4a93f0','#6dc76a','#6dc76a','#eeab3e','#eb5b5d'][i]):['#4a93f0','#4a93f0','#6dc76a','#eeab3e','#eb5b5d'];return colours[idx];}
+ function sliderAccent(input){const v=Math.max(0,Math.min(4,Math.round(Number(input.value)||0)));return ['#368cf1','#21b7a9','#32c66a','#f19d36','#e9545c'][v];}
  function init(){
    const root=document.querySelector('#testNow .card');
    if(!root||root.querySelector('.mur-now-v96-grid'))return;
@@ -3266,7 +3266,9 @@ if (typeof window.installPresentationFallback !== 'function') {
        const pct=Math.max(0,Math.min(1,(Number(input.value)-min)/range));
        // The visual thumb centre travels from half of native thumb width to the other edge.
        thumb.style.left='calc('+ (pct*100).toFixed(2)+'% + '+ (15.5-31*pct).toFixed(2)+'px)';
-       applyAccent(sliderAccent(input));
+       const currentAccent=sliderAccent(input);
+       applyAccent(currentAccent);
+       if(typeof window.MUR_V114_PAINT_LOGO==='function')window.MUR_V114_PAINT_LOGO(spec.cls,currentAccent);
      };
      input.addEventListener('input',update);input.addEventListener('change',update);
      update();
@@ -3537,4 +3539,190 @@ if (typeof window.installPresentationFallback !== 'function') {
    // No matching file was located. Leave a visible clue for troubleshooting.
    console.warn('[M.U.R. ki.S V113] Image non trouvée :',basename,'— vérifier images/kis/ et les extensions .png/.webp sur GitHub.');
  },true);
+})();
+
+
+/* ================================================================
+   M.U.R. V114 — Logos des 4 curseurs = couleurs exactes de la barre.
+   Dessins PNG inchangés ; teinte générée localement à l'écran.
+   Les 4 choix sont sauvegardés uniquement lors de Valider
+   Ici & Maintenant ; mini-logos retrouvés dans la synthèse.
+   ================================================================ */
+(function(){
+ 'use strict';
+ if(window.MUR_NOW_LOGOS_V114)return;
+ window.MUR_NOW_LOGOS_V114=true;
+ const COLORS=['#368cf1','#21b7a9','#32c66a','#f19d36','#e9545c'];
+ const ITEMS=[
+   {id:'nowEnergy',key:'energy',fr:'Énergie',en:'Energy'},
+   {id:'nowBreath',key:'breath',fr:'Respiration',en:'Breathing'},
+   {id:'nowMind',key:'mind',fr:'Mental',en:'Mind'},
+   {id:'nowBody',key:'body',fr:'Corps',en:'Body'}
+ ];
+ // Always relative to the JS asset location, for GitHub Pages sub-paths.
+ const activeScript=[...document.querySelectorAll('script[src]')].reverse().find(x=>/mur-custom(?:\.min)?\.js(?:\?|$)/i.test(x.getAttribute('src')||''));
+ const rootUrl=new URL('./',activeScript?.src||document.baseURI);
+ const sources=new Map(), processed=new Map();
+ function source(key){
+   if(!sources.has(key)){
+     sources.set(key,new Promise(resolve=>{
+       const image=new Image();
+       image.onload=()=>{
+         try{
+           const c=document.createElement('canvas');c.width=c.height=192;
+           const context=c.getContext('2d',{willReadFrequently:true});
+           if(!context){resolve(null);return;}
+           context.drawImage(image,0,0,c.width,c.height);
+           resolve(context.getImageData(0,0,c.width,c.height));
+         }catch(e){console.warn('[M.U.R. V114] PNG non recolorable',key,e);resolve(null);}
+       };
+       image.onerror=()=>{console.warn('[M.U.R. V114] Logo manquant',key);resolve(null);};
+       image.src=new URL('images/ici-maintenant/'+key+'.png',rootUrl).href;
+     }));
+   }
+   return sources.get(key);
+ }
+ function hexRGB(hex){return [1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));}
+ function imageFor(key,color){
+   const cacheKey=key+'-'+color;
+   if(!processed.has(cacheKey))processed.set(cacheKey,source(key).then(data=>{
+     if(!data)return null;
+     const c=document.createElement('canvas');c.width=c.height=192;
+     const context=c.getContext('2d');if(!context)return null;
+     const out=context.createImageData(192,192),rgba=out.data,raw=data.data;
+     const [r,g,b]=hexRGB(color);
+     for(let i=0;i<raw.length;i+=4){
+       const brightness=Math.max(raw[i],raw[i+1],raw[i+2]);
+       // Remove dark source pixels while preserving the original bright
+       // particle silhouette and their individual luminosity.
+       const intensity=Math.max(0,Math.min(1,(brightness-14)/205));
+       const light=.45+.55*intensity;
+       rgba[i]=Math.round(r*light);rgba[i+1]=Math.round(g*light);rgba[i+2]=Math.round(b*light);
+       rgba[i+3]=Math.round(raw[i+3]*Math.pow(intensity,.88));
+     }
+     context.putImageData(out,0,0);
+     return c.toDataURL('image/png');
+   }));
+   return processed.get(cacheKey);
+ }
+ function paintElement(img,key,color){
+   if(!img||!COLORS.includes(color))return;
+   const token=key+'/'+color;
+   if(img.dataset.murV114Token===token)return;
+   img.dataset.murV114Token=token;
+   imageFor(key,color).then(uri=>{
+     if(uri&&img.isConnected&&img.dataset.murV114Token===token){
+       if(img.src!==uri)img.src=uri;
+       img.style.filter='drop-shadow(0 0 5px '+color+'77)';
+     }
+   }).catch(e=>console.warn('[M.U.R. V114] Logo',key,e));
+ }
+ window.MUR_V114_PAINT_LOGO=function(key,color){
+   const icon=document.querySelector('#testNow .mur-now-v96-'+key+' img.mur-now-v102-emblem');
+   paintElement(icon,key,color);
+ };
+ function values(){
+   const result={};
+   for(const x of ITEMS){const input=document.getElementById(x.id);if(!input)return null;
+     result[x.key]=Math.max(0,Math.min(4,Math.round(Number(input.value)||0)));
+   }
+   return result;
+ }
+ function validLevels(v){return !!v&&ITEMS.every(x=>Number.isInteger(v[x.key])&&v[x.key]>=0&&v[x.key]<=4);}
+ function readNow(){try{return JSON.parse(localStorage.getItem('murNow')||'null');}catch(_){return null;}}
+ function readNeuro(){try{return JSON.parse(localStorage.getItem('murLastNeuro')||'null');}catch(_){return null;}}
+ function currentLevels(){
+   const saved=readNow();return saved&&validLevels(saved.levels)?saved.levels:null;
+ }
+ function english(){
+   let stored='';try{stored=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||'';}catch(_){}
+   const sel=document.querySelector('[data-language="en"]');
+   if(sel&&(sel.getAttribute('aria-pressed')==='true'||sel.classList.contains('active')||sel.classList.contains('selected')))return true;
+   return String(stored||document.documentElement.lang||'fr').toLowerCase().startsWith('en');
+ }
+ function renderStrip(blockId,anchor,kind){
+   const block=document.getElementById(blockId);if(!block)return;
+   const old=block.querySelector(':scope .mur-now-v114-strip');
+   const levels=currentLevels(),neuro=readNeuro();
+   // Never infer 4 individual answers from the old single aggregate score.
+   const savedNow=readNow();
+   const allowed=!!levels&&(kind!=='synth'||(neuro&&neuro.zone&&Number(neuro.nowScore)===Number(savedNow?.score)));
+   if(!allowed){if(old)old.remove();return;}
+   const placement=block.querySelector(anchor);if(!placement)return;
+   const lang=english()?'en':'fr';
+   const signature=ITEMS.map(x=>x.key+':'+levels[x.key]).join('|')+'|'+lang;
+   let strip=old;
+   if(!strip){strip=document.createElement('div');strip.className='mur-now-v114-strip';strip.setAttribute('aria-label',lang==='en'?'Your current state':'Votre état du moment');
+     placement.insertAdjacentElement('afterend',strip);
+   }
+   if(strip.dataset.signature===signature)return;
+   strip.dataset.signature=signature;
+   strip.replaceChildren();
+   for(const item of ITEMS){
+     const level=levels[item.key],color=COLORS[level];
+     const cell=document.createElement('div');cell.className='mur-now-v114-mini';
+     const img=document.createElement('img');img.alt='';img.decoding='async';img.width=42;img.height=42;
+     img.dataset.murV114Token='';
+     const label=document.createElement('span');label.textContent=item[lang];
+     cell.append(img,label);strip.appendChild(cell);
+     paintElement(img,item.key,color);
+   }
+ }
+ let framePending=false;
+ function schedule(){
+   if(framePending)return;framePending=true;
+   requestAnimationFrame(()=>{
+     framePending=false;
+     renderStrip('resultNowBlock','.result-step-top','now');
+     renderStrip('resultSynthesisBlock','.result-score-row','synth');
+   });
+ }
+ const css=document.createElement('style');css.id='mur-now-v114-style';
+ css.textContent=`
+  #testNow .mur-now-v96-panel .mur-now-v96-symbol img.mur-now-v102-emblem{transition:filter .15s ease;object-fit:contain!important}
+  #testResultView .mur-now-v114-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:8px 2px 6px;margin:7px 0 2px;border-radius:12px;background:rgba(14,36,57,.35);max-width:100%}
+  #testResultView .mur-now-v114-mini{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}
+  #testResultView .mur-now-v114-mini img{display:block;width:clamp(33px,9vw,50px);height:clamp(33px,9vw,50px);object-fit:contain;flex:none}
+  #testResultView .mur-now-v114-mini span{font-size:clamp(9px,2.4vw,11px);line-height:1.15;color:#c9d9e6;white-space:normal;overflow-wrap:anywhere}
+ `;
+ document.head.appendChild(css);
+ function init(){
+   for(const x of ITEMS){
+     const input=document.getElementById(x.id);if(!input)continue;
+     const update=()=>window.MUR_V114_PAINT_LOGO(x.key,COLORS[Math.max(0,Math.min(4,Math.round(Number(input.value)||0)))]);
+     input.addEventListener('input',update);input.addEventListener('change',update);
+     update();
+   }
+   // Wrap the existing save action rather than changing the test calculations.
+   if(typeof window.finishNow==='function'){
+     const original=window.finishNow;
+     window.finishNow=function(){
+       const chosen=values();
+       const ret=original.apply(this,arguments);
+       if(validLevels(chosen)){
+         const saved=readNow();
+         if(saved&&typeof saved.score==='number'){
+           saved.levels=chosen;
+           localStorage.setItem('murNow',JSON.stringify(saved));
+         }
+       }
+       schedule();
+       return ret;
+     };
+   }
+   const result=document.getElementById('testResultView');
+   if(result){
+     const obs=new MutationObserver(schedule);
+     // Result logic rewrites the detailed chips; rebuild the strips only
+     // when their content actually changes.
+     obs.observe(result,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+   }
+   document.addEventListener('click',event=>{
+     if(event.target.closest('#resultNowBlock,#resultSynthesisBlock,[data-language],[data-lang]'))schedule();
+   },true);
+   document.addEventListener('visibilitychange',schedule);
+   window.addEventListener('storage',schedule);
+   schedule();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
