@@ -1,4 +1,4 @@
-/* M.U.R. Supabase V71 — synchronisation par compte et état de session stabilisé.
+/* M.U.R. Supabase v125.0 — synchronisation par compte.
  * Remplace uniquement mur-supabase.js, sans modifier index.html.
  * La table mur_history est facultative tant que la migration SQL n'est pas lancee.
  * Ne jamais placer de cle secrete/service_role dans ce fichier public.
@@ -15,17 +15,6 @@
   let role = 'visiteur';
   let user = null, busy = false, syncing = false, historyEnabled = true;
   let lastSyncUser = null, authReady = false;
-  const notifySession=()=>window.dispatchEvent(new CustomEvent('mur-auth-state-ready',{detail:{ready:authReady,signedIn:!!user}}));
-  let refreshSessionPending=null;
-  function refreshSession(){
-    if(refreshSessionPending)return refreshSessionPending;
-    refreshSessionPending=client.auth.getUser().then(({data,error})=>{
-      // En cas d'erreur réseau, ne pas remplacer un compte confirmé par 'visiteur'.
-      if(!error){user=data?.user||null;authReady=true;refreshAuth();notifySession();}
-      return {user,error};
-    }).catch(error=>({user,error})).finally(()=>{refreshSessionPending=null;});
-    return refreshSessionPending;
-  }
   const $ = id => document.getElementById(id);
   const get = id => $(id)?.value;
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
@@ -144,11 +133,62 @@
     });
     return [...result.values()].sort((a,b)=>Number(b.timestamp)-Number(a.timestamp)).slice(0,400);
   }
+  // V125 : reconstruire les champs enrichis depuis les réponses sauvegardées.
+  // Pas de changement de schéma ni de calcul des scores existants.
+  const kisRefs=[
+    ['pose',[10,2.5,2.5]],['funambule',[2.5,10,2.5]],
+    ['fonceur',[2.5,2.5,10]],['pose_funambule',[6.5,6.5,2]],
+    ['pose_fonceur',[6.5,2,6.5]],['funambule_fonceur',[2,6.5,6.5]],
+    ['equilibre',[5,5,5]]
+  ];
+  const validKisAnswers = answers => Array.isArray(answers) && answers.length===15 && answers.every(v=>v===-1||v===0||v===1);
+  const validNowAnswers = answers => Array.isArray(answers) && answers.length===4 && answers.every(v=>Number.isInteger(Number(v))&&Number(v)>=0&&Number(v)<=4);
+  function kisFromCloud(row){
+    if(!row||!validKisAnswers(row.answers))return null;
+    const answers=row.answers.map(Number);
+    let details=null;
+    try{ details=window.MUR_KIS_V90_CALCULATE?.(answers) || null; }catch(e){ console.warn('[MUR Cloud] Calcul ki.S :',e); }
+    if(!details){
+      const c=[answers.filter(v=>v===1).length,answers.filter(v=>v===0).length,answers.filter(v=>v===-1).length];
+      const d=ref=>ref.reduce((sum,value,i)=>sum+(c[i]-value)**2,0);
+      const chosen=kisRefs.reduce((best,item)=>d(item[1])<d(best[1])?item:best);
+      details={cardKey:chosen[0],counts:{pose:c[0],funambule:c[1],fonceur:c[2]},scoreHistorique:c[0]-c[2]};
+    }
+    const score=answers.reduce((sum,v)=>sum+v,0);
+    return {score,profile:profileLabel(row.profile,score),...details,cardVersion:7,
+      cloudCompletedAt:row.completed_at, cloudAnswers:answers};
+  }
+  function nowFromCloud(row){
+    if(!row||!validNowAnswers(row.answers)||!Number.isFinite(Number(row.score)))return null;
+    const a=row.answers.map(Number);
+    const score=Number(row.score);
+    return {score,zone:zoneFor(score),levels:{energy:a[0],breath:a[1],mind:a[2],body:a[3]},
+      cloudCompletedAt:row.completed_at,cloudAnswers:a};
+  }
+  function validCounts(c){return c && ['pose','funambule','fonceur'].every(k=>Number.isInteger(c[k])&&c[k]>=0&&c[k]<=15);}
+  function sameKis(a,b){return a&&b&&Number(a.score)===Number(b.score)&&a.cardKey===b.cardKey&&validCounts(a.counts)&&validCounts(b.counts)&&['pose','funambule','fonceur'].every(k=>a.counts[k]===b.counts[k]);}
+  function sameNow(a,b){return a&&b&&Number(a.score)===Number(b.score)&&a.levels&&b.levels&&['energy','breath','mind','body'].every(k=>a.levels[k]===b.levels[k]);}
+  function reconcile(local,cloud,same,ownerIsCurrent){
+    if(!cloud)return ownerIsCurrent?local:null;
+    if(!ownerIsCurrent||!local)return cloud;
+    if(same(local,cloud))return {...local,...cloud};
+    const oldT=Date.parse(local.cloudCompletedAt||'');
+    const cloudT=Date.parse(cloud.cloudCompletedAt||'');
+    if(Number.isFinite(oldT)&&Number.isFinite(cloudT)&&cloudT>oldT)return cloud;
+    // Sans date de synchronisation, le résultat local peut ne pas encore être envoyé.
+    // On le conserve plutôt que de l'effacer silencieusement.
+    return local;
+  }
+  function safeBackupUnlinked(owner, local){
+    if(!local||(!local.murKis&&!local.murNow&&!local.murLastNeuro))return;
+    const backupKey='murCloudV125BackupUnlinked';
+    if(!read(backupKey))write(backupKey,{savedAt:new Date().toISOString(),intendedUser:owner||null,data:local});
+  }
   async function syncFromCloud(){
     if(!user||syncing)return;
     syncing=true;
     const currentUser=user.id;
-    status('Synchronisation des resultats...');
+    status('Synchronisation des résultats...');
     try{
       const [kisResultQuery,nowResultQuery,profileQuery,historyQuery]=await Promise.all([
         client.from('mur_kis_results').select('answers,profile,completed_at').eq('user_id',currentUser).order('completed_at',{ascending:false}).limit(400),
@@ -165,39 +205,50 @@
         else console.warn('[MUR Cloud] Lecture historique :',historyQuery.error.message);
       }
       const kisRows=kisResultQuery.data||[],stateRows=nowResultQuery.data||[];
-      const kis=kisRows[0],now=stateRows[0];
       const oldOwner=localStorage.getItem('murCloudOwner');
-      // Si les donnees locales proviennent d'un autre compte, on les isole avant toute restauration.
-      if(oldOwner && oldOwner!==currentUser){
+      const ownerIsCurrent=oldOwner===currentUser;
+      const oldKis=read('murKis'),oldNow=read('murNow'),oldNeuro=read('murLastNeuro');
+      if(!ownerIsCurrent){
+        safeBackupUnlinked(oldOwner,{murKis:oldKis,murNow:oldNow,murLastNeuro:oldNeuro});
+        // Un résultat d'un ancien compte ne doit jamais être fusionné avec celui-ci.
         ['murKis','murNow','murLastNeuro','murHistory','murTestsUnlocked','murName'].forEach(k=>localStorage.removeItem(k));
       }
+      const cloudKis=kisRows.map(kisFromCloud).find(Boolean)||null;
+      const cloudNow=stateRows.map(nowFromCloud).find(Boolean)||null;
+      const latestKis=reconcile(ownerIsCurrent?oldKis:null,cloudKis,sameKis,ownerIsCurrent);
+      const latestNow=reconcile(ownerIsCurrent?oldNow:null,cloudNow,sameNow,ownerIsCurrent);
       let modified=false;
-      if(kis){
-        const score=kis.answers.reduce((acc,v)=>acc+Number(v||0),0);
-        write('murKis',{score,profile:profileLabel(kis.profile,score)});modified=true;
-      }else if(oldOwner!==currentUser){localStorage.removeItem('murKis');localStorage.removeItem('murLastNeuro');localStorage.removeItem('murNow');}
-      if(now && kis){
-        const score=Number(now.score);
-        const nz=zoneFor(score);
-        write('murNow',{score,zone:nz});
-        const kisScore=read('murKis')?.score||0;
-        const neuroScore=Math.max(-50,Math.min(50,score+Math.round(kisScore*1.2)));
-        const neuroZone=zoneFor(neuroScore);
-        write('murLastNeuro',{score:neuroScore,zone:neuroZone,kis:read('murKis').profile,kisScore,nowScore:score});
+      if(latestKis){write('murKis',latestKis);modified=true;}
+      else localStorage.removeItem('murKis');
+      if(latestNow){write('murNow',latestNow);modified=true;}
+      else localStorage.removeItem('murNow');
+      if(latestKis&&latestNow){
+        const kisScore=Number(latestKis.score)||0;
+        const nowScore=Number(latestNow.score)||0;
+        const score=Math.max(-50,Math.min(50,nowScore+Math.round(kisScore*1.2)));
+        const zone=zoneFor(score);
+        const neuro={score,zone,kis:latestKis.profile,kisScore,nowScore};
+        // Préserver les champs enrichis existants seulement si les scores correspondent.
+        if(ownerIsCurrent && oldNeuro && oldNeuro.kisScore===kisScore && oldNeuro.nowScore===nowScore){
+          Object.assign(neuro,oldNeuro,{score,zone,kis:latestKis.profile,kisScore,nowScore});
+        }
+        write('murLastNeuro',neuro);
         localStorage.setItem('murTestsUnlocked','1');modified=true;
-      }else if(kis && oldOwner!==currentUser){
-        localStorage.removeItem('murNow');localStorage.removeItem('murLastNeuro');localStorage.removeItem('murTestsUnlocked');
+      }else{
+        localStorage.removeItem('murLastNeuro');
+        localStorage.removeItem('murTestsUnlocked');
       }
-      const profile=profileQuery.data?.display_name;
-      if(profile){localStorage.setItem('murName',profile);modified=true;}
+      const name=profileQuery.data?.display_name;
+      if(name){localStorage.setItem('murName',name);modified=true;}
       const merged=mergeHistory(historyQuery.data||[],stateRows,kisRows);
       if(merged.length){write('murHistory',merged);modified=true;}
       localStorage.setItem('murCloudOwner',currentUser);
-      if(modified && typeof window.loadAll==='function'){
-        try{window.loadAll();}catch(e){console.warn('[MUR Cloud] Rafraichissement interface :',e);}
+      if(modified&&typeof window.loadAll==='function'){
+        try{window.loadAll();}catch(e){console.warn('[MUR Cloud] Rafraîchissement interface :',e);}
       }
+      window.MUR_KIS_V90_RENDER_AVATAR?.();
       lastSyncUser=currentUser;
-      status('Synchronisation terminee : '+kisRows.length+' ki.S, '+stateRows.length+' Ici & Maintenant.');
+      status('Synchronisation terminée : '+kisRows.length+' ki.S, '+stateRows.length+' Ici & Maintenant.');
     }catch(e){status('Synchronisation impossible : '+(e.message||e),true);}
     finally{syncing=false;}
   }
@@ -518,7 +569,7 @@
     panel();installHooks();
     const {data,error}=await client.auth.getUser();
     if(error)console.info('[MUR Cloud] Pas de session :',error.message);
-    user=data?.user||null;authReady=true;refreshAuth();notifySession();
+    user=data?.user||null;authReady=true;refreshAuth();
     // Une session persistante ne doit jamais etre confrontee au formulaire d'inscription.
     if(user && $('mur-cloud-dialog') && !$('mur-cloud-dialog').hidden){
       $('mur-cloud-dialog').hidden=true;
@@ -532,7 +583,7 @@
 
     client.auth.onAuthStateChange((event,session)=>{
       const previous=user?.id||null;
-      user=session?.user||null;authReady=true;refreshAuth();notifySession();
+      user=session?.user||null;refreshAuth();
       if(user && $('mur-cloud-dialog') && !$('mur-cloud-dialog').hidden && event==='SIGNED_IN'){
         const focus=document.activeElement;
         if(focus && $('mur-cloud-dialog').contains(focus))focus.blur();
@@ -547,11 +598,9 @@
       if(user && (previous!==user.id || (event==='SIGNED_IN'&&lastSyncUser!==user.id)))setTimeout(syncFromCloud,0);
       if(!user)lastSyncUser=null;
     });
-    window.addEventListener('pageshow',()=>{void refreshSession();});
-    document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refreshSession();});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
-  window.MURCloud={client,getUser:()=>user,getRole:()=>role,isReady:()=>authReady,refreshSession,saveKis,saveNow,saveProfile,sync:syncFromCloud};
+  window.MURCloud={client,getUser:()=>user,getRole:()=>role,saveKis,saveNow,saveProfile,sync:syncFromCloud};
 })();
 
 /* M.U.R. V12 — accès découverte, intégré au module Supabase existant.
@@ -567,7 +616,6 @@
   const FREE_EXERCISE='double';
   const $=id=>document.getElementById(id);
   const isSignedIn=()=>Boolean(window.MURCloud?.getUser?.());
-  const isAuthReady=()=>Boolean(window.MURCloud?.isReady?.());
   const messageBreath='En mode découverte, seule la Respiration 365 est disponible. Inscrivez-vous pour accéder aux autres respirations.';
   const messageExercise='En mode découverte, seul l’exercice rouge « Double inspiration » est disponible. Inscrivez-vous pour accéder aux autres exercices Paniflex.';
   function openAccount(){
@@ -602,15 +650,6 @@
     if(typeof original!=='function')return false;
     if(original.__murV11Guard)return true;
     function guarded(...args){
-      // Ne pas conclure 'visiteur' pendant la restauration de session Supabase.
-      if(!isAuthReady()&&!condition(...args)){
-        const cloud=window.MURCloud;
-        return Promise.resolve(cloud?.refreshSession?.()).then(()=>{
-          refresh();
-          if(!isSignedIn()){invite(message);return;}
-          return original.apply(this,args);
-        });
-      }
       if(!isSignedIn()&&!condition(...args)){
         invite(message);
         return;
@@ -644,26 +683,19 @@
     const signedIn=isSignedIn();
     const breath=$('mur-v12-breath-notice');
     if(breath){
-      breath.hidden=signedIn||!isAuthReady();
+      breath.hidden=signedIn;
       breath.textContent='Mode découverte : seule la Respiration 365 est disponible. Les autres respirations nécessitent une inscription.';
     }
     const exercise=$('mur-v11-access-notice');
     if(exercise){
-      exercise.hidden=signedIn||!isAuthReady();
+      exercise.hidden=signedIn;
       exercise.textContent='Mode découverte : dans la zone rouge, seul l’exercice « Double inspiration » est disponible. Les autres exercices Paniflex nécessitent une inscription.';
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',restrict,{once:true});
   else restrict();
-  window.addEventListener('mur-auth-state-ready',()=>{
-    refresh();
-    if(isSignedIn())$('mur-v11-access-dialog')?.remove();
-  });
-  // Le callback auth peut précéder la mise à jour de la variable user.
-  window.MURCloud?.client?.auth?.onAuthStateChange?.(()=>setTimeout(refresh,0));
-  window.addEventListener('pageshow',refresh);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
-  window.MURDiscoveryV71={freeBreath:FREE_BREATH,freeExercise:FREE_EXERCISE,isSignedIn,refresh};
+  window.MURCloud?.client?.auth?.onAuthStateChange?.(()=>queueMicrotask(refresh));
+  window.MURDiscoveryV11={freeBreath:FREE_BREATH,freeExercise:FREE_EXERCISE,isSignedIn};
 })();
 
 
