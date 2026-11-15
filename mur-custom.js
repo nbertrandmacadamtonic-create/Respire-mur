@@ -4297,3 +4297,71 @@ if (typeof window.installPresentationFallback !== 'function') {
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
+
+
+/* ============================================================
+   M.U.R. V121 — Image ki.S agrandie SANS agrandir le cadre.
+   Résultat NeuroFlex et profil : aucune modification du panneau
+   externe ; seule l'image exploite mieux l'espace disponible.
+   ============================================================ */
+(function(){
+  'use strict';
+  if(document.getElementById('mur-kis-image-only-v121'))return;
+  const st=document.createElement('style');
+  st.id='mur-kis-image-only-v121';
+  st.textContent=`
+    /* La zone et le cadre ouverts sont conservés (dimensions V118). */
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-card{
+      width:100%!important;
+      max-width:100%!important;
+      flex:1 1 auto!important;
+      min-height:0!important;
+      gap:5px!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip{
+      max-width:min(100%,360px)!important;
+      max-height:calc(100% - 65px)!important;
+      width:auto!important;
+      height:auto!important;
+      flex:0 1 auto!important;
+      min-height:0!important;
+      overflow:hidden!important;
+    }
+    #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip img{
+      width:auto!important;
+      height:auto!important;
+      max-width:min(82vw,360px)!important;
+      max-height:min(54dvh,calc(100dvh - 175px))!important;
+      object-fit:contain!important;
+      display:block!important;
+    }
+    /* Même logique depuis Mon profil : la fenêtre ne grandit pas. */
+    #mur-v97-profile-modal .mur-v97-image{
+      width:auto!important;height:auto!important;
+      max-width:min(82vw,335px)!important;
+      max-height:min(69dvh,calc(100dvh - 135px))!important;
+      object-fit:contain!important;
+    }
+    @media(max-width:520px){
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip{
+        max-width:min(100%,330px)!important;
+        max-height:calc(100% - 65px)!important;
+      }
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip img{
+        max-width:min(78vw,325px)!important;
+        max-height:min(49dvh,calc(100dvh - 160px))!important;
+      }
+      #mur-v97-profile-modal .mur-v97-image{
+        max-width:min(78vw,320px)!important;
+        max-height:min(66dvh,calc(100dvh - 135px))!important;
+      }
+    }
+    @media(max-width:600px) and (max-height:700px){
+      #testResultView #resultKisBlock.result-step.open .mur-kis-v92-flip img{
+        max-height:43dvh!important;
+      }
+      #mur-v97-profile-modal .mur-v97-image{max-height:60dvh!important;}
+    }
+  `;
+  document.head.appendChild(st);
+})();
