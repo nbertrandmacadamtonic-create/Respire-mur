@@ -4788,6 +4788,8 @@ css.textContent=`
  #mur-v129-gate .mur-v129-note{font-size:10px;color:#a9bfcb;margin-top:10px;line-height:1.45;}
  #testResultView .mur-v129-tag,#exercises .mur-v129-tag{display:inline-flex;align-items:center;gap:6px;border-radius:12px;padding:5px 9px;border:1px solid color-mix(in srgb,var(--accent) 60%,transparent);color:#f1fbff;background:#10283b;font-size:12px;font-weight:750;line-height:1.2;}
  #testResultView .mur-v129-tag .mur-v128-icon,#exercises .mur-v129-tag .mur-v128-icon{width:30px;height:30px;display:block;flex:none;}
+ #testResultView .mur-v129-tag.mur-v132-icon-only{padding:3px 5px;min-width:36px;min-height:36px;justify-content:center;box-sizing:border-box;}
+ #testResultView .mur-v129-tag.mur-v132-icon-only .mur-v131-logo{width:30px;height:30px;object-fit:contain;}
  #testResultView .mur-v129-side{position:absolute;right:-3px;bottom:-8px;width:24px;height:24px;display:grid;place-items:center;border:1px solid var(--accent);border-radius:50%;background:#081b2d;pointer-events:none;}
  #testResultView .mur-v129-side .mur-v128-icon{width:20px;height:20px;}
  #testResultView .mur-v129-insight,#exercises .mur-v129-exercise-banner{padding:12px;margin:8px 0;border:1px solid color-mix(in srgb,var(--accent) 50%,#547286);border-left:3px solid var(--accent);border-radius:13px;background:rgba(9,28,44,.93);color:#e8f5fa;line-height:1.45;font-size:12px;}
@@ -4825,7 +4827,7 @@ function current(){const n=read('murNow'),info=n?.nuanceV129;if(!info||!DATA[inf
 
 function save(choice){const n=read('murNow');if(!n||!DATA[choice]||zoneKey(n)!==DATA[choice].zone)return;const entry={choice,zone:DATA[choice].zone,score:Number(n.score),chosenAt:new Date().toISOString()};n.nuanceV129=entry;localStorage.setItem('murNow',JSON.stringify(n));localStorage.setItem(KEY,JSON.stringify(entry));}
 function label(choice){const d=DATA[choice];return txt(d.shortFr,d.shortEn)}
-function makeTag(choice){const d=DATA[choice],tag=document.createElement('span');tag.className='mur-v129-tag';tag.style.setProperty('--accent',d.color);const name=document.createElement('span');name.textContent=label(choice);tag.append(icon(choice),name);return tag;}
+function makeTag(choice,iconOnly=false){const d=DATA[choice],tag=document.createElement('span');tag.className='mur-v129-tag'+(iconOnly?' mur-v132-icon-only':'');tag.style.setProperty('--accent',d.color);tag.appendChild(icon(choice));if(!iconOnly){const name=document.createElement('span');name.textContent=label(choice);tag.appendChild(name);}else{tag.setAttribute('aria-label',txt(d.fr,d.en));}return tag;}
 let pending=false;
 function showGate(zone,commit){
   document.getElementById('mur-v129-gate')?.remove();
@@ -4863,14 +4865,14 @@ function decorateResults(){
   const block=document.getElementById(id);if(!block)continue;
   block.querySelectorAll('.mur-v129-tag,.mur-v129-side').forEach(n=>n.remove());
   if(!choice)continue;
-  const top=block.querySelector('.result-step-top');if(top)top.appendChild(makeTag(choice));
+  const top=block.querySelector('.result-step-top');if(top)top.appendChild(makeTag(choice,true));
   const side=block.querySelector('.result-step-side');if(side){side.style.position='relative';const sm=document.createElement('span');sm.className='mur-v129-side';sm.style.setProperty('--accent',DATA[choice].color);sm.appendChild(icon(choice));side.appendChild(sm);}
  }
  for(const id of ['resultNowDetail','resultSynthDetail']){
   const detail=document.getElementById(id);if(!detail)continue;
   detail.querySelectorAll('.mur-v129-insight').forEach(n=>n.remove());
   if(!choice || !detail.parentElement?.closest('.result-step.open'))continue;
-  const d=DATA[choice];const card=document.createElement('section');card.className='mur-v129-insight';card.style.setProperty('--accent',d.color);card.appendChild(makeTag(choice));
+  const d=DATA[choice];const card=document.createElement('section');card.className='mur-v129-insight';card.style.setProperty('--accent',d.color);card.appendChild(makeTag(choice,true));
   for(const content of [txt(d.descriptionFr,d.descriptionEn),txt(d.adviceFr,d.adviceEn),txt('Exercice suggéré : '+d.exerciseFr,'Suggested exercise: '+d.exerciseEn)]){const p=document.createElement('p');p.textContent=content;card.appendChild(p);}
   if(id==='resultSynthDetail'){const k=read('murKis')?.cardKey;if(profiles[k]){const p=document.createElement('p');p.textContent=profiles[k][lang()?1:0];card.appendChild(p);}}
   const btn=document.createElement('button');btn.type='button';btn.textContent=txt('Voir l’exercice conseillé','Open recommended exercise');btn.addEventListener('click',()=>openSuggested(choice));card.appendChild(btn);
