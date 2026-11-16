@@ -1893,48 +1893,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       }
     }
   `;
-  
-css.textContent += `
-/* V130 — logos multipoints modernes */
-#mur-v129-gate .mur-v129-choice .mur-v130-particle-icon,
-#testResultView .mur-v129-tag .mur-v130-particle-icon,
-#exercises .mur-v129-tag .mur-v130-particle-icon,
-#testResultView .mur-v129-side .mur-v130-particle-icon{
-  overflow:visible;
-  filter:drop-shadow(0 0 5px color-mix(in srgb,var(--accent) 48%,transparent));
-  transition:filter .35s ease,transform .35s ease;
-}
-#mur-v129-gate .mur-v129-choice .mur-v130-core,
-#testResultView .mur-v129-tag .mur-v130-core,
-#exercises .mur-v129-tag .mur-v130-core,
-#testResultView .mur-v129-side .mur-v130-core{
-  transform-origin:40px 40px;
-  animation:murV130Breathe 4.5s ease-in-out infinite;
-}
-#mur-v129-gate .mur-v129-choice .mur-v130-halo,
-#testResultView .mur-v129-tag .mur-v130-halo,
-#exercises .mur-v129-tag .mur-v130-halo,
-#testResultView .mur-v129-side .mur-v130-halo{
-  transform-origin:40px 40px;
-  animation:murV130Orbit 24s linear infinite;
-}
-#mur-v129-gate .mur-v129-choice:hover .mur-v130-particle-icon,
-#mur-v129-gate .mur-v129-choice[aria-pressed="true"] .mur-v130-particle-icon{
-  filter:drop-shadow(0 0 9px var(--accent));
-  transform:scale(1.07);
-}
-@keyframes murV130Breathe{0%,100%{transform:scale(.985);opacity:.89}50%{transform:scale(1.025);opacity:1}}
-@keyframes murV130Orbit{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){
-  #mur-v129-gate .mur-v130-core,
-  #mur-v129-gate .mur-v130-halo,
-  #testResultView .mur-v130-core,
-  #testResultView .mur-v130-halo,
-  #exercises .mur-v130-core,
-  #exercises .mur-v130-halo{animation:none!important}
-}
-`;
-document.head.appendChild(css);
+  document.head.appendChild(css);
 })();
 
 
@@ -4802,6 +4761,26 @@ css.textContent=`
  #mur-v129-gate .mur-v129-choice{background:#091c2e;border:1px solid #416279;border-radius:16px;color:#fff;padding:12px 7px;min-height:170px;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;cursor:pointer;box-sizing:border-box;}
  #mur-v129-gate .mur-v129-choice[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 15%,#091c2e);border:2px solid var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
  #mur-v129-gate .mur-v128-icon{width:70px;height:70px;flex:none;}
+ /* V131 : images lumineuses autonomes, même emplacement que les pictogrammes d'origine. */
+ #mur-v129-gate .mur-v129-choice .mur-v131-logo{
+   display:block!important;width:92px!important;height:92px!important;
+   max-width:100%!important;object-fit:contain!important;flex:none!important;
+   margin:-7px auto -4px;pointer-events:none;
+   filter:drop-shadow(0 0 5px color-mix(in srgb,var(--accent) 23%,transparent));
+   transition:transform .35s ease,filter .35s ease;
+ }
+ #mur-v129-gate .mur-v129-choice:hover .mur-v131-logo,
+ #mur-v129-gate .mur-v129-choice[aria-pressed="true"] .mur-v131-logo{
+   transform:scale(1.045);filter:drop-shadow(0 0 9px var(--accent));
+ }
+ #testResultView .mur-v129-tag .mur-v131-logo,#exercises .mur-v129-tag .mur-v131-logo{
+   width:34px!important;height:34px!important;object-fit:contain!important;
+ }
+ #testResultView .mur-v129-side .mur-v131-logo{
+   width:20px!important;height:20px!important;object-fit:contain!important;
+ }
+ @media(max-width:400px){#mur-v129-gate .mur-v129-choice .mur-v131-logo{width:77px!important;height:77px!important}}
+ @media(prefers-reduced-motion:reduce){#mur-v129-gate .mur-v131-logo{transition:none!important}}
  #mur-v129-gate .mur-v129-choice strong{font-size:13px;line-height:1.3;}
  #mur-v129-gate .mur-v129-choice small{color:#b0c5d4;font-size:10px;line-height:1.35;}
  #mur-v129-gate .mur-v129-confirm{width:100%;background:linear-gradient(100deg,#43d694,#35b6c8);color:#07182a;border:0;border-radius:13px;min-height:48px;font-size:15px;font-weight:800;cursor:pointer;}
@@ -4825,82 +4804,24 @@ const txt=(fr,en)=>lang()?en:fr;
 function read(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(_){return null}}
 function zoneKey(o){let z=o?.zone,k=String(z?.key||z?.name||z||'').toLowerCase();if(k.includes('bleu')||k.includes('blue'))return 'bleu';if(k.includes('rouge')||k.includes('red'))return 'rouge';if(k.includes('vert')||k.includes('green'))return 'vert';if(k.includes('orange'))return 'orange';return null;}
 function current(){const n=read('murNow'),info=n?.nuanceV129;if(!info||!DATA[info.choice]||DATA[info.choice].zone!==zoneKey(n)||Number(info.score)!==Number(n.score))return null;return info.choice;}
-  function makeSVG(symbol,color){
-    // V130 : pictogrammes multipoints lumineux, plus modernes et dynamiques.
-    const NS='http://www.w3.org/2000/svg';
-    const svg=document.createElementNS(NS,'svg');
-    svg.setAttribute('viewBox','0 0 80 80');
-    svg.setAttribute('class','mur-v128-icon mur-v130-particle-icon');
-    svg.setAttribute('aria-hidden','true');
-    const halo=document.createElementNS(NS,'g');
-    halo.setAttribute('class','mur-v130-halo');
-    const core=document.createElementNS(NS,'g');
-    core.setAttribute('class','mur-v130-core');
-    svg.append(halo,core);
-
-    const dot=(x,y,r=1.15,opacity=.92,target=core)=>{
-      const c=document.createElementNS(NS,'circle');
-      c.setAttribute('cx',x.toFixed(2));
-      c.setAttribute('cy',y.toFixed(2));
-      c.setAttribute('r',r.toFixed(2));
-      c.setAttribute('fill',color);
-      c.setAttribute('opacity',opacity.toFixed(2));
-      target.appendChild(c);
-    };
-    const line=(x1,y1,x2,y2,step=2.3,r=1.18)=>{
-      const n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/step));
-      for(let i=0;i<=n;i++){
-        const t=i/n;
-        dot(x1+(x2-x1)*t,y1+(y2-y1)*t,r,.58+.42*Math.sin(t*Math.PI));
-      }
-    };
-    const bez=(p0,p1,p2,p3,steps=30,r=1.18)=>{
-      for(let i=0;i<=steps;i++){
-        const t=i/steps,u=1-t;
-        dot(
-          u*u*u*p0[0]+3*u*u*t*p1[0]+3*u*t*t*p2[0]+t*t*t*p3[0],
-          u*u*u*p0[1]+3*u*u*t*p1[1]+3*u*t*t*p2[1]+t*t*t*p3[1],
-          r,.62+.32*Math.sin(t*Math.PI)
-        );
-      }
-    };
-
-    if(symbol==='lotus'){
-      bez([40,58],[27,46],[29,25],[40,14],29);
-      bez([40,14],[51,25],[53,46],[40,58],29);
-      bez([40,58],[18,53],[12,42],[15,29],24);
-      bez([15,29],[29,30],[37,44],[40,58],24);
-      bez([40,58],[62,53],[68,42],[65,29],24);
-      bez([65,29],[51,30],[43,44],[40,58],24);
-      bez([15,62],[26,67],[54,67],[65,62],28);
-      dot(40,14,1.8,1);dot(40,58,1.7,1);
-    }else if(symbol==='battery'){
-      line(13,26,62,26,2.1);line(13,55,62,55,2.1);
-      line(13,26,13,55,2.1);line(62,26,62,55,2.1);
-      line(66,35,70,35,2);line(70,35,70,46,2);line(70,46,66,46,2);
-      for(let y=31;y<=50;y+=3.1)for(let x=19;x<=27;x+=3.1)dot(x,y,1.25,.84);
-      line(47,30,37,42,2.7,1.2);line(37,42,45,42,2.7,1.2);line(45,42,36,52,2.7,1.2);
-    }else if(symbol==='chevrons'){
-      line(12,43,40,16,2.0,1.25);line(40,16,68,43,2.0,1.25);
-      line(12,63,40,36,2.0,1.25);line(40,36,68,63,2.0,1.25);
-      for(let i=0;i<13;i++){
-        const t=i/12;
-        dot(10+60*t,70+2.1*Math.sin(t*Math.PI*2),.7,.12+.23*Math.sin(Math.PI*t));
-      }
-    }else{
-      bez([25,34],[25,8],[55,8],[55,34],35,1.25);
-      line(25,34,25,57,2,1.25);line(55,34,55,57,2,1.25);
-      line(25,34,55,34,2.1,1.25);line(25,57,55,57,2.1,1.25);
-      dot(40,43,2.3,1);line(40,45,40,51,2,1.3);dot(40,14,1.6,1);
-    }
-
-    for(let i=0;i<28;i++){
-      const a=2.3999632297*i, radius=31+(i%5)*2;
-      dot(40+radius*Math.cos(a),40+radius*Math.sin(a),i%5===0?.8:.48,i%5===0?.26:.11,halo);
-    }
-    return svg;
+  // V131 : les quatre logos sont des fichiers PNG indépendants.
+  // Pour remplacer un logo, conserver son nom dans le dossier mur-logos.
+  const MUR_V131_LOGOS = Object.freeze({
+    blue_calm:'mur-logos/bleu-lotus.png',
+    blue_tired:'mur-logos/bleu-batterie.png',
+    red_tense:'mur-logos/rouge-surtension.png',
+    red_frozen:'mur-logos/rouge-fige-bloque.png'
+  });
+  function icon(choice){
+    const img=document.createElement('img');
+    img.className='mur-v128-icon mur-v131-logo';
+    img.src=MUR_V131_LOGOS[choice];
+    img.alt='';
+    img.setAttribute('aria-hidden','true');
+    img.decoding='async';
+    img.draggable=false;
+    return img;
   }
-  function icon(choice){const d=DATA[choice];return makeSVG(d.symbol,d.color)}
 
 function save(choice){const n=read('murNow');if(!n||!DATA[choice]||zoneKey(n)!==DATA[choice].zone)return;const entry={choice,zone:DATA[choice].zone,score:Number(n.score),chosenAt:new Date().toISOString()};n.nuanceV129=entry;localStorage.setItem('murNow',JSON.stringify(n));localStorage.setItem(KEY,JSON.stringify(entry));}
 function label(choice){const d=DATA[choice];return txt(d.shortFr,d.shortEn)}
