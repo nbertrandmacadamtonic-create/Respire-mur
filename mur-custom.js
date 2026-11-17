@@ -1401,7 +1401,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V134 — ACCUEIL SPHERE 3D 1200 POINTS RAFFINES
+   M.U.R. V135 — MENU PETITE SPHERE ROUGE HARMONISEE + LIBELLES ENCADRES
    Suppression du bandeau. Appel a l'action agrandi sous la sphère.
    Ajout limité à mur-custom.js.
    ============================================================= */
@@ -1631,21 +1631,21 @@ if (typeof window.installPresentationFallback !== 'function') {
     window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_HOME_PARTICLES_V33={version:134,particles:COUNT,monochrome:true,meshSegments:mesh.length,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere',menuTransition:'particle-dispersion-1000ms'};
+  window.MUR_HOME_PARTICLES_V33={version:135,particles:COUNT,monochrome:true,meshSegments:mesh.length,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere',menuTransition:'particle-dispersion-1000ms'};
 })();
 
 
 
 /* =============================================================
    M.U.R. V87 — URGENCE PLUS DENSE
-   La sphère de 1200 points se dissout ; 5 sphères denses naissent du nuage.
+   La sphère de 1200 points se dissout ; 5 sphères harmonisées naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V87)return;
-  const N=1200, PER=350, CENTER_PER=1200, OPEN_MS=2350, CLOSE_MS=1550;
+  if(window.MUR_HOME_FIVE_V135)return;
+  const N=1200, PER=350, CENTER_PER=350, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
     {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[239,78,91]},
@@ -1685,10 +1685,10 @@ if (typeof window.installPresentationFallback !== 'function') {
       .mur-five-layer{position:fixed!important;inset:0!important;z-index:10030!important;pointer-events:none!important;display:none!important;overflow:hidden!important}
       .mur-five-layer.is-visible{display:block!important}
       .mur-five-layer canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-      .mur-five-target{position:absolute;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);width:104px;height:104px;border:0;border-radius:50%;color:#fff;background:transparent;cursor:pointer;pointer-events:auto;opacity:0;transition:opacity .25s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-shadow:0 2px 8px #001c31;font-family:inherit;overflow:visible}
+      .mur-five-target{position:absolute;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);width:104px;height:104px;border:0;border-radius:50%;color:#fff;background:transparent;cursor:pointer;pointer-events:auto;opacity:0;transition:opacity .25s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-shadow:0 2px 8px #001c31;font-family:inherit;overflow:visible;--mur-accent:rgba(255,255,255,.55)}
       .mur-five-target.ready{opacity:1}
       .mur-five-target .mur-five-icon{font-size:25px;line-height:1;font-weight:750;filter:drop-shadow(0 0 6px currentColor)}
-      .mur-five-target .mur-five-label{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%);display:block;min-width:max-content;max-width:124px;padding:5px 9px;border-radius:10px;background:rgba(5,17,32,.90);border:1px solid rgba(255,255,255,.24);box-shadow:0 2px 12px rgba(0,0,0,.38);font-size:15px;font-weight:800;letter-spacing:.015em;line-height:1.2;text-align:center;white-space:nowrap;color:#fff;text-shadow:0 1px 4px #000;pointer-events:none}
+      .mur-five-target .mur-five-label{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);display:block;min-width:max-content;max-width:132px;padding:6px 12px;border-radius:12px;background:color-mix(in srgb, var(--mur-accent) 10%, rgba(5,17,32,.92));border:1.35px solid color-mix(in srgb, var(--mur-accent) 90%, white 10%);box-shadow:0 2px 12px rgba(0,0,0,.34),0 0 0 1px rgba(255,255,255,.05) inset,0 0 16px color-mix(in srgb, var(--mur-accent) 25%, transparent);font-size:15px;font-weight:800;letter-spacing:.015em;line-height:1.2;text-align:center;white-space:nowrap;color:#fff;text-shadow:0 1px 4px #000;pointer-events:none}
       .mur-five-target.is-locked{opacity:.50;filter:grayscale(.55)}
       .mur-five-target:focus-visible{outline:2px solid #fff;outline-offset:4px}
       @media(max-width:370px){.mur-five-target .mur-five-label{font-size:13px;padding:4px 7px}.mur-five-target .mur-five-icon{font-size:22px}}
@@ -1727,7 +1727,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const cx=rect.left+rect.width/2;
       const cy=rect.top+rect.height/2;
       const radius=small?33:39;
-      const centerRadius=small?37:44;
+      const centerRadius=radius;
       // Adaptation à la place disponible autour de la sphère sur mobile.
       const edge=Math.min(cx,w-cx,cy,h-cy);
       const orbitR=Math.max(82,Math.min(small?119:147,edge-radius-10));
@@ -1805,7 +1805,7 @@ if (typeof window.installPresentationFallback !== 'function') {
         }
         ctx.restore();
       }
-      // Condensation indépendante : centre à 1200 points, satellites à 350 points,
+      // Condensation indépendante : centre harmonisé à 350 points, satellites à 350 points,
       // plus serrés et plus lumineux que dans la V38.
       const grown=ease(Math.max(0,Math.min(1,(progress-.22)/.73)));
       if(grown>0){
@@ -1879,7 +1879,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V87={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'static-four-spheres-no-links-white-breath-no-red-halo'};
+    window.MUR_HOME_FIVE_V135={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'static-four-spheres-no-links-white-breath-no-red-halo'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
