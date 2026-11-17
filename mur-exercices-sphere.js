@@ -1,4 +1,4 @@
-/* M.U.R. V22.8 — Exercices guidés : variante verte clair vers foncé.
+/* M.U.R. V22.7 — Exercices guidés : image vers sphère, voix et progression.
    Module additionnel non destructif. Aucun changement de index.html.
    L'animation s'appuie sur #visualAsset, #exerciseAudio, #exerciseDetail
    et les objets EXERCISES déjà présents dans l'application. */
@@ -10,10 +10,8 @@
   const TRANSFORM_SECONDS = 5.4;
   const RETURN_SECONDS = 5.4;
   const DEFAULT_DURATION = 90;
-  const COLORS = {rouge:[255,82,86],orange:[255,163,65],vert:[108,238,176],bleu:[83,157,244]};
+  const COLORS = {rouge:[255,82,86],orange:[255,163,65],vert:[78,224,148],bleu:[83,157,244]};
   const GREEN=[80,235,155];
-  const GREEN_LIGHT=[118,242,186];
-  const GREEN_DARK=[20,112,73];
   let state = null, observed = null;
   let nativeExerciseOpen = null;
   const prefersReduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
@@ -45,7 +43,7 @@
       #exerciseDetail .mur-exsphere-stage:focus-visible{outline:2px solid #85e9bd;outline-offset:3px}
       #exerciseDetail .mur-exsphere-controls{display:flex;align-items:center;justify-content:space-between;gap:8px;width:min(100%,460px);margin:4px auto 8px;color:#b8d5df;font-size:11px}
       #exerciseDetail .mur-exsphere-progress{height:5px;border-radius:9px;flex:1;background:rgba(129,164,185,.22);overflow:hidden}
-      #exerciseDetail .mur-exsphere-progress>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--mur-sphere-start,#f66),var(--mur-sphere-end,#53e89f));transition:width .15s linear}
+      #exerciseDetail .mur-exsphere-progress>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--mur-sphere-start,#f66),#53e89f);transition:width .15s linear}
       /* On conserve le lecteur audio et sa boucle infinie natifs, sous la photo. */
       #exerciseDetail .exercise-audio-actions{display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center;gap:12px}
       #exerciseDetail .exercise-audio-actions #exercisePlayBtn{display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center}
@@ -147,16 +145,14 @@
     if(state?.audio===audio&&state?.image===img)return;
     detach();style();
     const key=window.currentExerciseKey||'',zone=zoneOf(key),color=COLORS[zone]||COLORS.rouge;
-    const targetColor=zone==='vert'?GREEN_DARK:GREEN;
     const stage=document.createElement('div');stage.className='mur-exsphere-stage';stage.setAttribute('aria-label','Appuyer sur la photo pour lancer l’exercice guidé');stage.setAttribute('role','button');stage.setAttribute('tabindex','0');
     const canvas=document.createElement('canvas');const caption=document.createElement('div');caption.className='mur-exsphere-caption';caption.textContent='Toucher la photo pour démarrer';
     stage.style.setProperty('--mur-sphere-start',`rgb(${color.join(',')})`);
-    stage.style.setProperty('--mur-sphere-end',`rgb(${targetColor.join(',')})`);
     img.parentNode.insertBefore(stage,img);stage.append(img,canvas,caption);
     const controls=document.createElement('div');controls.className='mur-exsphere-controls';
     controls.innerHTML='<span class="mur-exsphere-time">0:00 / --:--</span><div class="mur-exsphere-progress" aria-label="Progression de l’exercice"><span></span></div>';
     stage.after(controls);
-    const s={key,zone,color,targetColor,detail,audio,image:img,stage,canvas,caption,controls,ctx:canvas.getContext('2d'),points:makeParticles(color),raf:0,playedAt:null,started:false,enabled:true,analyser:null,frequency:null,voice:.11,analyserFrames:0,paused:false,returnAt:null,reverseProgress:0};
+    const s={key,zone,color,detail,audio,image:img,stage,canvas,caption,controls,ctx:canvas.getContext('2d'),points:makeParticles(color),raf:0,playedAt:null,started:false,enabled:true,analyser:null,frequency:null,voice:.11,analyserFrames:0,paused:false,returnAt:null,reverseProgress:0};
     state=s;
     s.onImageLoad=()=>sizeStage(s);s.onResize=()=>sizeStage(s);
     img.addEventListener('load',s.onImageLoad);window.addEventListener('resize',s.onResize,{passive:true});
@@ -256,10 +252,9 @@
         const amount=green?(1-reverse):0;
         const base=pt.pixel||initial;
         const fromPhoto=Math.max(reverse,1-smooth(clamp((morph-.15)/.85)));
-        const target=s.targetColor||GREEN;
-        const rr=Math.round((base[0]*fromPhoto+initial[0]*(1-fromPhoto))*(1-amount)+target[0]*amount);
-        const gg=Math.round((base[1]*fromPhoto+initial[1]*(1-fromPhoto))*(1-amount)+target[1]*amount);
-        const bb=Math.round((base[2]*fromPhoto+initial[2]*(1-fromPhoto))*(1-amount)+target[2]*amount);
+        const rr=Math.round((base[0]*fromPhoto+initial[0]*(1-fromPhoto))*(1-amount)+GREEN[0]*amount);
+        const gg=Math.round((base[1]*fromPhoto+initial[1]*(1-fromPhoto))*(1-amount)+GREEN[1]*amount);
+        const bb=Math.round((base[2]*fromPhoto+initial[2]*(1-fromPhoto))*(1-amount)+GREEN[2]*amount);
         const depth=(pnt.z+1)/2;
         c.globalAlpha=clamp((.4+.6*depth)*smooth(clamp((morph+.05)*2.5)),0,1);
         c.fillStyle=`rgb(${rr},${gg},${bb})`;
@@ -267,10 +262,7 @@
         c.beginPath();c.arc(pnt.xx,pnt.yy,radius,0,Math.PI*2);c.fill();
       }
       c.globalAlpha=1;
-      if(!s.ended){
-        const towards=s.zone==='vert'?'vers le vert profond':'vers le vert';
-        s.caption.textContent=current<TRANSFORM_SECONDS?'L’image devient une sphère':s.audio.paused?'En pause':`Voix narrative · ${Math.round(mix*100)} % ${towards}`;
-      }
+      if(!s.ended)s.caption.textContent=current<TRANSFORM_SECONDS?'L’image devient une sphère':s.audio.paused?'En pause':`Voix narrative · ${Math.round(mix*100)} % vers le vert`;
     }else if(!started)s.caption.textContent='Toucher la photo pour démarrer';
     s.raf=requestAnimationFrame(next=>render(s,next));
   }
