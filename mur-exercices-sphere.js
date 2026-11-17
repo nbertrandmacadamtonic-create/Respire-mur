@@ -10,8 +10,9 @@
   const TRANSFORM_SECONDS = 5.4;
   const RETURN_SECONDS = 5.4;
   const DEFAULT_DURATION = 90;
-  const COLORS = {rouge:[255,82,86],orange:[255,163,65],vert:[78,224,148],bleu:[83,157,244]};
+  const COLORS = {rouge:[255,82,86],orange:[255,163,65],vert:[111,239,176],bleu:[83,157,244]};
   const GREEN=[80,235,155];
+  const GREEN_DARK=[27,125,89];
   let state = null, observed = null;
   let nativeExerciseOpen = null;
   const prefersReduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
@@ -305,6 +306,7 @@
     if(state?.audio===audio&&state?.image===img)return;
     detach();style();
     const key=window.currentExerciseKey||'',zone=zoneOf(key),color=COLORS[zone]||COLORS.rouge;
+    const finalColor=zone==='vert'?GREEN_DARK:GREEN;
     const stage=document.createElement('div');stage.className='mur-exsphere-stage';stage.setAttribute('aria-label','Appuyer sur la photo pour lancer l’exercice guidé');stage.setAttribute('role','button');stage.setAttribute('tabindex','0');
     const canvas=document.createElement('canvas');const caption=document.createElement('div');caption.className='mur-exsphere-caption';caption.textContent='Toucher la photo pour démarrer';
     stage.style.setProperty('--mur-sphere-start',`rgb(${color.join(',')})`);
@@ -312,7 +314,7 @@
     const controls=document.createElement('div');controls.className='mur-exsphere-controls';
     controls.innerHTML='<span class="mur-exsphere-time">0:00 / --:--</span><div class="mur-exsphere-progress" aria-label="Progression de l’exercice"><span></span></div>';
     stage.after(controls);
-    const s={key,zone,color,detail,audio,image:img,stage,canvas,caption,controls,ctx:canvas.getContext('2d'),points:makeParticles(color),raf:0,playedAt:null,started:false,enabled:true,analyser:null,frequency:null,voice:.11,analyserFrames:0,paused:false,returnAt:null,reverseProgress:0,fullscreen:false,zooming:false,visualHold:false,zoomTimer:0};
+    const s={key,zone,color,finalColor,detail,audio,image:img,stage,canvas,caption,controls,ctx:canvas.getContext('2d'),points:makeParticles(color),raf:0,playedAt:null,started:false,enabled:true,analyser:null,frequency:null,voice:.11,analyserFrames:0,paused:false,returnAt:null,reverseProgress:0,fullscreen:false,zooming:false,visualHold:false,zoomTimer:0};
     state=s;
     s.onImageLoad=()=>sizeStage(s);s.onResize=()=>sizeStage(s);
     img.addEventListener('load',s.onImageLoad);window.addEventListener('resize',s.onResize,{passive:true});
@@ -413,9 +415,10 @@
         const amount=green?(1-reverse):0;
         const base=pt.pixel||initial;
         const fromPhoto=Math.max(reverse,1-smooth(clamp((morph-.15)/.85)));
-        const rr=Math.round((base[0]*fromPhoto+initial[0]*(1-fromPhoto))*(1-amount)+GREEN[0]*amount);
-        const gg=Math.round((base[1]*fromPhoto+initial[1]*(1-fromPhoto))*(1-amount)+GREEN[1]*amount);
-        const bb=Math.round((base[2]*fromPhoto+initial[2]*(1-fromPhoto))*(1-amount)+GREEN[2]*amount);
+        const target=s.finalColor;
+        const rr=Math.round((base[0]*fromPhoto+initial[0]*(1-fromPhoto))*(1-amount)+target[0]*amount);
+        const gg=Math.round((base[1]*fromPhoto+initial[1]*(1-fromPhoto))*(1-amount)+target[1]*amount);
+        const bb=Math.round((base[2]*fromPhoto+initial[2]*(1-fromPhoto))*(1-amount)+target[2]*amount);
         const depth=(pnt.z+1)/2;
         c.globalAlpha=clamp((.4+.6*depth)*smooth(clamp((morph+.05)*2.5)),0,1);
         c.fillStyle=`rgb(${rr},${gg},${bb})`;
@@ -485,5 +488,5 @@
     window.addEventListener('pagehide',()=>{if(state)cancelAnimationFrame(state.raf)});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_EXERCICES_SPHERE={version:'22.12',get active(){return !!state},refresh:attach,close:detach};
+  window.MUR_EXERCICES_SPHERE={version:'22.12-v138',get active(){return !!state},refresh:attach,close:detach};
 })();
