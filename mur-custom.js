@@ -3058,10 +3058,15 @@ if (typeof window.installPresentationFallback !== 'function') {
   const img=modal.querySelector('.mur-v97-image');
   function render(){
     if(!current)return;
-    img.src='images/kis/'+current.key+'-'+side+'.png';
-    img.alt=(side==='recto'?'Recto':'Verso')+' de '+current.name;
-    modal.querySelector('.mur-v97-title').textContent=current.name;
-    modal.querySelector('.mur-v97-flip').textContent=side==='recto'?'Voir le verso':'Voir le recto';
+    let selected='';try{selected=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||'';}catch(_){}
+    const en=String(selected||document.documentElement.lang||'fr').toLowerCase().startsWith('en');
+    const enNames={pose:'The Grounded',funambule:'The Balancer',fonceur:'The Go-Getter',equilibre:'The Balanced',pose_funambule:'Grounded–Balancer',pose_fonceur:'Grounded–Go-Getter',funambule_fonceur:'Balancer–Go-Getter'};
+    const name=en?(enNames[current.key]||current.name):current.name;
+    img.src='images/kis/'+current.key+'-'+side+(en?'-en':'')+'.webp';
+    img.alt=(en?(side==='recto'?'Front':'Back'):(side==='recto'?'Recto':'Verso'))+' — '+name;
+    modal.querySelector('.mur-v97-title').textContent=name;
+    modal.querySelector('.mur-v97-flip').textContent=en?(side==='recto'?'See back':'See front'):(side==='recto'?'Voir le verso':'Voir le recto');
+    modal.querySelector('[data-v97-back]').textContent=en?'← My profile':'← Mon profil';
   }
   function open(){
     const k=read();if(!k){return false}
@@ -5072,4 +5077,235 @@ function init(){
   refresh();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+
+
+/* ============================================================
+   M.U.R. V145 — 7 cartes Ki.S enrichies, 28 faces WebP, FR/EN
+   Détourage régulier, recto-verso en images nettes et traduction
+   des 7 profils. Aucune modification des scores ni des tests.
+   ============================================================ */
+(() => {
+  'use strict';
+  if(window.MUR_PROFILE_CARDS_V145)return;
+  const NAMES={
+    pose:['Le Posé','The Grounded'],
+    funambule:['Le Funambule','The Balancer'],
+    fonceur:['Le Fonceur','The Go-Getter'],
+    equilibre:['L’Équilibré','The Balanced'],
+    pose_funambule:['Posé–Funambule','Grounded–Balancer'],
+    pose_fonceur:['Posé–Fonceur','Grounded–Go-Getter'],
+    funambule_fonceur:['Funambule–Fonceur','Balancer–Go-Getter']
+  };
+  const KEY_ALIAS={fun_pose:'pose_funambule',fun_fonceur:'funambule_fonceur',fun_equilibre:'funambule'};
+  const base='images/kis/';
+  const language=()=>{
+    // Même ordre de priorité que le sélecteur FR/EN de l'application.
+    let selected='';
+    try{selected=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||'';}catch(_){/* stockage indisponible */}
+    return String(selected||document.documentElement.lang||'fr').toLowerCase().startsWith('en')?'en':'fr';
+  };
+  const file=(key,side,lang)=>base+key+'-'+side+(lang==='en'?'-en':'')+'.webp';
+  const lookup=()=>{
+    let k=null;
+    try{k=(typeof kisResult!=='undefined'&&kisResult)||JSON.parse(localStorage.getItem('murKis')||'null')}catch(_){}
+    const code=String(k?.cardKey||'');
+    if(NAMES[code])return code;
+    const score=Number(k?.score)||0;
+    return score>=8?'pose':score>2?'pose_funambule':score<=-8?'fonceur':score<-2?'funambule_fonceur':'funambule';
+  };
+  function card(key){
+    key=NAMES[key]?key:(KEY_ALIAS[key]||lookup());
+    const lang=language(),name=NAMES[key]?.[lang==='en'?1:0]||key;
+    return `<div class="neuro-profile-card mur-profile-flip-v144" data-mur-kis-profile="${key}" data-mur-kis-lang="${lang}" style="--mur-profile-border:#75d0df">
+      <button type="button" class="mur-profile-toggle-v144" aria-pressed="false" aria-label="${lang==='en'?'Flip profile card':'Retourner la carte de profil'}">
+        <span class="mur-profile-inner-v144">
+          <img class="mur-profile-face-v144 mur-profile-front-v144" src="${file(key,'recto',lang)}" alt="${name} — ${lang==='en'?'front':'recto'}" loading="eager" decoding="async">
+          <img class="mur-profile-face-v144 mur-profile-back-v144" src="${file(key,'verso',lang)}" alt="${name} — ${lang==='en'?'back':'verso'}" loading="eager" decoding="async">
+        </span>
+      </button>
+    </div>`;
+  }
+  function installStyle(){
+    if(document.getElementById('mur-profile-v144-css'))return;
+    const st=document.createElement('style');st.id='mur-profile-v144-css';st.textContent=`
+      .neuro-profile-card.mur-profile-flip-v144{display:block!important;width:min(100%,315px)!important;max-width:315px!important;margin:8px auto!important;padding:0!important;border:0!important;overflow:visible!important;background:transparent!important;box-shadow:none!important}
+      .mur-profile-toggle-v144{display:block!important;position:relative!important;width:100%!important;aspect-ratio:3/5!important;margin:0!important;padding:0!important;border:0!important;border-radius:22px!important;background:transparent!important;cursor:pointer!important;perspective:1300px!important}
+      .mur-profile-toggle-v144:focus-visible{outline:3px solid #8ae9df!important;outline-offset:5px!important}
+      .mur-profile-inner-v144{display:block!important;position:absolute!important;inset:0!important;transform-style:preserve-3d!important;transition:transform .72s cubic-bezier(.2,.72,.25,1)!important}
+      .mur-profile-flip-v144.is-flipped .mur-profile-inner-v144{transform:rotateY(180deg)!important}
+      .mur-profile-face-v144{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;border-radius:22px!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important;box-shadow:0 14px 28px rgba(0,0,0,.24)!important}
+      .mur-profile-back-v144{transform:rotateY(180deg)!important}
+      .mur-kis-v92-flip img,.mur-kis-card-image{aspect-ratio:3/5!important;object-fit:contain!important}
+      #testResultView .mur-profile-flip-v144{max-height:min(58dvh,520px)!important;width:min(100%,310px)!important}
+      #testResultView .mur-profile-flip-v144 .mur-profile-toggle-v144{max-height:min(58dvh,520px)!important}
+      @media(max-width:400px){.neuro-profile-card.mur-profile-flip-v144{width:min(100%,270px)!important}}
+      @media(prefers-reduced-motion:reduce){.mur-profile-inner-v144{transition:none!important}}
+    `;document.head.appendChild(st);
+  }
+  function updateOldCardImages(){
+    const lang=language();
+    // La grande carte ki.S native et la miniature utilisent les mêmes WebP.
+    document.querySelectorAll('.mur-kis-v92-card, .mur-kis-flip-v89').forEach(root=>{
+      const raw=root.getAttribute('data-mur-kis-v92')||root.getAttribute('data-mur-kis-card')||lookup();
+      const key=NAMES[raw]?raw:(KEY_ALIAS[raw]||lookup());
+      const img=root.querySelector('img');if(!img)return;
+      const front=file(key,'recto',lang),back=file(key,'verso',lang);
+      const side=(root.dataset.side||root.dataset.murKisSide||'recto');
+      img.dataset.front=front;img.dataset.back=back;
+      const expected=side==='verso'?back:front;
+      if(!img.getAttribute('src')?.endsWith(expected))img.src=expected;
+    });
+    document.querySelectorAll('.mur-kis-v92-mini img').forEach(img=>{
+      const root=img.closest('.mur-kis-v92-mini');
+      let key=lookup();
+      const m=(img.getAttribute('src')||'').match(/images\/kis\/([a-z_]+)-recto/);
+      if(m&&NAMES[m[1]])key=m[1];
+      const expected=file(key,'recto',lang);
+      if(!img.getAttribute('src')?.endsWith(expected))img.src=expected;
+    });
+  }
+  function refresh(){
+    const lang=language();
+    document.querySelectorAll('.neuro-profile-card').forEach(el=>{
+      if(el.classList.contains('mur-profile-flip-v144')&&el.dataset.murKisLang===lang)return;
+      const raw=el.dataset.murKisProfile||el.dataset.murProfile||'';
+      const key=NAMES[raw]?raw:(KEY_ALIAS[raw]||lookup());
+      const flipped=el.classList.contains('is-flipped');
+      const box=document.createElement('div');box.innerHTML=card(key);
+      const next=box.firstElementChild;
+      if(flipped){next.classList.add('is-flipped');next.querySelector('button').setAttribute('aria-pressed','true')}
+      el.replaceWith(next);
+    });
+    updateOldCardImages();
+  }
+  function init(){
+    installStyle();
+    window.profileCardHTML=function(){return card(lookup())};
+    document.addEventListener('click',event=>{
+      const button=event.target.closest?.('.mur-profile-toggle-v144');
+      if(!button)return;
+      const root=button.closest('.mur-profile-flip-v144');
+      if(!root)return;
+      const flip=root.classList.toggle('is-flipped');button.setAttribute('aria-pressed',String(flip));
+    });
+    let pending=false;
+    const schedule=()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;refresh()})};
+    new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
+    new MutationObserver(schedule).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    window.addEventListener('storage',e=>{if(/lang|murKis/i.test(e.key||''))schedule()});
+    // Quelques écrans choisissent leur langue sans changer l'attribut lang.
+    document.addEventListener('click',e=>{if(e.target.closest?.('[data-lang],[data-language],.lang-switch'))setTimeout(schedule,50)},true);
+    refresh();
+    window.MUR_PROFILE_CARDS_V145={profiles:7,faces:2,languages:['fr','en'],format:'WebP',refresh:schedule};
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+
+
+/* ============================================================
+   M.U.R. V146 — Ki.S cartes en plein écran sur téléphone.
+   7 profils × recto/verso × FR/EN, sans modifier les tests.
+   La carte occupe tout l'espace disponible, gardant ses proportions.
+   ============================================================ */
+(() => {
+  'use strict';
+  if(window.MUR_KIS_FULLSCREEN_V146)return;
+  const PROFILES={
+    pose:['Le Posé','The Grounded'],
+    funambule:['Le Funambule','The Balancer'],
+    fonceur:['Le Fonceur','The Go-Getter'],
+    equilibre:['L’Équilibré','The Balanced'],
+    pose_funambule:['Posé–Funambule','Grounded–Balancer'],
+    pose_fonceur:['Posé–Fonceur','Grounded–Go-Getter'],
+    funambule_fonceur:['Funambule–Fonceur','Balancer–Go-Getter']
+  };
+  const ALIASES={fun_pose:'pose_funambule',fun_fonceur:'funambule_fonceur'};
+  const lang=()=>{
+    let v='';try{v=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||''}catch(_){}
+    return String(v||document.documentElement.lang||'fr').toLowerCase().startsWith('en')?'en':'fr';
+  };
+  const path=(key,side)=>`images/kis/${key}-${side}${lang()==='en'?'-en':''}.webp`;
+  const mobile=()=>window.matchMedia('(max-width: 700px)').matches;
+  function lookup(){
+    let k=null;
+    try{k=JSON.parse(localStorage.getItem('murKis')||'null')}catch(_){}
+    const key=k?.cardKey;
+    if(PROFILES[key])return key;
+    const score=Number(k?.score)||0;
+    return score>=8?'pose':score>2?'pose_funambule':score<=-8?'fonceur':score<-2?'funambule_fonceur':'funambule';
+  }
+  const st=document.createElement('style');st.id='mur-kis-fullscreen-v146-css';
+  st.textContent=`
+    #mur-kis-fullscreen-v146[hidden]{display:none!important}
+    #mur-kis-fullscreen-v146{position:fixed!important;inset:0!important;z-index:2147483646!important;display:flex!important;flex-direction:column!important;align-items:center!important;box-sizing:border-box!important;background:#041323!important;color:#eefaff!important;width:100vw!important;width:100dvw!important;height:100vh!important;height:100dvh!important;padding:calc(4px + env(safe-area-inset-top,0px)) 5px calc(5px + env(safe-area-inset-bottom,0px))!important;overflow:hidden!important}
+    #mur-kis-fullscreen-v146 .mur-kis-fs-header{box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;width:100%;min-height:43px;gap:8px;padding:0 4px;flex:0 0 auto}
+    #mur-kis-fullscreen-v146 .mur-kis-fs-title{font-size:14px;min-width:0;max-width:65%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
+    #mur-kis-fullscreen-v146 .mur-kis-fs-close,#mur-kis-fullscreen-v146 .mur-kis-fs-flip{border:1px solid #508d9f;border-radius:12px;background:#123b51;color:#f4fbff;font:600 14px inherit;min-height:39px;padding:8px 14px;cursor:pointer;touch-action:manipulation}
+    #mur-kis-fullscreen-v146 .mur-kis-fs-card{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-height:0;min-width:0;width:100%;padding:0;border:0;background:transparent;cursor:pointer;touch-action:manipulation;perspective:1300px}
+    #mur-kis-fullscreen-v146 .mur-kis-fs-card img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;aspect-ratio:3/5;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(0,0,0,.24));border:0;background:transparent;animation:mur-kis-fs-enter .28s ease both}
+    #mur-kis-fullscreen-v146 .mur-kis-fs-footer{display:flex;align-items:center;justify-content:center;flex:none;width:100%;min-height:43px}
+    #mur-kis-fullscreen-v146 button:focus-visible{outline:2px solid #7de3ed;outline-offset:2px}
+    @keyframes mur-kis-fs-enter{from{opacity:.5;transform:rotateY(-9deg) scale(.98)}to{opacity:1;transform:rotateY(0deg) scale(1)}}
+    @media(prefers-reduced-motion:reduce){#mur-kis-fullscreen-v146 .mur-kis-fs-card img{animation:none}}
+  `;
+  document.head.appendChild(st);
+  const overlay=document.createElement('section');
+  overlay.id='mur-kis-fullscreen-v146';overlay.hidden=true;
+  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
+  overlay.innerHTML=`<div class="mur-kis-fs-header"><button type="button" class="mur-kis-fs-close" data-kis-fs-close>←</button><strong class="mur-kis-fs-title"></strong><span aria-hidden="true"></span></div><button type="button" class="mur-kis-fs-card" data-kis-fs-flip aria-label="Retourner la carte"><img alt="Carte de profil Ki.S" decoding="async"></button><div class="mur-kis-fs-footer"><button type="button" class="mur-kis-fs-flip" data-kis-fs-flip></button></div>`;
+  const picture=overlay.querySelector('img');
+  const title=overlay.querySelector('.mur-kis-fs-title');
+  const flipLabel=overlay.querySelector('.mur-kis-fs-flip');
+  const closeButton=overlay.querySelector('.mur-kis-fs-close');
+  let active=null,side='recto',restoreFocus=null,oldOverflow='';
+  function paint(){
+    if(!active)return;
+    const en=lang()==='en',name=PROFILES[active][en?1:0];
+    const wanted=path(active,side);
+    if(picture.getAttribute('src')!==wanted)picture.src=wanted;
+    picture.alt=`${name} — ${en?(side==='recto'?'front':'back'):side}`;
+    title.textContent=name;
+    closeButton.textContent=en?'← Back':'← Retour';
+    flipLabel.textContent=en?(side==='recto'?'See back':'See front'):(side==='recto'?'Voir le verso':'Voir le recto');
+    overlay.querySelector('.mur-kis-fs-card').setAttribute('aria-label',en?'Flip profile card':'Retourner la carte de profil');
+    overlay.setAttribute('aria-label',name);
+  }
+  function open(key,startingSide){
+    if(!PROFILES[key])key=lookup();
+    active=key;side=startingSide==='verso'?'verso':'recto';restoreFocus=document.activeElement;
+    oldOverflow=document.body.style.overflow;
+    overlay.hidden=false;document.body.style.overflow='hidden';paint();closeButton.focus({preventScroll:true});
+  }
+  function close(){
+    overlay.hidden=true;active=null;document.body.style.overflow=oldOverflow;
+    if(restoreFocus?.isConnected)restoreFocus.focus({preventScroll:true});
+  }
+  function flip(){side=side==='recto'?'verso':'recto';paint();}
+  function init(){if(!overlay.isConnected)document.body.appendChild(overlay)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+  // La capture sur window précède les anciennes interceptions sur document.
+  window.addEventListener('click',e=>{
+    if(!overlay.hidden){
+      if(e.target.closest?.('[data-kis-fs-close]')){e.preventDefault();e.stopImmediatePropagation();close();return}
+      if(e.target.closest?.('[data-kis-fs-flip]')){e.preventDefault();e.stopImmediatePropagation();flip();return}
+      return;
+    }
+    if(!mobile())return;
+    const trigger=e.target.closest?.('.mur-kis-v92-flip,.mur-profile-toggle-v144,#mur-v90-profile-card [data-mur-v95-open],.mur-kis-card-image');
+    if(!trigger)return;
+    const root=trigger.closest('[data-mur-kis-v92],[data-mur-kis-profile],[data-mur-kis-card]');
+    const raw=root?.dataset.murKisV92||root?.dataset.murKisProfile||root?.dataset.murKisCard||lookup();
+    const key=PROFILES[raw]?raw:(ALIASES[raw]||lookup());
+    const start=root?.dataset.side||'recto';
+    e.preventDefault();e.stopImmediatePropagation();open(key,start);
+  },true);
+  document.addEventListener('keydown',e=>{
+    if(overlay.hidden)return;
+    if(e.key==='Escape'){e.preventDefault();close()}
+    else if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();flip()}
+  });
+  new MutationObserver(()=>{if(!overlay.hidden)paint()}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+  document.addEventListener('click',e=>{if(!overlay.hidden&&e.target.closest?.('[data-lang],[data-language],.lang-switch'))requestAnimationFrame(paint)},true);
+  window.MUR_KIS_FULLSCREEN_V146={open,close,flip,languages:['fr','en'],profiles:7};
 })();
