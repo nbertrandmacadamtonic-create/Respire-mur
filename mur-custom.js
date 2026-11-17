@@ -1637,15 +1637,15 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V140 — TRANSITION PAR FLUX DE PARTICULES VERS LES 4 SPHERES
+   M.U.R. V141 — FLUX SPIRALES PLUS LONGS VERS LES 4 SPHERES
    La sphère de 1200 points envoie des flux de particules vers les 4 sphères périphériques ; le noyau rouge reste au centre.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V140)return;
-  const N=1200, PER=350, CENTER_PER=350, OPEN_MS=2350, CLOSE_MS=1550;
+  if(window.MUR_HOME_FIVE_V141)return;
+  const N=1200, PER=350, CENTER_PER=350, OPEN_MS=3500, CLOSE_MS=1800;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
     {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[239,78,91]},
@@ -1672,10 +1672,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV140)return;
-    circle.dataset.murFiveV140='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV141)return;
+    circle.dataset.murFiveV141='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v140-css';
+    style.id='mur-five-spheres-v141-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1826,25 +1826,47 @@ if (typeof window.installPresentationFallback !== 'function') {
             y=c[1]+p.y*R*perspective*cloudScale;
             depth=(zz+1)/2;
           }else{
-            const threshold=.10+p.seed*.18+(p.g-1)*.02;
-            const travel=ease(Math.max(0,Math.min(1,(progress-threshold)/.42)));
-            appear=ease(Math.max(0,Math.min(1,(progress-(threshold+.16))/.26)));
+            // Départs décalés en quatre vagues avec une arrivée progressive.
+            const threshold=.09+p.seed*.23+(p.g-1)*.025;
+            const travel=ease(Math.max(0,Math.min(1,(progress-threshold)/.57)));
+            appear=ease(Math.max(0,Math.min(1,(progress-(threshold+.28))/.27)));
             if(travel<=0)continue;
             const dirX=(c[0]-hx),dirY=(c[1]-hy);
             const dirLen=Math.hypot(dirX,dirY)||1;
             const ux=dirX/dirLen, uy=dirY/dirLen;
             const px=-uy, py=ux;
-            const launchR=hr*(.70+.10*(p.seed-.5));
-            const swirl=(p.seed-.5)*(radius*.95)*(1-travel);
+            const launchR=hr*(.52+.27*p.seed);
+            const swirl=(p.seed-.5)*radius*.85;
             const startX=hx+ux*launchR+px*swirl;
             const startY=hy+uy*launchR+py*swirl;
-            const cloudScale=1+(1-appear)*(.55+.35*p.seed);
+            const cloudScale=1+(1-appear)*(.50+.30*p.seed);
             const endX=c[0]+xx*R*perspective*cloudScale;
             const endY=c[1]+p.y*R*perspective*cloudScale;
-            const arcLift=Math.sin(travel*Math.PI)*(10+20*p.seed);
-            x=startX+(endX-startX)*travel+px*arcLift*(1-travel*.35);
-            y=startY+(endY-startY)*travel+py*arcLift*(1-travel*.35);
+            // Double courbe spiralée autour de l'axe de chaque flux ; elle
+            // s'atténue à l'arrivée pour former une sphère bien ronde.
+            const orbitWave=Math.sin(travel*Math.PI);
+            const spiralAngle=travel*TAU*(1.15+.35*p.seed)+p.seed*TAU;
+            const spiralWidth=(12+16*p.seed)*orbitWave;
+            const radialWidth=spiralWidth*.32*Math.cos(spiralAngle);
+            const lateralWidth=spiralWidth*Math.sin(spiralAngle);
+            const bend=Math.sin(travel*Math.PI)*(8+15*p.seed);
+            x=startX+(endX-startX)*travel+ux*radialWidth+px*(lateralWidth+bend);
+            y=startY+(endY-startY)*travel+uy*radialWidth+py*(lateralWidth+bend);
             depth=Math.max(.18,Math.min(1,(zz+1)/2*.85+.15*travel));
+            // Petites traînées lumineuses uniquement durant le déplacement.
+            // Elles restent discrètes et disparaissent lorsque l'orbe est formé.
+            if(travel<.96 && travel>.04 && !reduced?.matches && p.seed>.56){
+              const back=Math.max(.004,travel-.017);
+              const bWave=Math.sin(back*Math.PI);
+              const bAngle=back*TAU*(1.15+.35*p.seed)+p.seed*TAU;
+              const bWidth=(12+16*p.seed)*bWave;
+              const bx=startX+(endX-startX)*back+ux*(bWidth*.32*Math.cos(bAngle))+px*(bWidth*Math.sin(bAngle)+Math.sin(back*Math.PI)*(8+15*p.seed));
+              const by=startY+(endY-startY)*back+uy*(bWidth*.32*Math.cos(bAngle))+py*(bWidth*Math.sin(bAngle)+Math.sin(back*Math.PI)*(8+15*p.seed));
+              ctx.globalAlpha=(.12+.17*depth)*orbitWave;
+              ctx.strokeStyle=`rgb(${g.rgb.join(',')})`;
+              ctx.lineWidth=.7;
+              ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(x,y);ctx.stroke();
+            }
           }
           // Profondeur et lumière identiques au langage visuel de Respiration :
           // points lointains plus sombres, points proches adoucis.
@@ -1898,7 +1920,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V140={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'five-equal-spheres-framed-labels',transition:'source-particles-stream-to-peripheral-spheres'};
+    window.MUR_HOME_FIVE_V141={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'five-equal-spheres-framed-labels',transition:'spiral-particle-streams-with-light-trails'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
