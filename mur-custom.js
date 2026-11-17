@@ -1401,13 +1401,13 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V33 — ACCUEIL SPHERE 3D 2400 PARTICULES
+   M.U.R. V134 — ACCUEIL SPHERE 3D 1200 POINTS RAFFINES
    Suppression du bandeau. Appel a l'action agrandi sous la sphère.
    Ajout limité à mur-custom.js.
    ============================================================= */
 (() => {
   'use strict';
-  const COUNT=2400, STYLE_ID='murHomeParticlesV33Style';
+  const COUNT=1200, STYLE_ID='murHomeParticlesV33Style';
   if(window.MUR_HOME_PARTICLES_V33) return;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const points=Array.from({length:COUNT},(_,i)=>{
@@ -1415,6 +1415,21 @@ if (typeof window.installPresentationFallback !== 'function') {
     const a=i*GOLD;
     return {x:rad*Math.cos(a),y,z:rad*Math.sin(a),phase:(i*67%101)/101};
   });
+  // Filet de lumière discret entre points voisins sur la surface de la sphère.
+  // Les liens sont préparés une seule fois, et non recalculés à chaque image.
+  const mesh=[];
+  for(let i=0;i<COUNT;i++){
+    const a=points[i],neighbors=[];
+    const from=Math.max(0,i-68),to=Math.min(COUNT,i+69);
+    for(let j=from;j<to;j++){
+      if(j<=i)continue;
+      const b=points[j];
+      const d2=(a.x-b.x)**2+(a.y-b.y)**2+(a.z-b.z)**2;
+      if(d2<.020)neighbors.push({j,d2});
+    }
+    neighbors.sort((u,v)=>u.d2-v.d2);
+    for(const item of neighbors.slice(0,3))mesh.push([i,item.j]);
+  }
   const palettes={
     bleu:[59,150,247],vert:[85,233,153],orange:[255,165,63],rouge:[255,88,100]
   };
@@ -1496,7 +1511,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     let rgb=null;
     if(s.startsWith('#')){const h=s.slice(1);if(h.length===6)rgb=[0,2,4].map(i=>parseInt(h.slice(i,i+2),16));}
     if(!rgb&&/^rgba?\(/.test(s))rgb=s.match(/[\d.]+/g)?.slice(0,3).map(Number);
-    if(!rgb)rgb=palettes.vert;
+    if(!rgb)rgb=palettes.rouge;
     return rgb;
   }
   function lighten(rgb,factor=.38){
@@ -1541,7 +1556,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     canvas.setAttribute('aria-hidden','true');circle.prepend(canvas);
     const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
     let phase=0,previous=0,raf=0;
-    let lastRgb=null, color=[...palettes.vert];
+    let lastRgb=null, color=[...palettes.rouge];
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)');
     function draw(t){
       raf=requestAnimationFrame(draw);
@@ -1562,30 +1577,42 @@ if (typeof window.installPresentationFallback !== 'function') {
       }
       const cx=w/2,cy=h/2,R=Math.min(w,h)*.405;
       const glow=ctx.createRadialGradient(cx,cy,R*.12,cx,cy,R*1.45);
-      glow.addColorStop(0,`rgba(${light[0]},${light[1]},${light[2]},.07)`);
-      glow.addColorStop(.70,`rgba(${r},${g},${b},.18)`);
+      glow.addColorStop(0,`rgba(${r},${g},${b},.012)`);
+      glow.addColorStop(.70,`rgba(${r},${g},${b},.09)`);
       glow.addColorStop(1,`rgba(${r},${g},${b},0)`);
       ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
       const ca=Math.cos(phase),sa=Math.sin(phase);
-      const pts=points.map(p=>{
+      const projected=points.map(p=>{
         const xx=p.x*ca-p.z*sa, zz=p.x*sa+p.z*ca;
         const perspective=2.9/(2.9-zz*.26);
         return {x:cx+xx*R*perspective,y:cy+p.y*R*perspective,z:zz,phase:p.phase};
-      }).sort((a,b)=>a.z-b.z);
+      });
+      // Filigrane rouge extrêmement fin, visible surtout sur la face avant.
+      ctx.save();
+      ctx.lineWidth=Math.max(.3,Math.min(.52,w/620));
+      ctx.strokeStyle=`rgba(${r},${g},${b},.14)`;
+      ctx.beginPath();
+      for(const [a,b] of mesh){
+        const u=projected[a],v=projected[b];
+        if(u.z < -.10 || v.z < -.10)continue;
+        ctx.moveTo(u.x,u.y);ctx.lineTo(v.x,v.y);
+      }
+      ctx.stroke();ctx.restore();
+      const pts=projected.slice().sort((a,b)=>a.z-b.z);
       for(const p of pts){
         const depth=(p.z+1)/2;
-        const size=.65+depth*1.1;
-        const shimmer=.85+.15*Math.sin(t*.0012+p.phase*TAU);
-        ctx.globalAlpha=(.28+.68*depth)*shimmer;
-        ctx.fillStyle=depth>.8?`rgb(${light[0]},${light[1]},${light[2]})`:`rgb(${r},${g},${b})`;
+        const size=.48+depth*.91;
+        const shimmer=.94+.06*Math.sin(t*.00075+p.phase*TAU);
+        ctx.globalAlpha=(.29+.68*depth)*shimmer;
+        ctx.fillStyle=`rgb(${r},${g},${b})`;
         ctx.beginPath();ctx.arc(p.x,p.y,size,0,TAU);ctx.fill();
       }
       ctx.globalAlpha=1;
       ctx.save();
       ctx.shadowColor=`rgba(${r},${g},${b},.38)`;
-      ctx.shadowBlur=28;
+      ctx.shadowBlur=14;
       const halo=ctx.createRadialGradient(cx,cy+R*1.02,0,cx,cy+R*1.02,R*.70);
-      halo.addColorStop(0,`rgba(${light[0]},${light[1]},${light[2]},.38)`);
+      halo.addColorStop(0,`rgba(${r},${g},${b},.23)`);
       halo.addColorStop(1,`rgba(${r},${g},${b},0)`);
       ctx.fillStyle=halo;
       ctx.beginPath();
@@ -1593,8 +1620,8 @@ if (typeof window.installPresentationFallback !== 'function') {
       ctx.fill();
       ctx.restore();
       ctx.save();
-      ctx.strokeStyle=`rgba(${light[0]},${light[1]},${light[2]},.24)`;
-      ctx.lineWidth=1.15;
+      ctx.strokeStyle=`rgba(${r},${g},${b},.12)`;
+      ctx.lineWidth=.65;
       ctx.beginPath();
       ctx.ellipse(cx,cy,R*1.08,R*1.08,0,0,TAU);
       ctx.stroke();
@@ -1604,21 +1631,21 @@ if (typeof window.installPresentationFallback !== 'function') {
     window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_HOME_PARTICLES_V33={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere',menuTransition:'particle-dispersion-1000ms'};
+  window.MUR_HOME_PARTICLES_V33={version:134,particles:COUNT,monochrome:true,meshSegments:mesh.length,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere',menuTransition:'particle-dispersion-1000ms'};
 })();
 
 
 
 /* =============================================================
    M.U.R. V87 — URGENCE PLUS DENSE
-   La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
+   La sphère de 1200 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
   if(window.MUR_HOME_FIVE_V87)return;
-  const N=2400, PER=350, CENTER_PER=1200, OPEN_MS=2350, CLOSE_MS=1550;
+  const N=1200, PER=350, CENTER_PER=1200, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
     {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[239,78,91]},
@@ -1628,7 +1655,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     {key:'stats',fr:'Stats',en:'Stats',icon:'▥',rgb:[218,94,156]}
   ];
   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
-  // Deux populations distinctes : 2400 points de la sphère source et
+  // Deux populations distinctes : 1200 points de la sphère source et
   // 1200 points au centre, 350 par sphère périphérique (sans scission).
   const sourcePoints=Array.from({length:N},(_,i)=>{
     const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),a=i*GOLD;
