@@ -5243,18 +5243,28 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     #mur-kis-fullscreen-v146 .mur-kis-fs-title{font-size:14px;min-width:0;max-width:65%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
     #mur-kis-fullscreen-v146 .mur-kis-fs-close,#mur-kis-fullscreen-v146 .mur-kis-fs-flip{border:1px solid #508d9f;border-radius:12px;background:#123b51;color:#f4fbff;font:600 14px inherit;min-height:39px;padding:8px 14px;cursor:pointer;touch-action:manipulation}
     #mur-kis-fullscreen-v146 .mur-kis-fs-card{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-height:0;min-width:0;width:100%;padding:0;border:0;background:transparent;cursor:pointer;touch-action:manipulation;perspective:1300px}
-    #mur-kis-fullscreen-v146 .mur-kis-fs-card img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;aspect-ratio:3/5;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(0,0,0,.24));border:0;background:transparent;animation:mur-kis-fs-enter .28s ease both}
+    /* V148 : deux faces préchargées dans un véritable support 3D. */
+    #mur-kis-fullscreen-v146 .mur-kis-fs-rotor{position:relative;display:block;height:100%;max-height:100%;width:auto;max-width:100%;aspect-ratio:3/5;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform 760ms cubic-bezier(.22,.7,.18,1);transform:rotateY(0deg);will-change:transform}
+    #mur-kis-fullscreen-v146 .mur-kis-fs-card.is-verso .mur-kis-fs-rotor{transform:rotateY(180deg)}
+    #mur-kis-fullscreen-v146 .mur-kis-fs-card.is-initializing .mur-kis-fs-rotor{transition:none!important}
+    #mur-kis-fullscreen-v146 .mur-kis-fs-face{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;aspect-ratio:3/5;backface-visibility:hidden;-webkit-backface-visibility:hidden;filter:drop-shadow(0 6px 12px rgba(0,0,0,.24));border:0;background:transparent}
+    #mur-kis-fullscreen-v146 .mur-kis-fs-face--back{transform:rotateY(180deg)}
+    #mur-kis-fullscreen-v146 .mur-kis-fs-card:focus-visible{outline:2px solid #7de3ed;outline-offset:3px}
+    @media(max-width:700px){#mur-kis-fullscreen-v146 .mur-kis-fs-rotor{width:min(100%,calc((100dvh - 112px)*.6));height:auto;max-height:100%}}
+
     #mur-kis-fullscreen-v146 .mur-kis-fs-footer{display:flex;align-items:center;justify-content:center;flex:none;width:100%;min-height:43px}
     #mur-kis-fullscreen-v146 button:focus-visible{outline:2px solid #7de3ed;outline-offset:2px}
     @keyframes mur-kis-fs-enter{from{opacity:.5;transform:rotateY(-9deg) scale(.98)}to{opacity:1;transform:rotateY(0deg) scale(1)}}
-    @media(prefers-reduced-motion:reduce){#mur-kis-fullscreen-v146 .mur-kis-fs-card img{animation:none}}
+    @media(prefers-reduced-motion:reduce){#mur-kis-fullscreen-v146 .mur-kis-fs-rotor{transition:none!important}}
   `;
   document.head.appendChild(st);
   const overlay=document.createElement('section');
   overlay.id='mur-kis-fullscreen-v146';overlay.hidden=true;
   overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
-  overlay.innerHTML=`<div class="mur-kis-fs-header"><button type="button" class="mur-kis-fs-close" data-kis-fs-close>←</button><strong class="mur-kis-fs-title"></strong><span aria-hidden="true"></span></div><button type="button" class="mur-kis-fs-card" data-kis-fs-flip aria-label="Retourner la carte"><img alt="Carte de profil Ki.S" decoding="async"></button><div class="mur-kis-fs-footer"><button type="button" class="mur-kis-fs-flip" data-kis-fs-flip></button></div>`;
-  const picture=overlay.querySelector('img');
+  overlay.innerHTML=`<div class="mur-kis-fs-header"><button type="button" class="mur-kis-fs-close" data-kis-fs-close>←</button><strong class="mur-kis-fs-title"></strong><span aria-hidden="true"></span></div><button type="button" class="mur-kis-fs-card is-initializing" data-kis-fs-flip aria-label="Retourner la carte"><span class="mur-kis-fs-rotor"><img class="mur-kis-fs-face mur-kis-fs-face--front" alt="" decoding="async"><img class="mur-kis-fs-face mur-kis-fs-face--back" alt="" decoding="async"></span></button><div class="mur-kis-fs-footer"><button type="button" class="mur-kis-fs-flip" data-kis-fs-flip></button></div>`;
+  const pictureFront=overlay.querySelector('.mur-kis-fs-face--front');
+  const pictureBack=overlay.querySelector('.mur-kis-fs-face--back');
+  const cardButton=overlay.querySelector('.mur-kis-fs-card');
   const title=overlay.querySelector('.mur-kis-fs-title');
   const flipLabel=overlay.querySelector('.mur-kis-fs-flip');
   const closeButton=overlay.querySelector('.mur-kis-fs-close');
@@ -5262,9 +5272,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function paint(){
     if(!active)return;
     const en=lang()==='en',name=PROFILES[active][en?1:0];
-    const wanted=path(active,side);
-    if(picture.getAttribute('src')!==wanted)picture.src=wanted;
-    picture.alt=`${name} — ${en?(side==='recto'?'front':'back'):side}`;
+    const front=path(active,'recto'),back=path(active,'verso');
+    if(pictureFront.getAttribute('src')!==front)pictureFront.src=front;
+    if(pictureBack.getAttribute('src')!==back)pictureBack.src=back;
+    pictureFront.alt=`${name} — ${en?'front':'recto'}`;
+    pictureBack.alt=`${name} — ${en?'back':'verso'}`;
+    pictureFront.setAttribute('aria-hidden',String(side==='verso'));
+    pictureBack.setAttribute('aria-hidden',String(side==='recto'));
+    cardButton.classList.toggle('is-verso',side==='verso');
     title.textContent=name;
     closeButton.textContent=en?'← Back':'← Retour';
     flipLabel.textContent=en?(side==='recto'?'See back':'See front'):(side==='recto'?'Voir le verso':'Voir le recto');
@@ -5275,13 +5290,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(!PROFILES[key])key=lookup();
     active=key;side=startingSide==='verso'?'verso':'recto';restoreFocus=document.activeElement;
     oldOverflow=document.body.style.overflow;
-    overlay.hidden=false;document.body.style.overflow='hidden';paint();closeButton.focus({preventScroll:true});
+    cardButton.classList.add('is-initializing');
+    overlay.hidden=false;document.body.style.overflow='hidden';paint();
+    // No flip on first opening, even when opening the verso directly.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>cardButton.classList.remove('is-initializing')));
+    closeButton.focus({preventScroll:true});
   }
   function close(){
     overlay.hidden=true;active=null;document.body.style.overflow=oldOverflow;
     if(restoreFocus?.isConnected)restoreFocus.focus({preventScroll:true});
   }
-  function flip(){side=side==='recto'?'verso':'recto';paint();}
+  function flip(){if(!active)return;side=side==='recto'?'verso':'recto';paint();}
   function init(){if(!overlay.isConnected)document.body.appendChild(overlay)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
   // La capture sur window précède les anciennes interceptions sur document.
@@ -5314,7 +5333,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   });
   new MutationObserver(()=>{if(!overlay.hidden)paint()}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   document.addEventListener('click',e=>{if(!overlay.hidden&&e.target.closest?.('[data-lang],[data-language],.lang-switch'))requestAnimationFrame(paint)},true);
-  window.MUR_KIS_FULLSCREEN_V146={open,close,flip,languages:['fr','en'],profiles:7};
+  window.MUR_KIS_FULLSCREEN_V146={open,close,flip,languages:['fr','en'],profiles:7,flip3D:true,version:148};
 })();
 
 
@@ -5360,3 +5379,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.MUR_KIS_PROFILE_SIDES_V147={version:147,faces:['recto','verso'],languages:['fr','en']};
 })();
+
+/* V148 : la fenêtre Ki.S utilise deux faces superposées et une rotation Y de 760 ms. */
