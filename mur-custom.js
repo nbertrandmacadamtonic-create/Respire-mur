@@ -2701,7 +2701,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const first=page.querySelector('.card');if(first)first.appendChild(box);}
     if(!state){box.innerHTML='<p class="help" style="margin-top:15px">Votre avatar apparaîtra après le test ki.S.</p>';return}
     const status=state.zone?'Ici & Maintenant : zone '+state.zone+'.':'Réalisez Ici & Maintenant pour colorer votre avatar.';
-    box.innerHTML=`<div class="mur-v90-profile" data-mur-v95-open role="button" tabindex="0" aria-label="Voir la carte complète de mon profil ki.S">${avatarHTML(state)}<div><small>MON PROFIL ki.S</small><strong>${state.title}</strong><p>${status}</p><small>${state.legacy?'Ancien résultat : refaites ki.S pour un calcul sur les 15 réponses.':'Profil de fond : évolue lorsque vous refaites ki.S.'}</small><button type="button" class="mur-v95-open" data-mur-v95-open>Voir ma carte ki.S</button></div></div>`;
+    box.innerHTML=`<div class="mur-v90-profile" data-mur-v95-open role="button" tabindex="0" aria-label="Voir la carte complète de mon profil ki.S">${avatarHTML(state)}<div><small>MON PROFIL ki.S</small><strong>${state.title}</strong><p>${status}</p><small>${state.legacy?'Ancien résultat : refaites ki.S pour un calcul sur les 15 réponses.':'Profil de fond : évolue lorsque vous refaites ki.S.'}</small><div class="mur-v147-actions"><button type="button" class="mur-v95-open" data-mur-v147-open="recto">Voir le recto</button><button type="button" class="mur-v95-open" data-mur-v147-open="verso">Voir le verso</button></div></div></div>`;
   }
   window.MUR_KIS_V90_RENDER_AVATAR=renderAvatar;
   // Interception minimale : on garde le moteur et les fonctions de synthèse existants.
@@ -5291,6 +5291,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(e.target.closest?.('[data-kis-fs-flip]')){e.preventDefault();e.stopImmediatePropagation();flip();return}
       return;
     }
+    const profileControl=e.target.closest?.('#mur-v90-profile-card [data-mur-v147-open]');
+    // Dans Mon profil, afficher la face demandée sur mobile et ordinateur.
+    if(profileControl){
+      e.preventDefault();e.stopImmediatePropagation();
+      open(lookup(),profileControl.dataset.murV147Open||'recto');
+      return;
+    }
     if(!mobile())return;
     const trigger=e.target.closest?.('.mur-kis-v92-flip,.mur-profile-toggle-v144,#mur-v90-profile-card [data-mur-v95-open],.mur-kis-card-image');
     if(!trigger)return;
@@ -5308,4 +5315,48 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   new MutationObserver(()=>{if(!overlay.hidden)paint()}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   document.addEventListener('click',e=>{if(!overlay.hidden&&e.target.closest?.('[data-lang],[data-language],.lang-switch'))requestAnimationFrame(paint)},true);
   window.MUR_KIS_FULLSCREEN_V146={open,close,flip,languages:['fr','en'],profiles:7};
+})();
+
+
+/* M.U.R. V147 — Profil Ki.S : accès explicite au recto ET au verso. */
+(() => {
+  'use strict';
+  if(window.MUR_KIS_PROFILE_SIDES_V147)return;
+  const style=document.createElement('style');
+  style.id='mur-kis-profile-sides-v147';
+  style.textContent=`
+    #mur-v90-profile-card .mur-v147-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    #mur-v90-profile-card .mur-v147-actions .mur-v95-open{margin:0!important;flex:1 1 130px;white-space:nowrap}
+    @media(max-width:420px){#mur-v90-profile-card .mur-v147-actions{flex-direction:column}#mur-v90-profile-card .mur-v147-actions .mur-v95-open{flex-basis:auto}}
+  `;
+  document.head.appendChild(style);
+  const en=()=>{
+    let v='';try{v=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||''}catch(_){}
+    return String(v||document.documentElement.lang||'fr').toLowerCase().startsWith('en');
+  };
+  function translate(){
+    document.querySelectorAll('#mur-v90-profile-card [data-mur-v147-open]').forEach(button=>{
+      const back=button.dataset.murV147Open==='verso';
+      button.textContent=en()?(back?'See back':'See front'):(back?'Voir le verso':'Voir le recto');
+      button.setAttribute('aria-label',button.textContent+' — Ki.S');
+    });
+  }
+  let scheduled=false;
+  function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;translate()})}
+  const start=()=>{
+    translate();
+    const root=document.getElementById('mur-v90-profile-card');
+    if(root)new MutationObserver(schedule).observe(root,{childList:true,subtree:true});
+    // Le panneau Profil est reconstruit après certains tests : surveiller son conteneur.
+    const settings=document.getElementById('settings');
+    if(settings)new MutationObserver(()=>{
+      const profile=document.getElementById('mur-v90-profile-card');
+      if(profile&&!profile.dataset.murV147Observed){profile.dataset.murV147Observed='1';new MutationObserver(schedule).observe(profile,{childList:true,subtree:true})}
+      schedule();
+    }).observe(settings,{childList:true});
+    new MutationObserver(schedule).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    document.addEventListener('click',e=>{if(e.target.closest?.('[data-lang],[data-language],.lang-switch'))setTimeout(schedule,60)},true);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+  window.MUR_KIS_PROFILE_SIDES_V147={version:147,faces:['recto','verso'],languages:['fr','en']};
 })();
