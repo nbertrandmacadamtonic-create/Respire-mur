@@ -1637,14 +1637,14 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V139 — TRANSITION FLUIDE SPHERE PRINCIPALE VERS MENU
-   La sphère de 1200 points se dissout ; 5 sphères harmonisées naissent du nuage.
+   M.U.R. V140 — TRANSITION PAR FLUX DE PARTICULES VERS LES 4 SPHERES
+   La sphère de 1200 points envoie des flux de particules vers les 4 sphères périphériques ; le noyau rouge reste au centre.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V139)return;
+  if(window.MUR_HOME_FIVE_V140)return;
   const N=1200, PER=350, CENTER_PER=350, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
@@ -1672,10 +1672,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV139)return;
-    circle.dataset.murFiveV139='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV140)return;
+    circle.dataset.murFiveV140='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v139-css';
+    style.id='mur-five-spheres-v140-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1762,7 +1762,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const color=homeColor();
       const ca=Math.cos(time*.00023),sa=Math.sin(time*.00023);
       const cb=Math.cos(time*.00030),sb=Math.sin(time*.00030);
-      // V139 — Continuité visuelle : les 1 200 points de la grande sphère
+      // V140 — Continuité visuelle : les 1 200 points de la grande sphère
       // convergent progressivement vers le volume de la petite boule centrale.
       // Un fondu croisé avec la petite sphère évite l'apparition brusque.
       const shrink=ease(Math.min(1,progress/.86));
@@ -1806,32 +1806,53 @@ if (typeof window.installPresentationFallback !== 'function') {
         }
         ctx.restore();
       }
-      // Condensation indépendante : centre harmonisé à 350 points, satellites à 350 points,
+      // V140 — Condensation avec flux : centre harmonisé à 350 points, satellites à 350 points,
       // plus serrés et plus lumineux que dans la V38.
-      const grown=ease(Math.max(0,Math.min(1,(progress-.18)/.72)));
+      const grown=ease(Math.max(0,Math.min(1,(progress-.16)/.74)));
       if(grown>0){
         ctx.save();ctx.globalCompositeOperation='lighter';
         for(const p of miniPoints){
-          const threshold=p.g===0?0.04+p.seed*.12:.07+p.seed*.65;
-          const appear=p.g===0
-            ? ease(Math.max(0,Math.min(1,(progress-.43)/.43)))
-            : ease(Math.max(0,Math.min(1,(grown-threshold)/.20)));
-          if(appear<=0)continue;
           const g=GROUPS[p.g],c=coords[p.g];
           const xx=p.g===0 ? p.x*cb-p.z*sb : p.x;
           const zz=p.g===0 ? p.x*sb+p.z*cb : p.z;
           const perspective=2.9/(2.9-zz*.22);
           const R=p.g===0?centerRadius:radius;
-          const cloudScale=p.g===0?1:1+(1-appear)*(.62+.46*p.seed);
-          const x=c[0]+xx*R*perspective*cloudScale;
-          const y=c[1]+p.y*R*perspective*cloudScale;
-          const depth=(zz+1)/2;
+          let x,y,appear,depth;
+          if(p.g===0){
+            appear=ease(Math.max(0,Math.min(1,(progress-.42)/.42)));
+            if(appear<=0)continue;
+            const cloudScale=1;
+            x=c[0]+xx*R*perspective*cloudScale;
+            y=c[1]+p.y*R*perspective*cloudScale;
+            depth=(zz+1)/2;
+          }else{
+            const threshold=.10+p.seed*.18+(p.g-1)*.02;
+            const travel=ease(Math.max(0,Math.min(1,(progress-threshold)/.42)));
+            appear=ease(Math.max(0,Math.min(1,(progress-(threshold+.16))/.26)));
+            if(travel<=0)continue;
+            const dirX=(c[0]-hx),dirY=(c[1]-hy);
+            const dirLen=Math.hypot(dirX,dirY)||1;
+            const ux=dirX/dirLen, uy=dirY/dirLen;
+            const px=-uy, py=ux;
+            const launchR=hr*(.70+.10*(p.seed-.5));
+            const swirl=(p.seed-.5)*(radius*.95)*(1-travel);
+            const startX=hx+ux*launchR+px*swirl;
+            const startY=hy+uy*launchR+py*swirl;
+            const cloudScale=1+(1-appear)*(.55+.35*p.seed);
+            const endX=c[0]+xx*R*perspective*cloudScale;
+            const endY=c[1]+p.y*R*perspective*cloudScale;
+            const arcLift=Math.sin(travel*Math.PI)*(10+20*p.seed);
+            x=startX+(endX-startX)*travel+px*arcLift*(1-travel*.35);
+            y=startY+(endY-startY)*travel+py*arcLift*(1-travel*.35);
+            depth=Math.max(.18,Math.min(1,(zz+1)/2*.85+.15*travel));
+          }
           // Profondeur et lumière identiques au langage visuel de Respiration :
           // points lointains plus sombres, points proches adoucis.
           const tone=.64+.36*depth;
           const shade=g.rgb.map(v=>Math.round(v*tone));
           const lit=shade.map(v=>Math.round(v+(255-v)*(.05+.19*depth)));
-          ctx.globalAlpha=appear*(.50+.42*depth);
+          const alphaBoost=p.g===0?1:(.35+.65*Math.max(appear,.4));
+          ctx.globalAlpha=alphaBoost*(.50+.42*depth);
           ctx.fillStyle=`rgb(${lit.join(',')})`;
           ctx.beginPath();ctx.arc(x,y,.85+depth*1.28,0,TAU);ctx.fill();
         }
@@ -1877,7 +1898,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V139={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'five-equal-spheres-framed-labels',transition:'continuous-source-to-red-crossfade'};
+    window.MUR_HOME_FIVE_V140={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'five-equal-spheres-framed-labels',transition:'source-particles-stream-to-peripheral-spheres'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
