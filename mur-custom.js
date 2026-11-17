@@ -1637,15 +1637,15 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V141 — FLUX SPIRALES PLUS LONGS VERS LES 4 SPHERES
+   M.U.R. V142 — FLUX DENSES ET RAFFINES VERS LES 4 SPHERES
    La sphère de 1200 points envoie des flux de particules vers les 4 sphères périphériques ; le noyau rouge reste au centre.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V141)return;
-  const N=1200, PER=350, CENTER_PER=350, OPEN_MS=3500, CLOSE_MS=1800;
+  if(window.MUR_HOME_FIVE_V142)return;
+  const N=1200, PER=850, CENTER_PER=650, OPEN_MS=3700, CLOSE_MS=1800;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
     {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[239,78,91]},
@@ -1655,8 +1655,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     {key:'stats',fr:'Stats',en:'Stats',icon:'▥',rgb:[218,94,156]}
   ];
   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
-  // Deux populations distinctes : 1200 points de la sphère source et
-  // 1200 points au centre, 350 par sphère périphérique (sans scission).
+  // Grande sphère 1200 points ; petites sphères densifiées : 650 au centre et 850 par satellite.
   const sourcePoints=Array.from({length:N},(_,i)=>{
     const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),a=i*GOLD;
     return {x:r*Math.cos(a),y,z:r*Math.sin(a),seed:((i*67)%1009)/1009};
@@ -1672,10 +1671,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV141)return;
-    circle.dataset.murFiveV141='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV142)return;
+    circle.dataset.murFiveV142='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v141-css';
+    style.id='mur-five-spheres-v142-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1806,7 +1805,7 @@ if (typeof window.installPresentationFallback !== 'function') {
         }
         ctx.restore();
       }
-      // V140 — Condensation avec flux : centre harmonisé à 350 points, satellites à 350 points,
+      // V142 — Flux plus denses : centre à 650 points, satellites à 850 points,
       // plus serrés et plus lumineux que dans la V38.
       const grown=ease(Math.max(0,Math.min(1,(progress-.16)/.74)));
       if(grown>0){
@@ -1826,57 +1825,40 @@ if (typeof window.installPresentationFallback !== 'function') {
             y=c[1]+p.y*R*perspective*cloudScale;
             depth=(zz+1)/2;
           }else{
-            // Départs décalés en quatre vagues avec une arrivée progressive.
-            const threshold=.09+p.seed*.23+(p.g-1)*.025;
-            const travel=ease(Math.max(0,Math.min(1,(progress-threshold)/.57)));
-            appear=ease(Math.max(0,Math.min(1,(progress-(threshold+.28))/.27)));
+            // Départs progressifs : un flot fin et continu s'échappe du noyau.
+            const threshold=.075+p.seed*.28+(p.g-1)*.012;
+            const travel=ease(Math.max(0,Math.min(1,(progress-threshold)/.58)));
+            appear=ease(Math.max(0,Math.min(1,(progress-(threshold+.23))/.29)));
             if(travel<=0)continue;
             const dirX=(c[0]-hx),dirY=(c[1]-hy);
             const dirLen=Math.hypot(dirX,dirY)||1;
             const ux=dirX/dirLen, uy=dirY/dirLen;
             const px=-uy, py=ux;
-            const launchR=hr*(.52+.27*p.seed);
-            const swirl=(p.seed-.5)*radius*.85;
-            const startX=hx+ux*launchR+px*swirl;
-            const startY=hy+uy*launchR+py*swirl;
-            const cloudScale=1+(1-appear)*(.50+.30*p.seed);
-            const endX=c[0]+xx*R*perspective*cloudScale;
-            const endY=c[1]+p.y*R*perspective*cloudScale;
-            // Double courbe spiralée autour de l'axe de chaque flux ; elle
-            // s'atténue à l'arrivée pour former une sphère bien ronde.
-            const orbitWave=Math.sin(travel*Math.PI);
-            const spiralAngle=travel*TAU*(1.15+.35*p.seed)+p.seed*TAU;
-            const spiralWidth=(12+16*p.seed)*orbitWave;
-            const radialWidth=spiralWidth*.32*Math.cos(spiralAngle);
-            const lateralWidth=spiralWidth*Math.sin(spiralAngle);
-            const bend=Math.sin(travel*Math.PI)*(8+15*p.seed);
-            x=startX+(endX-startX)*travel+ux*radialWidth+px*(lateralWidth+bend);
-            y=startY+(endY-startY)*travel+uy*radialWidth+py*(lateralWidth+bend);
+            // Points libérés depuis une large zone de la sphère d'origine.
+            const launchR=hr*(.46+.42*p.seed);
+            const startSide=(p.seed-.5)*hr*.35;
+            const startX=hx+ux*launchR+px*startSide;
+            const startY=hy+uy*launchR+py*startSide;
+            const endX=c[0]+xx*R*perspective;
+            const endY=c[1]+p.y*R*perspective;
+            // Courbe douce, sans spirale ostentatoire ni traits dessinés :
+            // les points font seuls le mouvement et reforment chaque orbe.
+            const ribbon=Math.sin(travel*Math.PI);
+            const harmonic=Math.sin(p.seed*TAU*2.0+travel*Math.PI*1.4);
+            const lateral=(p.seed-.5)*radius*.35*ribbon+harmonic*(5+7*p.seed)*ribbon;
+            x=startX+(endX-startX)*travel+px*lateral;
+            y=startY+(endY-startY)*travel+py*lateral;
             depth=Math.max(.18,Math.min(1,(zz+1)/2*.85+.15*travel));
-            // Petites traînées lumineuses uniquement durant le déplacement.
-            // Elles restent discrètes et disparaissent lorsque l'orbe est formé.
-            if(travel<.96 && travel>.04 && !reduced?.matches && p.seed>.56){
-              const back=Math.max(.004,travel-.017);
-              const bWave=Math.sin(back*Math.PI);
-              const bAngle=back*TAU*(1.15+.35*p.seed)+p.seed*TAU;
-              const bWidth=(12+16*p.seed)*bWave;
-              const bx=startX+(endX-startX)*back+ux*(bWidth*.32*Math.cos(bAngle))+px*(bWidth*Math.sin(bAngle)+Math.sin(back*Math.PI)*(8+15*p.seed));
-              const by=startY+(endY-startY)*back+uy*(bWidth*.32*Math.cos(bAngle))+py*(bWidth*Math.sin(bAngle)+Math.sin(back*Math.PI)*(8+15*p.seed));
-              ctx.globalAlpha=(.12+.17*depth)*orbitWave;
-              ctx.strokeStyle=`rgb(${g.rgb.join(',')})`;
-              ctx.lineWidth=.7;
-              ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(x,y);ctx.stroke();
-            }
           }
           // Profondeur et lumière identiques au langage visuel de Respiration :
           // points lointains plus sombres, points proches adoucis.
           const tone=.64+.36*depth;
           const shade=g.rgb.map(v=>Math.round(v*tone));
           const lit=shade.map(v=>Math.round(v+(255-v)*(.05+.19*depth)));
-          const alphaBoost=p.g===0?1:(.35+.65*Math.max(appear,.4));
-          ctx.globalAlpha=alphaBoost*(.50+.42*depth);
+          const alphaBoost=p.g===0?appear:(.40+.60*Math.max(appear,.25));
+          ctx.globalAlpha=alphaBoost*(.30+.64*depth);
           ctx.fillStyle=`rgb(${lit.join(',')})`;
-          ctx.beginPath();ctx.arc(x,y,.85+depth*1.28,0,TAU);ctx.fill();
+          ctx.beginPath();ctx.arc(x,y,.55+depth*1.04,0,TAU);ctx.fill();
         }
         ctx.restore();
       }
@@ -1920,7 +1902,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V141={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'five-equal-spheres-framed-labels',transition:'spiral-particle-streams-with-light-trails'};
+    window.MUR_HOME_FIVE_V142={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'five-equal-spheres-framed-labels',transition:'dense-soft-particle-ribbons-3700ms'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
