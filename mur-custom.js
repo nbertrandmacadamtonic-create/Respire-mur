@@ -5372,7 +5372,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         const intro=page.classList.contains('breath-voice-only') ||
           String(document.getElementById('phaseText')?.textContent||'').toLowerCase().includes('preparation');
         name.textContent=en?'Breathing':'Respiration';
-        subtitle.textContent=intro?(en?'Voice introduction':'Introduction vocale'):(en?'Session in progress':'Séquence en cours');
+        subtitle.textContent=intro?(en?'Preparation':'Préparation'):(en?'Session in progress':'Séquence en cours');
         exit.textContent=en?'← Stop and return':'← Arrêter et revenir';
       }
     }
@@ -5399,4 +5399,278 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     sync();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+
+
+/* ============================================================
+   M.U.R. V155 — SPHERE RESPIRATION STYLE TENDANCE ki.S
+   Même page Respiration, même moteur natif, mais la sphère prend
+   d'abord l'apparence de la carte tendance ki.S puis ses points
+   évoluent vers la couleur de la respiration choisie.
+   ============================================================ */
+(() => {
+  'use strict';
+  if (window.MUR_BREATH_KIS_STYLE_V155) return;
+  window.MUR_BREATH_KIS_STYLE_V155 = true;
+
+  const fallbackKis = {
+    pose: '#538fc6',
+    pose_funambule: '#4ea7b2',
+    funambule: '#5baf96',
+    pose_fonceur: '#7a87c9',
+    funambule_fonceur: '#d0a067',
+    fonceur: '#c96e72',
+    equilibre: '#5baf96'
+  };
+  const protocolPalette = {
+    boost: [59,130,246],
+    '365': [34,197,94],
+    coherence: [34,197,94],
+    square: [34,197,94],
+    regulate: [245,158,11],
+    frein: [239,68,68],
+    '478': [239,68,68],
+    sleep: [99,102,241]
+  };
+  const COUNT = 280;
+  const GOLD = Math.PI * (3 - Math.sqrt(5));
+  const TAU = Math.PI * 2;
+  const POINTS = Array.from({length: COUNT}, (_, i) => {
+    const y = 1 - 2 * (i + .5) / COUNT;
+    const a = i * GOLD;
+    const r = Math.sqrt(Math.max(0, 1 - y * y));
+    return {x: r * Math.cos(a), y, z: r * Math.sin(a), seed: (i % 17) / 17};
+  });
+
+  function parseRGB(str){
+    const s = String(str || '').trim();
+    if (/^#[0-9a-f]{6}$/i.test(s)) return [1,3,5].map(i => parseInt(s.slice(i, i + 2), 16));
+    if (/^#[0-9a-f]{3}$/i.test(s)) return [1,2,3].map(i => parseInt(s[i] + s[i], 16));
+    if (/^rgba?\(/i.test(s)) return (s.match(/[\d.]+/g) || []).slice(0,3).map(Number);
+    return null;
+  }
+  function clamp(v){ return Math.max(0, Math.min(255, Math.round(v))); }
+  function mix(a,b,t){ return a.map((v,i) => clamp(v * (1 - t) + b[i] * t)); }
+  function tint(rgb,f){ return rgb.map(v => clamp(v + (255 - v) * f)); }
+  function shade(rgb,f){ return rgb.map(v => clamp(v * (1 - f))); }
+
+  function neuroFlexRGB(){
+    const palette = {bleu:[59,150,247], vert:[85,233,153], orange:[255,165,63], rouge:[255,88,100]};
+    let zone = null;
+    try { zone = JSON.parse(localStorage.getItem('murLastNeuro') || 'null')?.zone || null; } catch (_) {}
+    if (!zone) {
+      try { zone = window.getCurrentNeuroRecommendation?.()?.zone || null; } catch (_) {}
+    }
+    const key = String(zone?.key || zone?.name || zone || '').toLowerCase();
+    const direct = parseRGB(zone?.color || '');
+    if (direct && direct.every(Number.isFinite)) return direct;
+    if (key.includes('bleu') || key.includes('blue')) return palette.bleu;
+    if (key.includes('orange')) return palette.orange;
+    if (key.includes('rouge') || key.includes('red')) return palette.rouge;
+    return palette.vert;
+  }
+  function kisBaseRGB(){
+    try {
+      const kis = JSON.parse(localStorage.getItem('murKis') || 'null') || {};
+      const key = kis.cardKey;
+      const picked = key && fallbackKis[key] ? parseRGB(fallbackKis[key]) : null;
+      if (picked && picked.every(Number.isFinite)) return picked;
+    } catch (_) {}
+    return neuroFlexRGB();
+  }
+  function currentProtocolRGB(){
+    const select = document.getElementById('protocolSelect');
+    const key = select?.value || '365';
+    const activeCard = document.getElementById('breathCard_' + key);
+    const cssColor = activeCard ? getComputedStyle(activeCard).getPropertyValue('--family-color') : '';
+    const parsed = parseRGB(cssColor);
+    if (parsed && parsed.every(Number.isFinite)) return parsed;
+    return protocolPalette[key] || neuroFlexRGB();
+  }
+  function sessionActive(page){
+    const stop = document.getElementById('stopBreathBtn');
+    return !!(page?.classList.contains('breath-immersive') || (stop && !stop.hidden));
+  }
+
+  function install(){
+    const page = document.getElementById('breath');
+    const orb = document.getElementById('orb');
+    if (!page || !orb || orb.querySelector('.mur-breath-points-v155')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mur-breath-kis-style-v155-css';
+    style.textContent = `
+      #breath #orb.mur-breath-particle-orb .mur-breath-points-v53{opacity:0!important;}
+      #breath #orb.mur-breath-particle-orb .mur-breath-points-v155{
+        position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+        border-radius:50%!important;pointer-events:none!important;z-index:1!important;
+      }
+      #breath #orb.mur-breath-particle-orb::before{
+        content:'';position:absolute;inset:13%;border-radius:50%;pointer-events:none;z-index:0;
+        background:radial-gradient(circle at 48% 42%, rgba(255,255,255,.16), rgba(255,255,255,.03) 44%, rgba(255,255,255,0) 74%);
+        filter:blur(1px);
+      }
+      #breath #orb.mur-breath-particle-orb::after{
+        content:'';position:absolute;inset:-7%;border-radius:50%;pointer-events:none;z-index:0;
+        background:radial-gradient(circle, rgba(126,232,186,.10), rgba(126,232,186,0) 67%);
+        opacity:.92;
+      }
+    `;
+    document.head.appendChild(style);
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'mur-breath-points-v155';
+    canvas.setAttribute('aria-hidden','true');
+    const ctx = canvas.getContext('2d', {alpha:true});
+    if (!ctx) return;
+    orb.insertBefore(canvas, orb.firstChild);
+
+    let displayColor = null;
+    let fromColor = null;
+    let toColor = null;
+    let changedAt = 0;
+    let lastActive = sessionActive(page);
+
+    function beginColorChange(target, now = performance.now()){
+      const next = [...target];
+      if (!displayColor) displayColor = [...next];
+      if (toColor && next.every((v,i) => v === toColor[i])) return;
+      fromColor = [...(displayColor || next)];
+      toColor = next;
+      changedAt = now;
+    }
+
+    function syncTarget(now = performance.now()){
+      const active = sessionActive(page);
+      if (!displayColor) {
+        const base = kisBaseRGB();
+        displayColor = [...base];
+        fromColor = [...base];
+        toColor = [...base];
+      }
+      if (active && !lastActive) beginColorChange(currentProtocolRGB(), now);
+      if (!active && lastActive) beginColorChange(kisBaseRGB(), now);
+      lastActive = active;
+    }
+
+    document.getElementById('protocolSelect')?.addEventListener('change', () => beginColorChange(currentProtocolRGB()));
+    document.getElementById('breathSlider')?.addEventListener('change', () => beginColorChange(currentProtocolRGB()));
+    page.addEventListener('click', event => {
+      if (event.target.closest?.('.breath-choice,[data-b152="rhythm"],.mur-b152-start')) {
+        queueMicrotask(() => beginColorChange(sessionActive(page) ? currentProtocolRGB() : currentProtocolRGB()));
+      }
+    }, true);
+    window.addEventListener('storage', () => beginColorChange(kisBaseRGB()));
+
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    function renderFrame(ts){
+      requestAnimationFrame(renderFrame);
+      syncTarget(ts);
+      if (document.hidden || !page.classList.contains('active')) return;
+      const size = Math.max(64, orb.offsetWidth || 0);
+      if (!size) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const physical = Math.round(size * dpr);
+      if (canvas.width !== physical || canvas.height !== physical) {
+        canvas.width = physical;
+        canvas.height = physical;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, size, size);
+
+      const baseColor = (!displayColor || !toColor) ? kisBaseRGB() : toColor;
+      if (!displayColor) {
+        displayColor = [...baseColor];
+        fromColor = [...baseColor];
+        toColor = [...baseColor];
+      }
+      const p = changedAt ? Math.max(0, Math.min(1, (ts - changedAt) / 560)) : 1;
+      const eased = p * p * (3 - 2 * p);
+      displayColor = mix(fromColor || toColor, toColor || fromColor, eased);
+
+      const center = size / 2;
+      const radius = size * 0.40;
+      const angle = reduced?.matches ? 0.34 : ts * 0.00016;
+      const ca = Math.cos(angle), sa = Math.sin(angle);
+      const tilt = 0.15;
+      const ct = Math.cos(tilt), st = Math.sin(tilt);
+      const near = tint(displayColor, 0.48);
+      const far = shade(displayColor, 0.10);
+
+      const glow = ctx.createRadialGradient(center, center, size * 0.02, center, center, size * 0.50);
+      glow.addColorStop(0, `rgba(${displayColor[0]},${displayColor[1]},${displayColor[2]},0.15)`);
+      glow.addColorStop(0.52, `rgba(${displayColor[0]},${displayColor[1]},${displayColor[2]},0.04)`);
+      glow.addColorStop(1, `rgba(${displayColor[0]},${displayColor[1]},${displayColor[2]},0)`);
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, size, size);
+
+      const projected = POINTS.map(pnt => {
+        const x = pnt.x * ca - pnt.z * sa;
+        const z = pnt.x * sa + pnt.z * ca;
+        const y2 = pnt.y * ct - z * st;
+        const z2 = pnt.y * st + z * ct;
+        return {x, y: y2, z: z2, seed: pnt.seed};
+      }).sort((a,b) => a.z - b.z);
+
+      ctx.globalCompositeOperation = 'lighter';
+      for (const pnt of projected) {
+        const perspective = 2.8 / (2.8 - pnt.z * 0.28);
+        const depth = (pnt.z + 1) * 0.5;
+        const sx = center + pnt.x * radius * perspective;
+        const sy = center + pnt.y * radius * perspective;
+        const rr = Math.round(far[0] + (near[0] - far[0]) * depth);
+        const gg = Math.round(far[1] + (near[1] - far[1]) * depth);
+        const bb = Math.round(far[2] + (near[2] - far[2]) * depth);
+        const alpha = 0.24 + depth * 0.72;
+        const dot = 0.80 + depth * 0.72 + pnt.seed * 0.18;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, dot, 0, TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    beginColorChange(kisBaseRGB(), 0);
+    requestAnimationFrame(renderFrame);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
+  else install();
+})();
+
+
+/* M.U.R. V156 — Affichage « Préparation » pendant l'introduction active.
+   Les phases Inspirez/Expirez restent pilotées par le moteur natif. */
+(() => {
+  'use strict';
+  if (window.MUR_BREATH_PREPARATION_V156) return;
+  window.MUR_BREATH_PREPARATION_V156 = true;
+
+  function install() {
+    const page = document.getElementById('breath');
+    const label = document.getElementById('phaseText');
+    if (!page || !label) return;
+    const update = () => {
+      // Le moteur ajoute cette classe exclusivement pendant l'introduction vocale,
+      // avant le démarrage de la respiration proprement dite.
+      if (!page.classList.contains('breath-voice-only')) return;
+      const english = String(document.documentElement.lang || 'fr').toLowerCase().startsWith('en');
+      const desired = english ? 'Preparation' : 'Préparation';
+      if (label.textContent !== desired) label.textContent = desired;
+      const hint = document.getElementById('phaseHint');
+      if (hint) {
+        const message = english ? 'Voice introduction in progress' : 'Introduction vocale en cours';
+        if (hint.textContent !== message) hint.textContent = message;
+      }
+    };
+    new MutationObserver(update).observe(page, {attributes: true, attributeFilter: ['class']});
+    new MutationObserver(update).observe(label, {childList: true, characterData: true, subtree: true});
+    new MutationObserver(update).observe(document.documentElement, {attributes: true, attributeFilter: ['lang']});
+    update();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
+  else install();
 })();
