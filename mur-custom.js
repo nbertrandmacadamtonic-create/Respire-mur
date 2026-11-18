@@ -5093,7 +5093,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       status.querySelector('[data-b152-status="sound"]').textContent=english?(soundOn?'Sound on':'Muted'):(soundOn?'Son actif':'Silence');
       buttons[0].querySelector('span').textContent=english?'Choose rhythm':'Choisir un rythme';
       buttons[1].querySelector('span').textContent=english?'Duration':'Durée';
-      buttons[2].querySelector('span').textContent=english?'Sound':'Ambiance sonore';
+      buttons[2].querySelector('span').textContent=english?'Sound':'Son';
       buttons.forEach((b,i)=>{b.disabled=active&&i<2;b.setAttribute('aria-label',b.querySelector('span').textContent);});
       start.textContent=active?(english?'■ Stop session':'■ Arrêter la séance'):(english?'▶ Start my breathing':'▶ Démarrer ma respiration');
       advanced.textContent=english?'Advanced settings':'Réglages avancés';
@@ -6106,4 +6106,182 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     body.mur-five-open .mur-home-particle-burst{display:none!important;}
   `;
   document.head.appendChild(css);
+})();
+
+/* =============================================================
+   M.U.R. V162 — OPTIONS RESPIRATION CORRIGEES
+   Les trois boutons du bandeau ouvrent chacun le bon réglage.
+   La durée ne change pas le profil respiratoire sélectionné.
+   Le son est un interrupteur du guidage sonore natif, et non
+   un faux sélecteur d'ambiances inexistantes.
+   ============================================================= */
+(() => {
+  'use strict';
+  if(window.MUR_BREATH_OPTIONS_V162) return;
+  window.MUR_BREATH_OPTIONS_V162 = true;
+  const $ = id => document.getElementById(id);
+  const isEnglish = () => String(document.documentElement.lang || 'fr').toLowerCase().startsWith('en');
+  const nativeBreath = () => {try{return typeof breath !== 'undefined' ? breath : null;}catch(_){return null;}};
+  const runningNow = () => {try{return typeof running !== 'undefined' && !!running;}catch(_){return false;}};
+  const fmt = n => `${Math.round(Number(n || 300)/60)} min`;
+  function install(){
+    const page=$('breath');
+    const nativePanel=page?.querySelector(':scope > section.card:first-of-type');
+    if(!page || !nativePanel || page.dataset.murOptionsV162 === '1')return;
+    page.dataset.murOptionsV162='1';
+    const style=document.createElement('style');
+    style.id='mur-breath-v162-options-css';
+    style.textContent=`
+      #breath.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type .mur-v162-panel{display:none;}
+      #breath.mur-b152-settings[data-mur-option="duration"] > section.card:first-of-type > :not(.mur-v162-panel),
+      #breath.mur-b152-settings[data-mur-option="sound"] > section.card:first-of-type > :not(.mur-v162-panel){display:none!important;}
+      #breath.mur-b152-settings[data-mur-option="duration"] > section.card:first-of-type .mur-v162-panel,
+      #breath.mur-b152-settings[data-mur-option="sound"] > section.card:first-of-type .mur-v162-panel{display:flex!important;}
+      #breath.mur-b152-settings[data-mur-option="rhythm"] > section.card:first-of-type > .status,
+      #breath.mur-b152-settings[data-mur-option="rhythm"] > section.card:first-of-type > .scale,
+      #breath.mur-b152-settings[data-mur-option="rhythm"] > section.card:first-of-type > .breath-settings-row,
+      #breath.mur-b152-settings[data-mur-option="rhythm"] > section.card:first-of-type > #manualPanel,
+      #breath.mur-b152-settings[data-mur-option="rhythm"] > section.card:first-of-type > #breathMessage{display:none!important;}
+      #breath.mur-b152-settings[data-mur-option="rhythm"] .breath-master{margin-top:0!important;}
+      #breath.mur-b152-settings[data-mur-option="rhythm"] .breath-master-head{pointer-events:none!important;}
+      #breath.mur-b152-settings[data-mur-option="advanced"] > section.card:first-of-type > .status{display:none!important;}
+      #breath.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type{scrollbar-width:thin;}
+      #breath.mur-b152-settings .mur-v162-panel{
+        flex-direction:column;align-items:stretch;gap:13px;
+        color:#f8fafc;width:100%;max-width:100%;padding:3px 0;
+      }
+      #breath.mur-b152-settings .mur-v162-panel [hidden]{display:none!important;}
+      #breath.mur-b152-settings .mur-v162-panel h3{font-size:19px;font-weight:800;margin:2px 0 0;}
+      #breath.mur-b152-settings .mur-v162-panel p{font-size:12px;color:rgba(248,250,252,.72);line-height:1.45;}
+      #breath.mur-b152-settings .mur-v162-value{font-size:35px;font-weight:850;text-align:center;margin:9px 0;letter-spacing:-.04em;}
+      #breath.mur-b152-settings .mur-v162-duration-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;}
+      #breath.mur-b152-settings .mur-v162-duration-grid button,
+      #breath.mur-b152-settings .mur-v162-duration-step button{
+        min-width:0;min-height:50px;border:1px solid rgba(255,255,255,.21);
+        border-radius:15px;background:rgba(255,255,255,.075);color:#f8fafc;
+        font:750 14px/1.1 system-ui,sans-serif;cursor:pointer;
+      }
+      #breath.mur-b152-settings .mur-v162-duration-grid button.active{
+        border-color:var(--mur-b152-color,#22c55e);
+        box-shadow:0 0 0 1px var(--mur-b152-color,#22c55e),0 0 19px rgba(52,211,153,.12);
+        background:rgba(255,255,255,.16);
+      }
+      #breath.mur-b152-settings .mur-v162-duration-step{display:grid;grid-template-columns:56px 1fr 56px;gap:9px;align-items:center;}
+      #breath.mur-b152-settings .mur-v162-duration-step span{text-align:center;font-size:12px;color:rgba(248,250,252,.7);}
+      #breath.mur-b152-settings .mur-v162-sound-toggle{
+        display:flex;justify-content:space-between;align-items:center;gap:10px;
+        min-height:62px;width:100%;padding:13px 15px;color:#f8fafc;
+        border:1px solid rgba(255,255,255,.2);border-radius:18px;
+        background:linear-gradient(180deg,rgba(255,255,255,.105),rgba(255,255,255,.055));
+        font:750 15px system-ui,sans-serif;cursor:pointer;
+      }
+      #breath.mur-b152-settings .mur-v162-sound-state{color:#b6f3d2;font-size:13px;}
+      #breath.mur-b152-settings .mur-v162-panel .mur-v162-confirm{
+        width:100%;margin-top:7px;min-height:49px;border:0;border-radius:17px;
+        background:white;color:#07111f;font:850 14px system-ui,sans-serif;cursor:pointer;
+      }
+    `;
+    document.head.appendChild(style);
+    const panel=document.createElement('div');
+    panel.className='mur-v162-panel';
+    panel.innerHTML=`<h3 id="mur-v162-heading"></h3><p id="mur-v162-description"></p>
+      <div class="mur-v162-value" id="mur-v162-duration-value"></div>
+      <div class="mur-v162-duration-grid" id="mur-v162-duration-grid"></div>
+      <div class="mur-v162-duration-step" id="mur-v162-duration-step"><button type="button" data-v162-step="-1">−</button><span id="mur-v162-step-hint"></span><button type="button" data-v162-step="1">+</button></div>
+      <button type="button" class="mur-v162-sound-toggle" id="mur-v162-sound-toggle"><span id="mur-v162-sound-title"></span><span class="mur-v162-sound-state" id="mur-v162-sound-state"></span></button>
+      <button type="button" class="mur-v162-confirm" id="mur-v162-confirm"></button>`;
+    nativePanel.prepend(panel);
+    const durations=[60,120,180,300,600];
+    const grid=$('mur-v162-duration-grid');
+    durations.forEach(seconds=>{
+      const b=document.createElement('button');b.type='button';b.dataset.v162Duration=String(seconds);
+      grid.appendChild(b);
+    });
+    const mode = () => page.dataset.murOption || 'advanced';
+    function refresh(){
+      const en=isEnglish(), b=nativeBreath(), current=Math.round(Number(b?.duration||300));
+      $('mur-v162-heading').textContent=en?(mode()==='sound'?'Sound settings':'Session duration'):(mode()==='sound'?'Réglages du son':'Durée de la séance');
+      $('mur-v162-description').textContent=mode()==='sound'?
+        (en?'Turn the breathing guidance sounds on or off. The current app does not provide a separate soundscape selector.':'Activez ou coupez les sons qui accompagnent le souffle. Les ambiances naturelles ne sont pas disponibles dans cette commande.'):
+        (en?'Adjust the time without changing your breathing rhythm.':'Modifiez la durée sans changer le rythme respiratoire choisi.');
+      $('mur-v162-duration-value').textContent=fmt(current);
+      $('mur-v162-step-hint').textContent=en?'Adjust by 1 minute':'Ajuster par 1 minute';
+      grid.querySelectorAll('button').forEach(button=>{
+        const seconds=Number(button.dataset.v162Duration);
+        button.textContent=fmt(seconds);
+        button.classList.toggle('active',current===seconds);
+        button.setAttribute('aria-pressed',String(current===seconds));
+      });
+      const soundOn=$('soundBtn')?.getAttribute('aria-pressed')!=='false';
+      $('mur-v162-sound-title').textContent=en?'Breathing sound':'Son respiratoire';
+      $('mur-v162-sound-state').textContent=en?(soundOn?'On':'Off'):(soundOn?'Activé':'Coupé');
+      $('mur-v162-sound-toggle').setAttribute('aria-pressed',String(soundOn));
+      $('mur-v162-confirm').textContent=en?'Done':'Terminé';
+      $('mur-v162-duration-value').hidden=mode()==='sound';
+      grid.hidden=mode()==='sound';
+      $('mur-v162-duration-step').hidden=mode()==='sound';
+      $('mur-v162-sound-toggle').hidden=mode()!=='sound';
+    }
+    function durationChange(seconds){
+      if(runningNow() || !nativeBreath())return;
+      const b=nativeBreath();
+      b.duration=Math.max(60,Math.min(1200,Number(seconds||300)));
+      // Ne pas appeler setBreathDuration : cette fonction native force
+      // applyManualBreathProfile() et remplace le protocole par "manual".
+      try{if(typeof updateBreath==='function')updateBreath(true);}catch(e){console.warn('[M.U.R. V162] durée',e);}
+      refresh();
+    }
+    function open(which){
+      if(page.classList.contains('mur-b154-fullscreen'))return;
+      page.dataset.murOption=which;
+      page.classList.add('mur-b152-settings');
+      const menu=$('breathMaster');
+      if(menu){menu.classList.add('open');menu.querySelector('.breath-master-head')?.setAttribute('aria-expanded','true');}
+      nativePanel.scrollTop=0;
+      refresh();
+    }
+    function close(){
+      page.classList.remove('mur-b152-settings');
+      delete page.dataset.murOption;
+    }
+    function handleButton(e){
+      if(!page.classList.contains('active'))return;
+      const t=e.target.closest?.('button');if(!t)return;
+      if(t.matches('#breath .mur-b152-close')){
+        e.preventDefault();e.stopImmediatePropagation();close();return;
+      }
+      if(t.matches('#breath [data-b152="rhythm"]')){
+        e.preventDefault();e.stopImmediatePropagation();open('rhythm');return;
+      }
+      if(t.matches('#breath [data-b152="duration"]')){
+        e.preventDefault();e.stopImmediatePropagation();open('duration');return;
+      }
+      if(t.matches('#breath [data-b152="sound"]')){
+        e.preventDefault();e.stopImmediatePropagation();open('sound');return;
+      }
+      if(t.matches('#breath .mur-b152-advanced')){
+        e.preventDefault();e.stopImmediatePropagation();open('advanced');return;
+      }
+    }
+    // Capture avant les anciens écouteurs V152 et V160 : une seule
+    // action par bouton, sans double ouverture ni modification du manuel.
+    document.addEventListener('click',handleButton,true);
+    grid.addEventListener('click',e=>{
+      const button=e.target.closest('button[data-v162-duration]');
+      if(button)durationChange(button.dataset.v162Duration);
+    });
+    panel.addEventListener('click',e=>{
+      const step=e.target.closest('[data-v162-step]');
+      if(step)durationChange(Number(nativeBreath()?.duration||300)+Number(step.dataset.v162Step)*60);
+    });
+    $('mur-v162-sound-toggle').addEventListener('click',()=>{
+      $('soundBtn')?.click();refresh();
+    });
+    $('mur-v162-confirm').addEventListener('click',close);
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&page.classList.contains('mur-b152-settings'))close();},true);
+    new MutationObserver(()=>{if(page.classList.contains('mur-b152-settings')&&['duration','sound'].includes(mode()))refresh();}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    refresh();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
 })();
