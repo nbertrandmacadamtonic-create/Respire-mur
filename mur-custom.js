@@ -5194,3 +5194,209 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   `;
   document.head.appendChild(css);
 })();
+
+
+/* ================================================================
+   M.U.R. V154 — RESPIRATION IMMERSIVE AU DEMARRAGE
+   La préparation vocale et la séquence respiratoire partagent UN
+   seul écran plein format. Retour à l'écran compact à l'arrêt.
+   Aucun changement du moteur natif, des sons ou de Supabase.
+   ================================================================ */
+(() => {
+  'use strict';
+  if (window.MUR_BREATH_V154) return;
+  window.MUR_BREATH_V154 = {version:154, mode:'fullscreen-session-with-intro'};
+
+  const CSS = `
+    /* Le plein écran prend la fenêtre, pas une seconde page. */
+    #breath.mur-b152.page.active.mur-b154-fullscreen{
+      position:fixed!important;inset:0!important;top:0!important;left:0!important;
+      z-index:19000!important;width:100vw!important;height:100vh!important;
+      height:100dvh!important;max-width:none!important;min-height:0!important;
+      padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(16px + env(safe-area-inset-bottom,0px))!important;
+      margin:0!important;overflow:hidden!important;
+      display:flex!important;flex-direction:column!important;align-items:stretch!important;
+      justify-content:stretch!important;gap:0!important;
+      background:radial-gradient(ellipse at 50% 44%,#122e43 0%,#091c2f 53%,#050c18 100%)!important;
+      box-sizing:border-box!important;
+    }
+    body:has(#breath.mur-b154-fullscreen) {overflow:hidden!important;}
+    body:has(#breath.mur-b154-fullscreen) .tabbar,
+    body:has(#breath.mur-b154-fullscreen) main.app > header.top,
+    body:has(#breath.mur-b154-fullscreen) .mur-info-page-button,
+    body:has(#breath.mur-b154-fullscreen) #murQuickModePill{
+      visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+    }
+    #breath.mur-b154-fullscreen > .mur-b152-title,
+    #breath.mur-b154-fullscreen > .mur-b152-recommend,
+    #breath.mur-b154-fullscreen > .mur-b152-status,
+    #breath.mur-b154-fullscreen > .mur-b152-controls,
+    #breath.mur-b154-fullscreen > .mur-b153-intro-row,
+    #breath.mur-b154-fullscreen > .mur-b152-start,
+    #breath.mur-b154-fullscreen > .mur-b152-advanced,
+    #breath.mur-b154-fullscreen > .mur-b152-close{display:none!important;}
+    #breath.mur-b154-fullscreen > .mur-b154-top{
+      display:flex!important;align-items:center!important;justify-content:space-between!important;
+      flex:0 0 auto!important;width:100%!important;min-height:49px!important;
+      gap:10px!important;order:0!important;z-index:4!important;
+    }
+    #breath.mur-b154-fullscreen .mur-b154-heading{
+      display:flex;flex-direction:column;gap:3px;min-width:0;align-items:flex-start;
+      color:#f8fafc;font-weight:800;font-size:17px;line-height:1.2;
+    }
+    #breath.mur-b154-fullscreen .mur-b154-subtitle{
+      font-size:11px;color:rgba(248,250,252,.72);font-weight:600;
+    }
+    #breath.mur-b154-fullscreen .mur-b154-exit{
+      color:#f8fafc;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.23);
+      border-radius:13px;padding:9px 12px;min-height:42px;font:700 13px system-ui,sans-serif;
+      cursor:pointer;flex:0 0 auto;
+    }
+    /* Seul le panneau de respiration d'origine est agrandi. */
+    #breath.mur-b152.page.active.mur-b154-fullscreen > section.card:last-of-type,
+    #breath.mur-b152.page.active.breath-immersive.mur-b154-fullscreen > section.card:last-of-type{
+      position:relative!important;inset:auto!important;top:auto!important;left:auto!important;
+      right:auto!important;bottom:auto!important;order:1!important;
+      flex:1 1 0!important;min-height:0!important;max-height:none!important;
+      width:100%!important;height:auto!important;max-width:100%!important;
+      display:flex!important;flex-direction:column!important;align-items:center!important;
+      justify-content:space-between!important;gap:clamp(7px,1.5dvh,18px)!important;
+      padding:10px 0 4px!important;margin:0!important;overflow:hidden!important;
+      background:transparent!important;box-shadow:none!important;border:0!important;
+      border-radius:0!important;z-index:auto!important;isolation:auto!important;
+    }
+    #breath.mur-b154-fullscreen section.card:last-of-type > .mini-info,
+    #breath.mur-b152.page.active.mur-b154-fullscreen section.card:last-of-type > .mini-info{
+      display:grid!important;grid-template-columns:1fr 1fr!important;gap:9px!important;
+      width:min(100%,370px)!important;flex:0 0 auto!important;order:0!important;
+      margin:4px auto 0!important;
+    }
+    #breath.mur-b154-fullscreen .mini-info .info-box{
+      border:1px solid rgba(255,255,255,.16)!important;
+      border-radius:16px!important;background:rgba(255,255,255,.07)!important;
+      padding:9px 11px!important;
+    }
+    #breath.mur-b154-fullscreen .mini-info .info-box strong{font-size:21px!important;}
+    #breath.mur-b152.page.active.mur-b154-fullscreen .breath-stage,
+    #breath.mur-b152.page.active.breath-immersive.mur-b154-fullscreen .breath-stage{
+      order:1!important;flex:1 1 0!important;min-height:0!important;height:auto!important;
+      width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;
+      position:relative!important;overflow:visible!important;
+    }
+    #breath.mur-b152.page.active.mur-b154-fullscreen #orb,
+    #breath.mur-b152.page.active.breath-immersive.mur-b154-fullscreen #orb.mur-breath-particle-orb{
+      width:min(56vw,35dvh,285px)!important;height:min(56vw,35dvh,285px)!important;
+      max-width:none!important;max-height:none!important;
+      transform-origin:center center!important;
+    }
+    #breath.mur-b152.page.active.mur-b154-fullscreen .breath-stage > svg.ring,
+    #breath.mur-b152.page.active.breath-immersive.mur-b154-fullscreen .breath-stage > svg.ring{
+      width:min(77vw,48dvh,360px)!important;height:min(77vw,48dvh,360px)!important;
+    }
+    #breath.mur-b152.page.active.mur-b154-fullscreen #phaseText.mur-breath-label-v53,
+    #breath.mur-b152.page.active.breath-immersive.mur-b154-fullscreen #phaseText.mur-breath-label-v53{
+      order:2!important;display:block!important;margin:0 auto!important;
+      font-size:clamp(20px,5vw,26px)!important;padding:10px 22px!important;
+      min-width:145px!important;
+    }
+    #breath.mur-b152.page.active.mur-b154-fullscreen #phaseHint{
+      display:block!important;order:3!important;flex:0 0 auto!important;
+      text-align:center!important;font-size:clamp(12px,3.4vw,15px)!important;
+      color:rgba(235,248,251,.8)!important;line-height:1.4!important;
+      max-width:380px!important;margin:0 auto!important;
+    }
+    #breath.mur-b152.page.active.mur-b154-fullscreen .breath-action-row{
+      display:flex!important;order:4!important;flex:0 0 auto!important;
+      width:100%!important;max-width:370px!important;justify-content:center!important;
+      margin:3px auto 0!important;
+    }
+    #breath.mur-b152.page.active.mur-b154-fullscreen #stopBreathBtn{
+      display:block!important;width:100%!important;min-height:49px!important;
+      border-radius:16px!important;font-weight:800!important;
+      background:rgba(255,255,255,.11)!important;color:#fff!important;
+      border:1px solid rgba(255,255,255,.25)!important;
+    }
+    #breath.mur-b152.page.active.mur-b154-fullscreen .orb-sound-btn{
+      display:flex!important;z-index:5!important;
+    }
+    #breath.mur-b152.page.active.mur-b154-fullscreen > .mur-b154-top .mur-b154-exit:focus-visible{
+      outline:2px solid #9be8d8;outline-offset:2px;
+    }
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b154-top{display:none!important;}
+    @media(max-height:650px){
+      #breath.mur-b152.page.active.mur-b154-fullscreen{padding-top:calc(4px + env(safe-area-inset-top,0px))!important;padding-bottom:calc(5px + env(safe-area-inset-bottom,0px))!important}
+      #breath.mur-b152.page.active.mur-b154-fullscreen > section.card:last-of-type{padding:3px 0!important;gap:4px!important}
+      #breath.mur-b152.page.active.mur-b154-fullscreen #orb,
+      #breath.mur-b152.page.active.breath-immersive.mur-b154-fullscreen #orb.mur-breath-particle-orb{width:min(49vw,26dvh,215px)!important;height:min(49vw,26dvh,215px)!important}
+      #breath.mur-b154-fullscreen .mini-info .info-box{padding:5px!important}
+    }
+  `;
+  const style = document.createElement('style');
+  style.id='mur-breath-v154-fullscreen-css';
+  style.textContent=CSS;
+  document.head.appendChild(style);
+
+  function init(){
+    const page=document.getElementById('breath');
+    if(!page||page.dataset.murV154==='1')return;
+    page.dataset.murV154='1';
+    const header=document.createElement('div');
+    header.className='mur-b154-top';
+    const heading=document.createElement('div');heading.className='mur-b154-heading';
+    const name=document.createElement('span');
+    const subtitle=document.createElement('small');subtitle.className='mur-b154-subtitle';
+    heading.append(name,subtitle);
+    const exit=document.createElement('button');exit.type='button';exit.className='mur-b154-exit';
+    header.append(heading,exit);
+    page.appendChild(header);
+    const start=page.querySelector('.mur-b152-start');
+    let starting=false;
+    let startedAt=0;
+    const nativeActive=()=>page.classList.contains('breath-immersive') ||
+      page.classList.contains('breath-voice-only') ||
+      (document.getElementById('stopBreathBtn')?.hidden===false);
+    const english=()=>String(document.documentElement.lang||'fr').toLowerCase().startsWith('en');
+    function sync(){
+      const visible=page.classList.contains('active');
+      const active=visible && nativeActive();
+      // Le chargement audio peut être asynchrone : conserver le plein écran
+      // pendant ce court lancement, mais pas si une restriction bloque la séance.
+      if(starting && (active || performance.now()-startedAt>1400))starting=false;
+      const full=visible && (active || starting);
+      if(page.classList.contains('mur-b154-fullscreen')!==full){
+        page.classList.toggle('mur-b154-fullscreen',full);
+        if(!full)document.body.classList.remove('mur-b154-starting');
+      }
+      if(full){
+        const en=english();
+        const intro=page.classList.contains('breath-voice-only') ||
+          String(document.getElementById('phaseText')?.textContent||'').toLowerCase().includes('preparation');
+        name.textContent=en?'Breathing':'Respiration';
+        subtitle.textContent=intro?(en?'Voice introduction':'Introduction vocale'):(en?'Session in progress':'Séquence en cours');
+        exit.textContent=en?'← Stop and return':'← Arrêter et revenir';
+      }
+    }
+    // Activation dans le même geste, avant le clic natif sur l'orbe.
+    start?.addEventListener('click',()=>{
+      if(nativeActive())return;
+      starting=true;startedAt=performance.now();
+      page.classList.add('mur-b154-fullscreen');
+      sync();
+    },true);
+    exit.addEventListener('click',()=>{
+      const stop=document.getElementById('stopBreathBtn');
+      if(stop && !stop.hidden)stop.click();
+      else if(typeof window.stopBreathing==='function')window.stopBreathing();
+      starting=false;page.classList.remove('mur-b154-fullscreen');
+      sync();
+    });
+    new MutationObserver(sync).observe(page,{attributes:true,attributeFilter:['class']});
+    const stop=document.getElementById('stopBreathBtn');
+    if(stop)new MutationObserver(sync).observe(stop,{attributes:true,attributeFilter:['hidden']});
+    new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    // Le moteur règle running/breathVoicePlaying en asynchrone.
+    setInterval(()=>{if(page.classList.contains('active') || page.classList.contains('mur-b154-fullscreen'))sync();},300);
+    sync();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
