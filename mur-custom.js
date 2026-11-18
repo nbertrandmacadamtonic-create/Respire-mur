@@ -2846,9 +2846,14 @@ if (typeof window.installPresentationFallback !== 'function') {
    e.preventDefault();e.stopImmediatePropagation();
    if(next){if(typeof openTestStep==='function')openTestStep('now');return;}
    if(thumb){
-      if(typeof resultStepOpen!=='undefined')resultStepOpen.kis=true;
-      const block=document.getElementById('resultKisBlock');if(block)block.classList.add('open');
-      if(typeof renderResultStepDetails==='function')renderResultStepDetails();
+      // V150 : la miniature déclenche directement le visualiseur 3D.
+      const src=thumb.querySelector('img')?.getAttribute('src')||'';
+      const match=src.match(/images\/kis\/([a-z_]+)-recto(?:-en)?\.(?:png|webp)/i);
+      if(window.MUR_KIS_FULLSCREEN_V146?.open){
+        window.MUR_KIS_FULLSCREEN_V146.open(match?.[1],'recto');
+      }else{
+        console.warn('M.U.R. : visualiseur plein écran Ki.S indisponible');
+      }
       return;
    }
    const root=flip.closest('.mur-kis-v92-card');if(!root)return;
@@ -5317,6 +5322,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       open(lookup(),profileControl.dataset.murV147Open||'recto');
       return;
     }
+    // V149 : depuis Résultat NeuroFlex > Profil Ki.S, la miniature
+    // ouvre immédiatement le plein écran, avant le gestionnaire V92.
+    // Fonctionne sur téléphone ET ordinateur, sans déployer le bloc intermédiaire.
+    const neuroflexMini=e.target.closest?.('#resultKisBlock [data-mur-v92-mini]');
+    if(neuroflexMini){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      open(lookup(),'recto');
+      return;
+    }
     if(!mobile())return;
     const trigger=e.target.closest?.('.mur-kis-v92-flip,.mur-profile-toggle-v144,#mur-v90-profile-card [data-mur-v95-open],.mur-kis-card-image');
     if(!trigger)return;
@@ -5380,4 +5395,4 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.MUR_KIS_PROFILE_SIDES_V147={version:147,faces:['recto','verso'],languages:['fr','en']};
 })();
 
-/* V148 : la fenêtre Ki.S utilise deux faces superposées et une rotation Y de 760 ms. */
+/* V150 : miniature NeuroFlex reliée directement au visualiseur V148. */
