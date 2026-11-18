@@ -1618,7 +1618,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 (() => {
   'use strict';
   if(window.MUR_HOME_FIVE_V87)return;
-  const N=2400, PER=350, CENTER_PER=1200, OPEN_MS=2350, CLOSE_MS=1550;
+  const N=280, PER=280, CENTER_PER=280, OPEN_MS=1150, CLOSE_MS=850;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
     {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[239,78,91]},
@@ -1734,73 +1734,69 @@ if (typeof window.installPresentationFallback !== 'function') {
       const color=homeColor();
       const ca=Math.cos(time*.00023),sa=Math.sin(time*.00023);
       const cb=Math.cos(time*.00030),sb=Math.sin(time*.00030);
-      // Phase 1: la grande sphère demeure à sa place et perd ses points,
-      // en ordre irrégulier, avec un léger envol radial puis extinction.
-      // Aucune division en cinq sous-ensembles.
-      const sourceFade=ease(Math.min(1,progress/.79));
-      if(sourceFade<1){
-        ctx.save();ctx.globalCompositeOperation='lighter';
+      // V161 : le même rendu particulaire de Respiration anime l'ensemble.
+      // La sphère principale s'efface en douceur, sans ancienne dispersion.
+      // Les cinq sphères émergent depuis son centre et prennent leur place.
+      const emerge=ease(progress);
+      const sourceOpacity=1-ease(Math.min(1,progress/.55));
+      if(sourceOpacity>0){
+        ctx.save();
+        const sourceNear=color.map(v=>Math.round(v+(255-v)*.48));
+        const sourceFar=color.map(v=>Math.round(v*.90));
+        const tilt=.15,ct=Math.cos(tilt),st=Math.sin(tilt);
+        const glow=ctx.createRadialGradient(hx,hy,hr*.02,hx,hy,hr*1.25);
+        glow.addColorStop(0,`rgba(${color.join(',')},${(.15*sourceOpacity).toFixed(3)})`);
+        glow.addColorStop(1,`rgba(${color.join(',')},0)`);
+        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(hx,hy,hr*1.25,0,TAU);ctx.fill();
+        ctx.globalCompositeOperation='lighter';
+        const sourceProjected=[];
         for(const p of sourcePoints){
-          const threshold=.035+p.seed*.91;
-          const life=(sourceFade-threshold);
-          if(life>.19)continue;
           const xx=p.x*ca-p.z*sa,zz=p.x*sa+p.z*ca;
-          const perspective=2.9/(2.9-zz*.26);
-          const scatter=life>0?Math.min(1,life/.19):0;
-          const drift=1+scatter*(.27+.33*p.seed);
-          const x=hx+xx*hr*perspective*drift;
-          const y=hy+p.y*hr*perspective*drift;
-          const depth=(zz+1)/2;
-          ctx.globalAlpha=(.35+.60*depth)*(1-scatter);
-          ctx.fillStyle=`rgb(${color.join(',')})`;
-          ctx.beginPath();ctx.arc(x,y,.85+depth*1.3,0,TAU);ctx.fill();
+          const yy=p.y*ct-zz*st,z2=p.y*st+zz*ct;
+          const perspective=2.8/(2.8-z2*.28);
+          const depth=(z2+1)/2;
+          const rgb=sourceFar.map((v,i)=>Math.round(v+(sourceNear[i]-v)*depth));
+          sourceProjected.push({x:hx+xx*hr*perspective,y:hy+yy*hr*perspective,z:z2,alpha:sourceOpacity*(.24+.72*depth),size:.80+depth*.72+p.seed*.18,rgb});
+        }
+        sourceProjected.sort((a,b)=>a.z-b.z);
+        for(const p of sourceProjected){
+          ctx.globalAlpha=p.alpha;ctx.fillStyle=`rgb(${p.rgb.join(',')})`;
+          ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.fill();
         }
         ctx.restore();
       }
-      // V159 : même matière lumineuse que la sphère Respiration.
-      // Les satellites gardent leurs couleurs et leurs positions fixes.
-      const grown=ease(Math.max(0,Math.min(1,(progress-.22)/.73)));
-      if(grown>0){
+      if(emerge>0){
         ctx.save();
-        const angle=time*.00016,ca2=Math.cos(angle),sa2=Math.sin(angle);
+        const a=time*.00016,cs=Math.cos(a),sn=Math.sin(a);
         const tilt=.15,ct=Math.cos(tilt),st=Math.sin(tilt);
-        // Halo diffus dans chaque petite sphère, semblable à Respiration.
+        // Le halo et les points utilisent la même profondeur que la sphère Respiration.
         for(let i=0;i<GROUPS.length;i++){
-          const c=coords[i],radiusLocal=i===0?centerRadius:radius,g=GROUPS[i];
-          const glow=ctx.createRadialGradient(c[0],c[1],radiusLocal*.03,c[0],c[1],radiusLocal*1.32);
-          glow.addColorStop(0,`rgba(${g.rgb.join(',')},${(.14*grown).toFixed(3)})`);
-          glow.addColorStop(.55,`rgba(${g.rgb.join(',')},${(.045*grown).toFixed(3)})`);
+          const target=coords[i],c=[hx+(target[0]-hx)*emerge,hy+(target[1]-hy)*emerge];
+          const R=(i===0?centerRadius:radius)*(.42+.58*emerge),g=GROUPS[i];
+          const glow=ctx.createRadialGradient(c[0],c[1],R*.02,c[0],c[1],R*1.25);
+          glow.addColorStop(0,`rgba(${g.rgb.join(',')},${(.15*emerge).toFixed(3)})`);
+          glow.addColorStop(.52,`rgba(${g.rgb.join(',')},${(.04*emerge).toFixed(3)})`);
           glow.addColorStop(1,`rgba(${g.rgb.join(',')},0)`);
-          ctx.fillStyle=glow;
-          ctx.beginPath();ctx.arc(c[0],c[1],radiusLocal*1.32,0,TAU);ctx.fill();
+          ctx.fillStyle=glow;ctx.beginPath();ctx.arc(c[0],c[1],R*1.25,0,TAU);ctx.fill();
         }
         ctx.globalCompositeOperation='lighter';
-        const rendered=[];
+        const dots=[];
         for(const p of miniPoints){
-          const threshold=.07+p.seed*.65;
-          const appear=ease(Math.max(0,Math.min(1,(grown-threshold)/.20)));
-          // L'ancienne dissolution centrale est conservée, sans gêner les clics.
-          const erosion=p.g===0?ease(Math.max(0,Math.min(1,(progress-.50)/.43))):0;
-          if(p.g===0&&p.seed<erosion*.53)continue;
-          if(appear<=0)continue;
-          const g=GROUPS[p.g],c=coords[p.g];
-          const xx=p.x*ca2-p.z*sa2,zz=p.x*sa2+p.z*ca2;
-          const yy=p.y*ct-zz*st,depthZ=p.y*st+zz*ct;
-          const perspective=2.8/(2.8-depthZ*.28);
-          const R=p.g===0?centerRadius:radius;
-          const cloudScale=1+(1-appear)*(.62+.46*p.seed);
-          const x=c[0]+xx*R*perspective*cloudScale;
-          const y=c[1]+yy*R*perspective*cloudScale;
-          const depth=(depthZ+1)/2;
+          const g=GROUPS[p.g],target=coords[p.g];
+          const c=[hx+(target[0]-hx)*emerge,hy+(target[1]-hy)*emerge];
+          const xx=p.x*cs-p.z*sn,zz=p.x*sn+p.z*cs;
+          const yy=p.y*ct-zz*st,z2=p.y*st+zz*ct;
+          const perspective=2.8/(2.8-z2*.28);
+          const R=(p.g===0?centerRadius:radius)*(.42+.58*emerge);
+          const depth=(z2+1)/2;
           const near=g.rgb.map(v=>Math.round(v+(255-v)*.48));
           const far=g.rgb.map(v=>Math.round(v*.90));
-          const lit=far.map((v,i)=>Math.round(v+(near[i]-v)*depth));
-          rendered.push({x,y,z:depthZ,alpha:appear*(.24+.72*depth),size:.80+depth*.72+p.seed*.18,rgb:lit});
+          const rgb=far.map((v,i)=>Math.round(v+(near[i]-v)*depth));
+          dots.push({x:c[0]+xx*R*perspective,y:c[1]+yy*R*perspective,z:z2,alpha:emerge*(.24+.72*depth),size:.80+depth*.72+p.seed*.18,rgb});
         }
-        rendered.sort((a,b)=>a.z-b.z);
-        for(const p of rendered){
-          ctx.globalAlpha=p.alpha;
-          ctx.fillStyle=`rgb(${p.rgb.join(',')})`;
+        dots.sort((a,b)=>a.z-b.z);
+        for(const p of dots){
+          ctx.globalAlpha=p.alpha;ctx.fillStyle=`rgb(${p.rgb.join(',')})`;
           ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.fill();
         }
         ctx.restore();
@@ -1845,7 +1841,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V87={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'breathing-style-five-orbs-no-links'};
+    window.MUR_HOME_FIVE_V87={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'v161-native-menu-3d-no-legacy-scatter'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
@@ -6095,4 +6091,19 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
+})();
+
+/* V161 : empêcher les anciennes bulles radiales de traverser la nouvelle transition. */
+(() => {
+  const css = document.createElement('style');
+  css.id = 'mur-home-five-v161-final-style';
+  css.textContent = `
+    body.mur-five-open .mur-orb-menu, body.mur-five-open .mur-orb-choice,
+    body.mur-five-open .mur-orb-quick-center, body.mur-five-open .mur-orb-connectors{
+      opacity:0!important;visibility:hidden!important;pointer-events:none!important;
+    }
+    body.mur-five-open .mur-five-layer.is-visible{display:block!important;visibility:visible!important;opacity:1!important;}
+    body.mur-five-open .mur-home-particle-burst{display:none!important;}
+  `;
+  document.head.appendChild(css);
 })();
