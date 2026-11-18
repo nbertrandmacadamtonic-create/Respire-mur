@@ -5674,3 +5674,61 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
   else install();
 })();
+
+
+/* =============================================================
+   M.U.R. V157 — Démarrer par la sphère / plein écran épuré
+   La sphère conserve son gestionnaire natif : aucune simulation de clic.
+   L'arrêt reste disponible via le bouton natif pendant la séance.
+   ============================================================= */
+(() => {
+  'use strict';
+  if (window.MUR_BREATH_V157) return;
+  window.MUR_BREATH_V157 = true;
+  const style = document.createElement('style');
+  style.id = 'mur-breath-v157-css';
+  style.textContent = `
+    /* Supprimer le bouton de retour redondant ; garder Arrêter la séance. */
+    #breath.mur-b154-fullscreen .mur-b154-exit {display:none!important;}
+    #breath.mur-b154-fullscreen .mur-b154-subtitle {display:none!important;}
+    /* La sphère devient la cible principale au démarrage. */
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen) #orb {
+      cursor:pointer!important;touch-action:manipulation!important;
+      -webkit-tap-highlight-color:transparent;
+    }
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen) .mur-b154-top {display:none!important;}
+    #breath.mur-b152.page.active .mur-b152-title > small {display:none!important;}
+  `;
+  document.head.appendChild(style);
+
+  function install(){
+    const page = document.getElementById('breath');
+    const orb = document.getElementById('orb');
+    if (!page || !orb || orb.dataset.murV157 === '1') return;
+    orb.dataset.murV157 = '1';
+    const stop = document.getElementById('stopBreathBtn');
+    const nativeActive = () => page.classList.contains('breath-immersive') ||
+      page.classList.contains('breath-voice-only') || (stop && stop.hidden === false);
+    // Le moteur natif écoute déjà le clic sur #orb et sait démarrer / arrêter.
+    // On active le plein écran AVANT ce gestionnaire, sans toucher à son fonctionnement.
+    orb.addEventListener('click', () => {
+      if (!page.classList.contains('active') || nativeActive()) return;
+      // La classe est retirée automatiquement par le synchroniseur V154
+      // si le moteur n'autorise pas ou ne démarre pas la séance.
+      page.classList.add('mur-b154-fullscreen');
+    }, true);
+    // La préconisation reste lisible sans doublon de marque dans le titre.
+    const recTop = page.querySelector('.mur-b152-rec-top');
+    if (recTop) {
+      const clean = () => {
+        const value = String(recTop.textContent || '');
+        if (value === 'Rythme recommandé par NeuroFlex') recTop.textContent = 'Rythme recommandé';
+        else if (value === 'Recommended by NeuroFlex') recTop.textContent = 'Recommended rhythm';
+      };
+      new MutationObserver(clean).observe(recTop, {childList:true,characterData:true,subtree:true});
+      clean();
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
+  else install();
+})();
