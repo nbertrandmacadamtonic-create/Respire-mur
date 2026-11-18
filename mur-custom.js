@@ -1536,7 +1536,7 @@ if (typeof window.installPresentationFallback !== 'function') {
         const label=en?'Touch to begin':'Toucher pour commencer';
         homeHint.setAttribute('aria-label',label);
         homeHint.setAttribute('title',label);
-        homeHint.innerHTML='<svg width="33" height="33" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 11a2 2 0 0 1 2 2c0 3.4-.35 6.2-1.1 8"/><path d="M8 13a4 4 0 0 1 8 0c0 2.6-.18 5.1-.7 7.1"/><path d="M5 13a7 7 0 0 1 14 0c0 2.5-.15 4.6-.5 6.5"/><path d="M3.2 10.2A9.3 9.3 0 0 1 12 4a9.3 9.3 0 0 1 8.8 6.2"/><path d="M9 16c0 2.1-.1 3.3-.5 4.9"/><path d="M6.2 17.2c-.03 1.1-.13 1.8-.3 2.6"/></svg>';
+        homeHint.innerHTML='<svg aria-hidden="true" viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M10 23c0-9 6-15 14-15s14 6 14 15"/><path d="M15 26v-3c0-6 4-10 9-10s9 4 9 10v5"/><path d="M20 30v-7a4 4 0 0 1 8 0v9"/><path d="M11 31v-7"/><path d="M16 35c3-4 3-7 3-11"/><path d="M24 22v8c0 6-2 10-5 13"/><path d="M32 34c-1 5-3 8-5 10"/><path d="M37 29c0 6-2 11-5 15"/></svg>';
       };
       homeHint.setAttribute('role','button');
       homeHint.tabIndex=0;
@@ -1574,7 +1574,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const [r,g,b]=color;
       const light=lighten(color,.42);
       if(homeHint){
-        homeHint.style.setProperty('border-color',`rgba(${light[0]},${light[1]},${light[2]},.40)`,'important');
+        /* V166 : bordure d'origine Souffle vivant, ne pas surcharger. */
       }
       const cx=w/2,cy=h/2,R=Math.min(w,h)*.405;
       const glow=ctx.createRadialGradient(cx,cy,R*.12,cx,cy,R*1.45);
@@ -6640,4 +6640,75 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',install,{once:true});
   else install();
+})();
+
+/* =============================================================
+   M.U.R. V166 — empreinte ORIGINALE de Souffle vivant (V72)
+   Le SVG provient de mur-souffle-vivant.js, sans recréation.
+   L'accueil reste cliquable; aucune modification du mode Urgence.
+   ============================================================= */
+(() => {
+  'use strict';
+  if (window.MUR_HOME_FINGERPRINT_V166) return;
+  window.MUR_HOME_FINGERPRINT_V166 = true;
+  const css = document.createElement('style');
+  css.id = 'mur-home-fingerprint-original-v166';
+  css.textContent = `
+    main.app #home.page.active #homeHint.home-hint {
+      width:clamp(60px,10vh,80px)!important;
+      height:clamp(60px,10vh,80px)!important;
+      min-width:60px!important;
+      max-width:80px!important;
+      min-height:60px!important;
+      padding:0!important;
+      display:grid!important;
+      place-items:center!important;
+      color:#a1ffe0!important;
+      background:radial-gradient(circle at 50% 40%,#1b5f55,#0c2b36 76%)!important;
+      border:1px solid #7de5c1!important;
+      border-radius:50%!important;
+      box-shadow:0 0 23px #33d39e31,inset 0 0 18px #66d6ac14!important;
+      cursor:pointer!important;
+      touch-action:manipulation!important;
+      user-select:none!important;
+      -webkit-user-select:none!important;
+      -webkit-touch-callout:none!important;
+      transition:box-shadow .12s,background .12s!important;
+    }
+    main.app #home.page.active #homeHint.home-hint svg{
+      width:45%!important;
+      height:45%!important;
+      color:inherit!important;
+      filter:none!important;
+    }
+    main.app #home.page.active #homeHint.home-hint::after{
+      content:''!important;
+      position:absolute!important;
+      inset:-7px!important;
+      border-radius:50%!important;
+      border:1px solid rgba(125,229,193,.57)!important;
+      box-shadow:0 0 11px rgba(51,211,158,.27)!important;
+      pointer-events:none!important;
+    }
+    main.app #home.page.active #homeHint.home-hint:active{
+      background:radial-gradient(circle,#278f70,#125445 76%)!important;
+      box-shadow:0 0 30px #4aeab388,inset 0 0 18px #8bffbc30!important;
+    }
+    @media(max-height:590px){
+      main.app #home.page.active #homeHint.home-hint{
+        width:54px!important;height:54px!important;min-width:54px!important;min-height:54px!important;
+      }
+    }
+  `;
+  document.head.appendChild(css);
+  function install(){
+    const hint = document.getElementById('homeHint');
+    if (!hint) return;
+    // La couleur appliquée en ligne par l'ancienne sphère ne doit pas écraser
+    // la bordure originale de Souffle vivant.
+    hint.style.removeProperty('border-color');
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', install, {once:true});
+  } else install();
 })();
