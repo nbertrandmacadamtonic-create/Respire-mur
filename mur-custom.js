@@ -1487,6 +1487,19 @@ if (typeof window.installPresentationFallback !== 'function') {
       main.app #home.page.active > section.home-wheel-card.card:has(#homeCircle.mur-home-2400){padding:8px 10px 12px!important}
       main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint{min-height:38px!important;margin-top:12px!important;padding:6px 12px!important;font-size:14px!important}
     }
+    /* V163 : empreinte digitale compacte, dans la charte M.U.R. */
+    main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint{
+      width:66px!important;max-width:66px!important;min-width:66px!important;
+      height:66px!important;min-height:66px!important;padding:0!important;
+      border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;
+      background:radial-gradient(circle at 35% 25%,rgba(100,209,232,.19),rgba(8,31,43,.9))!important;
+      box-shadow:inset 0 1px 7px rgba(255,255,255,.12),0 0 18px rgba(70,207,176,.22)!important;
+      touch-action:manipulation!important;
+    }
+    main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint svg{
+      display:block!important;width:33px!important;height:33px!important;
+      filter:drop-shadow(0 0 7px rgba(112,244,213,.7));
+    }
     @media(prefers-reduced-motion:reduce){#home #homeCircle.mur-home-2400 .mur-home-2400-canvas{transition:none!important}}
   `;
   function addStyle(){if(document.getElementById(STYLE_ID))return;const el=document.createElement('style');el.id=STYLE_ID;el.textContent=css;document.head.appendChild(el);}
@@ -1519,8 +1532,11 @@ if (typeof window.installPresentationFallback !== 'function') {
     if(homeHint){
       const refreshLabel=()=>{
         const en=String(document.documentElement.lang||'').toLowerCase().startsWith('en');
-        homeHint.textContent=en?'Tap to begin':'Appuyer pour commencer';
-        homeHint.setAttribute('aria-label',homeHint.textContent);
+        // V163 : le geste digital remplace le libellé, sans modifier le clic natif.
+        const label=en?'Touch to begin':'Toucher pour commencer';
+        homeHint.setAttribute('aria-label',label);
+        homeHint.setAttribute('title',label);
+        homeHint.innerHTML='<svg width="33" height="33" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 11a2 2 0 0 1 2 2c0 3.4-.35 6.2-1.1 8"/><path d="M8 13a4 4 0 0 1 8 0c0 2.6-.18 5.1-.7 7.1"/><path d="M5 13a7 7 0 0 1 14 0c0 2.5-.15 4.6-.5 6.5"/><path d="M3.2 10.2A9.3 9.3 0 0 1 12 4a9.3 9.3 0 0 1 8.8 6.2"/><path d="M9 16c0 2.1-.1 3.3-.5 4.9"/><path d="M6.2 17.2c-.03 1.1-.13 1.8-.3 2.6"/></svg>';
       };
       homeHint.setAttribute('role','button');
       homeHint.tabIndex=0;
@@ -1661,7 +1677,13 @@ if (typeof window.installPresentationFallback !== 'function') {
       .mur-five-target{position:absolute;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);width:104px;height:104px;border:0;border-radius:50%;color:#fff;background:transparent;cursor:pointer;pointer-events:auto;opacity:0;transition:opacity .25s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-shadow:0 2px 8px #001c31;font-family:inherit;overflow:visible}
       .mur-five-target.ready{opacity:1}
       .mur-five-target .mur-five-icon{font-size:25px;line-height:1;font-weight:750;filter:drop-shadow(0 0 6px currentColor)}
-      .mur-five-target .mur-five-label{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%);display:block;min-width:max-content;max-width:124px;padding:5px 9px;border-radius:10px;background:rgba(5,17,32,.90);border:1px solid rgba(255,255,255,.24);box-shadow:0 2px 12px rgba(0,0,0,.38);font-size:15px;font-weight:800;letter-spacing:.015em;line-height:1.2;text-align:center;white-space:nowrap;color:#fff;text-shadow:0 1px 4px #000;pointer-events:none}
+      .mur-five-target .mur-five-label{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%);display:block;min-width:max-content;max-width:124px;padding:5px 9px;border-radius:10px;background:rgba(5,17,32,.90);border:1px solid rgba(255,255,255,.24);box-shadow:0 2px 12px rgba(0,0,0,.38);font-size:15px;font-weight:800;letter-spacing:.015em;line-height:1.2;text-align:center;white-space:nowrap;color:var(--mur-mini-label-color,#fff);text-shadow:0 1px 4px #000,0 0 12px var(--mur-mini-label-color,#fff);pointer-events:none}
+      .mur-five-target[data-key="quick"]{--mur-mini-label-color:#ff677b}
+      .mur-five-target[data-key="tests"]{--mur-mini-label-color:#60a5fa}
+      .mur-five-target[data-key="breath"]{--mur-mini-label-color:#54e6a6}
+      .mur-five-target[data-key="exercises"]{--mur-mini-label-color:#ffb467}
+      .mur-five-target[data-key="stats"]{--mur-mini-label-color:#f58fcb}
+      .mur-five-target .mur-five-label{border-color:color-mix(in srgb,var(--mur-mini-label-color) 46%,transparent)!important;box-shadow:0 2px 12px rgba(0,0,0,.38),0 0 12px color-mix(in srgb,var(--mur-mini-label-color) 14%,transparent)!important;}
       .mur-five-target.is-locked{opacity:.50;filter:grayscale(.55)}
       .mur-five-target:focus-visible{outline:2px solid #fff;outline-offset:4px}
       @media(max-width:370px){.mur-five-target .mur-five-label{font-size:13px;padding:4px 7px}.mur-five-target .mur-five-icon{font-size:22px}}
@@ -1734,33 +1756,39 @@ if (typeof window.installPresentationFallback !== 'function') {
       const color=homeColor();
       const ca=Math.cos(time*.00023),sa=Math.sin(time*.00023);
       const cb=Math.cos(time*.00030),sb=Math.sin(time*.00030);
-      // V161 : le même rendu particulaire de Respiration anime l'ensemble.
-      // La sphère principale s'efface en douceur, sans ancienne dispersion.
-      // Les cinq sphères émergent depuis son centre et prennent leur place.
+      // V163 : transition CONTINUE. Les points de la grosse sphère
+      // voyagent physiquement vers les cinq emplacements au lieu de
+      // disparaître avant l'apparition des sphères du menu.
       const emerge=ease(progress);
-      const sourceOpacity=1-ease(Math.min(1,progress/.55));
+      const sourceOpacity=1-ease(Math.max(0,Math.min(1,(progress-.70)/.30)));
+      const miniOpacity=ease(Math.max(0,Math.min(1,(progress-.58)/.37)));
       if(sourceOpacity>0){
         ctx.save();
-        const sourceNear=color.map(v=>Math.round(v+(255-v)*.48));
-        const sourceFar=color.map(v=>Math.round(v*.90));
         const tilt=.15,ct=Math.cos(tilt),st=Math.sin(tilt);
-        const glow=ctx.createRadialGradient(hx,hy,hr*.02,hx,hy,hr*1.25);
-        glow.addColorStop(0,`rgba(${color.join(',')},${(.15*sourceOpacity).toFixed(3)})`);
-        glow.addColorStop(1,`rgba(${color.join(',')},0)`);
-        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(hx,hy,hr*1.25,0,TAU);ctx.fill();
-        ctx.globalCompositeOperation='lighter';
-        const sourceProjected=[];
-        for(const p of sourcePoints){
-          const xx=p.x*ca-p.z*sa,zz=p.x*sa+p.z*ca;
-          const yy=p.y*ct-zz*st,z2=p.y*st+zz*ct;
-          const perspective=2.8/(2.8-z2*.28);
-          const depth=(z2+1)/2;
-          const rgb=sourceFar.map((v,i)=>Math.round(v+(sourceNear[i]-v)*depth));
-          sourceProjected.push({x:hx+xx*hr*perspective,y:hy+yy*hr*perspective,z:z2,alpha:sourceOpacity*(.24+.72*depth),size:.80+depth*.72+p.seed*.18,rgb});
+        const projected=[];
+        for(let index=0;index<sourcePoints.length;index++){
+          const p=sourcePoints[index], groupIndex=index%GROUPS.length;
+          const g=GROUPS[groupIndex];
+          const dx=coords[groupIndex][0]-hx,dy=coords[groupIndex][1]-hy;
+          const sourceX=p.x*ca-p.z*sa,sourceZ=p.x*sa+p.z*ca;
+          const y2=p.y*ct-sourceZ*st,z2=p.y*st+sourceZ*ct;
+          const targetRadius=groupIndex===0?centerRadius:radius;
+          const scaleRadius=hr*(1-emerge)+targetRadius*emerge;
+          const persp=2.8/(2.8-z2*.28),depth=(z2+1)/2;
+          const destinationX=hx+dx*emerge+sourceX*scaleRadius*persp;
+          const destinationY=hy+dy*emerge+y2*scaleRadius*persp;
+          const base=color.map((v,i)=>Math.round(v*(1-emerge)+g.rgb[i]*emerge));
+          const near=base.map(v=>Math.round(v+(255-v)*.48));
+          const far=base.map(v=>Math.round(v*.90));
+          const rgb=far.map((v,i)=>Math.round(v+(near[i]-v)*depth));
+          projected.push({x:destinationX,y:destinationY,z:z2,
+            alpha:sourceOpacity*(.24+.72*depth),size:.8+depth*.72+p.seed*.18,rgb});
         }
-        sourceProjected.sort((a,b)=>a.z-b.z);
-        for(const p of sourceProjected){
-          ctx.globalAlpha=p.alpha;ctx.fillStyle=`rgb(${p.rgb.join(',')})`;
+        projected.sort((a,b)=>a.z-b.z);
+        ctx.globalCompositeOperation='lighter';
+        for(const p of projected){
+          ctx.globalAlpha=p.alpha;
+          ctx.fillStyle=`rgb(${p.rgb.join(',')})`;
           ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.fill();
         }
         ctx.restore();
@@ -1774,8 +1802,8 @@ if (typeof window.installPresentationFallback !== 'function') {
           const target=coords[i],c=[hx+(target[0]-hx)*emerge,hy+(target[1]-hy)*emerge];
           const R=(i===0?centerRadius:radius)*(.42+.58*emerge),g=GROUPS[i];
           const glow=ctx.createRadialGradient(c[0],c[1],R*.02,c[0],c[1],R*1.25);
-          glow.addColorStop(0,`rgba(${g.rgb.join(',')},${(.15*emerge).toFixed(3)})`);
-          glow.addColorStop(.52,`rgba(${g.rgb.join(',')},${(.04*emerge).toFixed(3)})`);
+          glow.addColorStop(0,`rgba(${g.rgb.join(',')},${(.15*miniOpacity).toFixed(3)})`);
+          glow.addColorStop(.52,`rgba(${g.rgb.join(',')},${(.04*miniOpacity).toFixed(3)})`);
           glow.addColorStop(1,`rgba(${g.rgb.join(',')},0)`);
           ctx.fillStyle=glow;ctx.beginPath();ctx.arc(c[0],c[1],R*1.25,0,TAU);ctx.fill();
         }
@@ -1792,7 +1820,7 @@ if (typeof window.installPresentationFallback !== 'function') {
           const near=g.rgb.map(v=>Math.round(v+(255-v)*.48));
           const far=g.rgb.map(v=>Math.round(v*.90));
           const rgb=far.map((v,i)=>Math.round(v+(near[i]-v)*depth));
-          dots.push({x:c[0]+xx*R*perspective,y:c[1]+yy*R*perspective,z:z2,alpha:emerge*(.24+.72*depth),size:.80+depth*.72+p.seed*.18,rgb});
+          dots.push({x:c[0]+xx*R*perspective,y:c[1]+yy*R*perspective,z:z2,alpha:miniOpacity*(.24+.72*depth),size:.80+depth*.72+p.seed*.18,rgb});
         }
         dots.sort((a,b)=>a.z-b.z);
         for(const p of dots){
