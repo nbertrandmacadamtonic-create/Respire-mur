@@ -5886,3 +5886,213 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
   else install();
 })();
+
+
+/* =============================================================
+   M.U.R. V160 — RESPIRATION : STYLE HOMOGENE / REGLAGES OUVERTS
+   La page compacte et le panneau des choix emploient la charte
+   native M.U.R. La séance immersive et toutes les sphères V159
+   restent inchangées. Aucun fichier HTML/CSS requis.
+   ============================================================= */
+(() => {
+  'use strict';
+  if (window.MUR_BREATH_STYLE_V160) return;
+  window.MUR_BREATH_STYLE_V160 = true;
+  function init(){
+    const page = document.getElementById('breath');
+    if (!page || page.dataset.murStyleV160 === '1') return;
+    page.dataset.murStyleV160 = '1';
+    const css = document.createElement('style');
+    css.id = 'mur-breath-style-v160';
+    css.textContent = `
+      /* Le conteneur Respiration reprend la largeur et les marges des autres pages. */
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen){
+        box-sizing:border-box!important;
+        width:100%!important;
+        max-width:100%!important;
+        margin:0!important;
+        padding:0 0 14px!important;
+        gap:9px!important;
+      }
+      /* Bords, fond et ombre : exactement le langage des .card M.U.R. */
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-recommend,
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-controls > .mur-b152-control{
+        border:1px solid var(--line,rgba(255,255,255,.16))!important;
+        border-radius:22px!important;
+        background:linear-gradient(180deg,rgba(255,255,255,.105),rgba(255,255,255,.055))!important;
+        box-shadow:var(--shadow,0 18px 46px rgba(0,0,0,.30))!important;
+        -webkit-backdrop-filter:blur(18px)!important;
+        backdrop-filter:blur(18px)!important;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-recommend{
+        position:relative!important;
+        padding:13px!important;
+        grid-template-columns:40px minmax(0,1fr)!important;
+        overflow:hidden;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-recommend::before{
+        content:'';position:absolute;top:0;bottom:0;left:0;width:3px;
+        background:var(--mur-b152-color,#22c55e);
+        box-shadow:0 0 12px var(--mur-b152-color,#22c55e);
+      }
+      #breath.mur-b152 .mur-b152-rec-icon{
+        width:38px!important;height:38px!important;
+        border-radius:15px!important;
+        background:linear-gradient(145deg,color-mix(in srgb,var(--mur-b152-color) 36%,rgba(255,255,255,.16)),rgba(7,17,31,.35))!important;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-status{
+        gap:7px!important;
+      }
+      #breath.mur-b152 .mur-b152-status span{
+        border:1px solid rgba(255,255,255,.16)!important;
+        border-radius:15px!important;
+        background:rgba(255,255,255,.075)!important;
+        min-height:32px;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-controls{
+        gap:8px!important;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-controls > .mur-b152-control{
+        border-radius:18px!important;
+        padding:9px 5px!important;
+        min-height:72px;
+      }
+      #breath.mur-b152 .mur-b152-controls > .mur-b152-control svg{
+        color:var(--mur-b152-color,#22c55e);
+        filter:drop-shadow(0 0 6px color-mix(in srgb,var(--mur-b152-color) 28%,transparent));
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-start{
+        background:#fff!important;color:#07111f!important;
+        border:1px solid rgba(255,255,255,.22)!important;
+        box-shadow:0 12px 28px rgba(0,0,0,.24)!important;
+        border-radius:17px!important;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b153-intro-row{
+        border:1px solid var(--line,rgba(255,255,255,.16))!important;
+        border-radius:17px!important;
+        background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.045))!important;
+        padding:10px 12px!important;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-advanced{
+        border:1px solid rgba(255,255,255,.18)!important;
+        border-radius:999px!important;
+        background:rgba(255,255,255,.08)!important;
+        color:#f8fafc!important;
+        text-decoration:none!important;
+        padding:9px 18px!important;
+        min-height:38px;
+      }
+      /* Réglages : un seul panneau mobile, avec contenu et fond identiques aux pages M.U.R. */
+      #breath.mur-b152.page.active.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type{
+        display:block!important;
+        position:fixed!important;
+        box-sizing:border-box!important;
+        top:calc(14px + env(safe-area-inset-top))!important;
+        bottom:calc(14px + env(safe-area-inset-bottom))!important;
+        left:50%!important;right:auto!important;
+        width:min(410px,calc(100vw - 24px))!important;
+        max-width:410px!important;
+        min-height:0!important;
+        height:auto!important;
+        margin:0!important;
+        padding:61px 13px 18px!important;
+        border:1px solid rgba(255,255,255,.20)!important;
+        border-radius:23px!important;
+        background:
+          radial-gradient(circle at 12% 0%,rgba(59,130,246,.17),transparent 38%),
+          linear-gradient(180deg,#102238,#07111f)!important;
+        -webkit-backdrop-filter:blur(18px)!important;backdrop-filter:blur(18px)!important;
+        box-shadow:0 0 0 100vmax rgba(3,10,20,.84),0 20px 55px rgba(0,0,0,.55)!important;
+        transform:translateX(-50%)!important;
+        z-index:18000!important;
+        overflow-x:hidden!important;overflow-y:auto!important;
+        overscroll-behavior:contain;
+        -webkit-overflow-scrolling:touch;
+      }
+      #breath.mur-b152.page.active.mur-b152-settings .mur-b152-close{
+        position:fixed!important;
+        top:calc(28px + env(safe-area-inset-top))!important;
+        right:max(22px,calc((100vw - 380px) / 2))!important;
+        z-index:18001!important;
+        min-height:36px!important;
+        background:rgba(255,255,255,.12)!important;
+        border:1px solid rgba(255,255,255,.25)!important;
+        border-radius:13px!important;
+      }
+      #breath.mur-b152.mur-b152-settings .breath-master{
+        margin-top:10px!important;
+        border:1px solid var(--line,rgba(255,255,255,.16))!important;
+        border-radius:20px!important;
+        background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.045))!important;
+      }
+      #breath.mur-b152.mur-b152-settings .breath-master-body{
+        gap:8px!important;
+      }
+      #breath.mur-b152.mur-b152-settings .breath-choice{
+        border:1px solid rgba(255,255,255,.16)!important;
+        border-radius:16px!important;
+        min-height:58px!important;
+        background:rgba(255,255,255,.065)!important;
+      }
+      #breath.mur-b152.mur-b152-settings .breath-choice.active{
+        border-color:var(--family-color,#22c55e)!important;
+        background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.07))!important;
+      }
+      #breath.mur-b152.mur-b152-settings .scale,
+      #breath.mur-b152.mur-b152-settings .manual-panel,
+      #breath.mur-b152.mur-b152-settings #breathMessage{
+        margin-top:15px!important;
+      }
+      @media(max-width:390px){
+        #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-controls > .mur-b152-control{
+          min-height:63px!important;font-size:11px!important;
+        }
+        #breath.mur-b152.page.active.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type{
+          width:calc(100vw - 16px)!important;padding-left:10px!important;padding-right:10px!important;
+        }
+      }
+    `;
+    document.head.appendChild(css);
+
+    const menu = document.getElementById('breathMaster');
+    const advanced = page.querySelector('.mur-b152-advanced');
+    const rhythmButton = page.querySelector('[data-b152="rhythm"]');
+    const durationButton = page.querySelector('[data-b152="duration"]');
+    const close = page.querySelector('.mur-b152-close');
+    const nativePanel = page.querySelector(':scope > section.card:first-of-type');
+    const settingsOpen = () => page.classList.contains('mur-b152-settings');
+    const openMenu = () => {
+      if (!menu) return;
+      menu.classList.add('open');
+      const head = menu.querySelector('.breath-master-head');
+      head?.setAttribute('aria-expanded','true');
+    };
+    // V152 ouvrait « réglages avancés » en laissant la liste entièrement repliée.
+    // Ici, on montre les respirations et l'on conserve les contrôles d'origine.
+    [advanced,rhythmButton,durationButton].forEach(button => {
+      button?.addEventListener('click',() => {
+        if (settingsOpen()) {
+          openMenu();
+          requestAnimationFrame(() => {if(nativePanel)nativePanel.scrollTop=0;});
+        }
+      });
+    });
+    // Rendre le panneau identifiable et refermable au clavier.
+    if (nativePanel){
+      nativePanel.setAttribute('role','dialog');
+      nativePanel.setAttribute('aria-label','Réglages de respiration');
+      nativePanel.setAttribute('aria-modal','true');
+    }
+    const sync = () => {
+      const opened = settingsOpen();
+      if (nativePanel) nativePanel.setAttribute('aria-hidden',opened?'false':'true');
+      if (opened) openMenu();
+    };
+    new MutationObserver(sync).observe(page,{attributes:true,attributeFilter:['class']});
+    sync();
+    // Ne pas toucher à l'introduction, aux sons, à la navigation native,
+    // ni au plein écran V154/V157.
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
