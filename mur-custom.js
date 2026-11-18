@@ -6313,3 +6313,331 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
   else install();
 })();
+
+/* ===========================================================
+   M.U.R. V164 — REGLAGES RESPIRATION : MANUEL, LISTE, FERMETURE
+   Correctif ciblé par-dessus V163, sans changement du moteur.
+   =========================================================== */
+(() => {
+  'use strict';
+  if (window.MUR_BREATH_OPTIONS_V164) return;
+  window.MUR_BREATH_OPTIONS_V164 = true;
+  const $ = id => document.getElementById(id);
+  const isEnglish = () => String(document.documentElement.lang || 'fr').toLowerCase().startsWith('en');
+  function init(){
+    const page = $('breath');
+    const master = $('breathMaster');
+    const panel = page?.querySelector(':scope > section.card:first-of-type');
+    const manualBtn = $('manualToggleBtn');
+    const manualPanel = $('manualPanel');
+    const close = page?.querySelector('.mur-b152-close');
+    if (!page || !master || !panel || !manualBtn || !manualPanel || !close || page.dataset.murBreathV164) return;
+    page.dataset.murBreathV164 = '1';
+
+    const css = document.createElement('style');
+    css.id = 'mur-breath-v164-options-css';
+    css.textContent = `
+      /* La croix de fermeture ne doit jamais prendre toute la largeur. */
+      #breath.mur-b152.page.active.mur-b152-settings:not(.mur-b154-fullscreen) > button.mur-b152-close {
+        display:flex!important;align-items:center!important;justify-content:center!important;
+        position:fixed!important;
+        top:calc(26px + env(safe-area-inset-top))!important;
+        right:max(24px,calc((100vw - 370px)/2))!important;
+        left:auto!important;bottom:auto!important;
+        width:36px!important;min-width:36px!important;max-width:36px!important;
+        height:36px!important;min-height:36px!important;max-height:36px!important;
+        margin:0!important;padding:0!important;border-radius:50%!important;
+        border:1px solid rgba(255,255,255,.30)!important;
+        background:rgba(17,38,57,.96)!important;color:white!important;
+        font-size:0!important;font-weight:500!important;line-height:1!important;
+        box-shadow:0 4px 14px rgba(0,0,0,.30)!important;z-index:18100!important;
+      }
+      #breath.mur-b152-settings > .mur-b152-close::after {content:'×';font-size:25px;line-height:1;}
+      #breath.mur-b152.page.active.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type {
+        padding-top:62px!important;padding-bottom:22px!important;
+      }
+      /* Titre du panneau + indication du mode sélectionné */
+      #breath.mur-b152-settings .mur-v164-panel-title {
+        position:relative;display:flex;align-items:center;gap:9px;
+        padding:2px 45px 11px 1px;margin:0 0 4px;
+        font-size:18px;font-weight:850;letter-spacing:-.02em;color:#f8fafc;
+      }
+      #breath.mur-b152-settings .mur-v164-panel-title::before {
+        content:'';display:block;flex:0 0 4px;height:24px;border-radius:4px;background:var(--mur-b152-color,#22c55e);
+      }
+      #breath.mur-b152-settings[data-mur-option="duration"] .mur-v164-panel-title,
+      #breath.mur-b152-settings[data-mur-option="sound"] .mur-v164-panel-title{display:none!important;}
+      /* L'intitulé des respirations est un véritable accordéon. */
+      #breath.mur-b152-settings[data-mur-option="rhythm"] .breath-master-head,
+      #breath.mur-b152-settings[data-mur-option="advanced"] .breath-master-head {
+        pointer-events:auto!important;cursor:pointer!important;
+        display:flex!important;min-height:60px!important;
+      }
+      #breath.mur-b152-settings .breath-master-head .breath-master-chev {
+        width:28px;height:28px;min-width:28px;border:1px solid rgba(255,255,255,.25);
+        border-radius:50%;background:rgba(255,255,255,.07);font-size:0!important;
+        position:relative;display:grid;place-items:center;
+      }
+      #breath.mur-b152-settings .breath-master-head .breath-master-chev::after {
+        content:'⌄';font-size:23px;color:#a8f0dc;line-height:1;transform:translateY(-2px);
+      }
+      #breath.mur-b152-settings .breath-master.open .breath-master-chev::after {transform:rotate(180deg) translateY(-2px);}
+      #breath.mur-b152-settings .breath-master-head .breath-master-title small {
+        font-size:11px!important;color:rgba(225,240,249,.75)!important;line-height:1.35;
+      }
+      #breath.mur-b152-settings .mur-v164-scroll-hint {
+        display:flex;align-items:center;justify-content:center;gap:7px;
+        margin:7px 6px 4px;color:#bbf4e5;font-size:12px;font-weight:750;
+        letter-spacing:.01em;text-align:center;
+      }
+      #breath.mur-b152-settings .mur-v164-scroll-hint::after {content:'↓';font-size:19px;color:#b8f6e8;}
+      #breath.mur-b152-settings .breath-master:not(.open) .mur-v164-scroll-hint {display:none!important;}
+      /* Choix multiples visibles ET déroulables, sans allonger le panneau entier. */
+      #breath.mur-b152-settings .breath-master.open .breath-master-body {
+        display:grid!important;max-height:min(44dvh,340px)!important;
+        overflow-y:auto!important;overflow-x:hidden!important;
+        overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+        padding:3px 5px 12px!important;scrollbar-width:thin;
+        scrollbar-color:rgba(148,235,208,.6) transparent;
+        border-bottom:1px solid rgba(255,255,255,.11);
+      }
+      #breath.mur-b152-settings .breath-master-body::-webkit-scrollbar {width:5px;}
+      #breath.mur-b152-settings .breath-master-body::-webkit-scrollbar-thumb {background:rgba(148,235,208,.6);border-radius:6px;}
+      /* Dans Réglages avancés, restaurer ET mettre en évidence le mode manuel. */
+      #breath.mur-b152-settings[data-mur-option="advanced"] .breath-settings-row {
+        display:flex!important;justify-content:stretch!important;margin:14px 0 6px!important;
+        visibility:visible!important;opacity:1!important;
+      }
+      #breath.mur-b152-settings[data-mur-option="advanced"] #manualToggleBtn {
+        display:flex!important;visibility:visible!important;opacity:1!important;
+        width:100%!important;max-width:none!important;justify-content:space-between!important;
+        min-height:51px!important;padding:9px 13px!important;margin:0!important;
+        border:1px solid rgba(167,231,214,.42)!important;border-radius:16px!important;
+        background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.055))!important;
+        color:#f8fafc!important;box-sizing:border-box!important;
+      }
+      #breath.mur-b152-settings[data-mur-option="advanced"] #manualToggleBtn .manual-switch-text {
+        font-size:14px!important;font-weight:800!important;color:#f8fafc!important;
+      }
+      #breath.mur-b152-settings[data-mur-option="advanced"] #manualPanel.open {
+        display:block!important;visibility:visible!important;opacity:1!important;
+        margin-top:10px!important;padding:10px!important;
+        border:1px solid rgba(167,231,214,.4)!important;border-radius:16px!important;
+        background:rgba(255,255,255,.07)!important;
+      }
+      #breath.mur-b152-settings[data-mur-option="advanced"] .mur-v164-manual-hint {
+        display:block;font-size:11px;color:rgba(235,249,255,.78);margin:0 0 7px;line-height:1.4;
+      }
+      #breath.mur-b152-settings:not([data-mur-option="advanced"]) .mur-v164-manual-hint {display:none!important;}
+      #breath.mur-b152-settings[data-mur-option="rhythm"] #manualPanel,
+      #breath.mur-b152-settings[data-mur-option="rhythm"] .breath-settings-row {display:none!important;}
+      @media(max-width:380px){
+        #breath.mur-b152-settings .breath-master.open .breath-master-body{max-height:40dvh!important;}
+        #breath.mur-b152.page.active.mur-b152-settings:not(.mur-b154-fullscreen) > button.mur-b152-close{right:18px!important;}
+      }
+    `;
+    document.head.appendChild(css);
+
+    const title=document.createElement('h3');
+    title.className='mur-v164-panel-title';
+    panel.prepend(title);
+    const hint=document.createElement('div');
+    hint.className='mur-v164-scroll-hint';
+    hint.setAttribute('role','note');
+    const body=master.querySelector('.breath-master-body');
+    if(body) master.insertBefore(hint,body);
+    const manualHint=document.createElement('p');
+    manualHint.className='mur-v164-manual-hint';
+    manualHint.textContent='';
+    manualPanel.insertAdjacentElement('beforebegin',manualHint);
+
+    close.setAttribute('aria-label','Fermer les réglages');
+    close.setAttribute('title','Fermer');
+    close.textContent='';
+    const head=master.querySelector('.breath-master-head');
+    function update(){
+      const mode=page.dataset.murOption||'advanced';
+      const en=isEnglish();
+      title.textContent=mode==='rhythm'?(en?'Choose a breathing rhythm':'Choisir une respiration'):(en?'Advanced breathing settings':'Réglages avancés');
+      hint.textContent=en?'Scroll to see all breathing rhythms':'Faites défiler pour voir les respirations';
+      manualHint.textContent=en?'Set inhale, pauses and exhale yourself.':'Personnalisez l’inspiration, les pauses et l’expiration.';
+      head?.setAttribute('aria-expanded',String(master.classList.contains('open')));
+      head?.setAttribute('aria-label',en?'Show or hide breathing rhythms':'Afficher ou masquer les respirations');
+      manualBtn.setAttribute('aria-label',en?'Manual breathing mode':'Mode manuel de respiration');
+      if(page.classList.contains('mur-b152-settings') && mode==='advanced') {
+        // L'interrupteur natif est conservé : aucune altération de son onclick.
+        const enabled=manualPanel.classList.contains('open');
+        manualBtn.classList.toggle('active',enabled);
+        manualBtn.setAttribute('aria-expanded',String(enabled));
+      }
+    }
+    const obs=new MutationObserver(update);
+    obs.observe(page,{attributes:true,attributeFilter:['class','data-mur-option']});
+    obs.observe(master,{attributes:true,attributeFilter:['class']});
+    obs.observe(manualPanel,{attributes:true,attributeFilter:['class']});
+    obs.observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    update();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
+
+/* ===============================================================
+   M.U.R. V165 — Tableau de bord Respiration et accueil
+   Interface exclusivement : moteur, audio, essais et données intacts.
+   =============================================================== */
+(() => {
+  'use strict';
+  if (window.MUR_BREATH_DASHBOARD_V165) return;
+  window.MUR_BREATH_DASHBOARD_V165 = true;
+  const $ = id => document.getElementById(id);
+  const en = () => String(document.documentElement.lang || '').toLowerCase().startsWith('en');
+  const waveIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 10c2.4 0 2.4-4.5 4.8-4.5s2.4 13 4.8 13 2.4-13 4.8-13 2.4 4.5 4.8 4.5"/></svg>`;
+  const icons = {
+    boost:`<path d="M12 20V4M6 10l6-6 6 6"/>`,
+    '365':`<path d="M3 12c3-8 6 8 9 0s6-8 9 0"/>`,
+    coherence:`<path d="M3 12c2.5-5 5.5-5 8 0s5.5 5 10 0"/><path d="M3 17c2.5-5 5.5-5 8 0s5.5 5 10 0"/>`,
+    square:`<rect x="5" y="5" width="14" height="14" rx="3"/><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"/>`,
+    regulate:`<path d="M4 7c4-3 8 3 12 0M4 12c4-3 8 3 12 0M4 17c4-3 8 3 12 0"/><path d="M19 7v10m-3-3 3 3 3-3"/>`,
+    frein:`<path d="M5 6h14M7 10h10M9 14h6M11 18h2"/><path d="M19 14v6m-3-3 3 3 3-3"/>`,
+    '478':`<path d="M4 12h16M12 4v16"/><path d="M7 7c3-3 7-3 10 0M7 17c3 3 7 3 10 0"/>`,
+    sleep:`<path d="M20.5 14.3A8 8 0 0 1 9.7 3.5 8 8 0 1 0 20.5 14.3Z"/>`,
+    manual:`<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="#0a2031"/><circle cx="15" cy="12" r="2" fill="#0a2031"/><circle cx="10" cy="18" r="2" fill="#0a2031"/>`
+  };
+  const svg = paths => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+
+  // Le clic « Son » n'ouvre plus le sous-panneau créé par V162.
+  // Capture sur window = avant le gestionnaire historique document capture.
+  window.addEventListener('click', event => {
+    const sound = event.target.closest?.('#breath .mur-b152-controls [data-b152="sound"]');
+    if (!sound || !$('#breath')?.classList.contains('active')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    const native = $('soundBtn');
+    if (!native || native === sound) return;
+    native.click();
+    requestAnimationFrame(() => {
+      const on = native.getAttribute('aria-pressed') !== 'false';
+      const caption = sound.querySelector('span');
+      if (caption) caption.textContent = en() ? (on ? 'Sound on' : 'Sound off') : (on ? 'Son actif' : 'Son coupé');
+      sound.setAttribute('aria-pressed', String(on));
+      const status = $('#breath .mur-b152-status [data-b152-status="sound"]');
+      if (status) status.textContent = en() ? (on ? 'Sound on' : 'Muted') : (on ? 'Son actif' : 'Silence');
+    });
+  }, true);
+
+  // V162 ouvre toutes les respirations par défaut : les replier quand
+  // l'utilisateur a demandé les réglages avancés. L'accordéon reste cliquable.
+  window.addEventListener('click', event => {
+    if (!event.target.closest?.('#breath .mur-b152-advanced')) return;
+    queueMicrotask(() => {
+      const page = $('breath'), master = $('breathMaster');
+      if (page?.classList.contains('mur-b152-settings') && page.dataset.murOption === 'advanced' && master) {
+        master.classList.remove('open');
+        master.querySelector('.breath-master-head')?.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }, true);
+
+  function install(){
+    const page = $('breath');
+    const homeHint = $('homeHint');
+    const controls = page?.querySelector('.mur-b152-controls');
+    const master = $('breathMaster');
+    if (!page || !controls || !master) return;
+
+    // Les commandes sont désormais trois colonnes au sein d'une seule carte.
+    controls.classList.add('mur-v165-commands');
+    const css = document.createElement('style');
+    css.id = 'mur-v165-dashboard-css';
+    css.textContent = `
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-controls.mur-v165-commands{
+        display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+        gap:0!important;margin:0!important;padding:6px!important;
+        background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.047))!important;
+        border:1px solid rgba(255,255,255,.18)!important;border-radius:20px!important;
+        box-shadow:0 12px 28px rgba(0,0,0,.23)!important;
+        backdrop-filter:blur(16px)!important;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-v165-commands > .mur-b152-control{
+        min-height:64px!important;height:auto!important;margin:0!important;padding:7px 3px!important;
+        background:transparent!important;border:0!important;box-shadow:none!important;
+        border-radius:12px!important;gap:5px!important;font-size:11px!important;
+        color:#f8fafc!important;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-v165-commands > .mur-b152-control + .mur-b152-control{
+        border-left:1px solid rgba(255,255,255,.17)!important;border-top-left-radius:0!important;border-bottom-left-radius:0!important;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-v165-commands > .mur-b152-control svg{
+        width:22px!important;height:22px!important;flex:none;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-v165-commands > .mur-b152-control[data-b152="sound"][aria-pressed="false"]{opacity:.70!important;}
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-v165-commands > .mur-b152-control span{font-size:11px!important;white-space:normal!important;}
+      #breath .breath-master-logo{
+        flex:0 0 36px!important;width:36px!important;height:36px!important;border-radius:50%!important;
+        background:radial-gradient(circle at 35% 25%,rgba(163,248,218,.38),rgba(18,76,82,.82) 55%,#09273b)!important;
+        box-shadow:0 0 14px rgba(52,211,153,.20),inset 0 1px 3px rgba(255,255,255,.25)!important;
+        color:#baffdf!important;
+      }
+      #breath .breath-master-logo svg{width:22px!important;height:22px!important;}
+      #breath .breath-choice .breath-icon{
+        border-radius:50%!important;flex:0 0 35px;width:35px!important;height:35px!important;
+        background:radial-gradient(circle at 31% 22%,rgba(255,255,255,.48),transparent 33%),
+          radial-gradient(circle at 62% 70%,var(--family-color,#22c55e),#09263a 87%)!important;
+      }
+      #breath .breath-choice .breath-icon svg{width:20px!important;height:20px!important;stroke:#fff!important;}
+      /* Page avancée : vraie respiration guidée initialement repliée. */
+      #breath.mur-b152-settings[data-mur-option="advanced"] .breath-master:not(.open) .breath-master-body{display:none!important;}
+      #breath.mur-b152-settings[data-mur-option="advanced"] .breath-master:not(.open) .mur-v164-scroll-hint{display:none!important;}
+      /* Accueil : empreinte et cercle lumineux dans le style des sphères. */
+      #home.page.active #homeHint.home-hint{
+        position:relative!important;border-radius:50%!important;
+        border:1px solid rgba(143,232,218,.65)!important;
+        background:radial-gradient(circle at 31% 25%,rgba(95,229,208,.23),#08243b 80%)!important;
+        box-shadow:0 0 0 5px rgba(61,191,174,.08),0 0 22px rgba(71,227,192,.26),inset 0 1px 8px rgba(255,255,255,.17)!important;
+        color:#aeffe7!important;
+      }
+      #home.page.active #homeHint.home-hint::after{
+        content:''!important;position:absolute!important;inset:-6px!important;border-radius:50%!important;
+        border:1px solid rgba(103,227,203,.5)!important;pointer-events:none!important;
+        box-shadow:0 0 11px rgba(85,231,196,.21)!important;
+      }
+      #home.page.active #homeHint.home-hint svg{width:34px!important;height:34px!important;color:#abfce6!important;}
+    `;
+    document.head.appendChild(css);
+
+    // Respiration guidée : un seul pictogramme « souffle » dans son cercle.
+    const masterIcon = master.querySelector('.breath-master-logo');
+    if (masterIcon) masterIcon.innerHTML = waveIcon;
+    page.querySelectorAll('.breath-choice[id^="breathCard_"]').forEach(card => {
+      const key = card.id.slice('breathCard_'.length);
+      const icon = card.querySelector('.breath-icon');
+      if (icon) icon.innerHTML = svg(icons[key] || icons.coherence);
+    });
+
+    const sound = controls.querySelector('[data-b152="sound"]');
+    const nativeSound = $('soundBtn');
+    function syncSound(){
+      if (!sound || !nativeSound || page.classList.contains('mur-b154-fullscreen')) return;
+      const on = nativeSound.getAttribute('aria-pressed') !== 'false';
+      sound.setAttribute('aria-pressed', String(on));
+      const label = sound.querySelector('span');
+      const value = en() ? (on ? 'Sound on' : 'Sound off') : (on ? 'Son actif' : 'Son coupé');
+      if (label && label.textContent !== value) label.textContent = value;
+      sound.setAttribute('aria-label', value);
+    }
+    // Les anciens scripts mettent à jour les libellés : réaligner uniquement
+    // quand nécessaire, sans réécrire les réglages ni créer d'écran.
+    new MutationObserver(syncSound).observe(nativeSound,{attributes:true,attributeFilter:['aria-pressed']});
+    const soundLabel = sound?.querySelector('span');
+    if (soundLabel) new MutationObserver(syncSound).observe(soundLabel,{childList:true,characterData:true,subtree:true});
+    new MutationObserver(syncSound).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    syncSound();
+
+    // La V163 fournit déjà l'empreinte tactile ; on préserve ses événements.
+    if (homeHint) homeHint.classList.add('mur-v165-fingerprint-ring');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
+})();
