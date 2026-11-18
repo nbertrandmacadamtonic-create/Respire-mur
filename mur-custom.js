@@ -4920,124 +4920,277 @@ function init(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 
-
 /* ================================================================
-   M.U.R. V151 — RESPIRATION MOBILE SIMPLIFIEE
-   Interface uniquement : conserve la sphère, le moteur natif, les
-   rythmes, le son, la synchronisation et les limites du mode découverte.
+   M.U.R. V152 — RESPIRATION : UN SEUL ECRAN, STYLE NATIF M.U.R.
+   Remplace integralement le correctif V151 (sans couches concurrentes).
+   Ne modifie pas index.html, le moteur respiratoire, Supabase ou les sons.
    ================================================================ */
 (() => {
   'use strict';
-  if (window.MUR_BREATH_SIMPLE_V151) return;
-  window.MUR_BREATH_SIMPLE_V151 = {version:151, scope:'breath-presentation'};
+  if (window.MUR_BREATH_V152) return;
+  window.MUR_BREATH_V152 = {version:152, type:'single-screen-native'};
+
+  const RECOMMEND = {bleu:'boost', vert:'365', orange:'regulate', rouge:'frein'};
+  const COLORS = {bleu:'#3b82f6',vert:'#22c55e',orange:'#f59e0b',rouge:'#ef4444'};
+  const ICONS = {
+    clock:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V8m0 5 3 2M9 2h6"/></svg>',
+    waves:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8c3-3 5-3 8 0s5 3 8 0 3-2 4-2M2 14c3-3 5-3 8 0s5 3 8 0 3-2 4-2M2 20c3-3 5-3 8 0s5 3 8 0 3-2 4-2"/></svg>',
+    rhythm:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="10" cy="7" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="8" cy="17" r="2"/></svg>'
+  };
   const CSS = `
-    #breath.mur-b151:not(.breath-immersive).page.active {display:flex!important;flex-direction:column!important;gap:8px!important;min-height:0!important;padding-bottom:6px!important;overflow:visible!important}
-    #breath.mur-b151:not(.breath-immersive)>section.card:first-of-type{display:none!important}
-    #breath.mur-b151:not(.breath-immersive)>.mur-b151-head{order:0;display:flex;align-items:center;justify-content:space-between;gap:8px;flex:0 0 auto}
-    .mur-b151-head h2{margin:0!important;font-size:clamp(19px,4.8vw,24px)!important;color:#f8fafc!important}
-    .mur-b151-head .mur-b151-info{color:#b9d7f1;font-size:11px}
-    #breath.mur-b151:not(.breath-immersive)>.mur-b151-recommend{order:1;flex:0 0 auto;padding:12px 14px;border-radius:17px;border:1px solid color-mix(in srgb,var(--mur-b151-accent,#22c55e) 65%,white 15%);background:linear-gradient(125deg,rgba(23,49,75,.92),rgba(8,22,37,.90));box-shadow:0 7px 24px rgba(0,0,0,.18);color:white}
-    .mur-b151-recommend small{display:block;color:#d0dfea;font-size:11px;font-weight:650;margin-bottom:4px}
-    .mur-b151-recommend strong{display:block;font-size:clamp(16px,4.5vw,20px);line-height:1.25}
-    .mur-b151-recommend p{font-size:11px;color:#b9cedd;margin:5px 0 0}
-    #breath.mur-b151:not(.breath-immersive)>section.card:last-of-type{order:2!important;flex:1 1 auto!important;min-height:180px!important;max-height:39dvh!important;margin:0!important;padding:4px 7px!important;border:0!important;box-shadow:none!important;background:transparent!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;overflow:visible!important}
-    #breath.mur-b151:not(.breath-immersive)>section.card:last-of-type>.mini-info{display:none!important}
-    #breath.mur-b151:not(.breath-immersive) .breath-stage{height:auto!important;min-height:0!important;flex:1 1 auto!important;width:100%!important;max-height:31dvh!important;display:flex!important;align-items:center!important;justify-content:center!important;margin:0!important}
-    #breath.mur-b151:not(.breath-immersive) .breath-stage .ring{width:min(56vw,27dvh,220px)!important;height:min(56vw,27dvh,220px)!important;opacity:.25!important}
-    #breath.mur-b151:not(.breath-immersive) #orb{width:min(47vw,23dvh,190px)!important;height:min(47vw,23dvh,190px)!important;min-width:0!important;min-height:0!important;border-radius:50%!important}
-    #breath.mur-b151:not(.breath-immersive) #phaseText{margin:5px auto!important;font-size:clamp(15px,4.2vw,19px)!important;min-width:0!important;max-width:94%!important}
-    #breath.mur-b151:not(.breath-immersive) #phaseHint{display:none!important}
-    #breath.mur-b151:not(.breath-immersive) .breath-action-row{display:none!important}
-    #breath.mur-b151:not(.breath-immersive) .orb-sound-btn{display:none!important}
-    #breath.mur-b151:not(.breath-immersive)>.mur-b151-tools{order:3;flex:0 0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-    .mur-b151-tools button{border:1px solid rgba(160,207,235,.31);border-radius:14px;padding:9px 4px;background:linear-gradient(180deg,rgba(38,71,98,.87),rgba(12,36,58,.9));color:#f8fafc;min-height:61px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;line-height:1.2;text-align:center;font-size:11px;cursor:pointer}
-    .mur-b151-tools button b{font-size:clamp(12px,3.4vw,15px);font-weight:750}
-    .mur-b151-tools button small{font-size:10px;color:#b8cdda;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    #breath.mur-b151:not(.breath-immersive)>.mur-b151-start{order:4;flex:0 0 auto;display:block!important;width:100%;min-height:52px;border:1px solid rgba(130,208,249,.75);border-radius:999px;background:linear-gradient(120deg,#236aa9,#16436f);color:white;font-size:clamp(14px,4vw,17px);font-weight:800;box-shadow:0 5px 20px rgba(32,136,217,.25);cursor:pointer}
-    #breath.mur-b151:not(.breath-immersive)>.mur-b151-advanced{order:5;flex:0 0 auto;display:block;margin:0 auto;padding:5px 15px;border:0;background:none;color:#b9d9ed;text-decoration:underline;font-size:12px;cursor:pointer}
-    #breath.mur-b151.mur-b151-settings:not(.breath-immersive)>section.card:first-of-type{display:block!important;position:fixed!important;z-index:18000!important;inset:calc(46px + env(safe-area-inset-top)) 10px calc(50px + env(safe-area-inset-bottom))!important;width:min(430px,calc(100vw - 20px))!important;margin:0 auto!important;overflow-y:auto!important;border:1px solid #6f9daf!important;border-radius:20px!important;background:#0b2034!important;padding:14px!important;box-shadow:0 0 0 100vmax rgba(0,5,15,.84),0 20px 60px #000a!important}
-    #breath.mur-b151.mur-b151-settings:not(.breath-immersive)>.mur-b151-close{display:block!important;position:fixed!important;top:calc(51px + env(safe-area-inset-top));right:max(20px,calc((100vw - 410px)/2));z-index:18001!important;min-height:38px;padding:8px 12px;background:#1b5273;color:white;border:1px solid #8cb9d4;border-radius:12px;font-weight:700}
-    #breath.mur-b151>.mur-b151-close{display:none}
-    #breath.mur-b151.breath-immersive>.mur-b151-head,#breath.mur-b151.breath-immersive>.mur-b151-recommend,#breath.mur-b151.breath-immersive>.mur-b151-tools,#breath.mur-b151.breath-immersive>.mur-b151-start,#breath.mur-b151.breath-immersive>.mur-b151-advanced,#breath.mur-b151.breath-immersive>.mur-b151-close{display:none!important}
-    @media(max-height:700px){#breath.mur-b151:not(.breath-immersive)>section.card:last-of-type{min-height:125px!important;max-height:30dvh!important}#breath.mur-b151:not(.breath-immersive) .breath-stage{max-height:24dvh!important}#breath.mur-b151:not(.breath-immersive) #orb{width:min(42vw,19dvh,160px)!important;height:min(42vw,19dvh,160px)!important}#breath.mur-b151:not(.breath-immersive) .breath-stage .ring{width:min(50vw,23dvh,180px)!important;height:min(50vw,23dvh,180px)!important}.mur-b151-tools button{min-height:49px!important;padding:5px 2px!important}}
-  `;
-  function localeEN(){return String(document.documentElement.lang||'fr').toLowerCase().startsWith('en')}
-  function zone(){
-    let candidate=null;
-    try{candidate=window.getCurrentNeuroRecommendation?.()?.zone||JSON.parse(localStorage.getItem('murLastNeuro')||'null')?.zone}catch(_){ }
-    const raw=String(candidate?.key||candidate?.name||candidate||'').toLowerCase();
-    return raw.includes('bleu')||raw.includes('blue')?'bleu':raw.includes('rouge')||raw.includes('red')?'rouge':raw.includes('orange')?'orange':raw.includes('vert')||raw.includes('green')?'vert':null;
-  }
-  const RECOMMEND={bleu:'boost',vert:'365',orange:'regulate',rouge:'frein'};
-  const COLORS={bleu:'#3b82f6',vert:'#22c55e',orange:'#f59e0b',rouge:'#ef4444'};
-  function init(){
-    const page=document.getElementById('breath');
-    if(!page||page.classList.contains('mur-b151'))return;
-    const style=document.createElement('style');style.id='mur-breath-simple-v151-css';style.textContent=CSS;document.head.appendChild(style);
-    page.classList.add('mur-b151');
-    const head=document.createElement('div');head.className='mur-b151-head';head.innerHTML='<h2>Respiration</h2><span class="mur-b151-info">M.U.R. · NeuroFlex</span>';
-    const recommendation=document.createElement('div');recommendation.className='mur-b151-recommend';recommendation.innerHTML='<small></small><strong></strong><p></p>';
-    const tools=document.createElement('div');tools.className='mur-b151-tools';
-    const rhythm=document.createElement('button');rhythm.type='button';
-    const duration=document.createElement('button');duration.type='button';
-    const sound=document.createElement('button');sound.type='button';
-    tools.append(rhythm,duration,sound);
-    const start=document.createElement('button');start.type='button';start.className='mur-b151-start';
-    const advanced=document.createElement('button');advanced.type='button';advanced.className='mur-b151-advanced';
-    const close=document.createElement('button');close.type='button';close.className='mur-b151-close';
-    close.textContent='✕ Fermer';close.addEventListener('click',()=>page.classList.remove('mur-b151-settings'));
-    page.prepend(head,recommendation,tools,start,advanced,close);
-    function refresh(){
-      const en=localeEN(),k=zone(),key=document.getElementById('protocolSelect')?.value||'365';
-      const cfg=typeof BREATHS!=='undefined'?BREATHS[key]:null;
-      const a=cfg?.i??5,b=cfg?.e??5;
-      const recommended=!!k && key===RECOMMEND[k];
-      page.style.setProperty('--mur-b151-accent',COLORS[k]||'#22c55e');
-      recommendation.querySelector('small').textContent=recommended?(en?'Recommended for your NeuroFlex result':'Recommandé selon votre résultat NeuroFlex'):(en?'Selected breathing rhythm':'Rythme respiratoire sélectionné');
-      recommendation.querySelector('strong').textContent=(en?'Rhythm: ':'Rythme : ')+`${a} s / ${b} s`;
-      recommendation.querySelector('p').textContent=k?(en?'NeuroFlex zone: ':'Zone NeuroFlex : ')+({bleu:en?'Blue':'Bleue',vert:en?'Green':'Verte',orange:'Orange',rouge:en?'Red':'Rouge'}[k]):(en?'Complete your NeuroFlex tests for a recommendation.':'Réalisez vos tests NeuroFlex pour une recommandation.');
-      rhythm.innerHTML=`<b>${a} s / ${b} s</b><small>${en?'Choose rhythm':'Choisir un rythme'}</small>`;
-      duration.innerHTML=`<b>${Math.round((cfg?.duration||300)/60)} min</b><small>${en?'Duration':'Durée'}</small>`;
-      const on=document.getElementById('soundBtn')?.getAttribute('aria-pressed')!=='false';
-      sound.innerHTML=`<b>${on?'♫':'♪'}</b><small>${en?(on?'Sound on':'Muted'):(on?'Son actif':'Silence')}</small>`;
-      start.textContent=en?'▶ Start my breathing':'▶ Démarrer ma respiration';
-      advanced.textContent=en?'Advanced settings':'Réglages avancés';
-      close.textContent=en?'✕ Close':'✕ Fermer';
+    #breath.mur-b152.page.active{display:flex!important;flex-direction:column!important;gap:clamp(7px,1.1dvh,11px)!important;padding:0 0 8px!important;min-height:0!important;height:auto!important;overflow:visible!important;--mur-b152-color:#22c55e}
+    /* Important : ces deux sections sont les cartes NATIVES de index.html. */
+    #breath.mur-b152.page.active > section.card:first-of-type{display:none!important}
+    #breath.mur-b152.page.active > .mur-b152-title{order:0;display:flex;justify-content:space-between;align-items:center;gap:8px;flex:0 0 auto;padding:0 2px}
+    #breath.mur-b152 .mur-b152-title h2{font-size:clamp(20px,5vw,24px)!important;line-height:1.15!important;color:#f8fafc}
+    #breath.mur-b152 .mur-b152-title small{font-size:11px;color:var(--muted,#bdcfde)}
+    #breath.mur-b152.page.active > .mur-b152-recommend{order:1;flex:0 0 auto;margin:0!important;padding:12px!important;display:grid;grid-template-columns:37px minmax(0,1fr);gap:10px;align-items:center;border-left:3px solid var(--mur-b152-color)!important}
+    #breath.mur-b152 .mur-b152-rec-icon{width:36px;height:36px;border-radius:13px;display:grid;place-items:center;background:color-mix(in srgb,var(--mur-b152-color) 18%,rgba(255,255,255,.07));border:1px solid color-mix(in srgb,var(--mur-b152-color) 44%,rgba(255,255,255,.14));color:var(--mur-b152-color)}
+    #breath.mur-b152 .mur-b152-rec-icon svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round}
+    #breath.mur-b152 .mur-b152-rec-top{color:var(--muted,#cbd5e1);font-size:11px;font-weight:750;line-height:1.3}
+    #breath.mur-b152 .mur-b152-rec-main{margin-top:3px;font-size:clamp(16px,4.5vw,19px);line-height:1.18;color:#fff;font-weight:850}
+    #breath.mur-b152 .mur-b152-rec-sub{margin-top:4px;font-size:11px;line-height:1.3;color:var(--muted,#cbd5e1)}
+    /* Le panneau natif de respiration reste ici, AVANT et PENDANT la séance.
+       Priorité renforcée contre l'ancien mode immersif V85. */
+    #breath.mur-b152.page.active > section.card:last-of-type,
+    #breath.mur-b152.page.active.breath-immersive > section.card:last-of-type{
+      order:2!important;position:relative!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;z-index:auto!important;isolation:auto!important;transform:none!important;
+      display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;
+      width:100%!important;height:clamp(174px,30dvh,252px)!important;min-width:0!important;min-height:0!important;max-width:100%!important;max-height:none!important;
+      padding:4px 8px!important;margin:0!important;gap:2px!important;box-sizing:border-box!important;overflow:visible!important;
+      border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
     }
-    function settings(focus){
-      page.classList.add('mur-b151-settings');
-      if(focus==='rhythm')document.getElementById('breathMaster')?.classList.add('open');
-      if(focus==='duration'){
-        const p=document.getElementById('manualPanel');if(p&&!p.classList.contains('open'))window.toggleManual?.();
+    #breath.mur-b152.page.active section.card:last-of-type > .mini-info{display:none!important}
+    #breath.mur-b152.page.active .breath-stage,
+    #breath.mur-b152.page.active.breath-immersive .breath-stage{
+      order:0!important;position:relative!important;display:flex!important;justify-content:center!important;align-items:center!important;
+      flex:1 1 auto!important;width:100%!important;height:100%!important;min-height:0!important;max-height:none!important;overflow:visible!important;margin:0!important;padding:0!important;transform:none!important;inset:auto!important;
+    }
+    #breath.mur-b152.page.active #orb,
+    #breath.mur-b152.page.active.breath-immersive #orb.mur-breath-particle-orb{
+      position:relative!important;inset:auto!important;flex:0 0 auto!important;display:grid!important;place-items:center!important;
+      width:min(47vw,21.5dvh,195px)!important;height:min(47vw,21.5dvh,195px)!important;min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;
+      margin:0!important;padding:0!important;background:transparent!important;box-shadow:none!important;border:0!important;transform-origin:center center!important;
+    }
+    #breath.mur-b152.page.active .breath-stage > svg.ring,
+    #breath.mur-b152.page.active.breath-immersive .breath-stage > svg.ring{
+      position:absolute!important;left:50%!important;top:50%!important;width:min(59vw,28dvh,232px)!important;height:min(59vw,28dvh,232px)!important;
+      transform:translate(-50%,-50%) rotate(-90deg)!important;opacity:.18!important;pointer-events:none!important;
+    }
+    #breath.mur-b152.page.active #phaseText.mur-breath-label-v53,
+    #breath.mur-b152.page.active.breath-immersive #phaseText.mur-breath-label-v53{
+      position:relative!important;inset:auto!important;order:1!important;display:block!important;flex:0 0 auto!important;
+      margin:2px auto!important;min-width:115px!important;width:max-content!important;max-width:96%!important;
+      padding:6px 12px!important;font-size:clamp(14px,3.8vw,18px)!important;line-height:1.2!important;white-space:nowrap!important;text-align:center!important;
+    }
+    #breath.mur-b152.page.active #phaseHint{display:none!important}
+    #breath.mur-b152.page.active .breath-action-row{display:none!important}
+    #breath.mur-b152.page.active .orb-sound-btn{display:none!important}
+    #breath.mur-b152.page.active > .mur-b152-status{order:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;flex:0 0 auto}
+    #breath.mur-b152 .mur-b152-status span{display:block;min-width:0;padding:8px 3px;border:1px solid var(--line,rgba(255,255,255,.16));border-radius:999px;background:rgba(255,255,255,.075);color:#f8fafc;font-size:11px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #breath.mur-b152.page.active > .mur-b152-controls{order:4;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;flex:0 0 auto}
+    #breath.mur-b152 .mur-b152-controls button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:65px;padding:8px 4px;border-radius:16px!important;color:#f8fafc!important;font-size:12px;font-weight:750;line-height:1.15;text-align:center;cursor:pointer}
+    #breath.mur-b152 .mur-b152-controls button svg{width:23px;height:23px;stroke:var(--mur-b152-color);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    #breath.mur-b152 .mur-b152-controls button:focus-visible{outline:2px solid var(--mur-b152-color);outline-offset:2px}
+    #breath.mur-b152.page.active > .mur-b152-start{order:5;display:block;flex:0 0 auto;width:100%;min-height:49px;padding:9px 12px;border-radius:17px!important;font-size:15px;font-weight:900;cursor:pointer}
+    #breath.mur-b152.page.active > .mur-b152-advanced{order:6;flex:0 0 auto;display:block;margin:0 auto;padding:5px 12px;border:0;background:transparent;color:var(--muted,#cddce6);font-size:12px;text-decoration:underline;cursor:pointer}
+    /* Même page, même identité : le plein écran natif ne recouvre plus les choix. */
+    body.breath-immersive-global:has(#breath.mur-b152.active) .tabbar{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+    #breath.mur-b152.page.active.mur-b152-settings > section.card:first-of-type{
+      display:block!important;position:fixed!important;z-index:18000!important;inset:calc(52px + env(safe-area-inset-top)) 12px calc(35px + env(safe-area-inset-bottom))!important;
+      width:min(410px,calc(100vw - 24px))!important;max-width:none!important;height:auto!important;margin:0 auto!important;
+      overflow:auto!important;border:1px solid rgba(148,203,230,.5)!important;background:linear-gradient(180deg,#102a41,#071522)!important;
+      border-radius:22px!important;padding:52px 14px 18px!important;box-shadow:0 0 0 100vmax rgba(3,10,20,.86),0 20px 55px #000b!important;
+    }
+    #breath.mur-b152.page.active .mur-b152-close{display:none}
+    #breath.mur-b152.page.active.mur-b152-settings .mur-b152-close{
+      display:block!important;position:fixed!important;top:calc(62px + env(safe-area-inset-top));right:max(22px,calc((100vw - 390px)/2));z-index:18001!important;
+      padding:7px 12px;min-height:34px;border-radius:12px!important;color:white!important;font-size:12px;font-weight:750;cursor:pointer;
+    }
+    #breath.mur-b152.mur-b152-settings .breath-master{margin-top:5px}
+    #breath.mur-b152.mur-b152-settings .breath-choice{min-height:42px}
+    #breath.mur-b152.page.active .mur-b152-settings:focus-visible{outline:2px solid #fff}
+    @media(max-height:670px){
+      #breath.mur-b152.page.active{gap:5px!important}
+      #breath.mur-b152.page.active > .mur-b152-recommend{padding:8px!important}
+      #breath.mur-b152.page.active > section.card:last-of-type,#breath.mur-b152.page.active.breath-immersive > section.card:last-of-type{height:clamp(125px,24dvh,175px)!important}
+      #breath.mur-b152.page.active #orb,#breath.mur-b152.page.active.breath-immersive #orb.mur-breath-particle-orb{width:min(39vw,18dvh,144px)!important;height:min(39vw,18dvh,144px)!important}
+      #breath.mur-b152 .mur-b152-controls button{min-height:54px;padding:5px 3px}
+      #breath.mur-b152.page.active > .mur-b152-start{min-height:43px}
+    }
+  `;
+
+  const $ = id => document.getElementById(id);
+  const en = () => String(document.documentElement.lang||'fr').toLowerCase().startsWith('en');
+  function zoneKey(){
+    let candidate=null;
+    try { candidate=window.getCurrentNeuroRecommendation?.()?.zone || JSON.parse(localStorage.getItem('murLastNeuro')||'null')?.zone; } catch(_) {}
+    const value=String(candidate?.key||candidate?.name||candidate||'').toLowerCase();
+    if(value.includes('bleu')||value.includes('blue'))return 'bleu';
+    if(value.includes('rouge')||value.includes('red'))return 'rouge';
+    if(value.includes('orange'))return 'orange';
+    if(value.includes('vert')||value.includes('green'))return 'vert';
+    return null;
+  }
+  function nativeBreath(){
+    try { return typeof breath !== 'undefined' && breath ? breath : null; } catch(_) { return null; }
+  }
+  function isActiveSession(page){return page.classList.contains('breath-immersive') || !!$('stopBreathBtn') && !$('stopBreathBtn').hidden;}
+  function init(){
+    const page=$('breath');
+    if(!page || page.dataset.murBreathV152==='1') return;
+    page.dataset.murBreathV152='1';page.classList.add('mur-b152');
+    const style=document.createElement('style');style.id='mur-breath-v152-css';style.textContent=CSS;document.head.appendChild(style);
+    // On réutilise la classe native .card et les boutons native .secondary/.primary.
+    const heading=document.createElement('div');heading.className='mur-b152-title';heading.innerHTML='<h2>Respiration</h2><small>NeuroFlex</small>';
+    const rec=document.createElement('div');rec.className='card mur-b152-recommend';
+    rec.innerHTML=`<span class="mur-b152-rec-icon">${ICONS.waves}</span><div><div class="mur-b152-rec-top"></div><div class="mur-b152-rec-main"></div><div class="mur-b152-rec-sub"></div></div>`;
+    const status=document.createElement('div');status.className='mur-b152-status';status.innerHTML='<span data-b152-status="rhythm"></span><span data-b152-status="duration"></span><span data-b152-status="sound"></span>';
+    const controls=document.createElement('div');controls.className='mur-b152-controls';
+    const buttons=['rhythm','duration','sound'].map((key,i)=>{
+      const button=document.createElement('button');button.type='button';button.className='card mur-b152-control';button.dataset.b152=key;
+      button.innerHTML=ICONS[["rhythm","clock","waves"][i]]+'<span></span>';
+      controls.appendChild(button);return button;
+    });
+    const start=document.createElement('button');start.type='button';start.className='primary mur-b152-start';
+    const advanced=document.createElement('button');advanced.type='button';advanced.className='mur-b152-advanced';
+    const close=document.createElement('button');close.type='button';close.className='secondary mur-b152-close';
+    page.append(heading,rec,status,controls,start,advanced,close);
+
+    // V153 : le véritable interrupteur natif « Intro active » reste visible
+    // sur la page principale, y compris lors de l'introduction vocale.
+    // On DEPLACE le bouton existant (sans duplication de son id ou de son onclick).
+    const introToggle=$('breathIntroToggle');
+    const introRow=document.createElement('div');
+    introRow.className='mur-b153-intro-row';
+    const introCaption=document.createElement('span');
+    introCaption.className='mur-b153-intro-caption';
+    if(introToggle){
+      introToggle.parentNode?.insertBefore(document.createComment('Intro M.U.R. déplacée sur la page Respiration'),introToggle);
+      introRow.appendChild(introToggle);
+      introRow.appendChild(introCaption);
+      page.appendChild(introRow);
+    }
+
+
+    function refresh(){
+      const english=en(),zone=zoneKey(),actual=nativeBreath();
+      const recommendedKey=zone ? RECOMMEND[zone] : null;
+      const recData=recommendedKey && typeof BREATHS!=='undefined'?BREATHS[recommendedKey]:null;
+      const current=actual || (typeof BREATHS!=='undefined'?BREATHS[$('protocolSelect')?.value||'365']:null);
+      const ri=recData?.i??5, re=recData?.e??5;
+      const ai=current?.i??5, ae=current?.e??5;
+      const active=isActiveSession(page);
+      if(introToggle){
+        // La fonction native updateBreathIntroToggle reste seule source de vérité.
+        introCaption.textContent=active && page.classList.contains('breath-voice-only')
+          ? (english?'Voice introduction in progress':'Introduction vocale en cours')
+          : (english?'Voice guidance before the session':'Guidage vocal avant la séance');
+        const nativeLabel=$('breathIntroLabel');
+        if(nativeLabel)nativeLabel.textContent=english
+          ? (introToggle.getAttribute('aria-pressed')==='true'?'Intro on':'Intro off')
+          : (introToggle.getAttribute('aria-pressed')==='true'?'Intro active':'Intro inactive');
       }
+
+      page.style.setProperty('--mur-b152-color',COLORS[zone]||'#22c55e');
+      heading.querySelector('h2').textContent=english?'Breathing':'Respiration';
+      rec.querySelector('.mur-b152-rec-top').textContent=english?'Recommended by NeuroFlex':'Rythme recommandé par NeuroFlex';
+      rec.querySelector('.mur-b152-rec-main').textContent=zone?`${ri} s / ${re} s`:(english?'Complete both tests':'Effectuez vos deux tests');
+      const name=zone?({bleu:english?'Blue':'Bleue',vert:english?'Green':'Verte',orange:'Orange',rouge:english?'Red':'Rouge'})[zone]:null;
+      rec.querySelector('.mur-b152-rec-sub').textContent=name?(english?'Zone ':'Zone ')+name+(actual?.key && actual.key!==recommendedKey?(english?' · Custom rhythm selected':' · Rythme personnalisé sélectionné'):''):(english?'Start with an easy rhythm.':'En attendant, un rythme doux reste disponible.');
+      status.querySelector('[data-b152-status="rhythm"]').textContent=`${ai} s / ${ae} s`;
+      status.querySelector('[data-b152-status="duration"]').textContent=active?($('timeLeft')?.textContent||'--:--'):`${Math.round(Number(current?.duration||300)/60)} min`;
+      const soundOn=$('soundBtn')?.getAttribute('aria-pressed')!=='false';
+      status.querySelector('[data-b152-status="sound"]').textContent=english?(soundOn?'Sound on':'Muted'):(soundOn?'Son actif':'Silence');
+      buttons[0].querySelector('span').textContent=english?'Choose rhythm':'Choisir un rythme';
+      buttons[1].querySelector('span').textContent=english?'Duration':'Durée';
+      buttons[2].querySelector('span').textContent=english?'Sound':'Ambiance sonore';
+      buttons.forEach((b,i)=>{b.disabled=active&&i<2;b.setAttribute('aria-label',b.querySelector('span').textContent);});
+      start.textContent=active?(english?'■ Stop session':'■ Arrêter la séance'):(english?'▶ Start my breathing':'▶ Démarrer ma respiration');
+      advanced.textContent=english?'Advanced settings':'Réglages avancés';
+      advanced.disabled=active;
+      close.textContent=english?'✕ Close':'✕ Fermer';
+      // Le texte natif reste piloté par le moteur pendant la séance.
+      if(!active && $('phaseText'))$('phaseText').textContent=english?'Ready to breathe?':'Prêt à respirer ?';
+    }
+    function openSettings(which){
+      if(isActiveSession(page))return;
+      page.classList.add('mur-b152-settings');
+      if(which==='rhythm')$('breathMaster')?.classList.add('open');
+      if(which==='duration' && !$('manualPanel')?.classList.contains('open'))window.toggleManual?.();
       refresh();
     }
-    rhythm.addEventListener('click',()=>settings('rhythm'));
-    duration.addEventListener('click',()=>settings('duration'));
-    advanced.addEventListener('click',()=>settings('advanced'));
-    sound.addEventListener('click',()=>{document.getElementById('soundBtn')?.click();setTimeout(refresh,0)});
+    function closeSettings(){page.classList.remove('mur-b152-settings');refresh();}
+    buttons[0].addEventListener('click',()=>openSettings('rhythm'));
+    buttons[1].addEventListener('click',()=>openSettings('duration'));
+    buttons[2].addEventListener('click',()=>{ $('soundBtn')?.click();refresh(); });
+    advanced.addEventListener('click',()=>openSettings('advanced'));
+    close.addEventListener('click',closeSettings);
     start.addEventListener('click',()=>{
-      page.classList.remove('mur-b151-settings');
-      /* Le bouton natif conserve les contrôles audio, l'historique et le mode découverte. */
-      document.getElementById('orb')?.click();
+      closeSettings();
+      // Important : passer par la vraie fonction native, jamais par une
+      // fonction de démonstration. Elle garde sons, restrictions et historique.
+      $('orb')?.click();
+      requestAnimationFrame(refresh);
     });
+    // Le clic sur une option native doit refermer les réglages, sans créer une page.
     page.addEventListener('click',event=>{
-      if(event.target.closest?.('.breath-choice,#manualPanel,#manualToggleBtn'))setTimeout(refresh,0);
+      if(event.target.closest?.('.breath-choice')){setTimeout(closeSettings,0);}
+      else if(event.target.closest?.('.manual-duration-stepper,.manual-duration-buttons,#manualPanel,#breathSlider,#manualToggleBtn'))setTimeout(refresh,0);
     });
-    document.addEventListener('keydown',event=>{if(event.key==='Escape')page.classList.remove('mur-b151-settings')});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape' && page.classList.contains('mur-b152-settings'))closeSettings();});
     new MutationObserver(refresh).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
-    const protocol=document.getElementById('protocolSelect');if(protocol)new MutationObserver(refresh).observe(protocol,{attributes:true,attributeFilter:['value']});
-    let prior='';
-    const redraw=()=>{
-      if(!page.isConnected)return;
-      const key=document.getElementById('protocolSelect')?.value||'365';
-      const signature=key+'|'+(document.getElementById('soundBtn')?.getAttribute('aria-pressed')||'')+'|'+(zone()||'');
-      if(signature!==prior){prior=signature;refresh()}
-    };
-    page.addEventListener('pointerdown',redraw,{passive:true});
-    window.addEventListener('storage',redraw);
-    window.setInterval(()=>{if(page.classList.contains('active')&&!page.classList.contains('breath-immersive'))redraw()},1000);
+    new MutationObserver(refresh).observe(page,{attributes:true,attributeFilter:['class']});
+    const nativeSelect=$('protocolSelect');
+    if(nativeSelect)nativeSelect.addEventListener('change',refresh);
+    window.addEventListener('storage',refresh);
+    window.addEventListener('mur-content-loaded',refresh);
+    // Les décomptes sont natifs et ne déclenchent aucun événement JS.
+    let last='';
+    setInterval(()=>{
+      if(!page.classList.contains('active'))return;
+      const b=nativeBreath();const key=JSON.stringify([b?.key,b?.duration,b?.i,b?.e,$('timeLeft')?.textContent,$('soundBtn')?.getAttribute('aria-pressed'),zoneKey(),page.classList.contains('breath-immersive')]);
+      if(key!==last){last=key;refresh();}
+    },500);
     refresh();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+
+
+/* M.U.R. V153 — INTRO ACTIVE SUR LA MEME PAGE RESPIRATION.
+   La commande native est déplacée dans le panneau visible ; ni seconde page,
+   ni duplication de l'interrupteur, ni modification du moteur vocal. */
+(() => {
+  'use strict';
+  window.MUR_BREATH_V153={version:153,intro:'same-page-native-toggle'};
+  const css=document.createElement('style');
+  css.id='mur-breath-v153-intro-css';
+  css.textContent=`
+    #breath.mur-b152.page.active > .mur-b153-intro-row{
+      order:5!important;display:flex!important;align-items:center!important;
+      justify-content:space-between!important;gap:8px!important;
+      width:100%!important;min-width:0!important;padding:4px 10px!important;
+      border:1px solid var(--line,rgba(255,255,255,.16))!important;
+      border-radius:16px!important;background:linear-gradient(180deg,rgba(255,255,255,.105),rgba(255,255,255,.055))!important;
+      box-shadow:var(--shadow,0 10px 30px rgba(0,0,0,.2))!important;
+    }
+    #breath.mur-b152 .mur-b153-intro-row #breathIntroToggle{
+      flex:0 0 auto!important;display:inline-flex!important;visibility:visible!important;
+      margin:0!important;pointer-events:auto!important;min-height:36px!important;
+      background:rgba(255,255,255,.065)!important;
+      border-color:rgba(255,255,255,.2)!important;
+    }
+    #breath.mur-b152 .mur-b153-intro-caption{
+      color:var(--muted,rgba(248,250,252,.68))!important;
+      font-size:11px!important;line-height:1.25!important;text-align:right!important;
+    }
+    #breath.mur-b152.page.active > .mur-b152-start{order:6!important}
+    #breath.mur-b152.page.active > .mur-b152-advanced{order:7!important}
+    @media(max-height:670px){
+      #breath.mur-b152.page.active > .mur-b153-intro-row{padding:3px 7px!important}
+      #breath.mur-b152 .mur-b153-intro-caption{font-size:10px!important}
+    }
+  `;
+  document.head.appendChild(css);
 })();
