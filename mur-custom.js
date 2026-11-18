@@ -1401,13 +1401,13 @@ if (typeof window.installPresentationFallback !== 'function') {
 
 
 /* =============================================================
-   M.U.R. V135 — MENU PETITE SPHERE ROUGE HARMONISEE + LIBELLES ENCADRES
+   M.U.R. V33 — ACCUEIL SPHERE 3D 2400 PARTICULES
    Suppression du bandeau. Appel a l'action agrandi sous la sphère.
    Ajout limité à mur-custom.js.
    ============================================================= */
 (() => {
   'use strict';
-  const COUNT=1200, STYLE_ID='murHomeParticlesV33Style';
+  const COUNT=2400, STYLE_ID='murHomeParticlesV33Style';
   if(window.MUR_HOME_PARTICLES_V33) return;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const points=Array.from({length:COUNT},(_,i)=>{
@@ -1415,21 +1415,6 @@ if (typeof window.installPresentationFallback !== 'function') {
     const a=i*GOLD;
     return {x:rad*Math.cos(a),y,z:rad*Math.sin(a),phase:(i*67%101)/101};
   });
-  // Filet de lumière discret entre points voisins sur la surface de la sphère.
-  // Les liens sont préparés une seule fois, et non recalculés à chaque image.
-  const mesh=[];
-  for(let i=0;i<COUNT;i++){
-    const a=points[i],neighbors=[];
-    const from=Math.max(0,i-68),to=Math.min(COUNT,i+69);
-    for(let j=from;j<to;j++){
-      if(j<=i)continue;
-      const b=points[j];
-      const d2=(a.x-b.x)**2+(a.y-b.y)**2+(a.z-b.z)**2;
-      if(d2<.020)neighbors.push({j,d2});
-    }
-    neighbors.sort((u,v)=>u.d2-v.d2);
-    for(const item of neighbors.slice(0,3))mesh.push([i,item.j]);
-  }
   const palettes={
     bleu:[59,150,247],vert:[85,233,153],orange:[255,165,63],rouge:[255,88,100]
   };
@@ -1511,7 +1496,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     let rgb=null;
     if(s.startsWith('#')){const h=s.slice(1);if(h.length===6)rgb=[0,2,4].map(i=>parseInt(h.slice(i,i+2),16));}
     if(!rgb&&/^rgba?\(/.test(s))rgb=s.match(/[\d.]+/g)?.slice(0,3).map(Number);
-    if(!rgb)rgb=palettes.rouge;
+    if(!rgb)rgb=palettes.vert;
     return rgb;
   }
   function lighten(rgb,factor=.38){
@@ -1556,7 +1541,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     canvas.setAttribute('aria-hidden','true');circle.prepend(canvas);
     const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)return;
     let phase=0,previous=0,raf=0;
-    let lastRgb=null, color=[...palettes.rouge];
+    let lastRgb=null, color=[...palettes.vert];
     const reduce=window.matchMedia('(prefers-reduced-motion: reduce)');
     function draw(t){
       raf=requestAnimationFrame(draw);
@@ -1577,42 +1562,30 @@ if (typeof window.installPresentationFallback !== 'function') {
       }
       const cx=w/2,cy=h/2,R=Math.min(w,h)*.405;
       const glow=ctx.createRadialGradient(cx,cy,R*.12,cx,cy,R*1.45);
-      glow.addColorStop(0,`rgba(${r},${g},${b},.012)`);
-      glow.addColorStop(.70,`rgba(${r},${g},${b},.09)`);
+      glow.addColorStop(0,`rgba(${light[0]},${light[1]},${light[2]},.07)`);
+      glow.addColorStop(.70,`rgba(${r},${g},${b},.18)`);
       glow.addColorStop(1,`rgba(${r},${g},${b},0)`);
       ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
       const ca=Math.cos(phase),sa=Math.sin(phase);
-      const projected=points.map(p=>{
+      const pts=points.map(p=>{
         const xx=p.x*ca-p.z*sa, zz=p.x*sa+p.z*ca;
         const perspective=2.9/(2.9-zz*.26);
         return {x:cx+xx*R*perspective,y:cy+p.y*R*perspective,z:zz,phase:p.phase};
-      });
-      // Filigrane rouge extrêmement fin, visible surtout sur la face avant.
-      ctx.save();
-      ctx.lineWidth=Math.max(.3,Math.min(.52,w/620));
-      ctx.strokeStyle=`rgba(${r},${g},${b},.14)`;
-      ctx.beginPath();
-      for(const [a,b] of mesh){
-        const u=projected[a],v=projected[b];
-        if(u.z < -.10 || v.z < -.10)continue;
-        ctx.moveTo(u.x,u.y);ctx.lineTo(v.x,v.y);
-      }
-      ctx.stroke();ctx.restore();
-      const pts=projected.slice().sort((a,b)=>a.z-b.z);
+      }).sort((a,b)=>a.z-b.z);
       for(const p of pts){
         const depth=(p.z+1)/2;
-        const size=.48+depth*.91;
-        const shimmer=.94+.06*Math.sin(t*.00075+p.phase*TAU);
-        ctx.globalAlpha=(.29+.68*depth)*shimmer;
-        ctx.fillStyle=`rgb(${r},${g},${b})`;
+        const size=.65+depth*1.1;
+        const shimmer=.85+.15*Math.sin(t*.0012+p.phase*TAU);
+        ctx.globalAlpha=(.28+.68*depth)*shimmer;
+        ctx.fillStyle=depth>.8?`rgb(${light[0]},${light[1]},${light[2]})`:`rgb(${r},${g},${b})`;
         ctx.beginPath();ctx.arc(p.x,p.y,size,0,TAU);ctx.fill();
       }
       ctx.globalAlpha=1;
       ctx.save();
       ctx.shadowColor=`rgba(${r},${g},${b},.38)`;
-      ctx.shadowBlur=14;
+      ctx.shadowBlur=28;
       const halo=ctx.createRadialGradient(cx,cy+R*1.02,0,cx,cy+R*1.02,R*.70);
-      halo.addColorStop(0,`rgba(${r},${g},${b},.23)`);
+      halo.addColorStop(0,`rgba(${light[0]},${light[1]},${light[2]},.38)`);
       halo.addColorStop(1,`rgba(${r},${g},${b},0)`);
       ctx.fillStyle=halo;
       ctx.beginPath();
@@ -1620,8 +1593,8 @@ if (typeof window.installPresentationFallback !== 'function') {
       ctx.fill();
       ctx.restore();
       ctx.save();
-      ctx.strokeStyle=`rgba(${r},${g},${b},.12)`;
-      ctx.lineWidth=.65;
+      ctx.strokeStyle=`rgba(${light[0]},${light[1]},${light[2]},.24)`;
+      ctx.lineWidth=1.15;
       ctx.beginPath();
       ctx.ellipse(cx,cy,R*1.08,R*1.08,0,0,TAU);
       ctx.stroke();
@@ -1631,21 +1604,21 @@ if (typeof window.installPresentationFallback !== 'function') {
     window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.MUR_HOME_PARTICLES_V33={version:135,particles:COUNT,monochrome:true,meshSegments:mesh.length,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere',menuTransition:'particle-dispersion-1000ms'};
+  window.MUR_HOME_PARTICLES_V33={particles:COUNT,sphereRotation:'clockwise',band:'removed',cta:'lower-centered-below-sphere',menuTransition:'particle-dispersion-1000ms'};
 })();
 
 
 
 /* =============================================================
-   M.U.R. V142 — FLUX DENSES ET RAFFINES VERS LES 4 SPHERES
-   La sphère de 1200 points envoie des flux de particules vers les 4 sphères périphériques ; le noyau rouge reste au centre.
+   M.U.R. V87 — URGENCE PLUS DENSE
+   La sphère de 2400 points se dissout ; 5 sphères denses naissent du nuage.
    Les clics sont transmis aux commandes natives existantes.
    Aucun changement index.html / tests / respiration / historique.
    ============================================================= */
 (() => {
   'use strict';
-  if(window.MUR_HOME_FIVE_V142)return;
-  const N=1200, PER=850, CENTER_PER=650, OPEN_MS=3700, CLOSE_MS=1800;
+  if(window.MUR_HOME_FIVE_V87)return;
+  const N=2400, PER=350, CENTER_PER=1200, OPEN_MS=2350, CLOSE_MS=1550;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
     {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[239,78,91]},
@@ -1655,7 +1628,8 @@ if (typeof window.installPresentationFallback !== 'function') {
     {key:'stats',fr:'Stats',en:'Stats',icon:'▥',rgb:[218,94,156]}
   ];
   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
-  // Grande sphère 1200 points ; petites sphères densifiées : 650 au centre et 850 par satellite.
+  // Deux populations distinctes : 2400 points de la sphère source et
+  // 1200 points au centre, 350 par sphère périphérique (sans scission).
   const sourcePoints=Array.from({length:N},(_,i)=>{
     const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),a=i*GOLD;
     return {x:r*Math.cos(a),y,z:r*Math.sin(a),seed:((i*67)%1009)/1009};
@@ -1671,10 +1645,10 @@ if (typeof window.installPresentationFallback !== 'function') {
     const circle=document.getElementById('homeCircle');
     const home=document.getElementById('home');
     const nativeMenu=document.querySelector('.mur-orb-menu');
-    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV142)return;
-    circle.dataset.murFiveV142='1';
+    if(!circle||!home||!nativeMenu||circle.dataset.murFiveV87)return;
+    circle.dataset.murFiveV87='1';
     const style=document.createElement('style');
-    style.id='mur-five-spheres-v142-css';
+    style.id='mur-five-spheres-v87-css';
     style.textContent=`
       body.mur-five-open .mur-orb-menu{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
       body.mur-five-open .mur-home-particle-burst{display:none!important}
@@ -1684,10 +1658,10 @@ if (typeof window.installPresentationFallback !== 'function') {
       .mur-five-layer{position:fixed!important;inset:0!important;z-index:10030!important;pointer-events:none!important;display:none!important;overflow:hidden!important}
       .mur-five-layer.is-visible{display:block!important}
       .mur-five-layer canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-      .mur-five-target{position:absolute;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);width:104px;height:104px;border:0;border-radius:50%;color:#fff;background:transparent;cursor:pointer;pointer-events:auto;opacity:0;transition:opacity .25s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-shadow:0 2px 8px #001c31;font-family:inherit;overflow:visible;--mur-accent:rgba(255,255,255,.55)}
+      .mur-five-target{position:absolute;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);width:104px;height:104px;border:0;border-radius:50%;color:#fff;background:transparent;cursor:pointer;pointer-events:auto;opacity:0;transition:opacity .25s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent;text-shadow:0 2px 8px #001c31;font-family:inherit;overflow:visible}
       .mur-five-target.ready{opacity:1}
       .mur-five-target .mur-five-icon{font-size:25px;line-height:1;font-weight:750;filter:drop-shadow(0 0 6px currentColor)}
-      .mur-five-target .mur-five-label{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);display:block;min-width:max-content;max-width:132px;padding:6px 12px;border-radius:12px;background:color-mix(in srgb, var(--mur-accent) 10%, rgba(5,17,32,.92));border:1.35px solid color-mix(in srgb, var(--mur-accent) 90%, white 10%);box-shadow:0 2px 12px rgba(0,0,0,.34),0 0 0 1px rgba(255,255,255,.05) inset,0 0 16px color-mix(in srgb, var(--mur-accent) 25%, transparent);font-size:15px;font-weight:800;letter-spacing:.015em;line-height:1.2;text-align:center;white-space:nowrap;color:#fff;text-shadow:0 1px 4px #000;pointer-events:none}
+      .mur-five-target .mur-five-label{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%);display:block;min-width:max-content;max-width:124px;padding:5px 9px;border-radius:10px;background:rgba(5,17,32,.90);border:1px solid rgba(255,255,255,.24);box-shadow:0 2px 12px rgba(0,0,0,.38);font-size:15px;font-weight:800;letter-spacing:.015em;line-height:1.2;text-align:center;white-space:nowrap;color:#fff;text-shadow:0 1px 4px #000;pointer-events:none}
       .mur-five-target.is-locked{opacity:.50;filter:grayscale(.55)}
       .mur-five-target:focus-visible{outline:2px solid #fff;outline-offset:4px}
       @media(max-width:370px){.mur-five-target .mur-five-label{font-size:13px;padding:4px 7px}.mur-five-target .mur-five-icon{font-size:22px}}
@@ -1702,7 +1676,6 @@ if (typeof window.installPresentationFallback !== 'function') {
       // V73 : aucune icône dans les cinq sphères du menu.
       // Les libellés sous les sphères et les zones cliquables sont conservés.
       b.dataset.key=g.key;
-      b.style.setProperty('--mur-accent',`rgb(${g.rgb.join(',')})`);
       b.innerHTML='<span class="mur-five-label"></span>';
 
       b.addEventListener('pointerdown',e=>e.stopPropagation());
@@ -1727,7 +1700,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const cx=rect.left+rect.width/2;
       const cy=rect.top+rect.height/2;
       const radius=small?33:39;
-      const centerRadius=radius;
+      const centerRadius=small?37:44;
       // Adaptation à la place disponible autour de la sphère sur mobile.
       const edge=Math.min(cx,w-cx,cy,h-cy);
       const orbitR=Math.max(82,Math.min(small?119:147,edge-radius-10));
@@ -1761,26 +1734,26 @@ if (typeof window.installPresentationFallback !== 'function') {
       const color=homeColor();
       const ca=Math.cos(time*.00023),sa=Math.sin(time*.00023);
       const cb=Math.cos(time*.00030),sb=Math.sin(time*.00030);
-      // V140 — Continuité visuelle : les 1 200 points de la grande sphère
-      // convergent progressivement vers le volume de la petite boule centrale.
-      // Un fondu croisé avec la petite sphère évite l'apparition brusque.
-      const shrink=ease(Math.min(1,progress/.86));
-      const handoff=ease(Math.max(0,Math.min(1,(progress-.43)/.43)));
-      if(handoff<1){
+      // Phase 1: la grande sphère demeure à sa place et perd ses points,
+      // en ordre irrégulier, avec un léger envol radial puis extinction.
+      // Aucune division en cinq sous-ensembles.
+      const sourceFade=ease(Math.min(1,progress/.79));
+      if(sourceFade<1){
         ctx.save();ctx.globalCompositeOperation='lighter';
         for(const p of sourcePoints){
+          const threshold=.035+p.seed*.91;
+          const life=(sourceFade-threshold);
+          if(life>.19)continue;
           const xx=p.x*ca-p.z*sa,zz=p.x*sa+p.z*ca;
           const perspective=2.9/(2.9-zz*.26);
-          const move=hr+(centerRadius-hr)*shrink;
-          const x=hx+xx*move*perspective;
-          const y=hy+p.y*move*perspective;
+          const scatter=life>0?Math.min(1,life/.19):0;
+          const drift=1+scatter*(.27+.33*p.seed);
+          const x=hx+xx*hr*perspective*drift;
+          const y=hy+p.y*hr*perspective*drift;
           const depth=(zz+1)/2;
-          const red=GROUPS[0].rgb;
-          const blend=ease(Math.min(1,progress/.72));
-          const rgb=color.map((v,k)=>Math.round(v*(1-blend)+red[k]*blend));
-          ctx.globalAlpha=(.35+.60*depth)*(1-handoff);
-          ctx.fillStyle=`rgb(${rgb.join(',')})`;
-          ctx.beginPath();ctx.arc(x,y,.76+depth*1.21,0,TAU);ctx.fill();
+          ctx.globalAlpha=(.35+.60*depth)*(1-scatter);
+          ctx.fillStyle=`rgb(${color.join(',')})`;
+          ctx.beginPath();ctx.arc(x,y,.85+depth*1.3,0,TAU);ctx.fill();
         }
         ctx.restore();
       }
@@ -1790,7 +1763,7 @@ if (typeof window.installPresentationFallback !== 'function') {
         ctx.save();
         ctx.globalCompositeOperation='lighter';
         const alpha=ease(Math.min(1,Math.max(0,(progress-.25)/.50)));
-        for(let i=0;i<5;i++){
+        for(let i=1;i<5;i++){
           const g=GROUPS[i],p=coords[i],angle=time*.00105+i*.83;
           const orbit=radius+8;
           // Un arc fin, avec une petite tête lumineuse, tourne régulièrement.
@@ -1805,60 +1778,37 @@ if (typeof window.installPresentationFallback !== 'function') {
         }
         ctx.restore();
       }
-      // V142 — Flux plus denses : centre à 650 points, satellites à 850 points,
+      // Condensation indépendante : centre à 1200 points, satellites à 350 points,
       // plus serrés et plus lumineux que dans la V38.
-      const grown=ease(Math.max(0,Math.min(1,(progress-.16)/.74)));
+      const grown=ease(Math.max(0,Math.min(1,(progress-.22)/.73)));
       if(grown>0){
         ctx.save();ctx.globalCompositeOperation='lighter';
         for(const p of miniPoints){
+          const threshold=.07+p.seed*.65;
+          let appear=ease(Math.max(0,Math.min(1,(grown-threshold)/.20)));
+          // La boule rouge abandonne ses propres points. Une fraction du
+          // nuage reste autour d'elle, au lieu d'une boule centrale intacte.
+          const erosion=p.g===0?ease(Math.max(0,Math.min(1,(progress-.50)/.43))):0;
+          const gone=p.g===0&&p.seed<erosion*.53;
+          if(gone)continue;
+          if(appear<=0)continue;
           const g=GROUPS[p.g],c=coords[p.g];
           const xx=p.g===0 ? p.x*cb-p.z*sb : p.x;
           const zz=p.g===0 ? p.x*sb+p.z*cb : p.z;
           const perspective=2.9/(2.9-zz*.22);
           const R=p.g===0?centerRadius:radius;
-          let x,y,appear,depth;
-          if(p.g===0){
-            appear=ease(Math.max(0,Math.min(1,(progress-.42)/.42)));
-            if(appear<=0)continue;
-            const cloudScale=1;
-            x=c[0]+xx*R*perspective*cloudScale;
-            y=c[1]+p.y*R*perspective*cloudScale;
-            depth=(zz+1)/2;
-          }else{
-            // Départs progressifs : un flot fin et continu s'échappe du noyau.
-            const threshold=.075+p.seed*.28+(p.g-1)*.012;
-            const travel=ease(Math.max(0,Math.min(1,(progress-threshold)/.58)));
-            appear=ease(Math.max(0,Math.min(1,(progress-(threshold+.23))/.29)));
-            if(travel<=0)continue;
-            const dirX=(c[0]-hx),dirY=(c[1]-hy);
-            const dirLen=Math.hypot(dirX,dirY)||1;
-            const ux=dirX/dirLen, uy=dirY/dirLen;
-            const px=-uy, py=ux;
-            // Points libérés depuis une large zone de la sphère d'origine.
-            const launchR=hr*(.46+.42*p.seed);
-            const startSide=(p.seed-.5)*hr*.35;
-            const startX=hx+ux*launchR+px*startSide;
-            const startY=hy+uy*launchR+py*startSide;
-            const endX=c[0]+xx*R*perspective;
-            const endY=c[1]+p.y*R*perspective;
-            // Courbe douce, sans spirale ostentatoire ni traits dessinés :
-            // les points font seuls le mouvement et reforment chaque orbe.
-            const ribbon=Math.sin(travel*Math.PI);
-            const harmonic=Math.sin(p.seed*TAU*2.0+travel*Math.PI*1.4);
-            const lateral=(p.seed-.5)*radius*.35*ribbon+harmonic*(5+7*p.seed)*ribbon;
-            x=startX+(endX-startX)*travel+px*lateral;
-            y=startY+(endY-startY)*travel+py*lateral;
-            depth=Math.max(.18,Math.min(1,(zz+1)/2*.85+.15*travel));
-          }
+          const cloudScale=1+(1-appear)*(.62+.46*p.seed);
+          const x=c[0]+xx*R*perspective*cloudScale;
+          const y=c[1]+p.y*R*perspective*cloudScale;
+          const depth=(zz+1)/2;
           // Profondeur et lumière identiques au langage visuel de Respiration :
           // points lointains plus sombres, points proches adoucis.
           const tone=.64+.36*depth;
           const shade=g.rgb.map(v=>Math.round(v*tone));
           const lit=shade.map(v=>Math.round(v+(255-v)*(.05+.19*depth)));
-          const alphaBoost=p.g===0?appear:(.40+.60*Math.max(appear,.25));
-          ctx.globalAlpha=alphaBoost*(.30+.64*depth);
+          ctx.globalAlpha=appear*(.50+.42*depth);
           ctx.fillStyle=`rgb(${lit.join(',')})`;
-          ctx.beginPath();ctx.arc(x,y,.55+depth*1.04,0,TAU);ctx.fill();
+          ctx.beginPath();ctx.arc(x,y,.85+depth*1.28,0,TAU);ctx.fill();
         }
         ctx.restore();
       }
@@ -1902,7 +1852,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V142={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'five-equal-spheres-framed-labels',transition:'dense-soft-particle-ribbons-3700ms'};
+    window.MUR_HOME_FIVE_V87={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'static-four-spheres-no-links-white-breath-no-red-halo'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
@@ -2701,7 +2651,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       const first=page.querySelector('.card');if(first)first.appendChild(box);}
     if(!state){box.innerHTML='<p class="help" style="margin-top:15px">Votre avatar apparaîtra après le test ki.S.</p>';return}
     const status=state.zone?'Ici & Maintenant : zone '+state.zone+'.':'Réalisez Ici & Maintenant pour colorer votre avatar.';
-    box.innerHTML=`<div class="mur-v90-profile" data-mur-v95-open role="button" tabindex="0" aria-label="Voir la carte complète de mon profil ki.S">${avatarHTML(state)}<div><small>MON PROFIL ki.S</small><strong>${state.title}</strong><p>${status}</p><small>${state.legacy?'Ancien résultat : refaites ki.S pour un calcul sur les 15 réponses.':'Profil de fond : évolue lorsque vous refaites ki.S.'}</small><div class="mur-v147-actions"><button type="button" class="mur-v95-open" data-mur-v147-open="recto">Voir le recto</button><button type="button" class="mur-v95-open" data-mur-v147-open="verso">Voir le verso</button></div></div></div>`;
+    box.innerHTML=`<div class="mur-v90-profile" data-mur-v95-open role="button" tabindex="0" aria-label="Voir la carte complète de mon profil ki.S">${avatarHTML(state)}<div><small>MON PROFIL ki.S</small><strong>${state.title}</strong><p>${status}</p><small>${state.legacy?'Ancien résultat : refaites ki.S pour un calcul sur les 15 réponses.':'Profil de fond : évolue lorsque vous refaites ki.S.'}</small><button type="button" class="mur-v95-open" data-mur-v95-open>Voir ma carte ki.S</button></div></div>`;
   }
   window.MUR_KIS_V90_RENDER_AVATAR=renderAvatar;
   // Interception minimale : on garde le moteur et les fonctions de synthèse existants.
@@ -2846,14 +2796,9 @@ if (typeof window.installPresentationFallback !== 'function') {
    e.preventDefault();e.stopImmediatePropagation();
    if(next){if(typeof openTestStep==='function')openTestStep('now');return;}
    if(thumb){
-      // V150 : la miniature déclenche directement le visualiseur 3D.
-      const src=thumb.querySelector('img')?.getAttribute('src')||'';
-      const match=src.match(/images\/kis\/([a-z_]+)-recto(?:-en)?\.(?:png|webp)/i);
-      if(window.MUR_KIS_FULLSCREEN_V146?.open){
-        window.MUR_KIS_FULLSCREEN_V146.open(match?.[1],'recto');
-      }else{
-        console.warn('M.U.R. : visualiseur plein écran Ki.S indisponible');
-      }
+      if(typeof resultStepOpen!=='undefined')resultStepOpen.kis=true;
+      const block=document.getElementById('resultKisBlock');if(block)block.classList.add('open');
+      if(typeof renderResultStepDetails==='function')renderResultStepDetails();
       return;
    }
    const root=flip.closest('.mur-kis-v92-card');if(!root)return;
@@ -3063,15 +3008,10 @@ if (typeof window.installPresentationFallback !== 'function') {
   const img=modal.querySelector('.mur-v97-image');
   function render(){
     if(!current)return;
-    let selected='';try{selected=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||'';}catch(_){}
-    const en=String(selected||document.documentElement.lang||'fr').toLowerCase().startsWith('en');
-    const enNames={pose:'The Grounded',funambule:'The Balancer',fonceur:'The Go-Getter',equilibre:'The Balanced',pose_funambule:'Grounded–Balancer',pose_fonceur:'Grounded–Go-Getter',funambule_fonceur:'Balancer–Go-Getter'};
-    const name=en?(enNames[current.key]||current.name):current.name;
-    img.src='images/kis/'+current.key+'-'+side+(en?'-en':'')+'.webp';
-    img.alt=(en?(side==='recto'?'Front':'Back'):(side==='recto'?'Recto':'Verso'))+' — '+name;
-    modal.querySelector('.mur-v97-title').textContent=name;
-    modal.querySelector('.mur-v97-flip').textContent=en?(side==='recto'?'See back':'See front'):(side==='recto'?'Voir le verso':'Voir le recto');
-    modal.querySelector('[data-v97-back]').textContent=en?'← My profile':'← Mon profil';
+    img.src='images/kis/'+current.key+'-'+side+'.png';
+    img.alt=(side==='recto'?'Recto':'Verso')+' de '+current.name;
+    modal.querySelector('.mur-v97-title').textContent=current.name;
+    modal.querySelector('.mur-v97-flip').textContent=side==='recto'?'Voir le verso':'Voir le recto';
   }
   function open(){
     const k=read();if(!k){return false}
@@ -4821,26 +4761,6 @@ css.textContent=`
  #mur-v129-gate .mur-v129-choice{background:#091c2e;border:1px solid #416279;border-radius:16px;color:#fff;padding:12px 7px;min-height:170px;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;cursor:pointer;box-sizing:border-box;}
  #mur-v129-gate .mur-v129-choice[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 15%,#091c2e);border:2px solid var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
  #mur-v129-gate .mur-v128-icon{width:70px;height:70px;flex:none;}
- /* V131 : images lumineuses autonomes, même emplacement que les pictogrammes d'origine. */
- #mur-v129-gate .mur-v129-choice .mur-v131-logo{
-   display:block!important;width:92px!important;height:92px!important;
-   max-width:100%!important;object-fit:contain!important;flex:none!important;
-   margin:-7px auto -4px;pointer-events:none;
-   filter:drop-shadow(0 0 5px color-mix(in srgb,var(--accent) 23%,transparent));
-   transition:transform .35s ease,filter .35s ease;
- }
- #mur-v129-gate .mur-v129-choice:hover .mur-v131-logo,
- #mur-v129-gate .mur-v129-choice[aria-pressed="true"] .mur-v131-logo{
-   transform:scale(1.045);filter:drop-shadow(0 0 9px var(--accent));
- }
- #testResultView .mur-v129-tag .mur-v131-logo,#exercises .mur-v129-tag .mur-v131-logo{
-   width:34px!important;height:34px!important;object-fit:contain!important;
- }
- #testResultView .mur-v129-side .mur-v131-logo{
-   width:20px!important;height:20px!important;object-fit:contain!important;
- }
- @media(max-width:400px){#mur-v129-gate .mur-v129-choice .mur-v131-logo{width:77px!important;height:77px!important}}
- @media(prefers-reduced-motion:reduce){#mur-v129-gate .mur-v131-logo{transition:none!important}}
  #mur-v129-gate .mur-v129-choice strong{font-size:13px;line-height:1.3;}
  #mur-v129-gate .mur-v129-choice small{color:#b0c5d4;font-size:10px;line-height:1.35;}
  #mur-v129-gate .mur-v129-confirm{width:100%;background:linear-gradient(100deg,#43d694,#35b6c8);color:#07182a;border:0;border-radius:13px;min-height:48px;font-size:15px;font-weight:800;cursor:pointer;}
@@ -4848,8 +4768,6 @@ css.textContent=`
  #mur-v129-gate .mur-v129-note{font-size:10px;color:#a9bfcb;margin-top:10px;line-height:1.45;}
  #testResultView .mur-v129-tag,#exercises .mur-v129-tag{display:inline-flex;align-items:center;gap:6px;border-radius:12px;padding:5px 9px;border:1px solid color-mix(in srgb,var(--accent) 60%,transparent);color:#f1fbff;background:#10283b;font-size:12px;font-weight:750;line-height:1.2;}
  #testResultView .mur-v129-tag .mur-v128-icon,#exercises .mur-v129-tag .mur-v128-icon{width:30px;height:30px;display:block;flex:none;}
- #testResultView .mur-v129-tag.mur-v132-icon-only{padding:3px 5px;min-width:36px;min-height:36px;justify-content:center;box-sizing:border-box;}
- #testResultView .mur-v129-tag.mur-v132-icon-only .mur-v131-logo{width:30px;height:30px;object-fit:contain;}
  #testResultView .mur-v129-side{position:absolute;right:-3px;bottom:-8px;width:24px;height:24px;display:grid;place-items:center;border:1px solid var(--accent);border-radius:50%;background:#081b2d;pointer-events:none;}
  #testResultView .mur-v129-side .mur-v128-icon{width:20px;height:20px;}
  #testResultView .mur-v129-insight,#exercises .mur-v129-exercise-banner{padding:12px;margin:8px 0;border:1px solid color-mix(in srgb,var(--accent) 50%,#547286);border-left:3px solid var(--accent);border-radius:13px;background:rgba(9,28,44,.93);color:#e8f5fa;line-height:1.45;font-size:12px;}
@@ -4860,64 +4778,40 @@ css.textContent=`
  @media(max-width:400px){#mur-v129-gate .mur-v129-panel{padding:14px 10px}#mur-v129-gate .mur-v129-choice{min-height:153px;padding:10px 4px}#mur-v129-gate .mur-v128-icon{width:59px;height:59px}}
  @media(prefers-reduced-motion:reduce){#mur-v129-gate *{animation:none!important;transition:none!important}}
 `;
-css.textContent += `
- #testResultView .mur-v133-info-trigger{cursor:pointer!important;pointer-events:auto!important;touch-action:manipulation;appearance:none;font-family:inherit;}
- #testResultView .mur-v133-info-trigger:focus-visible{outline:2px solid #b9f2ff!important;outline-offset:3px!important;}
- #testResultView .mur-v129-side.mur-v133-info-trigger{border:1px solid var(--accent)!important;padding:0!important;z-index:4!important;}
- #testResultView .mur-v129-side.mur-v133-info-trigger .mur-v131-logo{pointer-events:none;}
- #mur-v133-info{position:fixed!important;inset:0!important;z-index:2147483645!important;display:flex!important;justify-content:center!important;align-items:center!important;background:rgba(2,9,19,.88)!important;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);padding:calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));box-sizing:border-box;}
- #mur-v133-info .mur-v133-panel{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;width:min(100%,460px);max-height:100%;overflow-y:auto;box-sizing:border-box;padding:24px 22px 21px;background:radial-gradient(ellipse at 50% 8%,color-mix(in srgb,var(--mur-v133-accent) 17%,#10293d),#071624 78%);border:1px solid color-mix(in srgb,var(--mur-v133-accent) 60%,#42647b);border-radius:22px;color:#f1faff;box-shadow:0 15px 80px #000b;}
- #mur-v133-info .mur-v133-visual{width:clamp(138px,34vw,194px);height:clamp(138px,34vw,194px);display:grid;place-items:center;flex:none;background:radial-gradient(circle,color-mix(in srgb,var(--mur-v133-accent) 17%,transparent),transparent 72%);filter:drop-shadow(0 0 13px color-mix(in srgb,var(--mur-v133-accent) 35%,transparent));}
- #mur-v133-info .mur-v133-visual .mur-v131-logo{width:100%!important;height:100%!important;max-width:100%;object-fit:contain;animation:murV133Float 4s ease-in-out infinite;}
- #mur-v133-info h2{font-size:clamp(20px,5vw,27px);line-height:1.2;margin:0!important;text-align:center;color:#fff!important;}
- #mur-v133-info h3{align-self:stretch;font-size:15px;color:var(--mur-v133-accent);margin:7px 0 0!important;}
- #mur-v133-info p{align-self:stretch;font-size:13px;line-height:1.58;color:#d9e9f1;margin:0!important;}
- #mur-v133-info .mur-v133-description{font-size:14px;color:#e9f8ff;}
- #mur-v133-info .mur-v133-suggestion{padding:10px 12px;border-left:3px solid var(--mur-v133-accent);background:#0d2739;border-radius:9px;}
- #mur-v133-info .mur-v133-disclaimer{font-size:11px;opacity:.74;}
- #mur-v133-info button{cursor:pointer;font-family:inherit;}
- #mur-v133-info .mur-v133-close{position:absolute;top:10px;right:11px;display:grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid #718d9a;border-radius:50%;background:#122d40;color:#fff;font-size:25px;line-height:1;}
- #mur-v133-info .mur-v133-done{width:100%;margin-top:6px;padding:12px;border:1px solid #72c0cd;background:#17596a;color:#fff;border-radius:12px;font-size:14px;font-weight:750;}
- #mur-v133-info button:focus-visible{outline:2px solid #b7f5ff;outline-offset:3px;}
- @keyframes murV133Float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
- @media(prefers-reduced-motion:reduce){#mur-v133-info .mur-v133-visual .mur-v131-logo{animation:none!important}}
- @media(max-height:660px){#mur-v133-info .mur-v133-panel{padding:12px 16px;gap:7px}#mur-v133-info .mur-v133-visual{width:105px;height:105px}}
-`;
 document.head.appendChild(css);
 function lang(){try{return String(localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||document.documentElement.lang||'fr').toLowerCase().startsWith('en')}catch(_){return false}}
 const txt=(fr,en)=>lang()?en:fr;
 function read(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(_){return null}}
 function zoneKey(o){let z=o?.zone,k=String(z?.key||z?.name||z||'').toLowerCase();if(k.includes('bleu')||k.includes('blue'))return 'bleu';if(k.includes('rouge')||k.includes('red'))return 'rouge';if(k.includes('vert')||k.includes('green'))return 'vert';if(k.includes('orange'))return 'orange';return null;}
 function current(){const n=read('murNow'),info=n?.nuanceV129;if(!info||!DATA[info.choice]||DATA[info.choice].zone!==zoneKey(n)||Number(info.score)!==Number(n.score))return null;return info.choice;}
-  // V131 : les quatre logos sont des fichiers PNG indépendants.
-  // Pour remplacer un logo, conserver son nom dans le dossier mur-logos.
-  const MUR_V131_LOGOS = Object.freeze({
-    blue_calm:'mur-logos/bleu-lotus.png',
-    blue_tired:'mur-logos/bleu-batterie.png',
-    red_tense:'mur-logos/rouge-surtension.png',
-    red_frozen:'mur-logos/rouge-fige-bloque.png'
-  });
-  function icon(choice){
-    const img=document.createElement('img');
-    img.className='mur-v128-icon mur-v131-logo';
-    img.src=MUR_V131_LOGOS[choice];
-    img.alt='';
-    img.setAttribute('aria-hidden','true');
-    img.decoding='async';
-    img.draggable=false;
-    return img;
+  function makeSVG(symbol,color){
+    // Les traits sont construits intégralement avec des points lumineux.
+    // Aucun cercle de fond : ces pictogrammes ne copient pas les orbes.
+    const NS='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox','0 0 80 80');svg.setAttribute('class','mur-v128-icon');svg.setAttribute('aria-hidden','true');
+    const add=(x,y,r=1.45)=>{const dot=document.createElementNS(NS,'circle');dot.setAttribute('cx',x.toFixed(2));dot.setAttribute('cy',y.toFixed(2));dot.setAttribute('r',String(r));dot.setAttribute('fill',color);dot.setAttribute('opacity','.96');svg.appendChild(dot);};
+    const line=(x1,y1,x2,y2,step=3)=>{const length=Math.hypot(x2-x1,y2-y1),n=Math.max(2,Math.ceil(length/step));for(let i=0;i<=n;i++){const q=i/n;add(x1+(x2-x1)*q,y1+(y2-y1)*q)}};
+    const bezier=(a,b,c,d,n=32)=>{for(let i=0;i<=n;i++){const q=i/n,k=1-q;add(k*k*k*a[0]+3*k*k*q*b[0]+3*k*q*q*c[0]+q*q*q*d[0],k*k*k*a[1]+3*k*k*q*b[1]+3*k*q*q*c[1]+q*q*q*d[1],1.35)}};
+    if(symbol==='lotus'){
+      bezier([40,57],[24,43],[29,26],[40,14]);bezier([40,14],[51,26],[56,43],[40,57]);
+      bezier([40,57],[18,56],[11,42],[14,30]);bezier([14,30],[30,32],[37,43],[40,57]);
+      bezier([40,57],[62,56],[69,42],[66,30]);bezier([66,30],[50,32],[43,43],[40,57]);
+      bezier([14,62],[26,66],[54,66],[66,62],22);
+    }else if(symbol==='battery'){
+      line(14,25,63,25);line(14,55,63,55);line(14,25,14,55);line(63,25,63,55);line(66,35,70,35);line(70,35,70,45);line(66,45,70,45);
+      for(let y=32;y<=48;y+=3.3)for(let x=21;x<=28;x+=3.3)add(x,y,1.5);
+    }else if(symbol==='chevrons'){
+      line(13,44,40,17,2.6);line(40,17,67,44,2.6);line(13,63,40,36,2.6);line(40,36,67,63,2.6);
+    }else if(symbol==='pause'){
+      for(let y=20;y<=60;y+=3.2)for(let x of [29,33,47,51])add(x,y,1.4);
+    }
+    return svg;
   }
+  function icon(choice){const d=DATA[choice];return makeSVG(d.symbol,d.color)}
 
 function save(choice){const n=read('murNow');if(!n||!DATA[choice]||zoneKey(n)!==DATA[choice].zone)return;const entry={choice,zone:DATA[choice].zone,score:Number(n.score),chosenAt:new Date().toISOString()};n.nuanceV129=entry;localStorage.setItem('murNow',JSON.stringify(n));localStorage.setItem(KEY,JSON.stringify(entry));}
 function label(choice){const d=DATA[choice];return txt(d.shortFr,d.shortEn)}
-function makeTag(choice,iconOnly=false){
-  const d=DATA[choice],tag=document.createElement(iconOnly?'button':'span');
-  tag.className='mur-v129-tag'+(iconOnly?' mur-v132-icon-only mur-v133-info-trigger':'');
-  tag.style.setProperty('--accent',d.color);tag.appendChild(icon(choice));
-  if(!iconOnly){const name=document.createElement('span');name.textContent=label(choice);tag.appendChild(name);}
-  else{tag.type='button';tag.dataset.murNuanceChoice=choice;tag.setAttribute('aria-label',txt('Voir l’explication : '+d.fr,'View explanation: '+d.en));tag.title=txt('Voir l’explication','View explanation');}
-  return tag;
-}
+function makeTag(choice){const d=DATA[choice],tag=document.createElement('span');tag.className='mur-v129-tag';tag.style.setProperty('--accent',d.color);const name=document.createElement('span');name.textContent=label(choice);tag.append(icon(choice),name);return tag;}
 let pending=false;
 function showGate(zone,commit){
   document.getElementById('mur-v129-gate')?.remove();
@@ -4947,58 +4841,6 @@ function showGate(zone,commit){
   pane.append(over,z,title,description,options,confirm,note);screen.appendChild(pane);document.body.appendChild(screen);
   screen.querySelector('button')?.focus({preventScroll:true});
 }
-/* M.U.R. V133 : petites icônes cliquables dans les résultats Ici & Maintenant et Synthèse. */
-let v133PreviousFocus=null;
-function closeNuanceInfo(){
-  const modal=document.getElementById('mur-v133-info');
-  if(!modal)return;
-  modal.remove();
-  if(v133PreviousFocus?.isConnected)v133PreviousFocus.focus({preventScroll:true});
-  v133PreviousFocus=null;
-}
-function openNuanceInfo(choice){
-  const d=DATA[choice];if(!d)return;
-  closeNuanceInfo();v133PreviousFocus=document.activeElement;
-  const modal=document.createElement('div');modal.id='mur-v133-info';
-  modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
-  modal.style.setProperty('--mur-v133-accent',d.color);
-  const panel=document.createElement('section');panel.className='mur-v133-panel';
-  const close=document.createElement('button');close.type='button';close.className='mur-v133-close';
-  close.textContent='×';close.setAttribute('aria-label',txt('Fermer','Close'));
-  const heading=document.createElement('h2');heading.textContent=txt(d.fr,d.en);heading.id='mur-v133-title';
-  modal.setAttribute('aria-labelledby',heading.id);
-  const visual=document.createElement('div');visual.className='mur-v133-visual';visual.appendChild(icon(choice));
-  const intro=document.createElement('p');intro.className='mur-v133-description';intro.textContent=txt(d.descriptionFr,d.descriptionEn);
-  const guidanceTitle=document.createElement('h3');guidanceTitle.textContent=txt('Ce qui peut vous aider','What may help');
-  const guidance=document.createElement('p');guidance.textContent=txt(d.adviceFr,d.adviceEn);
-  const exercise=document.createElement('p');exercise.className='mur-v133-suggestion';
-  exercise.textContent=txt('Exercice conseillé : '+d.exerciseFr,'Suggested exercise: '+d.exerciseEn);
-  const note=document.createElement('p');note.className='mur-v133-disclaimer';
-  note.textContent=txt('Ces repères décrivent votre ressenti ; ils ne constituent pas un diagnostic médical.',
-    'These descriptions reflect your experience; they are not a medical diagnosis.');
-  const done=document.createElement('button');done.type='button';done.className='mur-v133-done';
-  done.textContent=txt('Retour aux résultats','Back to results');
-  panel.append(close,visual,heading,intro,guidanceTitle,guidance,exercise,note,done);
-  modal.appendChild(panel);document.body.appendChild(modal);
-  close.addEventListener('click',closeNuanceInfo);done.addEventListener('click',closeNuanceInfo);
-  modal.addEventListener('click',e=>{if(e.target===modal)closeNuanceInfo();});
-  close.focus({preventScroll:true});
-}
-document.addEventListener('click',e=>{
-  const target=e.target instanceof Element?e.target:null;
-  const trigger=target?.closest('.mur-v133-info-trigger[data-mur-nuance-choice]');
-  if(!trigger||!trigger.closest('#testResultView'))return;
-  e.preventDefault();e.stopImmediatePropagation();openNuanceInfo(trigger.dataset.murNuanceChoice);
-},true);
-document.addEventListener('keydown',e=>{
-  const modal=document.getElementById('mur-v133-info');if(!modal)return;
-  if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();closeNuanceInfo();return;}
-  if(e.key==='Tab'){
-    const items=[...modal.querySelectorAll('button:not([disabled])')];if(!items.length)return;
-    if(e.shiftKey&&document.activeElement===items[0]){e.preventDefault();items.at(-1).focus();}
-    else if(!e.shiftKey&&document.activeElement===items.at(-1)){e.preventDefault();items[0].focus();}
-  }
-},true);
 function scoreFromSliders(){const ids=['nowEnergy','nowBreath','nowMind','nowBody'],map=[-2,-1,0,1,2];const values=ids.map(id=>Number(document.getElementById(id)?.value));if(values.some(v=>!Number.isInteger(v)||v<0||v>4))return null;return Math.round(values.reduce((a,v)=>a+map[v],0)/8*50);}
 function decideZone(score){if(score<=-22)return 'bleu';if(score>=28)return 'rouge';if(score>=10)return 'orange';return 'vert';}
 function decorateResults(){
@@ -5007,20 +4849,14 @@ function decorateResults(){
   const block=document.getElementById(id);if(!block)continue;
   block.querySelectorAll('.mur-v129-tag,.mur-v129-side').forEach(n=>n.remove());
   if(!choice)continue;
-  const top=block.querySelector('.result-step-top');if(top)top.appendChild(makeTag(choice,true));
-  const side=block.querySelector('.result-step-side');if(side){
-  side.style.position='relative';const sm=document.createElement('button');sm.type='button';
-  sm.className='mur-v129-side mur-v133-info-trigger';sm.dataset.murNuanceChoice=choice;
-  sm.setAttribute('aria-label',txt('Voir l’explication : '+DATA[choice].fr,'View explanation: '+DATA[choice].en));
-  sm.title=txt('Voir l’explication','View explanation');
-  sm.style.setProperty('--accent',DATA[choice].color);sm.appendChild(icon(choice));side.appendChild(sm);
-}
+  const top=block.querySelector('.result-step-top');if(top)top.appendChild(makeTag(choice));
+  const side=block.querySelector('.result-step-side');if(side){side.style.position='relative';const sm=document.createElement('span');sm.className='mur-v129-side';sm.style.setProperty('--accent',DATA[choice].color);sm.appendChild(icon(choice));side.appendChild(sm);}
  }
  for(const id of ['resultNowDetail','resultSynthDetail']){
   const detail=document.getElementById(id);if(!detail)continue;
   detail.querySelectorAll('.mur-v129-insight').forEach(n=>n.remove());
   if(!choice || !detail.parentElement?.closest('.result-step.open'))continue;
-  const d=DATA[choice];const card=document.createElement('section');card.className='mur-v129-insight';card.style.setProperty('--accent',d.color);card.appendChild(makeTag(choice,true));
+  const d=DATA[choice];const card=document.createElement('section');card.className='mur-v129-insight';card.style.setProperty('--accent',d.color);card.appendChild(makeTag(choice));
   for(const content of [txt(d.descriptionFr,d.descriptionEn),txt(d.adviceFr,d.adviceEn),txt('Exercice suggéré : '+d.exerciseFr,'Suggested exercise: '+d.exerciseEn)]){const p=document.createElement('p');p.textContent=content;card.appendChild(p);}
   if(id==='resultSynthDetail'){const k=read('murKis')?.cardKey;if(profiles[k]){const p=document.createElement('p');p.textContent=profiles[k][lang()?1:0];card.appendChild(p);}}
   const btn=document.createElement('button');btn.type='button';btn.textContent=txt('Voir l’exercice conseillé','Open recommended exercise');btn.addEventListener('click',()=>openSuggested(choice));card.appendChild(btn);
@@ -5085,314 +4921,123 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 
-/* ============================================================
-   M.U.R. V145 — 7 cartes Ki.S enrichies, 28 faces WebP, FR/EN
-   Détourage régulier, recto-verso en images nettes et traduction
-   des 7 profils. Aucune modification des scores ni des tests.
-   ============================================================ */
+/* ================================================================
+   M.U.R. V151 — RESPIRATION MOBILE SIMPLIFIEE
+   Interface uniquement : conserve la sphère, le moteur natif, les
+   rythmes, le son, la synchronisation et les limites du mode découverte.
+   ================================================================ */
 (() => {
   'use strict';
-  if(window.MUR_PROFILE_CARDS_V145)return;
-  const NAMES={
-    pose:['Le Posé','The Grounded'],
-    funambule:['Le Funambule','The Balancer'],
-    fonceur:['Le Fonceur','The Go-Getter'],
-    equilibre:['L’Équilibré','The Balanced'],
-    pose_funambule:['Posé–Funambule','Grounded–Balancer'],
-    pose_fonceur:['Posé–Fonceur','Grounded–Go-Getter'],
-    funambule_fonceur:['Funambule–Fonceur','Balancer–Go-Getter']
-  };
-  const KEY_ALIAS={fun_pose:'pose_funambule',fun_fonceur:'funambule_fonceur',fun_equilibre:'funambule'};
-  const base='images/kis/';
-  const language=()=>{
-    // Même ordre de priorité que le sélecteur FR/EN de l'application.
-    let selected='';
-    try{selected=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||'';}catch(_){/* stockage indisponible */}
-    return String(selected||document.documentElement.lang||'fr').toLowerCase().startsWith('en')?'en':'fr';
-  };
-  const file=(key,side,lang)=>base+key+'-'+side+(lang==='en'?'-en':'')+'.webp';
-  const lookup=()=>{
-    let k=null;
-    try{k=(typeof kisResult!=='undefined'&&kisResult)||JSON.parse(localStorage.getItem('murKis')||'null')}catch(_){}
-    const code=String(k?.cardKey||'');
-    if(NAMES[code])return code;
-    const score=Number(k?.score)||0;
-    return score>=8?'pose':score>2?'pose_funambule':score<=-8?'fonceur':score<-2?'funambule_fonceur':'funambule';
-  };
-  function card(key){
-    key=NAMES[key]?key:(KEY_ALIAS[key]||lookup());
-    const lang=language(),name=NAMES[key]?.[lang==='en'?1:0]||key;
-    return `<div class="neuro-profile-card mur-profile-flip-v144" data-mur-kis-profile="${key}" data-mur-kis-lang="${lang}" style="--mur-profile-border:#75d0df">
-      <button type="button" class="mur-profile-toggle-v144" aria-pressed="false" aria-label="${lang==='en'?'Flip profile card':'Retourner la carte de profil'}">
-        <span class="mur-profile-inner-v144">
-          <img class="mur-profile-face-v144 mur-profile-front-v144" src="${file(key,'recto',lang)}" alt="${name} — ${lang==='en'?'front':'recto'}" loading="eager" decoding="async">
-          <img class="mur-profile-face-v144 mur-profile-back-v144" src="${file(key,'verso',lang)}" alt="${name} — ${lang==='en'?'back':'verso'}" loading="eager" decoding="async">
-        </span>
-      </button>
-    </div>`;
+  if (window.MUR_BREATH_SIMPLE_V151) return;
+  window.MUR_BREATH_SIMPLE_V151 = {version:151, scope:'breath-presentation'};
+  const CSS = `
+    #breath.mur-b151:not(.breath-immersive).page.active {display:flex!important;flex-direction:column!important;gap:8px!important;min-height:0!important;padding-bottom:6px!important;overflow:visible!important}
+    #breath.mur-b151:not(.breath-immersive)>section.card:first-of-type{display:none!important}
+    #breath.mur-b151:not(.breath-immersive)>.mur-b151-head{order:0;display:flex;align-items:center;justify-content:space-between;gap:8px;flex:0 0 auto}
+    .mur-b151-head h2{margin:0!important;font-size:clamp(19px,4.8vw,24px)!important;color:#f8fafc!important}
+    .mur-b151-head .mur-b151-info{color:#b9d7f1;font-size:11px}
+    #breath.mur-b151:not(.breath-immersive)>.mur-b151-recommend{order:1;flex:0 0 auto;padding:12px 14px;border-radius:17px;border:1px solid color-mix(in srgb,var(--mur-b151-accent,#22c55e) 65%,white 15%);background:linear-gradient(125deg,rgba(23,49,75,.92),rgba(8,22,37,.90));box-shadow:0 7px 24px rgba(0,0,0,.18);color:white}
+    .mur-b151-recommend small{display:block;color:#d0dfea;font-size:11px;font-weight:650;margin-bottom:4px}
+    .mur-b151-recommend strong{display:block;font-size:clamp(16px,4.5vw,20px);line-height:1.25}
+    .mur-b151-recommend p{font-size:11px;color:#b9cedd;margin:5px 0 0}
+    #breath.mur-b151:not(.breath-immersive)>section.card:last-of-type{order:2!important;flex:1 1 auto!important;min-height:180px!important;max-height:39dvh!important;margin:0!important;padding:4px 7px!important;border:0!important;box-shadow:none!important;background:transparent!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;overflow:visible!important}
+    #breath.mur-b151:not(.breath-immersive)>section.card:last-of-type>.mini-info{display:none!important}
+    #breath.mur-b151:not(.breath-immersive) .breath-stage{height:auto!important;min-height:0!important;flex:1 1 auto!important;width:100%!important;max-height:31dvh!important;display:flex!important;align-items:center!important;justify-content:center!important;margin:0!important}
+    #breath.mur-b151:not(.breath-immersive) .breath-stage .ring{width:min(56vw,27dvh,220px)!important;height:min(56vw,27dvh,220px)!important;opacity:.25!important}
+    #breath.mur-b151:not(.breath-immersive) #orb{width:min(47vw,23dvh,190px)!important;height:min(47vw,23dvh,190px)!important;min-width:0!important;min-height:0!important;border-radius:50%!important}
+    #breath.mur-b151:not(.breath-immersive) #phaseText{margin:5px auto!important;font-size:clamp(15px,4.2vw,19px)!important;min-width:0!important;max-width:94%!important}
+    #breath.mur-b151:not(.breath-immersive) #phaseHint{display:none!important}
+    #breath.mur-b151:not(.breath-immersive) .breath-action-row{display:none!important}
+    #breath.mur-b151:not(.breath-immersive) .orb-sound-btn{display:none!important}
+    #breath.mur-b151:not(.breath-immersive)>.mur-b151-tools{order:3;flex:0 0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+    .mur-b151-tools button{border:1px solid rgba(160,207,235,.31);border-radius:14px;padding:9px 4px;background:linear-gradient(180deg,rgba(38,71,98,.87),rgba(12,36,58,.9));color:#f8fafc;min-height:61px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;line-height:1.2;text-align:center;font-size:11px;cursor:pointer}
+    .mur-b151-tools button b{font-size:clamp(12px,3.4vw,15px);font-weight:750}
+    .mur-b151-tools button small{font-size:10px;color:#b8cdda;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #breath.mur-b151:not(.breath-immersive)>.mur-b151-start{order:4;flex:0 0 auto;display:block!important;width:100%;min-height:52px;border:1px solid rgba(130,208,249,.75);border-radius:999px;background:linear-gradient(120deg,#236aa9,#16436f);color:white;font-size:clamp(14px,4vw,17px);font-weight:800;box-shadow:0 5px 20px rgba(32,136,217,.25);cursor:pointer}
+    #breath.mur-b151:not(.breath-immersive)>.mur-b151-advanced{order:5;flex:0 0 auto;display:block;margin:0 auto;padding:5px 15px;border:0;background:none;color:#b9d9ed;text-decoration:underline;font-size:12px;cursor:pointer}
+    #breath.mur-b151.mur-b151-settings:not(.breath-immersive)>section.card:first-of-type{display:block!important;position:fixed!important;z-index:18000!important;inset:calc(46px + env(safe-area-inset-top)) 10px calc(50px + env(safe-area-inset-bottom))!important;width:min(430px,calc(100vw - 20px))!important;margin:0 auto!important;overflow-y:auto!important;border:1px solid #6f9daf!important;border-radius:20px!important;background:#0b2034!important;padding:14px!important;box-shadow:0 0 0 100vmax rgba(0,5,15,.84),0 20px 60px #000a!important}
+    #breath.mur-b151.mur-b151-settings:not(.breath-immersive)>.mur-b151-close{display:block!important;position:fixed!important;top:calc(51px + env(safe-area-inset-top));right:max(20px,calc((100vw - 410px)/2));z-index:18001!important;min-height:38px;padding:8px 12px;background:#1b5273;color:white;border:1px solid #8cb9d4;border-radius:12px;font-weight:700}
+    #breath.mur-b151>.mur-b151-close{display:none}
+    #breath.mur-b151.breath-immersive>.mur-b151-head,#breath.mur-b151.breath-immersive>.mur-b151-recommend,#breath.mur-b151.breath-immersive>.mur-b151-tools,#breath.mur-b151.breath-immersive>.mur-b151-start,#breath.mur-b151.breath-immersive>.mur-b151-advanced,#breath.mur-b151.breath-immersive>.mur-b151-close{display:none!important}
+    @media(max-height:700px){#breath.mur-b151:not(.breath-immersive)>section.card:last-of-type{min-height:125px!important;max-height:30dvh!important}#breath.mur-b151:not(.breath-immersive) .breath-stage{max-height:24dvh!important}#breath.mur-b151:not(.breath-immersive) #orb{width:min(42vw,19dvh,160px)!important;height:min(42vw,19dvh,160px)!important}#breath.mur-b151:not(.breath-immersive) .breath-stage .ring{width:min(50vw,23dvh,180px)!important;height:min(50vw,23dvh,180px)!important}.mur-b151-tools button{min-height:49px!important;padding:5px 2px!important}}
+  `;
+  function localeEN(){return String(document.documentElement.lang||'fr').toLowerCase().startsWith('en')}
+  function zone(){
+    let candidate=null;
+    try{candidate=window.getCurrentNeuroRecommendation?.()?.zone||JSON.parse(localStorage.getItem('murLastNeuro')||'null')?.zone}catch(_){ }
+    const raw=String(candidate?.key||candidate?.name||candidate||'').toLowerCase();
+    return raw.includes('bleu')||raw.includes('blue')?'bleu':raw.includes('rouge')||raw.includes('red')?'rouge':raw.includes('orange')?'orange':raw.includes('vert')||raw.includes('green')?'vert':null;
   }
-  function installStyle(){
-    if(document.getElementById('mur-profile-v144-css'))return;
-    const st=document.createElement('style');st.id='mur-profile-v144-css';st.textContent=`
-      .neuro-profile-card.mur-profile-flip-v144{display:block!important;width:min(100%,315px)!important;max-width:315px!important;margin:8px auto!important;padding:0!important;border:0!important;overflow:visible!important;background:transparent!important;box-shadow:none!important}
-      .mur-profile-toggle-v144{display:block!important;position:relative!important;width:100%!important;aspect-ratio:3/5!important;margin:0!important;padding:0!important;border:0!important;border-radius:22px!important;background:transparent!important;cursor:pointer!important;perspective:1300px!important}
-      .mur-profile-toggle-v144:focus-visible{outline:3px solid #8ae9df!important;outline-offset:5px!important}
-      .mur-profile-inner-v144{display:block!important;position:absolute!important;inset:0!important;transform-style:preserve-3d!important;transition:transform .72s cubic-bezier(.2,.72,.25,1)!important}
-      .mur-profile-flip-v144.is-flipped .mur-profile-inner-v144{transform:rotateY(180deg)!important}
-      .mur-profile-face-v144{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;border-radius:22px!important;backface-visibility:hidden!important;-webkit-backface-visibility:hidden!important;box-shadow:0 14px 28px rgba(0,0,0,.24)!important}
-      .mur-profile-back-v144{transform:rotateY(180deg)!important}
-      .mur-kis-v92-flip img,.mur-kis-card-image{aspect-ratio:3/5!important;object-fit:contain!important}
-      #testResultView .mur-profile-flip-v144{max-height:min(58dvh,520px)!important;width:min(100%,310px)!important}
-      #testResultView .mur-profile-flip-v144 .mur-profile-toggle-v144{max-height:min(58dvh,520px)!important}
-      @media(max-width:400px){.neuro-profile-card.mur-profile-flip-v144{width:min(100%,270px)!important}}
-      @media(prefers-reduced-motion:reduce){.mur-profile-inner-v144{transition:none!important}}
-    `;document.head.appendChild(st);
-  }
-  function updateOldCardImages(){
-    const lang=language();
-    // La grande carte ki.S native et la miniature utilisent les mêmes WebP.
-    document.querySelectorAll('.mur-kis-v92-card, .mur-kis-flip-v89').forEach(root=>{
-      const raw=root.getAttribute('data-mur-kis-v92')||root.getAttribute('data-mur-kis-card')||lookup();
-      const key=NAMES[raw]?raw:(KEY_ALIAS[raw]||lookup());
-      const img=root.querySelector('img');if(!img)return;
-      const front=file(key,'recto',lang),back=file(key,'verso',lang);
-      const side=(root.dataset.side||root.dataset.murKisSide||'recto');
-      img.dataset.front=front;img.dataset.back=back;
-      const expected=side==='verso'?back:front;
-      if(!img.getAttribute('src')?.endsWith(expected))img.src=expected;
-    });
-    document.querySelectorAll('.mur-kis-v92-mini img').forEach(img=>{
-      const root=img.closest('.mur-kis-v92-mini');
-      let key=lookup();
-      const m=(img.getAttribute('src')||'').match(/images\/kis\/([a-z_]+)-recto/);
-      if(m&&NAMES[m[1]])key=m[1];
-      const expected=file(key,'recto',lang);
-      if(!img.getAttribute('src')?.endsWith(expected))img.src=expected;
-    });
-  }
-  function refresh(){
-    const lang=language();
-    document.querySelectorAll('.neuro-profile-card').forEach(el=>{
-      if(el.classList.contains('mur-profile-flip-v144')&&el.dataset.murKisLang===lang)return;
-      const raw=el.dataset.murKisProfile||el.dataset.murProfile||'';
-      const key=NAMES[raw]?raw:(KEY_ALIAS[raw]||lookup());
-      const flipped=el.classList.contains('is-flipped');
-      const box=document.createElement('div');box.innerHTML=card(key);
-      const next=box.firstElementChild;
-      if(flipped){next.classList.add('is-flipped');next.querySelector('button').setAttribute('aria-pressed','true')}
-      el.replaceWith(next);
-    });
-    updateOldCardImages();
-  }
+  const RECOMMEND={bleu:'boost',vert:'365',orange:'regulate',rouge:'frein'};
+  const COLORS={bleu:'#3b82f6',vert:'#22c55e',orange:'#f59e0b',rouge:'#ef4444'};
   function init(){
-    installStyle();
-    window.profileCardHTML=function(){return card(lookup())};
-    document.addEventListener('click',event=>{
-      const button=event.target.closest?.('.mur-profile-toggle-v144');
-      if(!button)return;
-      const root=button.closest('.mur-profile-flip-v144');
-      if(!root)return;
-      const flip=root.classList.toggle('is-flipped');button.setAttribute('aria-pressed',String(flip));
+    const page=document.getElementById('breath');
+    if(!page||page.classList.contains('mur-b151'))return;
+    const style=document.createElement('style');style.id='mur-breath-simple-v151-css';style.textContent=CSS;document.head.appendChild(style);
+    page.classList.add('mur-b151');
+    const head=document.createElement('div');head.className='mur-b151-head';head.innerHTML='<h2>Respiration</h2><span class="mur-b151-info">M.U.R. · NeuroFlex</span>';
+    const recommendation=document.createElement('div');recommendation.className='mur-b151-recommend';recommendation.innerHTML='<small></small><strong></strong><p></p>';
+    const tools=document.createElement('div');tools.className='mur-b151-tools';
+    const rhythm=document.createElement('button');rhythm.type='button';
+    const duration=document.createElement('button');duration.type='button';
+    const sound=document.createElement('button');sound.type='button';
+    tools.append(rhythm,duration,sound);
+    const start=document.createElement('button');start.type='button';start.className='mur-b151-start';
+    const advanced=document.createElement('button');advanced.type='button';advanced.className='mur-b151-advanced';
+    const close=document.createElement('button');close.type='button';close.className='mur-b151-close';
+    close.textContent='✕ Fermer';close.addEventListener('click',()=>page.classList.remove('mur-b151-settings'));
+    page.prepend(head,recommendation,tools,start,advanced,close);
+    function refresh(){
+      const en=localeEN(),k=zone(),key=document.getElementById('protocolSelect')?.value||'365';
+      const cfg=typeof BREATHS!=='undefined'?BREATHS[key]:null;
+      const a=cfg?.i??5,b=cfg?.e??5;
+      const recommended=!!k && key===RECOMMEND[k];
+      page.style.setProperty('--mur-b151-accent',COLORS[k]||'#22c55e');
+      recommendation.querySelector('small').textContent=recommended?(en?'Recommended for your NeuroFlex result':'Recommandé selon votre résultat NeuroFlex'):(en?'Selected breathing rhythm':'Rythme respiratoire sélectionné');
+      recommendation.querySelector('strong').textContent=(en?'Rhythm: ':'Rythme : ')+`${a} s / ${b} s`;
+      recommendation.querySelector('p').textContent=k?(en?'NeuroFlex zone: ':'Zone NeuroFlex : ')+({bleu:en?'Blue':'Bleue',vert:en?'Green':'Verte',orange:'Orange',rouge:en?'Red':'Rouge'}[k]):(en?'Complete your NeuroFlex tests for a recommendation.':'Réalisez vos tests NeuroFlex pour une recommandation.');
+      rhythm.innerHTML=`<b>${a} s / ${b} s</b><small>${en?'Choose rhythm':'Choisir un rythme'}</small>`;
+      duration.innerHTML=`<b>${Math.round((cfg?.duration||300)/60)} min</b><small>${en?'Duration':'Durée'}</small>`;
+      const on=document.getElementById('soundBtn')?.getAttribute('aria-pressed')!=='false';
+      sound.innerHTML=`<b>${on?'♫':'♪'}</b><small>${en?(on?'Sound on':'Muted'):(on?'Son actif':'Silence')}</small>`;
+      start.textContent=en?'▶ Start my breathing':'▶ Démarrer ma respiration';
+      advanced.textContent=en?'Advanced settings':'Réglages avancés';
+      close.textContent=en?'✕ Close':'✕ Fermer';
+    }
+    function settings(focus){
+      page.classList.add('mur-b151-settings');
+      if(focus==='rhythm')document.getElementById('breathMaster')?.classList.add('open');
+      if(focus==='duration'){
+        const p=document.getElementById('manualPanel');if(p&&!p.classList.contains('open'))window.toggleManual?.();
+      }
+      refresh();
+    }
+    rhythm.addEventListener('click',()=>settings('rhythm'));
+    duration.addEventListener('click',()=>settings('duration'));
+    advanced.addEventListener('click',()=>settings('advanced'));
+    sound.addEventListener('click',()=>{document.getElementById('soundBtn')?.click();setTimeout(refresh,0)});
+    start.addEventListener('click',()=>{
+      page.classList.remove('mur-b151-settings');
+      /* Le bouton natif conserve les contrôles audio, l'historique et le mode découverte. */
+      document.getElementById('orb')?.click();
     });
-    let pending=false;
-    const schedule=()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;refresh()})};
-    new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
-    new MutationObserver(schedule).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
-    window.addEventListener('storage',e=>{if(/lang|murKis/i.test(e.key||''))schedule()});
-    // Quelques écrans choisissent leur langue sans changer l'attribut lang.
-    document.addEventListener('click',e=>{if(e.target.closest?.('[data-lang],[data-language],.lang-switch'))setTimeout(schedule,50)},true);
+    page.addEventListener('click',event=>{
+      if(event.target.closest?.('.breath-choice,#manualPanel,#manualToggleBtn'))setTimeout(refresh,0);
+    });
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')page.classList.remove('mur-b151-settings')});
+    new MutationObserver(refresh).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    const protocol=document.getElementById('protocolSelect');if(protocol)new MutationObserver(refresh).observe(protocol,{attributes:true,attributeFilter:['value']});
+    let prior='';
+    const redraw=()=>{
+      if(!page.isConnected)return;
+      const key=document.getElementById('protocolSelect')?.value||'365';
+      const signature=key+'|'+(document.getElementById('soundBtn')?.getAttribute('aria-pressed')||'')+'|'+(zone()||'');
+      if(signature!==prior){prior=signature;refresh()}
+    };
+    page.addEventListener('pointerdown',redraw,{passive:true});
+    window.addEventListener('storage',redraw);
+    window.setInterval(()=>{if(page.classList.contains('active')&&!page.classList.contains('breath-immersive'))redraw()},1000);
     refresh();
-    window.MUR_PROFILE_CARDS_V145={profiles:7,faces:2,languages:['fr','en'],format:'WebP',refresh:schedule};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
-
-
-/* ============================================================
-   M.U.R. V146 — Ki.S cartes en plein écran sur téléphone.
-   7 profils × recto/verso × FR/EN, sans modifier les tests.
-   La carte occupe tout l'espace disponible, gardant ses proportions.
-   ============================================================ */
-(() => {
-  'use strict';
-  if(window.MUR_KIS_FULLSCREEN_V146)return;
-  const PROFILES={
-    pose:['Le Posé','The Grounded'],
-    funambule:['Le Funambule','The Balancer'],
-    fonceur:['Le Fonceur','The Go-Getter'],
-    equilibre:['L’Équilibré','The Balanced'],
-    pose_funambule:['Posé–Funambule','Grounded–Balancer'],
-    pose_fonceur:['Posé–Fonceur','Grounded–Go-Getter'],
-    funambule_fonceur:['Funambule–Fonceur','Balancer–Go-Getter']
-  };
-  const ALIASES={fun_pose:'pose_funambule',fun_fonceur:'funambule_fonceur'};
-  const lang=()=>{
-    let v='';try{v=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||''}catch(_){}
-    return String(v||document.documentElement.lang||'fr').toLowerCase().startsWith('en')?'en':'fr';
-  };
-  const path=(key,side)=>`images/kis/${key}-${side}${lang()==='en'?'-en':''}.webp`;
-  const mobile=()=>window.matchMedia('(max-width: 700px)').matches;
-  function lookup(){
-    let k=null;
-    try{k=JSON.parse(localStorage.getItem('murKis')||'null')}catch(_){}
-    const key=k?.cardKey;
-    if(PROFILES[key])return key;
-    const score=Number(k?.score)||0;
-    return score>=8?'pose':score>2?'pose_funambule':score<=-8?'fonceur':score<-2?'funambule_fonceur':'funambule';
-  }
-  const st=document.createElement('style');st.id='mur-kis-fullscreen-v146-css';
-  st.textContent=`
-    #mur-kis-fullscreen-v146[hidden]{display:none!important}
-    #mur-kis-fullscreen-v146{position:fixed!important;inset:0!important;z-index:2147483646!important;display:flex!important;flex-direction:column!important;align-items:center!important;box-sizing:border-box!important;background:#041323!important;color:#eefaff!important;width:100vw!important;width:100dvw!important;height:100vh!important;height:100dvh!important;padding:calc(4px + env(safe-area-inset-top,0px)) 5px calc(5px + env(safe-area-inset-bottom,0px))!important;overflow:hidden!important}
-    #mur-kis-fullscreen-v146 .mur-kis-fs-header{box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;width:100%;min-height:43px;gap:8px;padding:0 4px;flex:0 0 auto}
-    #mur-kis-fullscreen-v146 .mur-kis-fs-title{font-size:14px;min-width:0;max-width:65%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
-    #mur-kis-fullscreen-v146 .mur-kis-fs-close,#mur-kis-fullscreen-v146 .mur-kis-fs-flip{border:1px solid #508d9f;border-radius:12px;background:#123b51;color:#f4fbff;font:600 14px inherit;min-height:39px;padding:8px 14px;cursor:pointer;touch-action:manipulation}
-    #mur-kis-fullscreen-v146 .mur-kis-fs-card{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-height:0;min-width:0;width:100%;padding:0;border:0;background:transparent;cursor:pointer;touch-action:manipulation;perspective:1300px}
-    /* V148 : deux faces préchargées dans un véritable support 3D. */
-    #mur-kis-fullscreen-v146 .mur-kis-fs-rotor{position:relative;display:block;height:100%;max-height:100%;width:auto;max-width:100%;aspect-ratio:3/5;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform 760ms cubic-bezier(.22,.7,.18,1);transform:rotateY(0deg);will-change:transform}
-    #mur-kis-fullscreen-v146 .mur-kis-fs-card.is-verso .mur-kis-fs-rotor{transform:rotateY(180deg)}
-    #mur-kis-fullscreen-v146 .mur-kis-fs-card.is-initializing .mur-kis-fs-rotor{transition:none!important}
-    #mur-kis-fullscreen-v146 .mur-kis-fs-face{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;aspect-ratio:3/5;backface-visibility:hidden;-webkit-backface-visibility:hidden;filter:drop-shadow(0 6px 12px rgba(0,0,0,.24));border:0;background:transparent}
-    #mur-kis-fullscreen-v146 .mur-kis-fs-face--back{transform:rotateY(180deg)}
-    #mur-kis-fullscreen-v146 .mur-kis-fs-card:focus-visible{outline:2px solid #7de3ed;outline-offset:3px}
-    @media(max-width:700px){#mur-kis-fullscreen-v146 .mur-kis-fs-rotor{width:min(100%,calc((100dvh - 112px)*.6));height:auto;max-height:100%}}
-
-    #mur-kis-fullscreen-v146 .mur-kis-fs-footer{display:flex;align-items:center;justify-content:center;flex:none;width:100%;min-height:43px}
-    #mur-kis-fullscreen-v146 button:focus-visible{outline:2px solid #7de3ed;outline-offset:2px}
-    @keyframes mur-kis-fs-enter{from{opacity:.5;transform:rotateY(-9deg) scale(.98)}to{opacity:1;transform:rotateY(0deg) scale(1)}}
-    @media(prefers-reduced-motion:reduce){#mur-kis-fullscreen-v146 .mur-kis-fs-rotor{transition:none!important}}
-  `;
-  document.head.appendChild(st);
-  const overlay=document.createElement('section');
-  overlay.id='mur-kis-fullscreen-v146';overlay.hidden=true;
-  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
-  overlay.innerHTML=`<div class="mur-kis-fs-header"><button type="button" class="mur-kis-fs-close" data-kis-fs-close>←</button><strong class="mur-kis-fs-title"></strong><span aria-hidden="true"></span></div><button type="button" class="mur-kis-fs-card is-initializing" data-kis-fs-flip aria-label="Retourner la carte"><span class="mur-kis-fs-rotor"><img class="mur-kis-fs-face mur-kis-fs-face--front" alt="" decoding="async"><img class="mur-kis-fs-face mur-kis-fs-face--back" alt="" decoding="async"></span></button><div class="mur-kis-fs-footer"><button type="button" class="mur-kis-fs-flip" data-kis-fs-flip></button></div>`;
-  const pictureFront=overlay.querySelector('.mur-kis-fs-face--front');
-  const pictureBack=overlay.querySelector('.mur-kis-fs-face--back');
-  const cardButton=overlay.querySelector('.mur-kis-fs-card');
-  const title=overlay.querySelector('.mur-kis-fs-title');
-  const flipLabel=overlay.querySelector('.mur-kis-fs-flip');
-  const closeButton=overlay.querySelector('.mur-kis-fs-close');
-  let active=null,side='recto',restoreFocus=null,oldOverflow='';
-  function paint(){
-    if(!active)return;
-    const en=lang()==='en',name=PROFILES[active][en?1:0];
-    const front=path(active,'recto'),back=path(active,'verso');
-    if(pictureFront.getAttribute('src')!==front)pictureFront.src=front;
-    if(pictureBack.getAttribute('src')!==back)pictureBack.src=back;
-    pictureFront.alt=`${name} — ${en?'front':'recto'}`;
-    pictureBack.alt=`${name} — ${en?'back':'verso'}`;
-    pictureFront.setAttribute('aria-hidden',String(side==='verso'));
-    pictureBack.setAttribute('aria-hidden',String(side==='recto'));
-    cardButton.classList.toggle('is-verso',side==='verso');
-    title.textContent=name;
-    closeButton.textContent=en?'← Back':'← Retour';
-    flipLabel.textContent=en?(side==='recto'?'See back':'See front'):(side==='recto'?'Voir le verso':'Voir le recto');
-    overlay.querySelector('.mur-kis-fs-card').setAttribute('aria-label',en?'Flip profile card':'Retourner la carte de profil');
-    overlay.setAttribute('aria-label',name);
-  }
-  function open(key,startingSide){
-    if(!PROFILES[key])key=lookup();
-    active=key;side=startingSide==='verso'?'verso':'recto';restoreFocus=document.activeElement;
-    oldOverflow=document.body.style.overflow;
-    cardButton.classList.add('is-initializing');
-    overlay.hidden=false;document.body.style.overflow='hidden';paint();
-    // No flip on first opening, even when opening the verso directly.
-    requestAnimationFrame(()=>requestAnimationFrame(()=>cardButton.classList.remove('is-initializing')));
-    closeButton.focus({preventScroll:true});
-  }
-  function close(){
-    overlay.hidden=true;active=null;document.body.style.overflow=oldOverflow;
-    if(restoreFocus?.isConnected)restoreFocus.focus({preventScroll:true});
-  }
-  function flip(){if(!active)return;side=side==='recto'?'verso':'recto';paint();}
-  function init(){if(!overlay.isConnected)document.body.appendChild(overlay)}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-  // La capture sur window précède les anciennes interceptions sur document.
-  window.addEventListener('click',e=>{
-    if(!overlay.hidden){
-      if(e.target.closest?.('[data-kis-fs-close]')){e.preventDefault();e.stopImmediatePropagation();close();return}
-      if(e.target.closest?.('[data-kis-fs-flip]')){e.preventDefault();e.stopImmediatePropagation();flip();return}
-      return;
-    }
-    const profileControl=e.target.closest?.('#mur-v90-profile-card [data-mur-v147-open]');
-    // Dans Mon profil, afficher la face demandée sur mobile et ordinateur.
-    if(profileControl){
-      e.preventDefault();e.stopImmediatePropagation();
-      open(lookup(),profileControl.dataset.murV147Open||'recto');
-      return;
-    }
-    // V149 : depuis Résultat NeuroFlex > Profil Ki.S, la miniature
-    // ouvre immédiatement le plein écran, avant le gestionnaire V92.
-    // Fonctionne sur téléphone ET ordinateur, sans déployer le bloc intermédiaire.
-    const neuroflexMini=e.target.closest?.('#resultKisBlock [data-mur-v92-mini]');
-    if(neuroflexMini){
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      open(lookup(),'recto');
-      return;
-    }
-    if(!mobile())return;
-    const trigger=e.target.closest?.('.mur-kis-v92-flip,.mur-profile-toggle-v144,#mur-v90-profile-card [data-mur-v95-open],.mur-kis-card-image');
-    if(!trigger)return;
-    const root=trigger.closest('[data-mur-kis-v92],[data-mur-kis-profile],[data-mur-kis-card]');
-    const raw=root?.dataset.murKisV92||root?.dataset.murKisProfile||root?.dataset.murKisCard||lookup();
-    const key=PROFILES[raw]?raw:(ALIASES[raw]||lookup());
-    const start=root?.dataset.side||'recto';
-    e.preventDefault();e.stopImmediatePropagation();open(key,start);
-  },true);
-  document.addEventListener('keydown',e=>{
-    if(overlay.hidden)return;
-    if(e.key==='Escape'){e.preventDefault();close()}
-    else if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();flip()}
-  });
-  new MutationObserver(()=>{if(!overlay.hidden)paint()}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
-  document.addEventListener('click',e=>{if(!overlay.hidden&&e.target.closest?.('[data-lang],[data-language],.lang-switch'))requestAnimationFrame(paint)},true);
-  window.MUR_KIS_FULLSCREEN_V146={open,close,flip,languages:['fr','en'],profiles:7,flip3D:true,version:148};
-})();
-
-
-/* M.U.R. V147 — Profil Ki.S : accès explicite au recto ET au verso. */
-(() => {
-  'use strict';
-  if(window.MUR_KIS_PROFILE_SIDES_V147)return;
-  const style=document.createElement('style');
-  style.id='mur-kis-profile-sides-v147';
-  style.textContent=`
-    #mur-v90-profile-card .mur-v147-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-    #mur-v90-profile-card .mur-v147-actions .mur-v95-open{margin:0!important;flex:1 1 130px;white-space:nowrap}
-    @media(max-width:420px){#mur-v90-profile-card .mur-v147-actions{flex-direction:column}#mur-v90-profile-card .mur-v147-actions .mur-v95-open{flex-basis:auto}}
-  `;
-  document.head.appendChild(style);
-  const en=()=>{
-    let v='';try{v=localStorage.getItem('mur-ui-language')||localStorage.getItem('murLanguage')||localStorage.getItem('murLang')||''}catch(_){}
-    return String(v||document.documentElement.lang||'fr').toLowerCase().startsWith('en');
-  };
-  function translate(){
-    document.querySelectorAll('#mur-v90-profile-card [data-mur-v147-open]').forEach(button=>{
-      const back=button.dataset.murV147Open==='verso';
-      button.textContent=en()?(back?'See back':'See front'):(back?'Voir le verso':'Voir le recto');
-      button.setAttribute('aria-label',button.textContent+' — Ki.S');
-    });
-  }
-  let scheduled=false;
-  function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;translate()})}
-  const start=()=>{
-    translate();
-    const root=document.getElementById('mur-v90-profile-card');
-    if(root)new MutationObserver(schedule).observe(root,{childList:true,subtree:true});
-    // Le panneau Profil est reconstruit après certains tests : surveiller son conteneur.
-    const settings=document.getElementById('settings');
-    if(settings)new MutationObserver(()=>{
-      const profile=document.getElementById('mur-v90-profile-card');
-      if(profile&&!profile.dataset.murV147Observed){profile.dataset.murV147Observed='1';new MutationObserver(schedule).observe(profile,{childList:true,subtree:true})}
-      schedule();
-    }).observe(settings,{childList:true});
-    new MutationObserver(schedule).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
-    document.addEventListener('click',e=>{if(e.target.closest?.('[data-lang],[data-language],.lang-switch'))setTimeout(schedule,60)},true);
-  };
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
-  window.MUR_KIS_PROFILE_SIDES_V147={version:147,faces:['recto','verso'],languages:['fr','en']};
-})();
-
-/* V150 : miniature NeuroFlex reliée directement au visualiseur V148. */
