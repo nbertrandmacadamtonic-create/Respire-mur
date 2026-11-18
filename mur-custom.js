@@ -1757,58 +1757,51 @@ if (typeof window.installPresentationFallback !== 'function') {
         }
         ctx.restore();
       }
-      // V50 : quatre fins arcs lumineux orbitent AUTOUR des petites sphères fixes.
-      // La sphère elle-même et l'anneau global ne tournent plus.
-      if(progress>.25){
-        ctx.save();
-        ctx.globalCompositeOperation='lighter';
-        const alpha=ease(Math.min(1,Math.max(0,(progress-.25)/.50)));
-        for(let i=1;i<5;i++){
-          const g=GROUPS[i],p=coords[i],angle=time*.00105+i*.83;
-          const orbit=radius+8;
-          // Un arc fin, avec une petite tête lumineuse, tourne régulièrement.
-          ctx.lineWidth=1.65;
-          ctx.lineCap='round';
-          ctx.strokeStyle=`rgba(${g.rgb.join(',')},${(.85*alpha).toFixed(3)})`;
-          ctx.beginPath();ctx.arc(p[0],p[1],orbit,angle,angle+Math.PI*.66);ctx.stroke();
-          ctx.fillStyle=`rgba(${g.rgb.join(',')},${alpha.toFixed(3)})`;
-          ctx.beginPath();
-          ctx.arc(p[0]+orbit*Math.cos(angle+Math.PI*.66),p[1]+orbit*Math.sin(angle+Math.PI*.66),2.25,0,TAU);
-          ctx.fill();
-        }
-        ctx.restore();
-      }
-      // Condensation indépendante : centre à 1200 points, satellites à 350 points,
-      // plus serrés et plus lumineux que dans la V38.
+      // V159 : même matière lumineuse que la sphère Respiration.
+      // Les satellites gardent leurs couleurs et leurs positions fixes.
       const grown=ease(Math.max(0,Math.min(1,(progress-.22)/.73)));
       if(grown>0){
-        ctx.save();ctx.globalCompositeOperation='lighter';
+        ctx.save();
+        const angle=time*.00016,ca2=Math.cos(angle),sa2=Math.sin(angle);
+        const tilt=.15,ct=Math.cos(tilt),st=Math.sin(tilt);
+        // Halo diffus dans chaque petite sphère, semblable à Respiration.
+        for(let i=0;i<GROUPS.length;i++){
+          const c=coords[i],radiusLocal=i===0?centerRadius:radius,g=GROUPS[i];
+          const glow=ctx.createRadialGradient(c[0],c[1],radiusLocal*.03,c[0],c[1],radiusLocal*1.32);
+          glow.addColorStop(0,`rgba(${g.rgb.join(',')},${(.14*grown).toFixed(3)})`);
+          glow.addColorStop(.55,`rgba(${g.rgb.join(',')},${(.045*grown).toFixed(3)})`);
+          glow.addColorStop(1,`rgba(${g.rgb.join(',')},0)`);
+          ctx.fillStyle=glow;
+          ctx.beginPath();ctx.arc(c[0],c[1],radiusLocal*1.32,0,TAU);ctx.fill();
+        }
+        ctx.globalCompositeOperation='lighter';
+        const rendered=[];
         for(const p of miniPoints){
           const threshold=.07+p.seed*.65;
-          let appear=ease(Math.max(0,Math.min(1,(grown-threshold)/.20)));
-          // La boule rouge abandonne ses propres points. Une fraction du
-          // nuage reste autour d'elle, au lieu d'une boule centrale intacte.
+          const appear=ease(Math.max(0,Math.min(1,(grown-threshold)/.20)));
+          // L'ancienne dissolution centrale est conservée, sans gêner les clics.
           const erosion=p.g===0?ease(Math.max(0,Math.min(1,(progress-.50)/.43))):0;
-          const gone=p.g===0&&p.seed<erosion*.53;
-          if(gone)continue;
+          if(p.g===0&&p.seed<erosion*.53)continue;
           if(appear<=0)continue;
           const g=GROUPS[p.g],c=coords[p.g];
-          const xx=p.g===0 ? p.x*cb-p.z*sb : p.x;
-          const zz=p.g===0 ? p.x*sb+p.z*cb : p.z;
-          const perspective=2.9/(2.9-zz*.22);
+          const xx=p.x*ca2-p.z*sa2,zz=p.x*sa2+p.z*ca2;
+          const yy=p.y*ct-zz*st,depthZ=p.y*st+zz*ct;
+          const perspective=2.8/(2.8-depthZ*.28);
           const R=p.g===0?centerRadius:radius;
           const cloudScale=1+(1-appear)*(.62+.46*p.seed);
           const x=c[0]+xx*R*perspective*cloudScale;
-          const y=c[1]+p.y*R*perspective*cloudScale;
-          const depth=(zz+1)/2;
-          // Profondeur et lumière identiques au langage visuel de Respiration :
-          // points lointains plus sombres, points proches adoucis.
-          const tone=.64+.36*depth;
-          const shade=g.rgb.map(v=>Math.round(v*tone));
-          const lit=shade.map(v=>Math.round(v+(255-v)*(.05+.19*depth)));
-          ctx.globalAlpha=appear*(.50+.42*depth);
-          ctx.fillStyle=`rgb(${lit.join(',')})`;
-          ctx.beginPath();ctx.arc(x,y,.85+depth*1.28,0,TAU);ctx.fill();
+          const y=c[1]+yy*R*perspective*cloudScale;
+          const depth=(depthZ+1)/2;
+          const near=g.rgb.map(v=>Math.round(v+(255-v)*.48));
+          const far=g.rgb.map(v=>Math.round(v*.90));
+          const lit=far.map((v,i)=>Math.round(v+(near[i]-v)*depth));
+          rendered.push({x,y,z:depthZ,alpha:appear*(.24+.72*depth),size:.80+depth*.72+p.seed*.18,rgb:lit});
+        }
+        rendered.sort((a,b)=>a.z-b.z);
+        for(const p of rendered){
+          ctx.globalAlpha=p.alpha;
+          ctx.fillStyle=`rgb(${p.rgb.join(',')})`;
+          ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.fill();
         }
         ctx.restore();
       }
@@ -1852,7 +1845,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V87={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'static-four-spheres-no-links-white-breath-no-red-halo'};
+    window.MUR_HOME_FIVE_V87={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'breathing-style-five-orbs-no-links'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
@@ -5729,6 +5722,167 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       clean();
     }
   }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
+  else install();
+})();
+
+
+/* ============================================================
+   M.U.R. V158 — SPHERE D'ACCUEIL STYLE RESPIRATION
+   Reprend le langage visuel de la sphère Respiration sur l'accueil,
+   sans modifier l'ouverture du menu radial ni les actions natives.
+   ============================================================ */
+(() => {
+  'use strict';
+  if (window.MUR_HOME_RESP_SPHERE_V158) return;
+  window.MUR_HOME_RESP_SPHERE_V158 = true;
+
+  const COUNT = 280;
+  const GOLD = Math.PI * (3 - Math.sqrt(5));
+  const TAU = Math.PI * 2;
+  const POINTS = Array.from({length: COUNT}, (_, i) => {
+    const y = 1 - 2 * (i + .5) / COUNT;
+    const a = i * GOLD;
+    const r = Math.sqrt(Math.max(0, 1 - y * y));
+    return {x: r * Math.cos(a), y, z: r * Math.sin(a), seed: (i % 19) / 19};
+  });
+  const fallbackKis = {
+    pose: '#538fc6',
+    pose_funambule: '#4ea7b2',
+    funambule: '#5baf96',
+    pose_fonceur: '#7a87c9',
+    funambule_fonceur: '#d0a067',
+    fonceur: '#c96e72',
+    equilibre: '#5baf96'
+  };
+
+  function parseRGB(str){
+    const s = String(str || '').trim();
+    if (/^#[0-9a-f]{6}$/i.test(s)) return [1,3,5].map(i => parseInt(s.slice(i, i + 2), 16));
+    if (/^#[0-9a-f]{3}$/i.test(s)) return [1,2,3].map(i => parseInt(s[i] + s[i], 16));
+    if (/^rgba?\(/i.test(s)) return (s.match(/[\d.]+/g) || []).slice(0,3).map(Number);
+    return null;
+  }
+  function clamp(v){ return Math.max(0, Math.min(255, Math.round(v))); }
+  function tint(rgb,f){ return rgb.map(v => clamp(v + (255 - v) * f)); }
+  function shade(rgb,f){ return rgb.map(v => clamp(v * (1 - f))); }
+  function homeBaseColor(circle){
+    let css = circle?.style?.getPropertyValue('--home-color')?.trim() || '';
+    if (!css && circle) css = getComputedStyle(circle).getPropertyValue('--home-color').trim();
+    const parsed = parseRGB(css);
+    if (parsed && parsed.every(Number.isFinite)) return parsed;
+    try {
+      const kis = JSON.parse(localStorage.getItem('murKis') || 'null') || {};
+      const picked = kis.cardKey && fallbackKis[kis.cardKey] ? parseRGB(fallbackKis[kis.cardKey]) : null;
+      if (picked && picked.every(Number.isFinite)) return picked;
+    } catch (_) {}
+    return [85,233,153];
+  }
+
+  function install(){
+    const home = document.getElementById('home');
+    const circle = document.getElementById('homeCircle');
+    if (!home || !circle || circle.querySelector('.mur-home-resp-v158-canvas')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mur-home-resp-v158-css';
+    style.textContent = `
+      #home #homeCircle.mur-home-2400 .mur-home-2400-canvas{opacity:0!important;}
+      #home #homeCircle.mur-home-resp-v158{
+        position:relative!important; isolation:isolate!important; overflow:hidden!important;
+        background:transparent!important; border:0!important; box-shadow:none!important;
+      }
+      #home #homeCircle.mur-home-resp-v158 .mur-home-resp-v158-canvas{
+        position:absolute!important; inset:0!important; width:100%!important; height:100%!important;
+        pointer-events:none!important; border-radius:50%!important; z-index:2!important;
+      }
+      #home #homeCircle.mur-home-resp-v158::before{
+        content:''; position:absolute; inset:13%; border-radius:50%; pointer-events:none; z-index:1;
+        background:radial-gradient(circle at 48% 42%, rgba(255,255,255,.16), rgba(255,255,255,.03) 44%, rgba(255,255,255,0) 74%);
+        filter:blur(1px);
+      }
+      #home #homeCircle.mur-home-resp-v158::after{
+        content:''; position:absolute; inset:-7%; border-radius:50%; pointer-events:none; z-index:1;
+        background:radial-gradient(circle, rgba(126,232,186,.10), rgba(126,232,186,0) 67%);
+        opacity:.92;
+      }
+    `;
+    document.head.appendChild(style);
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'mur-home-resp-v158-canvas';
+    canvas.setAttribute('aria-hidden', 'true');
+    circle.prepend(canvas);
+    circle.classList.add('mur-home-resp-v158');
+    const ctx = canvas.getContext('2d', {alpha:true});
+    if (!ctx) return;
+
+    let displayColor = null;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+
+    function render(ts){
+      requestAnimationFrame(render);
+      if (document.hidden || !home.classList.contains('active') || document.body.classList.contains('mur-five-open')) return;
+      const size = Math.max(64, circle.offsetWidth || 0);
+      if (!size) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const physical = Math.round(size * dpr);
+      if (canvas.width !== physical || canvas.height !== physical) {
+        canvas.width = physical;
+        canvas.height = physical;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, size, size);
+
+      displayColor = homeBaseColor(circle);
+      const near = tint(displayColor, 0.48);
+      const far = shade(displayColor, 0.10);
+      const center = size / 2;
+      const radius = size * 0.40;
+      const angle = reduced?.matches ? 0.34 : ts * 0.00016;
+      const ca = Math.cos(angle), sa = Math.sin(angle);
+      const tilt = 0.15;
+      const ct = Math.cos(tilt), st = Math.sin(tilt);
+
+      const glow = ctx.createRadialGradient(center, center, size * 0.02, center, center, size * 0.50);
+      glow.addColorStop(0, `rgba(${displayColor[0]},${displayColor[1]},${displayColor[2]},0.15)`);
+      glow.addColorStop(0.52, `rgba(${displayColor[0]},${displayColor[1]},${displayColor[2]},0.04)`);
+      glow.addColorStop(1, `rgba(${displayColor[0]},${displayColor[1]},${displayColor[2]},0)`);
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, size, size);
+
+      const projected = POINTS.map(pnt => {
+        const x = pnt.x * ca - pnt.z * sa;
+        const z = pnt.x * sa + pnt.z * ca;
+        const y2 = pnt.y * ct - z * st;
+        const z2 = pnt.y * st + z * ct;
+        return {x, y: y2, z: z2, seed: pnt.seed};
+      }).sort((a,b) => a.z - b.z);
+
+      ctx.globalCompositeOperation = 'lighter';
+      for (const pnt of projected) {
+        const perspective = 2.8 / (2.8 - pnt.z * 0.28);
+        const depth = (pnt.z + 1) * 0.5;
+        const sx = center + pnt.x * radius * perspective;
+        const sy = center + pnt.y * radius * perspective;
+        const rr = Math.round(far[0] + (near[0] - far[0]) * depth);
+        const gg = Math.round(far[1] + (near[1] - far[1]) * depth);
+        const bb = Math.round(far[2] + (near[2] - far[2]) * depth);
+        const alpha = 0.24 + depth * 0.72;
+        const dot = 0.80 + depth * 0.72 + pnt.seed * 0.18;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, dot, 0, TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    requestAnimationFrame(render);
+  }
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
   else install();
 })();
