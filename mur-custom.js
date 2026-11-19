@@ -2353,7 +2353,9 @@ if (typeof window.installPresentationFallback !== 'function') {
       display:block!important;
       width:76px!important;height:76px!important;min-width:76px!important;
       max-width:76px!important;max-height:76px!important;
-      border-radius:19px!important;object-fit:contain!important;
+      border-radius:50%!important;object-fit:cover!important;
+      border:2px solid rgba(98,211,232,.85)!important;
+      box-shadow:0 0 0 4px rgba(32,168,198,.09),0 0 13px rgba(43,201,223,.22)!important;
     }
     main.app:has(> #home.page.active) > header.top .brand > div,
     main.app:has(> #home.page.active) > .top .brand > div,
@@ -2377,10 +2379,11 @@ if (typeof window.installPresentationFallback !== 'function') {
     if(active){
       ['width','height','min-width','max-width','max-height'].forEach(k=>logo.style.setProperty(k,dimension,'important'));
       logo.style.setProperty('display','block','important');
+      logo.style.setProperty('border-radius','50%','important');
       if(logoText)logoText.style.setProperty('display','none','important');
       if(kicker)kicker.style.setProperty('display','none','important');
     } else {
-      ['width','height','min-width','max-width','max-height','display'].forEach(k=>logo.style.removeProperty(k));
+      ['width','height','min-width','max-width','max-height','display','border-radius'].forEach(k=>logo.style.removeProperty(k));
       if(logoText)logoText.style.removeProperty('display');
       if(kicker)kicker.style.removeProperty('display');
     }
@@ -6890,3 +6893,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
   else install();
 })();
+
+/* M.U.R. V170 — Logo d’accueil dans un cercle discret, V169 conservée. */
