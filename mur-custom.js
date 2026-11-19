@@ -6804,13 +6804,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       #home .home-wheel-card>.mur-home-waves-v168{
         position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
         display:block!important;pointer-events:none!important;z-index:0!important;
-        border-radius:inherit!important;opacity:.96!important;
+        border-radius:inherit!important;opacity:.78!important;
       }
       #home .home-wheel-card:has(>.mur-home-waves-v168)>#homeCircle,
       #home .home-wheel-card:has(>.mur-home-waves-v168)>#homeHint{
         position:relative!important;z-index:2!important;
       }
-      @media(prefers-reduced-motion:reduce){#home .home-wheel-card>.mur-home-waves-v168{opacity:.85!important;}}
+      @media(prefers-reduced-motion:reduce){#home .home-wheel-card>.mur-home-waves-v168{opacity:.72!important;}}
     `;
     document.head.appendChild(style);
 
@@ -6821,13 +6821,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const ctx = canvas.getContext('2d', {alpha:true});
     if (!ctx) return;
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    // V169 : trois filets discrets, respiration visuelle apaisée.
     const strands = [
-      {rgb:[55,166,255],y:-.32,amp:.087,period:1.28,speed:.34,phase: .08,alpha:.90,width:1.25},
-      {rgb:[33,135,242],y:-.17,amp:.067,period:1.54,speed:.27,phase:1.10,alpha:.36,width:1.0},
-      {rgb:[37,220,200],y:-.015,amp:.068,period:1.43,speed:.31,phase:2.12,alpha:.72,width:1.3},
-      {rgb:[255,122,92],y:.15,amp:.097,period:1.22,speed:.33,phase:3.04,alpha:.78,width:1.35},
-      {rgb:[69,229,162],y:.34,amp:.079,period:1.48,speed:.30,phase:4.30,alpha:.80,width:1.4},
-      {rgb:[44,168,225],y:.42,amp:.046,period:1.81,speed:.22,phase:5.42,alpha:.29,width:.85},
+      {rgb:[70,158,224],y:-.24,amp:.060,period:1.12,speed:.085,phase:.10,alpha:.35,width:.85},
+      {rgb:[67,191,179],y:.04,amp:.051,period:1.15,speed:.075,phase:2.18,alpha:.29,width:.8},
+      {rgb:[219,143,112],y:.29,amp:.057,period:1.08,speed:.065,phase:3.54,alpha:.25,width:.8},
     ];
     let raf=0, lastDraw=-Infinity;
     function smoothstep(a,b,x){ const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t); }
@@ -6862,9 +6860,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         const grad=ctx.createLinearGradient(0,0,w,0);
         const c=a=>`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
         grad.addColorStop(0,c(.10*s.alpha));
-        grad.addColorStop(.18,c(.80*s.alpha));
+        grad.addColorStop(.18,c(.60*s.alpha));
         grad.addColorStop(.49,c(.34*s.alpha));
-        grad.addColorStop(.78,c(.86*s.alpha));
+        grad.addColorStop(.78,c(.62*s.alpha));
         grad.addColorStop(1,c(.11*s.alpha));
         const yAt=x=>{
           const u=x/w;
@@ -6877,10 +6875,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           ctx.beginPath();
           for(let x=-3;x<=w+4;x+=3){const y=yAt(x);if(x===-3)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
           ctx.strokeStyle=grad;
-          ctx.lineWidth=pass===0?s.width*7:s.width;
-          ctx.shadowColor=c(pass===0?.28:.55);
-          ctx.shadowBlur=pass===0?14:7;
-          ctx.globalAlpha=pass===0?.25:1;
+          ctx.lineWidth=pass===0?s.width*4:s.width;
+          ctx.shadowColor=c(pass===0?.16:.25);
+          ctx.shadowBlur=pass===0?9:3;
+          ctx.globalAlpha=pass===0?.16:.78;
           ctx.stroke();
         }
       }
