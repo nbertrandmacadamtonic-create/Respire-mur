@@ -6826,9 +6826,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     // V169 : trois filets discrets, respiration visuelle apaisée.
     const strands = [
-      {rgb:[70,158,224],y:-.24,amp:.060,period:1.12,speed:.085,phase:.10,alpha:.35,width:.85},
-      {rgb:[67,191,179],y:.04,amp:.051,period:1.15,speed:.075,phase:2.18,alpha:.29,width:.8},
-      {rgb:[219,143,112],y:.29,amp:.057,period:1.08,speed:.065,phase:3.54,alpha:.25,width:.8},
+      {rgb:[85,167,232],y:-.24,amp:.060,period:1.12,speed:.065,phase:.10,alpha:.49,width:1.05},
+      {rgb:[76,206,183],y:.04,amp:.051,period:1.15,speed:.055,phase:2.18,alpha:.43,width:1.0},
+      {rgb:[223,150,123],y:.29,amp:.057,period:1.08,speed:.05,phase:3.54,alpha:.35,width:.95},
     ];
     let raf=0, lastDraw=-Infinity;
     function smoothstep(a,b,x){ const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t); }
@@ -6858,6 +6858,27 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       ctx.rect(0,0,w,h);
       ctx.arc(cx,cy,radius,0,Math.PI*2,true);
       ctx.clip('evenodd');
+      // V171 : voile nebuleux tres diffus. Le centre de la sphere est masque
+      // par le clipping precedent; les lueurs restent de part et d'autre.
+      for(const cloud of [
+        {x:.20,y:-.19,rx:.42,ry:.29,rgb:[57,138,207],alpha:.10},
+        {x:.81,y:.10,rx:.41,ry:.32,rgb:[49,169,155],alpha:.095},
+        {x:.28,y:.27,rx:.36,ry:.23,rgb:[202,119,102],alpha:.055}
+      ]){
+        const gx=w*cloud.x, gy=cy+h*cloud.y;
+        const R=Math.max(w*cloud.rx,h*cloud.ry);
+        ctx.save();
+        ctx.translate(gx,gy);
+        ctx.scale(1,Math.max(.32,(h*cloud.ry)/(w*cloud.rx)));
+        const fog=ctx.createRadialGradient(0,0,0,0,0,R);
+        const [r,g,b]=cloud.rgb;
+        fog.addColorStop(0,`rgba(${r},${g},${b},${cloud.alpha})`);
+        fog.addColorStop(.42,`rgba(${r},${g},${b},${cloud.alpha*.52})`);
+        fog.addColorStop(1,`rgba(${r},${g},${b},0)`);
+        ctx.fillStyle=fog;
+        ctx.fillRect(-R,-R,2*R,2*R);
+        ctx.restore();
+      }
       for(const s of strands){
         const rgb=s.rgb;
         const grad=ctx.createLinearGradient(0,0,w,0);
@@ -6878,10 +6899,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           ctx.beginPath();
           for(let x=-3;x<=w+4;x+=3){const y=yAt(x);if(x===-3)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
           ctx.strokeStyle=grad;
-          ctx.lineWidth=pass===0?s.width*4:s.width;
-          ctx.shadowColor=c(pass===0?.16:.25);
-          ctx.shadowBlur=pass===0?9:3;
-          ctx.globalAlpha=pass===0?.16:.78;
+          ctx.lineWidth=pass===0?s.width*9:s.width;
+          ctx.shadowColor=c(pass===0?.23:.32);
+          ctx.shadowBlur=pass===0?18:4;
+          ctx.globalAlpha=pass===0?.19:.87;
           ctx.stroke();
         }
       }
@@ -6894,4 +6915,4 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   else install();
 })();
 
-/* M.U.R. V170 — Logo d’accueil dans un cercle discret, V169 conservée. */
+/* M.U.R. V170 — Logo d’accueil dans un cercle discret. V171 : vagues avec voile nebuleux. */
