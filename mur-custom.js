@@ -6779,3 +6779,116 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
+
+/* =============================================================
+   M.U.R. V168 — Vagues vivantes derrière la sphère d'accueil
+   Dessin Canvas réel et animé, sans image ni nouvel asset.
+   La sphère V158, les 5 destinations V161, l'empreinte et l'audio
+   V167 restent intacts.
+   ============================================================= */
+(() => {
+  'use strict';
+  if (window.MUR_HOME_LIVING_WAVES_V168) return;
+  window.MUR_HOME_LIVING_WAVES_V168 = true;
+
+  function install(){
+    const home = document.getElementById('home');
+    const circle = document.getElementById('homeCircle');
+    const card = circle?.closest('.home-wheel-card');
+    if (!home || !circle || !card || card.querySelector('.mur-home-waves-v168')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mur-home-waves-v168-style';
+    style.textContent = `
+      #home .home-wheel-card:has(>.mur-home-waves-v168){position:relative!important;isolation:isolate!important;overflow:hidden!important;}
+      #home .home-wheel-card>.mur-home-waves-v168{
+        position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+        display:block!important;pointer-events:none!important;z-index:0!important;
+        border-radius:inherit!important;opacity:.96!important;
+      }
+      #home .home-wheel-card:has(>.mur-home-waves-v168)>#homeCircle,
+      #home .home-wheel-card:has(>.mur-home-waves-v168)>#homeHint{
+        position:relative!important;z-index:2!important;
+      }
+      @media(prefers-reduced-motion:reduce){#home .home-wheel-card>.mur-home-waves-v168{opacity:.85!important;}}
+    `;
+    document.head.appendChild(style);
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'mur-home-waves-v168';
+    canvas.setAttribute('aria-hidden','true');
+    card.prepend(canvas);
+    const ctx = canvas.getContext('2d', {alpha:true});
+    if (!ctx) return;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const strands = [
+      {rgb:[55,166,255],y:-.32,amp:.087,period:1.28,speed:.34,phase: .08,alpha:.90,width:1.25},
+      {rgb:[33,135,242],y:-.17,amp:.067,period:1.54,speed:.27,phase:1.10,alpha:.36,width:1.0},
+      {rgb:[37,220,200],y:-.015,amp:.068,period:1.43,speed:.31,phase:2.12,alpha:.72,width:1.3},
+      {rgb:[255,122,92],y:.15,amp:.097,period:1.22,speed:.33,phase:3.04,alpha:.78,width:1.35},
+      {rgb:[69,229,162],y:.34,amp:.079,period:1.48,speed:.30,phase:4.30,alpha:.80,width:1.4},
+      {rgb:[44,168,225],y:.42,amp:.046,period:1.81,speed:.22,phase:5.42,alpha:.29,width:.85},
+    ];
+    let raf=0, lastDraw=-Infinity;
+    function smoothstep(a,b,x){ const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t); }
+    function draw(ts){
+      raf = requestAnimationFrame(draw);
+      if(!card.isConnected){cancelAnimationFrame(raf);return;}
+      if(document.hidden || !home.classList.contains('active')) return;
+      if(ts-lastDraw<30) return; // 30 ips maximum : économie de batterie
+      lastDraw=ts;
+      const box=card.getBoundingClientRect();
+      const orb=circle.getBoundingClientRect();
+      if(box.width<80 || box.height<100) return;
+      const w=box.width,h=box.height,dpr=Math.min(2,window.devicePixelRatio||1);
+      const cw=Math.round(w*dpr),ch=Math.round(h*dpr);
+      if(canvas.width!==cw || canvas.height!==ch){canvas.width=cw;canvas.height=ch;}
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.clearRect(0,0,w,h);
+      const cx=orb.left-box.left+orb.width/2;
+      const cy=orb.top-box.top+orb.height/2;
+      const radius=Math.min(orb.width,orb.height)*.45;
+      const time=reduced?.matches?0:ts/1000;
+
+      // Flux subtils de gauche à droite, même famille que la capture validée.
+      // On découpe un disque transparent : aucun trait ne traverse la sphère.
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0,0,w,h);
+      ctx.arc(cx,cy,radius,0,Math.PI*2,true);
+      ctx.clip('evenodd');
+      for(const s of strands){
+        const rgb=s.rgb;
+        const grad=ctx.createLinearGradient(0,0,w,0);
+        const c=a=>`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
+        grad.addColorStop(0,c(.10*s.alpha));
+        grad.addColorStop(.18,c(.80*s.alpha));
+        grad.addColorStop(.49,c(.34*s.alpha));
+        grad.addColorStop(.78,c(.86*s.alpha));
+        grad.addColorStop(1,c(.11*s.alpha));
+        const yAt=x=>{
+          const u=x/w;
+          const main=Math.sin(u*Math.PI*2*s.period+time*s.speed+s.phase);
+          const detail=.24*Math.sin(u*Math.PI*4.2-time*s.speed*.6+s.phase*.7);
+          return cy + orb.height*s.y + (main+detail)*Math.min(orb.height,w)*s.amp;
+        };
+        // Brume large diffuse derrière la ligne, puis trait lumineux net.
+        for(const pass of [0,1]){
+          ctx.beginPath();
+          for(let x=-3;x<=w+4;x+=3){const y=yAt(x);if(x===-3)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+          ctx.strokeStyle=grad;
+          ctx.lineWidth=pass===0?s.width*7:s.width;
+          ctx.shadowColor=c(pass===0?.28:.55);
+          ctx.shadowBlur=pass===0?14:7;
+          ctx.globalAlpha=pass===0?.25:1;
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+      ctx.globalAlpha=1;
+    }
+    raf=requestAnimationFrame(draw);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
+})();
