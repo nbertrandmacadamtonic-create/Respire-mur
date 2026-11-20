@@ -1,0 +1,11 @@
+M.U.R. V172 — cartes exercices bilingues
+
+1. Sur GitHub, remplacez le fichier mur-custom.js par le mur-custom.js de cette archive.
+2. Ajoutez le dossier images/exercices/en/ de cette archive au dépôt, en conservant les noms de fichiers.
+3. Ne modifiez pas les fichiers FR déjà installés dans images/exercices/.
+4. Actualisez le site et choisissez FR puis EN pour vérifier le changement des images.
+
+Important : cette mise à jour concerne les images des exercices audio ; les cartes Paniflex
+(recto et verso) se trouvent dans images/paniflex/ et ne sont pas modifiées.
+Pour le fichier 04-lac-tranquille.webp, le nom a été normalisé (suppression de '(1)').
+L'exercice 'Regard horizon' ne figure pas dans les images EN fournies : la carte FR reste utilisée.
