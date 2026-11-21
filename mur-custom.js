@@ -7384,3 +7384,155 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
+
+/* =============================================================
+   M.U.R. V175 — Ondes enveloppantes en profondeur (accueil)
+   3 filets discrets derrière la sphère, 2 filets translucides devant.
+   Aucun changement de navigation, NeuroFlex, respiration ou images.
+   ============================================================= */
+(() => {
+  'use strict';
+  if (window.MUR_HOME_WRAP_WAVES_V175) return;
+  window.MUR_HOME_WRAP_WAVES_V175 = true;
+
+  function install(){
+    const home = document.getElementById('home');
+    const orb = document.getElementById('homeCircle');
+    const card = orb?.closest('.home-wheel-card');
+    if (!home || !orb || !card || card.querySelector('.mur-v175-wave-behind')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mur-v175-wrap-waves-css';
+    style.textContent = `
+      /* On remplace l'ancien dessin V168-V171, sans le modifier. */
+      #home .home-wheel-card > .mur-home-waves-v168{display:none!important;}
+      #home .home-wheel-card:has(>.mur-v175-wave-behind){
+        position:relative!important;isolation:isolate!important;overflow:hidden!important;
+      }
+      #home .home-wheel-card > .mur-v175-wave-behind,
+      #home .home-wheel-card > .mur-v175-wave-front{
+        position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+        pointer-events:none!important;display:block!important;border-radius:inherit!important;
+        user-select:none!important;touch-action:none!important;
+      }
+      #home .home-wheel-card > .mur-v175-wave-behind{z-index:0!important;}
+      #home .home-wheel-card > .mur-v175-wave-front{z-index:3!important;}
+      #home .home-wheel-card:has(>.mur-v175-wave-behind) > #homeCircle{position:relative!important;z-index:2!important;}
+      #home .home-wheel-card:has(>.mur-v175-wave-behind) > #homeHint{position:relative!important;z-index:4!important;}
+      body.mur-five-open #home .mur-v175-wave-behind,
+      body.mur-five-open #home .mur-v175-wave-front,
+      #home .home-wheel-card:has(#homeCircle.mur-menu-open) > .mur-v175-wave-behind,
+      #home .home-wheel-card:has(#homeCircle.mur-menu-open) > .mur-v175-wave-front,
+      #home .home-wheel-card:has(#homeCircle.mur-particles-transitioning) > .mur-v175-wave-behind,
+      #home .home-wheel-card:has(#homeCircle.mur-particles-transitioning) > .mur-v175-wave-front{
+        opacity:0!important;transition:opacity .18s ease!important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    const back = document.createElement('canvas');
+    const front = document.createElement('canvas');
+    back.className = 'mur-v175-wave-behind';
+    front.className = 'mur-v175-wave-front';
+    back.setAttribute('aria-hidden','true');
+    front.setAttribute('aria-hidden','true');
+    card.prepend(back);
+    card.appendChild(front);
+    const ctxBack = back.getContext('2d',{alpha:true});
+    const ctxFront = front.getContext('2d',{alpha:true});
+    if(!ctxBack || !ctxFront) return;
+
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const TAU = Math.PI*2;
+    let raf = 0, previous=-Infinity;
+    const waves = [
+      {rgb:[76,162,233], base:-.28, push:-.91, spread:1.14, phase:.2, speed:.12, opacity:.34, line:1.12},
+      {rgb:[61,206,182], base:.03, push:.87, spread:1.10, phase:2.1, speed:.095, opacity:.32, line:1.08},
+      {rgb:[248,145,105],base:.38, push:.64, spread:1.06, phase:3.6, speed:.082,opacity:.28,line:1.08}
+    ];
+    function line(ctx,w,h,col,alpha,width,calc){
+      const grad=ctx.createLinearGradient(0,0,w,0);
+      const rgba=a=>`rgba(${col[0]},${col[1]},${col[2]},${a})`;
+      grad.addColorStop(0,rgba(.04*alpha));
+      grad.addColorStop(.20,rgba(.76*alpha));
+      grad.addColorStop(.50,rgba(.9*alpha));
+      grad.addColorStop(.80,rgba(.76*alpha));
+      grad.addColorStop(1,rgba(.04*alpha));
+      ctx.beginPath();
+      for(let x=0;x<=w+2;x+=2){const y=calc(x);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+      // Diffuse halo and a crisp fine filament. No heavy glow.
+      ctx.strokeStyle=grad;
+      ctx.lineCap='round';
+      ctx.lineJoin='round';
+      ctx.lineWidth=width*7;
+      ctx.globalAlpha=.14;
+      ctx.shadowColor=rgba(.26);
+      ctx.shadowBlur=12;
+      ctx.stroke();
+      ctx.shadowBlur=0;
+      ctx.globalAlpha=.94;
+      ctx.lineWidth=width;
+      ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+    function frame(ts){
+      raf=requestAnimationFrame(frame);
+      if(!card.isConnected){cancelAnimationFrame(raf);return;}
+      if(document.hidden || !home.classList.contains('active')) return;
+      if(ts-previous<32)return;
+      previous=ts;
+      const box=card.getBoundingClientRect();
+      const rect=orb.getBoundingClientRect();
+      const w=box.width,h=box.height;
+      if(w<120||h<140||rect.width<40)return;
+      const dpr=Math.min(2,window.devicePixelRatio||1);
+      const wp=Math.round(w*dpr),hp=Math.round(h*dpr);
+      for(const [c,ctx] of [[back,ctxBack],[front,ctxFront]]){
+        if(c.width!==wp||c.height!==hp){c.width=wp;c.height=hp;}
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        ctx.clearRect(0,0,w,h);
+      }
+      const cx=rect.left-box.left+rect.width/2;
+      const cy=rect.top-box.top+rect.height/2;
+      const r=Math.min(rect.width,rect.height)*.435;
+      const t=reduced?.matches?0:ts/1000;
+
+      // Back layer: the lines deviate naturally around the outer silhouette.
+      ctxBack.save();
+      ctxBack.beginPath();ctxBack.rect(0,0,w,h);
+      ctxBack.arc(cx,cy,r*.995,0,TAU,true);
+      ctxBack.clip('evenodd');
+      for(const a of waves){
+        const curve=x=>{
+          const normalized=(x-cx)/(r*a.spread);
+          const around=Math.exp(-normalized*normalized*.82);
+          const motion=Math.sin(x/w*TAU*1.15+t*a.speed+a.phase)*r*.055;
+          return cy+r*a.base+r*a.push*around+motion;
+        };
+        line(ctxBack,w,h,a.rgb,a.opacity,a.line,curve);
+      }
+      ctxBack.restore();
+
+      // Foreground: only slender, translucent sections are drawn INSIDE the orb.
+      // This is the small visual overlap requested; the particle sphere stays visible.
+      ctxFront.save();
+      ctxFront.beginPath();ctxFront.arc(cx,cy,r*.985,0,TAU);ctxFront.clip();
+      const frontArcs=[
+        {rgb:[85,236,204], offset:.16,tilt:-.20,phase:1.0,speed:.10,alpha:.23,width:1.22},
+        {rgb:[255,158,105],offset:.73,tilt:-.14,phase:2.7,speed:.07,alpha:.22,width:1.16}
+      ];
+      for(const a of frontArcs){
+        const curve=x=>{
+          const v=(x-cx)/r;
+          const micro=.055*Math.sin(v*2.8+t*a.speed+a.phase);
+          return cy+r*(a.offset+a.tilt*v+micro);
+        };
+        line(ctxFront,w,h,a.rgb,a.alpha,a.width,curve);
+      }
+      ctxFront.restore();
+    }
+    raf=requestAnimationFrame(frame);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
+})();
