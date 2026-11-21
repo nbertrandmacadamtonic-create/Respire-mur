@@ -7827,3 +7827,233 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
+
+/* ====================================================================
+   M.U.R. V179 — sphère vivante + rubans lumineux en profondeur
+   Remplace le rendu visuel V178 (sans toucher à la navigation, NeuroFlex,
+   aux exercices, au doigt de lancement ni aux fenêtres d'explication).
+   Deux composantes réellement ordonnées : ondes ARRIÈRE, sphère, ondes AVANT.
+   ==================================================================== */
+(function murHomeLuminousGlobeV179(){
+  'use strict';
+  if (window.MUR_HOME_LUMINOUS_GLOBE_V179) return;
+  window.MUR_HOME_LUMINOUS_GLOBE_V179 = true;
+
+  const TAU = Math.PI * 2;
+  const COUNT = 560;
+  const GOLDEN = Math.PI * (3 - Math.sqrt(5));
+  const PTS = Array.from({length:COUNT}, (_,i)=>{
+    const y=1-2*(i+.5)/COUNT, a=i*GOLDEN, s=Math.sqrt(Math.max(0,1-y*y));
+    return {x:Math.cos(a)*s, y, z:Math.sin(a)*s, twinkle:(i*73%97)/97};
+  });
+  function rgba(c,a){ return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+  function cl(v,a=0,b=1){return Math.max(a,Math.min(b,v));}
+
+  function init(){
+    const home=document.getElementById('home');
+    const circle=document.getElementById('homeCircle');
+    const card=circle?.closest('.home-wheel-card');
+    if(!home||!circle||!card||card.querySelector('.mur-v179-live-canvas'))return;
+    const css=document.createElement('style');
+    css.id='mur-v179-live-sphere-style';
+    css.textContent=`
+      #home .home-wheel-card > .mur-home-waves-v168,
+      #home .home-wheel-card > .mur-v175-wave-behind,
+      #home .home-wheel-card > .mur-v175-wave-front,
+      #home .home-wheel-card > .mur-v177-orbit-back,
+      #home .home-wheel-card > .mur-v177-orbit-front,
+      #home .home-wheel-card > .mur-v178-behind,
+      #home .home-wheel-card > .mur-v178-ahead {display:none!important;opacity:0!important;}
+      #home .home-wheel-card:has(>.mur-v179-live-canvas){position:relative!important;isolation:isolate!important;overflow:hidden!important;}
+      #home .home-wheel-card > .mur-v179-live-canvas{
+        position:absolute!important;inset:0!important;display:block!important;
+        width:100%!important;height:100%!important;z-index:4!important;
+        pointer-events:none!important;border-radius:inherit!important;
+      }
+      #home .home-wheel-card.mur-v179-visible #homeCircle.mur-home-resp-v158::before,
+      #home .home-wheel-card.mur-v179-visible #homeCircle.mur-home-resp-v158::after,
+      #home .home-wheel-card.mur-v179-visible #homeCircle .mur-home-resp-v158-canvas,
+      #home .home-wheel-card.mur-v179-visible #homeCircle .mur-home-2400-canvas{
+        opacity:0!important;visibility:hidden!important;display:none!important;
+      }
+      #home .home-wheel-card.mur-v179-visible #homeCircle{
+        background:transparent!important;border:0!important;box-shadow:none!important;
+      }
+      #home .home-wheel-card:has(>.mur-v179-live-canvas)>#homeCircle{
+        position:relative!important;z-index:3!important;
+      }
+      #home .home-wheel-card:has(>.mur-v179-live-canvas)>#homeHint{
+        position:relative!important;z-index:5!important;
+      }
+      #home .home-wheel-card:not(.mur-v179-visible)>.mur-v179-live-canvas{opacity:0!important;}
+      @media (prefers-reduced-motion:reduce){
+        #home .home-wheel-card>.mur-v179-live-canvas{transition:none!important;}
+      }
+    `;
+    document.head.appendChild(css);
+    const canvas=document.createElement('canvas');
+    canvas.className='mur-v179-live-canvas';
+    canvas.setAttribute('aria-hidden','true');
+    card.appendChild(canvas);
+    const ctx=canvas.getContext('2d',{alpha:true,desynchronized:true});
+    if(!ctx)return;
+    const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    function orbTint(){
+      const raw=(circle.style.getPropertyValue('--home-color') || getComputedStyle(circle).getPropertyValue('--home-color')).trim();
+      let v=null;
+      if(/^#[a-f0-9]{6}$/i.test(raw))v=[1,3,5].map(i=>parseInt(raw.slice(i,i+2),16));
+      else if(/^rgba?\(/i.test(raw))v=(raw.match(/[\d.]+/g)||[]).slice(0,3).map(Number);
+      if(!v||v.length<3||v.some(x=>!Number.isFinite(x)))return [63,234,166];
+      return v;
+    }
+
+    // A real luminous ribbon, not a thin ellipse: layered soft halo + bright core.
+    function ribbon(path,c,w,alpha,bright=1){
+      ctx.save();
+      const X1=w*.02, X2=w*.98;
+      const grad=ctx.createLinearGradient(X1,0,X2,0);
+      grad.addColorStop(0,rgba(c,0));
+      grad.addColorStop(.14,rgba(c,alpha*.31));
+      grad.addColorStop(.32,rgba(c,alpha*.83));
+      grad.addColorStop(.58,rgba(c,alpha*1.0));
+      grad.addColorStop(.79,rgba(c,alpha*.88));
+      grad.addColorStop(.98,rgba(c,0));
+      ctx.strokeStyle=grad;ctx.lineJoin='round';ctx.lineCap='round';
+      ctx.globalCompositeOperation='screen';
+      for(const [lw,opacity,shadow] of [[18,.10,24],[9,.25,14],[3.5,.45,8],[1.55,.88,4]]){
+        ctx.lineWidth=lw*bright;ctx.globalAlpha=opacity;
+        ctx.shadowColor=rgba(c,alpha);ctx.shadowBlur=shadow*bright;
+        ctx.stroke(path);
+      }
+      ctx.restore();
+    }
+
+    function paint(ms){
+      requestAnimationFrame(paint);
+      if(!card.isConnected)return;
+      const active=home.classList.contains('active')
+        && !document.body.classList.contains('mur-five-open')
+        && !circle.classList.contains('mur-menu-open')
+        && !circle.classList.contains('mur-particles-transitioning');
+      card.classList.toggle('mur-v179-visible',active);
+      if(!active||document.hidden)return;
+      if(ms-(paint.last||-1000)<32)return;
+      paint.last=ms;
+      const cardRect=card.getBoundingClientRect(),circleRect=circle.getBoundingClientRect();
+      const w=cardRect.width,h=cardRect.height;
+      if(w<120||h<160||circleRect.width<80)return;
+      const dpr=Math.min(2,window.devicePixelRatio||1);
+      const pw=Math.round(w*dpr),ph=Math.round(h*dpr);
+      if(canvas.width!==pw||canvas.height!==ph){canvas.width=pw;canvas.height=ph;}
+      ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+      const cx=circleRect.left-cardRect.left+circleRect.width/2;
+      const cy=circleRect.top-cardRect.top+circleRect.height/2;
+      const r=Math.min(circleRect.width*.49,w*.265,h*.34);
+      const t=reduced?.matches?0:ms/1000;
+      const drift=reduced?.matches?0:Math.sin(t*.43)*r*.028;
+      const blue=[35,172,255],teal=[38,238,218],orange=[255,151,71];
+      const base=orbTint();
+      const tint=[Math.round(58+base[0]*.34),Math.round(101+base[1]*.64),Math.round(87+base[2]*.48)];
+
+      // 1 / Behind: wide, airy ribbons run round and underneath the globe.
+      let p=new Path2D();
+      p.moveTo(cx-2.15*r,cy-.32*r+drift);
+      p.bezierCurveTo(cx-1.58*r,cy-.84*r, cx-.97*r,cy-1.04*r, cx-.13*r,cy-1.02*r);
+      p.bezierCurveTo(cx+.68*r,cy-.94*r, cx+1.75*r,cy-.96*r, cx+1.92*r,cy-.62*r);
+      p.bezierCurveTo(cx+2.15*r,cy-.14*r, cx+1.46*r,cy-.07*r, cx+.92*r,cy+.09*r);
+      ribbon(p,blue,w,.91,1.04);
+      p=new Path2D();
+      p.moveTo(cx-2.12*r,cy+.35*r-drift);
+      p.bezierCurveTo(cx-1.48*r,cy+.48*r,cx-.93*r,cy-.37*r,cx-.22*r,cy-.17*r);
+      p.bezierCurveTo(cx+.42*r,cy+.06*r,cx+1.22*r,cy+.18*r,cx+2.17*r,cy-.05*r);
+      ribbon(p,teal,w,.49,.82);
+
+
+      // 2 / Sphere: opaque spherical volume + colored rim + glowing particles.
+      ctx.save();
+      let halo=ctx.createRadialGradient(cx,cy,r*.22,cx,cy,r*1.55);
+      halo.addColorStop(0,'rgba(32,236,160,.23)');
+      halo.addColorStop(.47,'rgba(19,144,157,.13)');
+      halo.addColorStop(.72,'rgba(24,162,230,.06)');
+      halo.addColorStop(1,'rgba(21,119,220,0)');
+      ctx.fillStyle=halo;ctx.beginPath();ctx.arc(cx,cy,r*1.55,0,TAU);ctx.fill();
+      let body=ctx.createRadialGradient(cx-r*.25,cy-r*.30,0,cx,cy,r*1.12);
+      body.addColorStop(0,'rgba(11,99,87,1)');
+      body.addColorStop(.48,'rgba(4,63,72,1)');
+      body.addColorStop(.76,'rgba(2,30,47,1)');
+      body.addColorStop(1,'rgba(1,12,28,1)');
+      ctx.fillStyle=body;ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.fill();
+      // soft central emerald glow
+      const emerald=ctx.createRadialGradient(cx,cy+r*.05,r*.003,cx,cy+r*.05,r*.9);
+      emerald.addColorStop(0,'rgba(39,255,170,.70)');
+      emerald.addColorStop(.16,'rgba(18,240,169,.34)');
+      emerald.addColorStop(.55,'rgba(12,187,150,.07)');
+      emerald.addColorStop(1,'rgba(6,94,124,0)');
+      ctx.fillStyle=emerald;ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.fill();
+      // Léger reflet orangé au bas du volume, comme sur la référence.
+      ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.clip();
+      const warm=ctx.createRadialGradient(cx+r*.50,cy+r*.91,0,cx+r*.50,cy+r*.91,r*.67);
+      warm.addColorStop(0,'rgba(253,153,83,.19)');
+      warm.addColorStop(.45,'rgba(240,126,75,.08)');
+      warm.addColorStop(1,'rgba(240,126,75,0)');
+      ctx.fillStyle=warm;ctx.fillRect(cx-r,cy-r,r*2,r*2);
+      ctx.restore();
+      ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.clip();
+      const angle=.20+t*.12, ca=Math.cos(angle),sa=Math.sin(angle);
+      const coords=PTS.map(p=>{
+        const x=p.x*ca-p.z*sa,z=p.x*sa+p.z*ca;
+        const y=p.y*.993-z*.118,z2=p.y*.118+z*.993;
+        return {x,y,z:z2,twinkle:p.twinkle};
+      }).sort((a,b)=>a.z-b.z);
+      for(const p of coords){
+        const depth=(p.z+1)*.5, persp=2.8/(2.8-p.z*.24);
+        const px=cx+p.x*r*.95*persp,py=cy+p.y*r*.95*persp;
+        const sz=(.85+depth*.73)*(w/445)**.12;
+        const alpha=(.30+depth*.65)*(.92+p.twinkle*.08);
+        ctx.globalAlpha=alpha;
+        ctx.fillStyle=depth>.40?`rgb(${tint[0]},${tint[1]},${tint[2]})`:'rgb(49,176,153)';
+        ctx.beginPath();ctx.arc(px,py,sz,0,TAU);ctx.fill();
+      }
+      ctx.restore();
+      ctx.globalAlpha=1;
+      ctx.globalCompositeOperation='screen';
+      ctx.shadowColor='rgba(39,203,255,.95)';ctx.shadowBlur=21;
+      let edge=ctx.createLinearGradient(cx,cy-r,cx,cy+r);
+      edge.addColorStop(0,'rgba(79,219,255,.95)');
+      edge.addColorStop(.30,'rgba(35,197,248,.60)');
+      edge.addColorStop(.68,'rgba(12,155,195,.13)');
+      edge.addColorStop(1,'rgba(255,145,87,.27)');
+      ctx.strokeStyle=edge;ctx.lineWidth=2.05;
+      ctx.beginPath();ctx.arc(cx,cy,r-.6,Math.PI*.88,Math.PI*2.20);ctx.stroke();
+      // Liseré de surface plus chaud sous le globe (effet de volume).
+      ctx.shadowColor='rgba(255,145,75,.70)';ctx.shadowBlur=14;
+      ctx.strokeStyle='rgba(255,159,90,.24)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(cx,cy,r-.9,Math.PI*.19,Math.PI*.79);ctx.stroke();
+      ctx.shadowBlur=0;
+      // Lumière de surface au coeur de la sphère (indépendante des rubans).
+      const pulse=ctx.createRadialGradient(cx,cy+r*.06,0,cx,cy+r*.06,r*.32);
+      pulse.addColorStop(0,'rgba(173,255,234,.98)');
+      pulse.addColorStop(.065,'rgba(31,255,177,.72)');
+      pulse.addColorStop(.27,'rgba(21,236,170,.22)');
+      pulse.addColorStop(1,'rgba(13,204,154,0)');
+      ctx.fillStyle=pulse;ctx.beginPath();ctx.arc(cx,cy+r*.06,r*.32,0,TAU);ctx.fill();
+      ctx.restore();
+
+      // 3 / In front: a cyan ribbon brushes the lower middle of the globe.
+      p=new Path2D();
+      p.moveTo(cx-1.49*r,cy+.40*r+drift*.3);
+      p.bezierCurveTo(cx-.81*r,cy+.53*r,cx-.20*r,cy+.31*r,cx+.50*r,cy+.08*r);
+      p.bezierCurveTo(cx+1.05*r,cy-.20*r,cx+1.49*r,cy-.45*r,cx+1.90*r,cy-.57*r);
+      ribbon(p,teal,w,.97,1.08);
+      // A second thin amber thread skims the bottom front edge.
+      p=new Path2D();
+      p.moveTo(cx-1.40*r,cy+.66*r-drift*.2);
+      p.bezierCurveTo(cx-.80*r,cy+.95*r,cx-.20*r,cy+1.03*r,cx+.29*r,cy+.91*r);
+      p.bezierCurveTo(cx+.85*r,cy+.78*r,cx+1.37*r,cy+.48*r,cx+1.80*r,cy+.41*r);
+      ribbon(p,orange,w,.62,.76);
+    }
+    requestAnimationFrame(paint);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
