@@ -7683,3 +7683,143 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watch,{once:true});
   else watch();
 })();
+
+/* =====================================================================
+   M.U.R. V177 — Rubans lumineux orbitaux 3D, accueil uniquement.
+   Corrige la V175 : filets plats -> rubans nets et halos visibles.
+   Même taille de carte, même sphère, même menus et navigation.
+   ===================================================================== */
+(function murOrbitalBandsV177(){
+ 'use strict';
+ if(window.MUR_HOME_ORBIT_V177)return;
+ window.MUR_HOME_ORBIT_V177=true;
+ function init(){
+   const orb=document.getElementById('homeCircle');
+   const home=document.getElementById('home');
+   const card=orb?.closest('.home-wheel-card');
+   if(!home||!orb||!card||card.querySelector('.mur-v177-orbit-back'))return;
+   const css=document.createElement('style');
+   css.id='mur-v177-orbit-style';
+   css.textContent=`
+    #home .home-wheel-card>.mur-home-waves-v168,
+    #home .home-wheel-card>.mur-v175-wave-behind,
+    #home .home-wheel-card>.mur-v175-wave-front{display:none!important;opacity:0!important}
+    #home .home-wheel-card:has(>.mur-v177-orbit-back){position:relative!important;isolation:isolate!important;overflow:hidden!important}
+    #home .home-wheel-card>.mur-v177-orbit-back,
+    #home .home-wheel-card>.mur-v177-orbit-front{
+      position:absolute!important;inset:0!important;display:block!important;
+      width:100%!important;height:100%!important;pointer-events:none!important;
+      border-radius:inherit!important;touch-action:none!important;
+    }
+    #home .home-wheel-card>.mur-v177-orbit-back{z-index:1!important}
+    #home .home-wheel-card>.mur-v177-orbit-front{z-index:4!important}
+    #home .home-wheel-card:has(>.mur-v177-orbit-back)>#homeCircle{position:relative!important;z-index:3!important}
+    #home .home-wheel-card:has(>.mur-v177-orbit-back)>#homeHint{position:relative!important;z-index:5!important}
+    body.mur-five-open #home .mur-v177-orbit-back,
+    body.mur-five-open #home .mur-v177-orbit-front,
+    #home .home-wheel-card:has(#homeCircle.mur-menu-open)>.mur-v177-orbit-back,
+    #home .home-wheel-card:has(#homeCircle.mur-menu-open)>.mur-v177-orbit-front,
+    #home .home-wheel-card:has(#homeCircle.mur-particles-transitioning)>.mur-v177-orbit-back,
+    #home .home-wheel-card:has(#homeCircle.mur-particles-transitioning)>.mur-v177-orbit-front{
+       opacity:0!important;transition:opacity .22s ease!important;
+    }
+   `;
+   document.head.appendChild(css);
+   const back=document.createElement('canvas');
+   const front=document.createElement('canvas');
+   back.className='mur-v177-orbit-back';front.className='mur-v177-orbit-front';
+   back.setAttribute('aria-hidden','true');front.setAttribute('aria-hidden','true');
+   card.prepend(back);card.appendChild(front);
+   const b=back.getContext('2d',{alpha:true});
+   const f=front.getContext('2d',{alpha:true});
+   if(!b||!f)return;
+   const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)');
+   let last=-Infinity,raf;
+   const ORBITS=[
+     // Le bleu remonte au-dessus, le turquoise enlace le centre,
+     // l'orange souligne le bas : chaque ruban possède avant + arrière.
+     {rgb:[35,165,255],y:-.27,tilt:-.26,ry:.45,rx:1.47,phi:1.25,rate:.075,alpha:1.0,thick:2.0},
+     {rgb:[49,235,202],y:.07,tilt:-.22,ry:.43,rx:1.39,phi:-.22,rate:.066,alpha:1.0,thick:2.65},
+     {rgb:[255,151,79],y:.35,tilt:-.16,ry:.36,rx:1.32,phi:2.35,rate:-.054,alpha:.92,thick:2.5}
+   ];
+   function stroke(ctx,pts,rgb,alpha,width,frontPart){
+      if(pts.length<2)return;
+      const path=new Path2D();
+      path.moveTo(pts[0][0],pts[0][1]);
+      for(let i=1;i<pts.length;i++)path.lineTo(pts[i][0],pts[i][1]);
+      const color=(a)=>`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
+      ctx.lineCap='round';ctx.lineJoin='round';
+      ctx.save();ctx.globalCompositeOperation='screen';
+      // soft atmospheric volume; clearly brighter than V175
+      ctx.strokeStyle=color(.075*alpha);ctx.lineWidth=width*19;
+      ctx.shadowColor=color(.65);ctx.shadowBlur=25;ctx.stroke(path);
+      ctx.strokeStyle=color(.14*alpha);ctx.lineWidth=width*9;
+      ctx.shadowBlur=15;ctx.stroke(path);
+      ctx.strokeStyle=color((frontPart?.90:.60)*alpha);
+      ctx.lineWidth=width*(frontPart?1.65:1.15);
+      ctx.shadowColor=color(.92);ctx.shadowBlur=9;ctx.stroke(path);
+      ctx.strokeStyle=color((frontPart?.95:.64)*alpha);
+      ctx.lineWidth=Math.max(.65,width*.39);ctx.shadowBlur=2;ctx.stroke(path);
+      ctx.restore();
+   }
+   function draw(time){
+     raf=requestAnimationFrame(draw);
+     if(!card.isConnected){cancelAnimationFrame(raf);return;}
+     if(document.hidden||!home.classList.contains('active'))return;
+     if(time-last<32)return;last=time;
+     const box=card.getBoundingClientRect(),o=orb.getBoundingClientRect();
+     const w=box.width,h=box.height;
+     if(w<140||h<170||o.width<70)return;
+     const dpr=Math.min(2,devicePixelRatio||1),cw=Math.ceil(w*dpr),ch=Math.ceil(h*dpr);
+     for(const [can,ctx] of [[back,b],[front,f]]){
+       if(can.width!==cw||can.height!==ch){can.width=cw;can.height=ch;}
+       ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+     }
+     const cx=o.left-box.left+o.width/2;
+     const cy=o.top-box.top+o.height/2;
+     const radius=Math.min(o.width,o.height)*.46;
+     const ts=reduce?.matches?0:time/1000;
+     // Bloom local derrière l'orbe ; la sphère de points d'origine reste intacte.
+     const bloom=b.createRadialGradient(cx,cy,radius*.14,cx,cy,radius*1.07);
+     bloom.addColorStop(0,'rgba(18,206,143,.18)');
+     bloom.addColorStop(.58,'rgba(19,146,154,.075)');
+     bloom.addColorStop(1,'rgba(23,145,199,0)');
+     b.fillStyle=bloom;b.beginPath();b.arc(cx,cy,radius*1.07,0,Math.PI*2);b.fill();
+     // Orbit elliptique projetée, partie arrière et avant calculées séparément.
+     for(const orbDef of ORBITS){
+       const amplitude=radius*orbDef.ry;
+       const thetaShift=ts*orbDef.rate;
+       const coordinates=[];
+       const N=360;
+       for(let i=0;i<=N;i++){
+         const a=i/N*Math.PI*2+orbDef.phi+thetaShift;
+         const xx=radius*orbDef.rx*Math.cos(a);
+         const z=Math.sin(a);
+         const yy=radius*orbDef.y+amplitude*z+orbDef.tilt*xx;
+         coordinates.push([cx+xx,cy+yy,z]);
+       }
+       // Draw each depth hemisphere without joining across the seam.
+       for(const depth of [-1,1]){
+         const ctx=depth<0?b:f;
+         const runs=[];let segment=[];
+         for(const p of coordinates){
+           const belongs=(p[2]>=0?1:-1)===depth;
+           if(belongs){segment.push(p);}else if(segment.length){runs.push(segment);segment=[];}
+         }
+         if(segment.length)runs.push(segment);
+         // Periodic domain: merge a segment split at the start/end.
+         if(runs.length>1 && runs[0][0]===coordinates[0] && runs[runs.length-1][runs[runs.length-1].length-1]===coordinates[N]){
+           const tail=runs.pop();runs[0]=tail.concat(runs[0]);
+         }
+         for(const seg of runs){
+           const width=orbDef.thick*(Math.max(.75,Math.min(1.25,w/450)));
+           stroke(ctx,seg,orbDef.rgb,orbDef.alpha,width,depth===1);
+         }
+       }
+     }
+   }
+   raf=requestAnimationFrame(draw);
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+ else init();
+})();
