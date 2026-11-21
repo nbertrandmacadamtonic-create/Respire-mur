@@ -6916,3 +6916,325 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 /* M.U.R. V170 — Logo d’accueil dans un cercle discret. V171 : vagues avec voile nebuleux. */
+
+/* =============================================================
+   M.U.R. V172 — Exercices : images dans la langue sélectionnée
+   FR : images/exercices/NN-nom.webp
+   EN : images/exercices/en/NN-nom.webp
+   Paniflex conserve son système propre de recto/verso.
+   ============================================================= */
+(function () {
+  'use strict';
+  const imageNames = Object.freeze({
+    pause: '06-pause-vagale.webp',
+    double: '12-double-inspiration.webp',
+    merle: '15-chant-du-merle.webp',
+    ancrage: '13-ancrage.webp',
+    vagues: '02-pas-de-vagues.webp',
+    fil: '11-fil-du-souffle.webp',
+    mains: '01-mains-apaisantes.webp',
+    foret: '10-promenade-foret.webp',
+    lac: '04-lac-tranquille.webp',
+    balancier: '14-balancier-du-corps.webp',
+    presence: '05-presence-corporelle.webp',
+    bell: '03-bell-bell-bell.webp',
+    lumiere: '07-lumiere-du-matin.webp',
+    etincelle: '09-etincelle.webp',
+    elan: '16-elan-vertical.webp'
+  });
+  const frBase = 'images/exercices/';
+  const enBase = 'images/exercices/en/';
+  const originals = {};
+  let lastLanguage = null;
+  let refreshPending = false;
+
+  function selectedLanguage() {
+    try {
+      const enButton = document.querySelector('[data-language="en"]');
+      const frButton = document.querySelector('[data-language="fr"]');
+      const active = btn => !!btn && (
+        btn.getAttribute('aria-pressed') === 'true' ||
+        btn.getAttribute('aria-selected') === 'true' ||
+        btn.classList.contains('active') ||
+        btn.classList.contains('selected')
+      );
+      if (active(enButton)) return 'en';
+      if (active(frButton)) return 'fr';
+      const saved = localStorage.getItem('mur-ui-language') ||
+        localStorage.getItem('murLanguage') ||
+        localStorage.getItem('murLang');
+      return /^en/i.test(String(saved || document.documentElement.lang || 'fr')) ? 'en' : 'fr';
+    } catch (_) {
+      return /^en/i.test(document.documentElement.lang || '') ? 'en' : 'fr';
+    }
+  }
+  function exerciseFile(key, language) {
+    if (!imageNames[key]) return null;
+    return (language === 'en' ? enBase : frBase) + imageNames[key];
+  }
+  function keyForImageUrl(url) {
+    if (!url) return null;
+    const normalized = String(url).split(/[?#]/, 1)[0];
+    for (const [key, name] of Object.entries(imageNames)) {
+      if (normalized.endsWith('/' + name) &&
+          (normalized.includes('images/exercices/') || normalized === name)) return key;
+    }
+    return null;
+  }
+  function setExerciseSources(language) {
+    if (typeof EXERCISES === 'undefined') return;
+    for (const key of Object.keys(imageNames)) {
+      const entry = EXERCISES[key];
+      if (!entry || !Array.isArray(entry.files)) continue;
+      if (!originals[key]) originals[key] = entry.files.slice();
+      const selected = exerciseFile(key, language);
+      // Prefer the English card, and fall back to the French version if missing.
+      const french = exerciseFile(key, 'fr');
+      const candidates = language === 'en'
+        ? [selected, french, ...originals[key].filter(x => x !== selected && x !== french)]
+        : [french, ...originals[key].filter(x => x !== french)];
+      entry.files.splice(0, entry.files.length, ...candidates);
+      try {
+        if (typeof MUR_AUDIO_IMAGE_PATHS !== 'undefined' &&
+            Object.prototype.hasOwnProperty.call(MUR_AUDIO_IMAGE_PATHS, key)) {
+          MUR_AUDIO_IMAGE_PATHS[key] = selected;
+        }
+      } catch (_) { /* optionnel dans les anciennes versions */ }
+    }
+    try {
+      // Dans index.html V85, cette fonction était figée sur les cartes FR.
+      getExerciseFirstImage = function (key) {
+        const entry = typeof EXERCISES !== 'undefined' ? EXERCISES[key] : null;
+        return entry && entry.files && entry.files.length ? entry.files[0] : '';
+      };
+    } catch (_) {}
+  }
+  function updateVisibleCards(language) {
+    const activePrefixes = [frBase, enBase];
+    const selectors = '#exerciseDetail img, #exerciseList img, #exercises img, #visualAsset, #exerciseCardsLibrary img';
+    document.querySelectorAll(selectors).forEach(img => {
+      if (img.id === 'exerciseCardFullImg' || img.id === 'exerciseCardBackImg') return; // Paniflex.
+      const raw = img.getAttribute('src') || '';
+      if (!activePrefixes.some(prefix => raw.includes(prefix))) return;
+      const key = keyForImageUrl(raw);
+      if (!key) return;
+      const expected = exerciseFile(key, language);
+      if (raw !== expected) {
+        img.style.opacity = '';
+        img.src = expected;
+      }
+    });
+  }
+  function refresh(force) {
+    const current = selectedLanguage();
+    if (!force && current === lastLanguage) return;
+    lastLanguage = current;
+    setExerciseSources(current);
+    updateVisibleCards(current);
+    // Audio exercise already opened: switch its illustration immediately.
+    try {
+      if (window.currentExerciseKey && imageNames[window.currentExerciseKey]) {
+        const img = document.getElementById('visualAsset');
+        if (img && img.closest('#exerciseDetail')) {
+          img.src = exerciseFile(window.currentExerciseKey, current);
+        }
+      }
+    } catch (_) {}
+  }
+  function schedule() {
+    if (refreshPending) return;
+    refreshPending = true;
+    setTimeout(() => {
+      refreshPending = false;
+      refresh(false);
+    }, 45);
+  }
+  function initialize() {
+    refresh(true);
+    const html = document.documentElement;
+    if (typeof MutationObserver !== 'undefined') {
+      new MutationObserver(schedule).observe(html, {attributes:true, attributeFilter:['lang']});
+      // Language picker toggles CSS classes/aria states in some app versions.
+      const languagePicker = document.querySelector('[data-language="en"]')?.parentElement;
+      if (languagePicker) {
+        new MutationObserver(schedule).observe(languagePicker, {
+          subtree:true, attributes:true, attributeFilter:['class','aria-pressed','aria-selected']
+        });
+      }
+    }
+    document.addEventListener('click', e => {
+      if (e.target.closest?.('[data-language],[data-lang],[onclick*="lang"],[onclick*="Lang"]')) {
+        setTimeout(() => refresh(true), 90);
+      }
+    }, true);
+    window.addEventListener('storage', e => {
+      if (['mur-ui-language','murLanguage','murLang'].includes(e.key)) schedule();
+    });
+    window.addEventListener('focus', schedule);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) schedule(); });
+    // Public integration point for the language selector if it emits an app event.
+    document.addEventListener('mur:languagechange', () => refresh(true));
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize, {once:true});
+  } else initialize();
+})();
+
+
+/* ================================================================
+   M.U.R. V173 — Cartes des exercices : sélection EN/FR renforcée.
+   V172 pouvait être écrasé par le chargement asynchrone des contenus.
+   Actualisation à l'affichage ET lors des changements de langue.
+   Les cartes Paniflex conservent leur propre logique.
+   ================================================================ */
+(function(){
+  'use strict';
+  const names = {
+    pause:'06-pause-vagale.webp',double:'12-double-inspiration.webp',
+    merle:'15-chant-du-merle.webp',ancrage:'13-ancrage.webp',
+    vagues:'02-pas-de-vagues.webp',fil:'11-fil-du-souffle.webp',
+    mains:'01-mains-apaisantes.webp',foret:'10-promenade-foret.webp',
+    lac:'04-lac-tranquille.webp',balancier:'14-balancier-du-corps.webp',
+    presence:'05-presence-corporelle.webp',bell:'03-bell-bell-bell.webp',
+    lumiere:'07-lumiere-du-matin.webp',etincelle:'09-etincelle.webp',
+    elan:'16-elan-vertical.webp'
+  };
+  const baseFR='images/exercices/';
+  const baseEN='images/exercices/en/';
+  let clickChoice=null, clickTime=0, last='';
+  let busy=false;
+
+  function lang(){
+    // Une sélection explicite récente a priorité sur une préférence persistée
+    // pouvant être modifiée un peu plus tard par l'application.
+    if(clickChoice && Date.now()-clickTime<1800) return clickChoice;
+    const buttons=document.querySelectorAll('[data-language],[data-lang]');
+    for(const b of buttons){
+      const val=String(b.dataset.language || b.dataset.lang || '').toLowerCase();
+      if(val!=='en'&&val!=='fr')continue;
+      if(b.getAttribute('aria-pressed')==='true' ||
+         b.getAttribute('aria-selected')==='true' ||
+         b.getAttribute('data-active')==='true' ||
+         b.classList.contains('active') ||
+         b.classList.contains('selected') ||
+         b.classList.contains('is-active')) return val;
+    }
+    try {
+      const values=['mur-ui-language','murLanguage','murLang','mur-language','language','appLanguage'].map(k=>localStorage.getItem(k));
+      const saved=values.find(v=>v && /^(en|fr)(-|_|$)/i.test(v));
+      if(saved) return /^en/i.test(saved)?'en':'fr';
+    }catch(_){}
+    return /^en/i.test(document.documentElement.lang || '')?'en':'fr';
+  }
+  function imgPath(key,language){return (language==='en'?baseEN:baseFR)+names[key];}
+  function keyFromUrl(src){
+    if(!src)return null;
+    const clean=String(src).split(/[?#]/)[0];
+    for(const [key,name] of Object.entries(names)){
+      if(clean.endsWith('/'+name) || clean===name) return key;
+    }
+    return null;
+  }
+  function updateEntries(language){
+    try {
+      if(typeof EXERCISES==='undefined')return;
+      Object.keys(names).forEach(key=>{
+        const entry=EXERCISES[key];
+        if(!entry)return;
+        const priority=imgPath(key,language);
+        const french=imgPath(key,'fr');
+        const files=Array.isArray(entry.files)?entry.files:[];
+        // Cette fonction reste idempotente même si mur-content.json
+        // remplace tout le tableau entry.files après le chargement.
+        const ordered=[priority,...(language==='en'?[french]:[]),
+          ...files.filter(x=>x!==priority && x!==french)];
+        if(files.length!==ordered.length || files.some((f,i)=>f!==ordered[i])){
+          entry.files=ordered;
+        }
+      });
+    }catch(_){ }
+  }
+  function replaceOne(img,language){
+    if(!img||img.nodeName!=='IMG')return;
+    if(img.id==='exerciseCardBackImg')return; // verso Paniflex : conserver
+    const raw=img.getAttribute('src')||'';
+    const key=(img.id==='visualAsset' || img.id==='exerciseCardFullImg')
+      ? (window.currentExerciseKey || keyFromUrl(raw)) : keyFromUrl(raw);
+    if(!key || !names[key])return;
+    if(!raw.includes('images/exercices/') && img.id!=='visualAsset' && img.id!=='exerciseCardFullImg')return;
+    const expected=imgPath(key,language);
+    if(raw===expected)return;
+    img.dataset.murV173Target=expected;
+    img.onerror=function(){
+      // Si un fichier anglais manque sur GitHub, retour en français explicite.
+      if(language==='en' && this.getAttribute('src')===expected){
+        this.onerror=null;
+        this.src=imgPath(key,'fr');
+      }
+    };
+    img.src=expected;
+    img.style.opacity='';
+  }
+  function updateImages(language){
+    const nodes=document.querySelectorAll(
+      '#exerciseCardsLibrary img, #exerciseList img, #exerciseDetail img, '+
+      '#exerciseCardFullImg, #visualAsset'
+    );
+    nodes.forEach(img=>replaceOne(img,language));
+  }
+  function refresh(){
+    if(busy)return;
+    busy=true;
+    try {
+      const current=lang();
+      last=current;
+      updateEntries(current);
+      updateImages(current);
+    }finally{busy=false;}
+  }
+  function schedule(){Promise.resolve().then(refresh);}
+  function init(){
+    refresh();
+    // MutationObserver observe les cartes recréées (collection / détail),
+    // ainsi que les changements de langue, sans boucle de mutation.
+    const exercises=document.getElementById('exercises');
+    const cardModal=document.getElementById('exerciseCardModal');
+    if(typeof MutationObserver!=='undefined'){
+      const obs=new MutationObserver(records=>{
+        if(records.some(r=>r.type==='childList' ||
+          (r.type==='attributes'&&r.attributeName==='src')))schedule();
+      });
+      if(exercises)obs.observe(exercises,{subtree:true,childList:true,attributes:true,attributeFilter:['src']});
+      if(cardModal)obs.observe(cardModal,{subtree:true,childList:true,attributes:true,attributeFilter:['src']});
+      new MutationObserver(schedule).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+      const pickers=document.querySelectorAll('.mur-language-picker');
+      pickers.forEach(p=>new MutationObserver(schedule).observe(p,{subtree:true,attributes:true,attributeFilter:['class','aria-pressed','aria-selected','data-active']}));
+    }
+    document.addEventListener('click',e=>{
+      const b=e.target.closest?.('[data-language],[data-lang]');
+      if(b){
+        const value=String(b.dataset.language||b.dataset.lang||'').toLowerCase();
+        if(value==='en'||value==='fr'){
+          clickChoice=value;clickTime=Date.now();
+          schedule();setTimeout(refresh,140);setTimeout(refresh,950);
+        }
+      }
+    },true);
+    document.addEventListener('mur:languagechange',schedule);
+    window.addEventListener('storage',schedule);
+    window.addEventListener('focus',schedule);
+    // Le chargement distant de mur-content.json peut remplacer EXERCISES
+    // après l'initialisation. Une vérification légère restaure la priorité.
+    setInterval(()=>{
+      if(!document.hidden)refresh();
+    },1250);
+    window.murExerciseCardsSetLanguage=function(value){
+      if(value!=='en' && value!=='fr')return;
+      clickChoice=value;clickTime=Date.now();
+      try{localStorage.setItem('mur-ui-language',value);}catch(_){}
+      refresh();
+    };
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
