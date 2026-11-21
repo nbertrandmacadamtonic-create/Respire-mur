@@ -7684,142 +7684,146 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   else watch();
 })();
 
-/* =====================================================================
-   M.U.R. V177 — Rubans lumineux orbitaux 3D, accueil uniquement.
-   Corrige la V175 : filets plats -> rubans nets et halos visibles.
-   Même taille de carte, même sphère, même menus et navigation.
-   ===================================================================== */
-(function murOrbitalBandsV177(){
- 'use strict';
- if(window.MUR_HOME_ORBIT_V177)return;
- window.MUR_HOME_ORBIT_V177=true;
- function init(){
-   const orb=document.getElementById('homeCircle');
-   const home=document.getElementById('home');
-   const card=orb?.closest('.home-wheel-card');
-   if(!home||!orb||!card||card.querySelector('.mur-v177-orbit-back'))return;
-   const css=document.createElement('style');
-   css.id='mur-v177-orbit-style';
-   css.textContent=`
-    #home .home-wheel-card>.mur-home-waves-v168,
-    #home .home-wheel-card>.mur-v175-wave-behind,
-    #home .home-wheel-card>.mur-v175-wave-front{display:none!important;opacity:0!important}
-    #home .home-wheel-card:has(>.mur-v177-orbit-back){position:relative!important;isolation:isolate!important;overflow:hidden!important}
-    #home .home-wheel-card>.mur-v177-orbit-back,
-    #home .home-wheel-card>.mur-v177-orbit-front{
-      position:absolute!important;inset:0!important;display:block!important;
-      width:100%!important;height:100%!important;pointer-events:none!important;
-      border-radius:inherit!important;touch-action:none!important;
-    }
-    #home .home-wheel-card>.mur-v177-orbit-back{z-index:1!important}
-    #home .home-wheel-card>.mur-v177-orbit-front{z-index:4!important}
-    #home .home-wheel-card:has(>.mur-v177-orbit-back)>#homeCircle{position:relative!important;z-index:3!important}
-    #home .home-wheel-card:has(>.mur-v177-orbit-back)>#homeHint{position:relative!important;z-index:5!important}
-    body.mur-five-open #home .mur-v177-orbit-back,
-    body.mur-five-open #home .mur-v177-orbit-front,
-    #home .home-wheel-card:has(#homeCircle.mur-menu-open)>.mur-v177-orbit-back,
-    #home .home-wheel-card:has(#homeCircle.mur-menu-open)>.mur-v177-orbit-front,
-    #home .home-wheel-card:has(#homeCircle.mur-particles-transitioning)>.mur-v177-orbit-back,
-    #home .home-wheel-card:has(#homeCircle.mur-particles-transitioning)>.mur-v177-orbit-front{
-       opacity:0!important;transition:opacity .22s ease!important;
-    }
-   `;
-   document.head.appendChild(css);
-   const back=document.createElement('canvas');
-   const front=document.createElement('canvas');
-   back.className='mur-v177-orbit-back';front.className='mur-v177-orbit-front';
-   back.setAttribute('aria-hidden','true');front.setAttribute('aria-hidden','true');
-   card.prepend(back);card.appendChild(front);
-   const b=back.getContext('2d',{alpha:true});
-   const f=front.getContext('2d',{alpha:true});
-   if(!b||!f)return;
-   const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)');
-   let last=-Infinity,raf;
-   const ORBITS=[
-     // Le bleu remonte au-dessus, le turquoise enlace le centre,
-     // l'orange souligne le bas : chaque ruban possède avant + arrière.
-     {rgb:[35,165,255],y:-.27,tilt:-.26,ry:.45,rx:1.47,phi:1.25,rate:.075,alpha:1.0,thick:2.0},
-     {rgb:[49,235,202],y:.07,tilt:-.22,ry:.43,rx:1.39,phi:-.22,rate:.066,alpha:1.0,thick:2.65},
-     {rgb:[255,151,79],y:.35,tilt:-.16,ry:.36,rx:1.32,phi:2.35,rate:-.054,alpha:.92,thick:2.5}
-   ];
-   function stroke(ctx,pts,rgb,alpha,width,frontPart){
-      if(pts.length<2)return;
-      const path=new Path2D();
-      path.moveTo(pts[0][0],pts[0][1]);
-      for(let i=1;i<pts.length;i++)path.lineTo(pts[i][0],pts[i][1]);
-      const color=(a)=>`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
-      ctx.lineCap='round';ctx.lineJoin='round';
-      ctx.save();ctx.globalCompositeOperation='screen';
-      // soft atmospheric volume; clearly brighter than V175
-      ctx.strokeStyle=color(.075*alpha);ctx.lineWidth=width*19;
-      ctx.shadowColor=color(.65);ctx.shadowBlur=25;ctx.stroke(path);
-      ctx.strokeStyle=color(.14*alpha);ctx.lineWidth=width*9;
-      ctx.shadowBlur=15;ctx.stroke(path);
-      ctx.strokeStyle=color((frontPart?.90:.60)*alpha);
-      ctx.lineWidth=width*(frontPart?1.65:1.15);
-      ctx.shadowColor=color(.92);ctx.shadowBlur=9;ctx.stroke(path);
-      ctx.strokeStyle=color((frontPart?.95:.64)*alpha);
-      ctx.lineWidth=Math.max(.65,width*.39);ctx.shadowBlur=2;ctx.stroke(path);
+
+/* ========================================================================
+   M.U.R. V178 — Accueil : sphère parfaitement ronde, ondes enveloppantes
+   Remplace les anneaux orbitaux V177 par trois fils calmes en arrière-plan
+   et deux passages lumineux très fins au premier plan.
+   Aucun changement de la page Exercices, NeuroFlex ou navigation.
+   ======================================================================== */
+(function murHomeSoftWrapV178(){
+  'use strict';
+  if(window.MUR_HOME_SOFT_WRAP_V178)return;
+  window.MUR_HOME_SOFT_WRAP_V178=true;
+  function init(){
+    const home=document.getElementById('home');
+    const orb=document.getElementById('homeCircle');
+    const card=orb?.closest('.home-wheel-card');
+    if(!home||!orb||!card||card.querySelector('.mur-v178-behind'))return;
+    const css=document.createElement('style');
+    css.id='mur-v178-soft-wrap-css';
+    css.textContent=`
+      #home .home-wheel-card>.mur-home-waves-v168,
+      #home .home-wheel-card>.mur-v175-wave-behind,
+      #home .home-wheel-card>.mur-v175-wave-front,
+      #home .home-wheel-card>.mur-v177-orbit-back,
+      #home .home-wheel-card>.mur-v177-orbit-front{display:none!important;opacity:0!important}
+      #home .home-wheel-card:has(>.mur-v178-behind){position:relative!important;overflow:hidden!important;isolation:isolate!important}
+      #home .home-wheel-card>.mur-v178-behind,
+      #home .home-wheel-card>.mur-v178-ahead{
+        display:block!important;position:absolute!important;inset:0!important;
+        width:100%!important;height:100%!important;pointer-events:none!important;
+        border-radius:inherit!important;touch-action:none!important;
+      }
+      #home .home-wheel-card>.mur-v178-behind{z-index:1!important}
+      #home .home-wheel-card>.mur-v178-ahead{z-index:4!important}
+      #home .home-wheel-card:has(>.mur-v178-behind)>#homeCircle{
+        position:relative!important;z-index:3!important;
+      }
+      #home #homeCircle.mur-home-resp-v158::before{
+        content:''!important;display:block!important;
+        position:absolute!important;inset:9%!important;border-radius:50%!important;
+        z-index:1!important;filter:none!important;opacity:1!important;
+        background:radial-gradient(circle at 45% 39%,
+          rgba(13,81,73,.88) 0%,rgba(5,53,52,.94) 49%,
+          rgba(3,30,40,.94) 76%,rgba(2,25,37,.48) 94%,rgba(2,25,37,0) 100%)!important;
+        box-shadow:inset -7px -8px 20px rgba(0,16,25,.20),0 0 20px rgba(30,191,149,.075)!important;
+      }
+      #home #homeCircle.mur-home-resp-v158 .mur-home-resp-v158-canvas{
+        z-index:2!important;filter:brightness(1.14)!important;
+      }
+      #home .home-wheel-card:has(>.mur-v178-behind)>#homeHint{
+        position:relative!important;z-index:5!important;
+      }
+      body.mur-five-open #home .mur-v178-behind,
+      body.mur-five-open #home .mur-v178-ahead,
+      #home .home-wheel-card:has(#homeCircle.mur-menu-open)>.mur-v178-behind,
+      #home .home-wheel-card:has(#homeCircle.mur-menu-open)>.mur-v178-ahead,
+      #home .home-wheel-card:has(#homeCircle.mur-particles-transitioning)>.mur-v178-behind,
+      #home .home-wheel-card:has(#homeCircle.mur-particles-transitioning)>.mur-v178-ahead{
+        opacity:0!important;transition:opacity .2s ease!important;
+      }
+    `;
+    document.head.appendChild(css);
+    const behind=document.createElement('canvas'),ahead=document.createElement('canvas');
+    behind.className='mur-v178-behind';ahead.className='mur-v178-ahead';
+    behind.setAttribute('aria-hidden','true');ahead.setAttribute('aria-hidden','true');
+    card.prepend(behind);card.appendChild(ahead);
+    const ctxBack=behind.getContext('2d',{alpha:true});
+    const ctxFront=ahead.getContext('2d',{alpha:true});
+    if(!ctxBack||!ctxFront)return;
+    const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const curves=[
+      {c:[54,153,233],level:-.39,bulge:-.72,opacity:.46,phase:.4,slow:.17},
+      {c:[44,200,179],level:.015,bulge:.49,opacity:.35,phase:2.0,slow:.12},
+      {c:[255,150,96],level:.34,bulge:.48,opacity:.35,phase:4.3,slow:.10}
+    ];
+    function paintPath(ctx,points,color,opacity,px,strong){
+      if(points.length<2)return;
+      ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
+      const alpha=(a)=>`rgba(${color[0]},${color[1]},${color[2]},${(a*opacity).toFixed(3)})`;
+      // Gradients fade to nearly invisible at both ends and remain calm.
+      const min=points[0][0],max=points[points.length-1][0];
+      const grad=ctx.createLinearGradient(min,0,max,0);
+      grad.addColorStop(0,alpha(.03));grad.addColorStop(.20,alpha(.70));
+      grad.addColorStop(.50,alpha(strong?1:.9));grad.addColorStop(.80,alpha(.7));grad.addColorStop(1,alpha(.03));
+      const path=new Path2D();path.moveTo(points[0][0],points[0][1]);
+      for(let i=1;i<points.length;i++)path.lineTo(points[i][0],points[i][1]);
+      ctx.globalCompositeOperation='screen';
+      ctx.strokeStyle=grad;ctx.lineWidth=px*5;ctx.shadowColor=alpha(.9);ctx.shadowBlur=9;ctx.globalAlpha=.22;ctx.stroke(path);
+      ctx.globalAlpha=1;ctx.lineWidth=px;ctx.shadowBlur=strong?5:2;ctx.stroke(path);
       ctx.restore();
-   }
-   function draw(time){
-     raf=requestAnimationFrame(draw);
-     if(!card.isConnected){cancelAnimationFrame(raf);return;}
-     if(document.hidden||!home.classList.contains('active'))return;
-     if(time-last<32)return;last=time;
-     const box=card.getBoundingClientRect(),o=orb.getBoundingClientRect();
-     const w=box.width,h=box.height;
-     if(w<140||h<170||o.width<70)return;
-     const dpr=Math.min(2,devicePixelRatio||1),cw=Math.ceil(w*dpr),ch=Math.ceil(h*dpr);
-     for(const [can,ctx] of [[back,b],[front,f]]){
-       if(can.width!==cw||can.height!==ch){can.width=cw;can.height=ch;}
-       ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
-     }
-     const cx=o.left-box.left+o.width/2;
-     const cy=o.top-box.top+o.height/2;
-     const radius=Math.min(o.width,o.height)*.46;
-     const ts=reduce?.matches?0:time/1000;
-     // Bloom local derrière l'orbe ; la sphère de points d'origine reste intacte.
-     const bloom=b.createRadialGradient(cx,cy,radius*.14,cx,cy,radius*1.07);
-     bloom.addColorStop(0,'rgba(18,206,143,.18)');
-     bloom.addColorStop(.58,'rgba(19,146,154,.075)');
-     bloom.addColorStop(1,'rgba(23,145,199,0)');
-     b.fillStyle=bloom;b.beginPath();b.arc(cx,cy,radius*1.07,0,Math.PI*2);b.fill();
-     // Orbit elliptique projetée, partie arrière et avant calculées séparément.
-     for(const orbDef of ORBITS){
-       const amplitude=radius*orbDef.ry;
-       const thetaShift=ts*orbDef.rate;
-       const coordinates=[];
-       const N=360;
-       for(let i=0;i<=N;i++){
-         const a=i/N*Math.PI*2+orbDef.phi+thetaShift;
-         const xx=radius*orbDef.rx*Math.cos(a);
-         const z=Math.sin(a);
-         const yy=radius*orbDef.y+amplitude*z+orbDef.tilt*xx;
-         coordinates.push([cx+xx,cy+yy,z]);
-       }
-       // Draw each depth hemisphere without joining across the seam.
-       for(const depth of [-1,1]){
-         const ctx=depth<0?b:f;
-         const runs=[];let segment=[];
-         for(const p of coordinates){
-           const belongs=(p[2]>=0?1:-1)===depth;
-           if(belongs){segment.push(p);}else if(segment.length){runs.push(segment);segment=[];}
-         }
-         if(segment.length)runs.push(segment);
-         // Periodic domain: merge a segment split at the start/end.
-         if(runs.length>1 && runs[0][0]===coordinates[0] && runs[runs.length-1][runs[runs.length-1].length-1]===coordinates[N]){
-           const tail=runs.pop();runs[0]=tail.concat(runs[0]);
-         }
-         for(const seg of runs){
-           const width=orbDef.thick*(Math.max(.75,Math.min(1.25,w/450)));
-           stroke(ctx,seg,orbDef.rgb,orbDef.alpha,width,depth===1);
-         }
-       }
-     }
-   }
-   raf=requestAnimationFrame(draw);
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
- else init();
+    }
+    let raf=0,last=-Infinity;
+    function render(ms){
+      raf=requestAnimationFrame(render);
+      if(!card.isConnected){cancelAnimationFrame(raf);return;}
+      if(document.hidden||!home.classList.contains('active'))return;
+      if(ms-last<33)return;last=ms;
+      const box=card.getBoundingClientRect(),circle=orb.getBoundingClientRect();
+      const w=box.width,h=box.height;
+      if(w<130||h<170||circle.width<70)return;
+      const dpr=Math.min(2,window.devicePixelRatio||1);
+      for(const [canvas,ctx] of [[behind,ctxBack],[ahead,ctxFront]]){
+        const dw=Math.round(w*dpr),dh=Math.round(h*dpr);
+        if(canvas.width!==dw||canvas.height!==dh){canvas.width=dw;canvas.height=dh;}
+        ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+      }
+      const cx=circle.left-box.left+circle.width/2;
+      const cy=circle.top-box.top+circle.height/2;
+      // R matches the actual point sphere (v158 uses .40 of circle width).
+      const r=Math.min(circle.width,circle.height)*.405;
+      const t=reduced?.matches?0:ms/1000;
+      const waveDrift=reduced?.matches?0:Math.sin(t*.35)*r*.015;
+      // The three background lines bend around the outside of the sphere.
+      curves.forEach((def,i)=>{
+        const pts=[];
+        for(let x=0;x<=w;x+=3){
+          const u=(x-cx)/(r*1.12);
+          const bulge=Math.exp(-u*u*1.25);
+          const quiet=Math.sin(x/(w||1)*Math.PI*1.7+t*def.slow+def.phase)*r*.024;
+          const y=cy+r*def.level+r*def.bulge*bulge+quiet+waveDrift;
+          pts.push([x,y]);
+        }
+        paintPath(ctxBack,pts,def.c,def.opacity,1.25,false);
+      });
+      // Two short, translucent filaments appear in front, not full orbit rings.
+      // Their tapered ends disappear before they obscure the outer silhouette.
+      const cyan=[],amber=[];
+      const step=r/46;
+      for(let x=cx-r*.94;x<=cx+r*.94;x+=step){
+        const u=(x-cx)/r;
+        cyan.push([x,cy+r*(.19-.19*u-.09*Math.cos(Math.PI*u))+waveDrift]);
+      }
+      for(let x=cx-r*.75;x<=cx+r*.82;x+=step){
+        const u=(x-cx)/r;
+        amber.push([x,cy+r*(.73-.11*u-.09*Math.cos(Math.PI*u))+waveDrift]);
+      }
+      paintPath(ctxFront,cyan,[77,229,211],.48,1.65,true);
+      paintPath(ctxFront,amber,[255,157,96],.42,1.45,true);
+    }
+    raf=requestAnimationFrame(render);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
 })();
