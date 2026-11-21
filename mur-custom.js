@@ -7536,3 +7536,150 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
   else install();
 })();
+
+/* =========================================================
+   M.U.R. V176 — « Pourquoi ça marche ? » en véritable popup
+   Ne change ni les cartes, ni les audios, ni les pages.
+   ========================================================= */
+(function murWhyPopupV176(){
+  'use strict';
+  const STYLE_ID='mur-why-popup-v176-style';
+  const MODAL_ID='mur-why-popup-v176';
+  if(document.getElementById(STYLE_ID))return;
+  const style=document.createElement('style');
+  style.id=STYLE_ID;
+  style.textContent=`
+    /* Le contenu explicatif existe toujours, mais n'occupe plus de place. */
+    #exercises #exerciseDetail #whyBox,
+    #exercises #exerciseDetail #whyBox.open{display:none!important;max-height:0!important;}
+    #${MODAL_ID}{
+      position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;
+      height:100dvh!important;z-index:2147483000!important;
+      display:flex!important;align-items:center!important;justify-content:center!important;
+      padding:calc(18px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px))!important;
+      box-sizing:border-box!important;
+      background:rgba(2,9,23,.76)!important;
+      -webkit-backdrop-filter:blur(11px);backdrop-filter:blur(11px);
+      overflow:hidden!important;overscroll-behavior:contain;
+    }
+    #${MODAL_ID}[hidden]{display:none!important;}
+    #${MODAL_ID} .mur-why-v176-card{
+      position:relative;box-sizing:border-box;width:min(100%,440px);
+      max-height:min(80dvh,650px);overflow-y:auto;overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+      border:1px solid rgba(108,194,234,.44);border-radius:24px;
+      padding:28px 24px 26px;
+      background:linear-gradient(145deg,#13273b 0%,#081625 58%,#06111d 100%);
+      box-shadow:0 22px 65px rgba(0,0,0,.55),0 0 30px rgba(54,157,183,.14);
+      color:#f4f8fd;font-family:inherit;
+    }
+    #${MODAL_ID} .mur-why-v176-close{
+      position:absolute;right:14px;top:12px;width:38px;height:38px;
+      border:1px solid rgba(188,213,230,.4);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(255,255,255,.045);color:#f5faff;
+      font-size:24px;font-weight:300;line-height:1;cursor:pointer;
+    }
+    #${MODAL_ID} .mur-why-v176-overline{
+      margin:2px 42px 8px 0;color:#8edddd;font-size:12px;
+      font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    }
+    #${MODAL_ID} .mur-why-v176-title{
+      margin:0 30px 22px 0;color:#fff;font-size:clamp(21px,5vw,26px);
+      line-height:1.2;font-weight:750;letter-spacing:-.02em;
+    }
+    #${MODAL_ID} .mur-why-v176-content{
+      color:#e6eef8;font-size:15px;line-height:1.65;
+    }
+    #${MODAL_ID} .mur-why-v176-content p{margin:0 0 14px!important;}
+    #${MODAL_ID} .mur-why-v176-content p:last-child{margin-bottom:0!important;}
+    #${MODAL_ID} .mur-why-v176-bottom{margin-top:22px;display:flex;justify-content:flex-end;}
+    #${MODAL_ID} .mur-why-v176-done{
+      padding:10px 20px;min-height:42px;color:#071827;font-weight:700;
+      background:#88d9d4;border:0;border-radius:12px;cursor:pointer;
+    }
+    @media(max-width:430px){#${MODAL_ID} .mur-why-v176-card{padding:24px 20px;max-height:78dvh;}}
+  `;
+  (document.head||document.documentElement).appendChild(style);
+  let previousFocus=null;
+  function modal(){
+    let node=document.getElementById(MODAL_ID);
+    if(node)return node;
+    node=document.createElement('div');
+    node.id=MODAL_ID;
+    node.hidden=true;
+    node.setAttribute('role','presentation');
+    node.innerHTML=`
+      <div class="mur-why-v176-card" role="dialog" aria-modal="true" aria-labelledby="mur-why-v176-heading" aria-describedby="mur-why-v176-body" tabindex="-1">
+        <button type="button" class="mur-why-v176-close" aria-label="Fermer">×</button>
+        <p class="mur-why-v176-overline"></p>
+        <h2 class="mur-why-v176-title" id="mur-why-v176-heading"></h2>
+        <div class="mur-why-v176-content" id="mur-why-v176-body"></div>
+        <div class="mur-why-v176-bottom"><button type="button" class="mur-why-v176-done"></button></div>
+      </div>`;
+    node.addEventListener('click',(event)=>{
+      if(event.target===node || event.target.closest('.mur-why-v176-close,.mur-why-v176-done'))close();
+    });
+    document.body.appendChild(node);
+    return node;
+  }
+  function close(){
+    const node=document.getElementById(MODAL_ID);
+    if(!node || node.hidden)return;
+    node.hidden=true;
+    if(previousFocus && previousFocus.isConnected){try{previousFocus.focus({preventScroll:true});}catch(e){previousFocus.focus();}}
+    previousFocus=null;
+  }
+  function open(){
+    const source=document.querySelector('#exercises #exerciseDetail #whyBox');
+    if(!source || !source.innerHTML.trim())return;
+    const node=modal();
+    const page=document.getElementById('exercises');
+    if(page && !page.classList.contains('active'))return;
+    const title=document.querySelector('#exerciseDetail h2');
+    const trigger=document.querySelector('#exerciseDetail .why-toggle-btn');
+    const isEnglish=/^en(?:-|$)/i.test(document.documentElement.lang||'') ||
+      /why|how it works/i.test(trigger?.textContent||'');
+    node.querySelector('.mur-why-v176-overline').textContent=isEnglish?'Why it works':'Pourquoi ça marche ?';
+    node.querySelector('.mur-why-v176-title').textContent=title?.textContent?.trim()||'';
+    // Content is already rendered by the existing EXERCISES engine.
+    node.querySelector('.mur-why-v176-content').innerHTML=source.innerHTML;
+    node.querySelector('.mur-why-v176-done').textContent=isEnglish?'Close':'Fermer';
+    node.querySelector('.mur-why-v176-close').setAttribute('aria-label',isEnglish?'Close':'Fermer');
+    previousFocus=document.activeElement;
+    node.hidden=false;
+    node.querySelector('.mur-why-v176-close').focus({preventScroll:true});
+  }
+  // Le bouton existant utilise onclick="toggleWhy()" dans index.html.
+  window.toggleWhy=function(){
+    const node=document.getElementById(MODAL_ID);
+    if(node && !node.hidden)close();else open();
+  };
+  document.addEventListener('keydown',event=>{
+    const node=document.getElementById(MODAL_ID);
+    if(!node || node.hidden)return;
+    if(event.key==='Escape'){event.preventDefault();close();}
+    else if(event.key==='Tab'){
+      const controls=Array.from(node.querySelectorAll('button:not([disabled])'));
+      const first=controls[0],last=controls[controls.length-1];
+      if(event.shiftKey && document.activeElement===first){event.preventDefault();last.focus();}
+      else if(!event.shiftKey && document.activeElement===last){event.preventDefault();first.focus();}
+    }
+  },true);
+  const originalClose=window.closeExercise;
+  if(typeof originalClose==='function'){
+    window.closeExercise=function(){close();return originalClose.apply(this,arguments);};
+  }
+  // If the detail is replaced when opening another exercise, close the popup.
+  function watch(){
+    const detail=document.getElementById('exerciseDetail');
+    if(!detail)return;
+    const observer=new MutationObserver(()=>{
+      const node=document.getElementById(MODAL_ID);
+      if(node && !node.hidden && !document.querySelector('#exerciseDetail #whyBox'))close();
+    });
+    observer.observe(detail,{childList:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watch,{once:true});
+  else watch();
+})();
