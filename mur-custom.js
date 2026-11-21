@@ -7238,3 +7238,149 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
+
+
+/* ================================================================
+   M.U.R. V174 — Tableau de bord : exercice conseillé selon NeuroFlex
+   Ne remplace QUE le contenu de la carte « Tendance actuelle ».
+   FR/EN, miniature WebP, pastille score, ouverture directe de l'exercice.
+   ================================================================ */
+(function(){
+  'use strict';
+  const REC={
+    rouge:{key:'pause',file:'06-pause-vagale.webp',fr:'Pause vagale',en:'Vagal Pause',frSub:'Souffler · Ralentir · Apaiser',enSub:'Breathe · Slow down · Soothe',c:'#ef4444'},
+    orange:{key:'mains',file:'01-mains-apaisantes.webp',fr:'Mains apaisantes',en:'Soothing Hands',frSub:'Toucher · Rassurer · Recentrer',enSub:'Touch · Reassure · Center',c:'#f59e0b'},
+    vert:{key:'foret',file:'10-promenade-foret.webp',fr:'Promenade dans la forêt',en:'Forest Walk',frSub:'Écouter · Ralentir · S’ancrer',enSub:'Listen · Slow down · Ground',c:'#22c55e'},
+    bleu:{key:'lumiere',file:'07-lumiere-du-matin.webp',fr:'Lumière du matin',en:'Morning Light',frSub:'Ouvrir · Respirer · Dynamiser',enSub:'Open · Breathe · Energize',c:'#3b82f6'}
+  };
+  const CSS=`
+  /* V174: aucune modification des deux autres cartes d'accueil */
+  #home .home-trend-card.mur-v174-rec{cursor:pointer!important;--mur-rec-color:#22c55e;transition:border-color .25s,background .25s!important;}
+  #home .home-trend-card.mur-v174-rec .status{display:none!important;}
+  #home .home-trend-card.mur-v174-rec .mur-rec-row{display:flex!important;align-items:center!important;gap:10px!important;width:100%!important;height:100%!important;min-width:0!important;}
+  #home .mur-rec-thumb{display:block;flex:0 0 auto;width:52px;height:52px;border-radius:11px;object-fit:cover;object-position:center 44%;border:1px solid color-mix(in srgb,var(--mur-rec-color) 52%,transparent);background:#091525;}
+  #home .mur-rec-info{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px;justify-content:center;}
+  #home .mur-rec-kicker{font-size:9px;line-height:1.05;color:#aabccc;font-weight:500;white-space:nowrap;}
+  #home .mur-rec-name{font-size:13px;line-height:1.12;font-weight:800;color:#f8fafc;white-space:normal;max-height:2.25em;overflow:hidden;}
+  #home .mur-rec-sub{font-size:9px;line-height:1.1;color:#a8b8c7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #home .mur-rec-score{display:flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;border:1px solid #d89e06;border-radius:99px;padding:4px 8px;color:var(--mur-rec-color);font-weight:700;font-size:11px;white-space:nowrap;min-width:40px;}
+  #home .mur-rec-score-dot{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:var(--mur-rec-color);}
+  #home .home-trend-card.mur-v174-rec:focus-visible{outline:2px solid var(--mur-rec-color);outline-offset:2px;}
+  main.app #home.page.active > section.home-trend-card.card.mur-v174-rec{padding:7px 11px!important;}
+  @media(max-height:760px){#home .mur-rec-thumb{height:44px;width:44px}#home .mur-rec-sub{display:none}}
+  `;
+  let suppress=false, keyNow=null, signature='';
+  function language(){
+    try{
+      const chosen=document.querySelector('[data-language="en"].active,[data-language="en"][aria-pressed="true"],[data-lang="en"].active,[data-lang="en"][aria-pressed="true"]');
+      if(chosen)return'en';
+      const chosenFR=document.querySelector('[data-language="fr"].active,[data-language="fr"][aria-pressed="true"],[data-lang="fr"].active,[data-lang="fr"][aria-pressed="true"]');
+      if(chosenFR)return'fr';
+      for(const k of ['mur-ui-language','murLanguage','murLang','mur-language','language']){
+        const v=localStorage.getItem(k);
+        if(v && /^(en|fr)(-|_|$)/i.test(v))return /^en/i.test(v)?'en':'fr';
+      }
+    }catch(_e){}
+    return /^en/i.test(document.documentElement.lang||'')?'en':'fr';
+  }
+  function recent(){
+    let v=null;
+    try{v=typeof latestNeuro==='function'?latestNeuro():JSON.parse(localStorage.getItem('murLastNeuro')||'null')}catch(_e){}
+    return v && v.zone ?v:null;
+  }
+  function zoneOf(v){
+    if(!v)return'';
+    const z=v.zone||{};
+    const str=String(z.key||z.name||z.label||z.color||'').toLowerCase();
+    for(const [zone, hints] of Object.entries({rouge:['rouge','red','#ef4444'],orange:['orange','#f59e0b'],vert:['vert','green','#22c55e'],bleu:['bleu','blue','#3b82f6']})){
+      if(hints.some(x=>str.includes(x)))return zone;
+    }
+    return '';
+  }
+  function imageFor(rec,lg){return 'images/exercices/'+(lg==='en'?'en/':'')+rec.file;}
+  function render(){
+    const card=document.querySelector('#home .home-trend-card');
+    const old=document.getElementById('homeTrend');
+    if(!card||!old||suppress)return;
+    const v=recent();
+    const z=zoneOf(v);
+    const lg=language();
+    const score=v&&v.score!=null?(Number(v.score)>0?'+':'')+String(v.score):'-';
+    const stamp=[z,lg,score,!!v].join('|');
+    if(!z){
+      keyNow=null;
+      signature='';
+      card.classList.remove('mur-v174-rec');
+      card.removeAttribute('role'); card.removeAttribute('tabindex');
+      card.removeAttribute('aria-label');
+      const panel=card.querySelector('.mur-rec-row');
+      if(panel)panel.remove();
+      return;
+    }
+    const rec=REC[z];
+    keyNow=rec.key;
+    if(stamp===signature && card.querySelector('.mur-rec-row'))return;
+    signature=stamp;
+    suppress=true;
+    try{
+      card.classList.add('mur-v174-rec');
+      card.style.setProperty('--mur-rec-color',rec.c);
+      card.setAttribute('role','button');
+      card.setAttribute('tabindex','0');
+      card.setAttribute('aria-label',lg==='en'?'Open suggested exercise '+rec.en:'Ouvrir l’exercice conseillé '+rec.fr);
+      let row=card.querySelector('.mur-rec-row');
+      if(!row){row=document.createElement('div');row.className='mur-rec-row';card.appendChild(row);}
+      row.textContent='';
+      const img=document.createElement('img');img.className='mur-rec-thumb';img.alt='';img.loading='lazy';
+      img.src=imageFor(rec,lg);
+      img.onerror=function(){if(lg==='en'&&this.src.indexOf('/en/')!==-1){this.onerror=null;this.src=imageFor(rec,'fr');}};
+      const info=document.createElement('div');info.className='mur-rec-info';
+      const kicker=document.createElement('span');kicker.className='mur-rec-kicker';kicker.textContent=lg==='en'?'Suggested exercise':'Exercice conseillé';
+      const title=document.createElement('strong');title.className='mur-rec-name';title.textContent=lg==='en'?rec.en:rec.fr;
+      const sub=document.createElement('span');sub.className='mur-rec-sub';sub.textContent=lg==='en'?rec.enSub:rec.frSub;
+      info.append(kicker,title,sub);
+      const pill=document.createElement('span');pill.className='mur-rec-score';
+      const dot=document.createElement('span');dot.className='mur-rec-score-dot';
+      pill.append(dot,document.createTextNode(score));
+      row.append(img,info,pill);
+    }finally{suppress=false;}
+  }
+  function open(e){
+    if(!keyNow)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    if(typeof switchPageDirect==='function')switchPageDirect('exercises');
+    if(typeof openExercise==='function'){
+      try{openExercise(keyNow);}catch(err){console.warn('MUR V174 exercice:',err);}
+    }
+  }
+  function init(){
+    if(!document.getElementById('mur-v174-recommendation-css')){
+      const el=document.createElement('style');el.id='mur-v174-recommendation-css';el.textContent=CSS;document.head.appendChild(el);
+    }
+    const card=document.querySelector('#home .home-trend-card');
+    if(!card)return;
+    // Capture: l'ancien onclick dirigeait vers Statistiques; on le neutralise seulement
+    // lorsqu'une recommandation existe, et on conserve le comportement ancien sans résultat.
+    card.addEventListener('click',e=>{if(keyNow)open(e);},true);
+    card.addEventListener('keydown',e=>{if(keyNow&&(e.key==='Enter'||e.key===' '))open(e);},true);
+    const original=document.getElementById('homeTrend');
+    if(original && typeof MutationObserver!=='undefined'){
+      new MutationObserver(()=>{if(!suppress)render();}).observe(original,{subtree:true,characterData:true,childList:true});
+    }
+    if(typeof MutationObserver!=='undefined'){
+      new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    }
+    render();
+    window.addEventListener('storage',render);
+    window.addEventListener('focus',render);
+    document.addEventListener('mur:languagechange',render);
+    document.addEventListener('click',e=>{
+      if(e.target.closest?.('[data-language],[data-lang]')){
+        setTimeout(()=>{signature='';render();},150);
+      }
+    },true);
+    setInterval(()=>{if(!document.hidden)render();},1500);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
