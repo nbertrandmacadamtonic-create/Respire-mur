@@ -8130,8 +8130,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  const CSS=`
   main.app:has(> #home.page.active) > header.top .brand > img.logo,
   main.app:has(> #home.page.active) > .top .brand > img.logo {
-    width:106px!important;height:78px!important;min-width:106px!important;
-    max-width:106px!important;max-height:78px!important;
+    width:74px!important;height:55px!important;min-width:74px!important;
+    max-width:74px!important;max-height:55px!important;
     border:0!important;border-radius:0!important;box-shadow:none!important;
     object-fit:contain!important;object-position:left center!important;
     background:transparent!important;filter:drop-shadow(0 0 5px rgba(102,225,255,.21))!important;
@@ -8180,7 +8180,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   #home .home-trend-card.mur-v174-rec .mur-rec-score{display:none!important;}
   #home .home-trend-card.mur-v174-rec .mur-rec-row{padding-right:2px!important;}
   #home .home-trend-card.mur-v174-rec{border-color:color-mix(in srgb,var(--mur-rec-color) 55%,#405368)!important;}
-  @media(max-width:380px){main.app:has(> #home.page.active) > .top .brand > img.logo{width:94px!important;min-width:94px!important;max-width:94px!important;height:70px!important;max-height:70px!important;}}
+  @media(max-width:380px){main.app:has(> #home.page.active) > .top .brand > img.logo{width:66px!important;min-width:66px!important;max-width:66px!important;height:49px!important;max-height:49px!important;}}
  `;
  const SVG=`<svg class="mur-v185-graph" viewBox="0 0 360 58" preserveAspectRatio="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
  <defs>
@@ -8227,7 +8227,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(home.classList.contains('active')){
       if(!logo.dataset.murV185Original)logo.dataset.murV185Original=oldSrc||'';
       if(logo.src!==LOGO_DATA)logo.src=LOGO_DATA;
-      logo.style.setProperty('border','0','important');logo.style.setProperty('box-shadow','none','important');logo.style.setProperty('border-radius','0','important');logo.style.setProperty('background','transparent','important');logo.style.setProperty('object-fit','contain','important');logo.style.setProperty('width','106px','important');logo.style.setProperty('height','78px','important');logo.style.setProperty('min-width','106px','important');logo.style.setProperty('max-width','106px','important');logo.style.setProperty('max-height','78px','important');
+      logo.style.setProperty('border','0','important');logo.style.setProperty('box-shadow','none','important');logo.style.setProperty('border-radius','0','important');logo.style.setProperty('background','transparent','important');logo.style.setProperty('object-fit','contain','important');logo.style.setProperty('width','74px','important');logo.style.setProperty('height','55px','important');logo.style.setProperty('min-width','74px','important');logo.style.setProperty('max-width','74px','important');logo.style.setProperty('max-height','55px','important');
     } else if(logo.dataset.murV185Original){logo.src=logo.dataset.murV185Original;for(const prop of ['border','box-shadow','border-radius','background','object-fit','width','height','min-width','max-width','max-height'])logo.style.removeProperty(prop);}
    };
    new MutationObserver(applyLogo).observe(home,{attributes:true,attributeFilter:['class']});
