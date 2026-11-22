@@ -8868,8 +8868,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       const menuOpen=document.body.classList.contains('mur-five-open') ||
         !!sphere?.classList.contains('mur-menu-open') ||
         !!sphere?.classList.contains('mur-particles-transitioning');
+      const introExiting=document.body.dataset.murIntroExiting==='1';
+      const infoOpen=!!document.getElementById('infoModal')?.classList.contains('open');
       const show=source.isConnected && !!home?.classList.contains('active') &&
-        !!sphere && !presentationVisible && !menuOpen && !document.hidden;
+        !!sphere && !presentationVisible && !introExiting && !infoOpen &&
+        !menuOpen && !document.hidden;
       if(!show){
         if(last!=='hidden'){portal.style.display='none';last='hidden';}
         return;
@@ -8975,4 +8978,59 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enforce,{once:true});
   else enforce();
+})();
+
+
+/* =====================================================================
+ M.U.R. V202 — EMPREINTE APRÈS LA PRÉSENTATION ET L'INFORMATION INITIALE
+
+ L'accueil est déjà marqué active derrière la présentation. Au clic sur
+ « Commencer », la fenêtre d'information peut s'ouvrir 700 ms plus tard :
+ éviter que l'empreinte apparaisse fugitivement au milieu de la transition.
+ Préserve la seule empreinte sous la sphère (V201), son clic et son son.
+ ===================================================================== */
+(function(){
+  'use strict';
+  if(window.MUR_V202_INTRO_FINGERPRINT_GUARD)return;
+  window.MUR_V202_INTRO_FINGERPRINT_GUARD=true;
+  const style=document.createElement('style');
+  style.id='mur-v202-intro-fingerprint-guard';
+  style.textContent=`
+    body[data-mur-intro-exiting="1"] > #mur-v197-fingerprint-portal,
+    body:has(#infoModal.open) > #mur-v197-fingerprint-portal,
+    body:has(#presentation:not(.hide)) > #mur-v197-fingerprint-portal {
+      display:none!important;
+      visibility:hidden!important;
+      pointer-events:none!important;
+    }
+  `;
+  document.head.appendChild(style);
+  let token=0;
+  function onIntroExit(){
+    const current=++token;
+    const start=Date.now();
+    document.body.dataset.murIntroExiting='1';
+    const interval=setInterval(()=>{
+      if(current!==token){clearInterval(interval);return;}
+      const elapsed=Date.now()-start;
+      const presentation=document.getElementById('presentation');
+      const info=document.getElementById('infoModal');
+      const videoVisible=!!presentation && !presentation.classList.contains('hide');
+      const infoOpen=!!info?.classList.contains('open');
+      let infoSeen=false;
+      try{infoSeen=localStorage.getItem('murInfoSeen')==='1';}catch(_){}
+      // Pas de flash lors des 700 ms précédant l'ouverture du premier message.
+      // Si l'information initiale est requise, attendre sa fermeture.
+      if(elapsed>=1050 && !videoVisible && !infoOpen && (infoSeen || elapsed>=2800)){
+        clearInterval(interval);
+        delete document.body.dataset.murIntroExiting;
+      }
+    },100);
+  }
+  document.addEventListener('click',e=>{
+    if(e.target.closest?.('#murCommencer,#murIntroSkip'))onIntroExit();
+  },true);
+  // L'autre chemin de sortie (ancienne présentation) ne doit pas relancer
+  // un portail si le dialogue est encore affiché.
+  window.MUR_V202={version:202,fix:'fingerprint-only-after-intro-and-initial-info'};
 })();
