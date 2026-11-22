@@ -9043,3 +9043,189 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 window.MUR_V203={version:203,fix:'fingerprint-no-artificial-delay'};
 
 /* M.U.R. V204 — Recommandation aleatoire parmi les 4 exercices de la zone NeuroFlex ; evite la repetition immediate par zone. Base V203. */
+
+/* =====================================================================
+ M.U.R. V205 — CORRECTIFS CROISÉS ACCUEIL
+ - Remonte encore la courbe « Tendance NeuroFlex » pour la centrer.
+ - Recale le point pour qu'il soit posé sur la courbe.
+ - Corrige l'apparition de l'empreinte : immédiate sur téléphone,
+   légèrement retardée sur ordinateur après « Commencer ».
+ ===================================================================== */
+(function(){
+  'use strict';
+  if (window.MUR_V205) return;
+  window.MUR_V205 = { version: 205, fixes: ['neuroflex-curve-up', 'marker-on-curve', 'fingerprint-mobile-desktop-timing'] };
+
+  const STYLE_ID = 'mur-v205-neuroflex-fingerprint-css';
+  const PORTAL_ID = 'mur-v197-fingerprint-portal';
+  let portalLast = '';
+
+  function installStyle(){
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = `
+      /* Courbe neuroflex encore remontée et recentrée. */
+      #home .home-line-card.mur-v185-line .mur-v185-graph{
+        inset:auto 0 8px!important;
+        top:7px!important;
+        height:calc(100% - 15px)!important;
+      }
+      /* Le point reste exactement calé sur la courbe recalculée ci-dessous. */
+      #home .home-line-card.mur-v185-line .mur-v185-marker{
+        transform:translate(-50%,-50%)!important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function getScore(){
+    const raw = String(document.getElementById('homeScore')?.textContent || '').replace(',', '.');
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function recalcMarker(){
+    const marker = document.querySelector('#home .home-line-card.mur-v185-line .mur-v185-marker');
+    if (!marker) return;
+    const val = getScore();
+    const pct = val === null ? 0.5 : Math.max(0.03, Math.min(0.97, (val + 50) / 100));
+    const t = pct;
+    const y = 43 - 27*Math.exp(-Math.pow((t-.17)/.16,2))
+                 + 13*Math.exp(-Math.pow((t-.43)/.12,2))
+                 - 24*Math.exp(-Math.pow((t-.70)/.17,2))
+                 +  6*Math.exp(-Math.pow((t-.89)/.07,2));
+    const yn = Math.min(1, Math.max(0, y / 58));
+    marker.style.left = `${(pct * 100).toFixed(3)}%`;
+    marker.style.top  = `calc(7px + (100% - 15px) * ${yn})`;
+  }
+
+  function bindMarkerRefresh(){
+    const native = document.getElementById('homeScore');
+    if (native && !native.dataset.murV205Obs) {
+      native.dataset.murV205Obs = '1';
+      new MutationObserver(recalcMarker).observe(native, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style']
+      });
+    }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) recalcMarker(); });
+    window.addEventListener('resize', recalcMarker, { passive: true });
+    window.setInterval(recalcMarker, 350);
+    window.setTimeout(recalcMarker, 80);
+    window.setTimeout(recalcMarker, 300);
+  }
+
+  function markIntroDismiss(){
+    window.__murIntroDismissedAt = performance.now();
+  }
+
+  function bindIntroTimestamp(){
+    if (document.body.dataset.murV205IntroBound === '1') return;
+    document.body.dataset.murV205IntroBound = '1';
+    document.addEventListener('click', (event) => {
+      const btn = event.target.closest?.('#murCommencer,#murIntroSkip');
+      if (btn) markIntroDismiss();
+    }, true);
+  }
+
+  function isIntroVisible(){
+    const presentation = document.getElementById('presentation');
+    return !!presentation && !presentation.classList.contains('hide') &&
+      getComputedStyle(presentation).display !== 'none' &&
+      getComputedStyle(presentation).visibility !== 'hidden';
+  }
+
+  function isMobileViewport(){
+    return window.matchMedia('(max-width: 768px)').matches ||
+      /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+  }
+
+  function syncFingerprintPortal(){
+    const portal = document.getElementById(PORTAL_ID);
+    const source = document.getElementById('homeHint');
+    const sphere = document.getElementById('homeCircle');
+    const home = document.getElementById('home');
+    if (!portal || !source || !sphere || !home) return;
+
+    const menuOpen = document.body.classList.contains('mur-five-open') ||
+      sphere.classList.contains('mur-menu-open') ||
+      sphere.classList.contains('mur-particles-transitioning');
+    const infoOpen = !!document.getElementById('infoModal')?.classList.contains('open');
+
+    let infoValidated = false;
+    try {
+      infoValidated = localStorage.getItem('murInfoSeen') === '1';
+    } catch (_error) {
+      infoValidated = true;
+    }
+
+    const introAt = Number(window.__murIntroDismissedAt || 0);
+    const requiredDelay = introAt > 0 ? (isMobileViewport() ? 0 : 220) : 0;
+    const delaySatisfied = introAt > 0 ? (performance.now() - introAt >= requiredDelay) : true;
+
+    const show = source.isConnected && home.classList.contains('active') &&
+      !isIntroVisible() && !infoOpen && infoValidated && !menuOpen &&
+      !document.hidden && delaySatisfied;
+
+    if (!show) {
+      portal.style.display = 'none';
+      portalLast = 'hidden';
+      return;
+    }
+
+    const r = source.getBoundingClientRect();
+    if (r.width < 30 || r.height < 30 || r.bottom < 0 || r.top > window.innerHeight) {
+      portal.style.display = 'none';
+      portalLast = 'hidden';
+      return;
+    }
+
+    const size = Math.min(80, Math.max(54, r.height || 66));
+    const left = r.left + r.width / 2 - size / 2;
+    const top = r.top + r.height / 2 - size / 2;
+    const coords = [left, top, size].map(n => Math.round(n * 10) / 10).join('|');
+    if (coords !== portalLast) {
+      portal.style.left = `${left}px`;
+      portal.style.top = `${top}px`;
+      portal.style.width = `${size}px`;
+      portal.style.height = `${size}px`;
+      portalLast = coords;
+    }
+
+    const label = source.getAttribute('aria-label') || 'Ouvrir le menu';
+    if (portal.getAttribute('aria-label') !== label) portal.setAttribute('aria-label', label);
+    if (portal.style.display !== 'flex') portal.style.display = 'flex';
+  }
+
+  function bindFingerprintSync(){
+    if (document.body.dataset.murV205PortalBound === '1') return;
+    document.body.dataset.murV205PortalBound = '1';
+
+    const pulse = () => requestAnimationFrame(syncFingerprintPortal);
+    ['resize','orientationchange','pageshow'].forEach(evt => window.addEventListener(evt, pulse, { passive: true }));
+    ['visibilitychange','transitionend','animationend'].forEach(evt => document.addEventListener(evt, pulse, true));
+    document.addEventListener('click', pulse, true);
+    document.addEventListener('pointerup', pulse, true);
+    window.setInterval(syncFingerprintPortal, 40);
+    window.setTimeout(syncFingerprintPortal, 0);
+    window.setTimeout(syncFingerprintPortal, 60);
+    window.setTimeout(syncFingerprintPortal, 240);
+    window.setTimeout(syncFingerprintPortal, 420);
+  }
+
+  function init(){
+    installStyle();
+    bindMarkerRefresh();
+    bindIntroTimestamp();
+    bindFingerprintSync();
+    recalcMarker();
+    syncFingerprintPortal();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+})();
