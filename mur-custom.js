@@ -8834,9 +8834,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       outline:2px solid #a5f2d1;outline-offset:9px;
     }
     /* Même si une autre feuille force la vidéo visible, pas d'empreinte. */
-    body:has(#presentation:not(.hide)) > #mur-v197-fingerprint-portal{
-      display:none!important;pointer-events:none!important;
-    }
+    /* L'affichage est commandé par sync() selon la visibilité réelle de la présentation. */
   `;
   document.head.appendChild(style);
   function install(){
@@ -8876,13 +8874,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         if(last!=='hidden'){portal.style.display='none';last='hidden';}
         return;
       }
-      // Positionner sur la grande sphère elle-même, PAS sur le #homeHint sous elle.
-      const r=sphere.getBoundingClientRect();
+      // Positionner l'empreinte SOUS la grande sphère, à l'emplacement
+      // historique de #homeHint (maintenu dans le flux, mais invisible).
+      const r=source.getBoundingClientRect();
       if(r.width<30 || r.height<30 || r.bottom<0 || r.top>innerHeight){
         if(last!=='hidden'){portal.style.display='none';last='hidden';}
         return;
       }
-      const size=Math.min(66,Math.max(46,r.width*.23));
+      const size=Math.min(80,Math.max(54,r.height||66));
       const left=r.left+r.width/2-size/2;
       const top=r.top+r.height/2-size/2;
       const coords=[left,top,size].map(n=>Math.round(n*10)/10).join('|');
@@ -8932,4 +8931,48 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
   else install();
   window.MUR_V198={version:'198',fix:'raise-neuroflex-curve-and-marker-4px'};
+})();
+
+
+/* =====================================================================
+ M.U.R. V201 — EMPREINTE UNIQUE SOUS LA SPHÈRE (POSITION ORIGINALE)
+ - Conserve #homeHint dans le flux pour son placement sous la sphère.
+ - Le rend invisible, et superpose le bouton flottant au même emplacement.
+ - sync() du portail V199 cache celui-ci pendant la présentation et le menu.
+ ===================================================================== */
+(function(){
+  'use strict';
+  const ID='mur-v201-fingerprint-below-sphere';
+  if(document.getElementById(ID))return;
+  const style=document.createElement('style');
+  style.id=ID;
+  style.textContent=`
+    html body main.app #home.page.active section.home-wheel-card.card #homeHint.home-hint,
+    html body main.app #home section.home-wheel-card.card #homeHint.home-hint {
+      display:flex!important;
+      position:relative!important;
+      visibility:hidden!important;
+      opacity:0!important;
+      pointer-events:none!important;
+    }
+    html body main.app #home section.home-wheel-card.card #homeHint.home-hint::after {
+      display:none!important;
+      content:none!important;
+    }
+  `;
+  document.head.appendChild(style);
+  function enforce(){
+    const source=document.getElementById('homeHint');
+    if(!source)return;
+    source.classList.add('mur-v199-source');
+    // Maintenir l'espace du bouton original sous la sphère.
+    source.style.setProperty('display','flex','important');
+    source.style.setProperty('visibility','hidden','important');
+    source.style.setProperty('opacity','0','important');
+    source.style.setProperty('pointer-events','none','important');
+    source.setAttribute('aria-hidden','true');
+    source.setAttribute('tabindex','-1');
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enforce,{once:true});
+  else enforce();
 })();
