@@ -1891,16 +1891,10 @@ if (typeof window.installPresentationFallback !== 'function') {
             ctx.shadowBlur=7;
             ctx.stroke();
             const x=orbitRadius*Math.cos(endAngle),y=orbitRadius*Math.sin(endAngle);
-            const tx=-Math.sin(endAngle),ty=Math.cos(endAngle);
-            const nx=-ty,ny=tx;
-            const wing=3.5,shaft=7;
-            ctx.beginPath();
-            ctx.moveTo(x-shaft*tx+wing*nx,y-shaft*ty+wing*ny);
-            ctx.lineTo(x,y);
-            ctx.lineTo(x-shaft*tx-wing*nx,y-shaft*ty-wing*ny);
-            ctx.lineWidth=1.85;
-            ctx.stroke();
-            // V216 : chaque flèche se termine par un point lumineux coloré.
+            // V217 : aucune pointe de flèche. L'arc se termine uniquement
+            // par le point lumineux ; ne pas ajouter de chevrons.
+            // Les coordonnées restent celles du moteur de particules.
+            // V216 : chaque arc se termine par un point lumineux coloré.
             // Le point est sur la même courbe, à l'extrémité de l'arc.
             ctx.beginPath();
             ctx.arc(x,y,2.75,0,TAU);
@@ -9467,3 +9461,216 @@ window.MUR_V214={version:214,base:213,feature:'five-outside-canvas-orbit-arrows'
 /* M.U.R. V216 — Respiration V215 + flèches rapprochées terminées par un point.
    Base V214, sans modifier le comportement des cinq sphères ni des tests. */
 window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiration-fingerprint-three-settings']};
+
+
+/* ========================================================================
+ M.U.R. V217 — RESPIRATION : 3 BLOCS SANS FENÊTRE SON / EMPREINTE ACCUEIL
+ - Flèches de l'accueil : arcs sans pointes, points lumineux conservés.
+ - Le bouton de lancement est l'empreinte V215, portant le graphisme de l'accueil.
+ - Le bloc Son comprend exactement deux commandes directes : Son et Intro.
+ - Réutilise les boutons natifs #soundBtn et #breathIntroToggle :
+   pas de duplication d'état, aucune nouvelle fenêtre.
+ - Le réglage du rythme / de la durée et la session plein écran restent natifs.
+ ======================================================================== */
+(function(){
+  'use strict';
+  if(window.MUR_V217)return;
+  window.MUR_V217={version:217,base:216,fixes:['no-arrowheads','home-fingerprint-match','inline-sound-intro']};
+  const ID='mur-v217-breath-three-cards';
+  const CSS=`
+    /* Le bouton de l'accueil et l'empreinte de la respiration partagent
+       exactement le même motif SVG, les couleurs et les deux anneaux. */
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-v215-finger{
+      width:clamp(78px,11dvh,98px)!important;
+      height:clamp(78px,11dvh,98px)!important;
+      border:1px solid #7de5c1!important;
+      background:radial-gradient(circle at 35% 25%,#1b5f55,#0c2b36 76%)!important;
+      box-shadow:0 0 23px #33d39e31,inset 0 0 18px #66d6ac14!important;
+      color:#a1ffe0!important;
+      margin:2px auto 8px!important;
+      filter:none!important;
+      isolation:isolate!important;
+    }
+    #breath .mur-v215-finger::after{
+      content:'';position:absolute;inset:-7px;border-radius:50%;
+      border:1px solid rgba(125,229,193,.57);
+      box-shadow:0 0 11px rgba(51,211,158,.27);pointer-events:none;
+    }
+    #breath .mur-v215-finger svg{
+      display:block;width:45%!important;height:45%!important;
+      color:inherit!important;stroke:currentColor!important;
+      filter:none!important;pointer-events:none!important;
+    }
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-controls.mur-v165-commands{
+      display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+      align-items:stretch!important;gap:7px!important;
+    }
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-controls.mur-v165-commands > .mur-b152-control{
+      min-height:126px!important;
+    }
+    /* Ancienne commande 'Son' cachée, mais conservée dans le DOM pour
+       ses observateurs historiques. Seule la nouvelle commande a une UI. */
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-controls.mur-v165-commands > .mur-b152-control[data-b152="sound"]{
+      display:none!important;pointer-events:none!important;
+    }
+    /* La commande native Intro est déplacée dans le bloc Son. Son ancienne
+       ligne n'a plus de raison de prendre une rangée entière. */
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b153-intro-row{
+      display:none!important;
+    }
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-controls.mur-v165-commands > .mur-v217-sound-panel{
+      display:flex!important;flex-direction:column!important;align-items:stretch!important;
+      gap:6px!important;justify-content:flex-start!important;min-width:0!important;
+      min-height:126px!important;padding:10px 5px 7px!important;
+      border:1px solid #7a6ac5!important;border-radius:15px!important;
+      background:linear-gradient(165deg,rgba(65,52,116,.50),rgba(15,30,46,.86))!important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 4px 15px rgba(0,0,0,.10)!important;
+      color:white!important;
+    }
+    #breath .mur-v217-sound-heading{
+      display:flex;align-items:center;justify-content:center;gap:5px;
+      font-size:11px;font-weight:800;line-height:1.1;color:#fff;min-height:24px;
+    }
+    #breath .mur-v217-sound-heading svg{
+      flex:none;width:22px;height:22px;stroke:#b5a3ff;
+      filter:drop-shadow(0 0 3px #b5a3ff77);
+    }
+    #breath .mur-v217-sound-actions{
+      display:flex;flex:1;min-width:0;flex-direction:column;gap:5px;
+      align-items:stretch;justify-content:center;
+    }
+    #breath .mur-v217-sound-toggle,
+    #breath .mur-v217-sound-panel #breathIntroToggle{
+      display:grid!important;grid-template-columns:minmax(0,1fr) 24px!important;
+      align-items:center!important;column-gap:3px!important;
+      width:100%!important;max-width:100%!important;min-width:0!important;
+      min-height:32px!important;margin:0!important;padding:3px 5px!important;
+      background:rgba(11,25,48,.78)!important;border:1px solid rgba(180,163,255,.42)!important;
+      border-radius:10px!important;box-shadow:none!important;
+      font:700 10px/1.12 system-ui,sans-serif!important;color:#f2ebff!important;
+      cursor:pointer!important;white-space:nowrap!important;touch-action:manipulation!important;
+    }
+    #breath .mur-v217-sound-panel #breathIntroToggle .manual-switch-text,
+    #breath .mur-v217-sound-toggle .mur-v217-toggle-label{
+      display:block!important;min-width:0!important;flex:1 1 auto!important;
+      font:700 10px/1.14 system-ui,sans-serif!important;color:inherit!important;
+      text-align:left!important;overflow:hidden!important;white-space:normal!important;
+    }
+    #breath .mur-v217-sound-panel #breathIntroToggle .manual-switch-text{grid-column:1!important;grid-row:1!important;}
+    #breath .mur-v217-sound-panel #breathIntroToggle .manual-switch-track{grid-column:2!important;grid-row:1!important;}
+    #breath .mur-v217-sound-toggle .mur-v217-toggle-label{grid-column:1!important;grid-row:1!important;}
+    #breath .mur-v217-sound-toggle .mur-v217-toggle-track{grid-column:2!important;grid-row:1!important;}
+    #breath .mur-v217-sound-panel #breathIntroToggle .manual-switch-track,
+    #breath .mur-v217-sound-toggle .mur-v217-toggle-track{
+      order:2!important;display:block!important;position:relative!important;
+      flex:0 0 24px!important;width:24px!important;min-width:24px!important;
+      height:15px!important;border-radius:50px!important;
+      background:rgba(127,140,167,.58)!important;border:1px solid rgba(210,213,237,.38)!important;
+      transition:background .15s ease!important;
+    }
+    #breath .mur-v217-sound-panel #breathIntroToggle .manual-switch-thumb,
+    #breath .mur-v217-sound-toggle .mur-v217-toggle-thumb{
+      position:absolute!important;top:1px!important;left:1px!important;
+      width:11px!important;height:11px!important;border-radius:50%!important;
+      background:#fff!important;box-shadow:0 1px 4px #0006!important;
+      transform:none!important;transition:transform .15s ease!important;
+    }
+    #breath .mur-v217-sound-panel #breathIntroToggle[aria-pressed="true"] .manual-switch-track,
+    #breath .mur-v217-sound-toggle[aria-pressed="true"] .mur-v217-toggle-track{
+      background:#22d6aa!important;border-color:#6af2d7!important;
+    }
+    #breath .mur-v217-sound-panel #breathIntroToggle[aria-pressed="true"] .manual-switch-thumb,
+    #breath .mur-v217-sound-toggle[aria-pressed="true"] .mur-v217-toggle-thumb{
+      transform:translateX(9px)!important;
+    }
+    #breath .mur-v217-sound-toggle:focus-visible,
+    #breath .mur-v217-sound-panel #breathIntroToggle:focus-visible{
+      outline:2px solid #b5a3ff!important;outline-offset:1px!important;
+    }
+    @media(max-width:370px){
+      #breath .mur-v217-sound-panel #breathIntroToggle .manual-switch-text,
+      #breath .mur-v217-sound-toggle .mur-v217-toggle-label{font-size:9px!important;}
+    }
+    @media(max-height:740px){
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-controls.mur-v165-commands > .mur-v217-sound-panel{
+        min-height:108px!important;padding:6px 4px!important;gap:3px!important;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-controls.mur-v165-commands > .mur-b152-control{
+        min-height:108px!important;
+      }
+      #breath .mur-v217-sound-panel #breathIntroToggle,
+      #breath .mur-v217-sound-toggle{min-height:28px!important;}
+    }
+    #breath.mur-b152.page.active.mur-b154-fullscreen .mur-v217-sound-panel{display:none!important;}
+  `;
+  function english(){return /^en/i.test(document.documentElement.lang||'fr');}
+  function install(){
+    const page=document.getElementById('breath');
+    const controls=page?.querySelector(':scope > .mur-b152-controls.mur-v165-commands');
+    const fingerprint=page?.querySelector(':scope > .mur-v215-finger');
+    const intro=document.getElementById('breathIntroToggle');
+    const nativeSound=document.getElementById('soundBtn');
+    if(!page||!controls||!fingerprint||!intro||!nativeSound)return;
+    if(!document.getElementById(ID)){
+      const style=document.createElement('style');style.id=ID;style.textContent=CSS;
+      document.head.appendChild(style);
+    }
+    // Réutiliser exactement l'empreinte du portail de l'accueil :
+    // même pictogramme, pas une variante approchante.
+    const homeGraphic=document.querySelector('#mur-v197-fingerprint-portal svg') ||
+      document.querySelector('#homeHint svg');
+    if(homeGraphic) fingerprint.innerHTML=homeGraphic.outerHTML;
+    const titleSound=english()?'Sound':'Son';
+    let panel=controls.querySelector('.mur-v217-sound-panel');
+    if(!panel){
+      panel=document.createElement('div');panel.className='mur-v217-sound-panel';
+      panel.innerHTML=`
+        <div class="mur-v217-sound-heading">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5a9.5 9.5 0 0 1 0 14"/>
+          </svg><span>${titleSound}</span>
+        </div>
+        <div class="mur-v217-sound-actions">
+          <button type="button" class="mur-v217-sound-toggle" aria-pressed="true">
+            <span class="mur-v217-toggle-label"></span>
+            <span class="mur-v217-toggle-track"><span class="mur-v217-toggle-thumb"></span></span>
+          </button>
+        </div>`;
+      controls.appendChild(panel);
+    }
+    // Le bouton original #breathIntroToggle conserve son ID, onclick et état.
+    // Le déplacer dans le bloc Son (il n'est jamais dupliqué).
+    const actions=panel.querySelector('.mur-v217-sound-actions');
+    if(intro.parentElement!==actions)actions.appendChild(intro);
+    const soundToggle=panel.querySelector('.mur-v217-sound-toggle');
+    soundToggle.addEventListener('click',event=>{
+      event.preventDefault();event.stopPropagation();
+      nativeSound.click();  // vraie commande du moteur, pas une simulation.
+      requestAnimationFrame(sync);
+    });
+    // Eviter qu'un clic sur le décor du bloc ne déclenche le panneau historique.
+    panel.addEventListener('click',event=>event.stopPropagation());
+    function sync(){
+      const isEn=english();
+      const on=nativeSound.getAttribute('aria-pressed')!=='false';
+      const introOn=intro.getAttribute('aria-pressed')==='true';
+      const heading=panel.querySelector('.mur-v217-sound-heading span');
+      if(heading)heading.textContent=isEn?'Sound':'Son';
+      soundToggle.setAttribute('aria-pressed',String(on));
+      soundToggle.querySelector('.mur-v217-toggle-label').textContent=isEn?(on?'Sound on':'Sound off'):(on?'Son actif':'Son coupé');
+      soundToggle.setAttribute('aria-label',isEn?(on?'Mute sound':'Enable sound'):(on?'Couper le son':'Activer le son'));
+      const introLabel=document.getElementById('breathIntroLabel');
+      if(introLabel){const txt=isEn?(introOn?'Intro on':'Intro off'):(introOn?'Intro active':'Intro inactive');
+        if(introLabel.textContent!==txt)introLabel.textContent=txt;}
+    }
+    const observer=new MutationObserver(sync);
+    observer.observe(nativeSound,{attributes:true,attributeFilter:['aria-pressed']});
+    observer.observe(intro,{attributes:true,attributeFilter:['aria-pressed']});
+    observer.observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    intro.addEventListener('click',()=>requestAnimationFrame(sync));
+    window.addEventListener('mur-content-loaded',sync);
+    sync();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
+})();
