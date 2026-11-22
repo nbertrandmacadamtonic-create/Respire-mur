@@ -8628,3 +8628,75 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  `;
  document.head.appendChild(css);
 })();
+
+
+/* =====================================================================
+ M.U.R. V195 — EMPREINTE AU PREMIER PLAN + LOGO NET
+ Base V194, sans changement à la transition des cinq sphères.
+ ===================================================================== */
+(function(){
+ 'use strict';
+ const ID='mur-v195-home-fingerprint-logo-crisp';
+ if(document.getElementById(ID))return;
+ const css=document.createElement('style');
+ css.id=ID;
+ css.textContent=`
+   /* La carte constitue une seule pile : rubans et sphère sous le bouton. */
+   main.app #home.page.active .home-wheel-card:has(#homeHint){
+     isolation:isolate!important;
+     position:relative!important;
+   }
+   main.app #home.page.active .home-wheel-card > canvas,
+   main.app #home.page.active .home-wheel-card > .mur-v181-back-canvas,
+   main.app #home.page.active .home-wheel-card > .mur-v181-globe-canvas,
+   main.app #home.page.active .home-wheel-card > .mur-v181-front-canvas{
+     z-index:1!important;
+     pointer-events:none!important;
+   }
+   main.app #home.page.active .home-wheel-card #homeCircle{
+     z-index:2!important;
+   }
+   main.app #home.page.active .home-wheel-card #homeHint.home-hint{
+     position:relative!important;
+     z-index:9999!important;
+     isolation:isolate!important;
+     opacity:1!important;
+     visibility:visible!important;
+     pointer-events:auto!important;
+     transform:none!important;
+     filter:none!important;
+     -webkit-filter:none!important;
+     cursor:pointer!important;
+   }
+   main.app #home.page.active .home-wheel-card #homeHint.home-hint svg{
+     position:relative!important;
+     z-index:1!important;
+     filter:none!important;
+     -webkit-filter:none!important;
+     pointer-events:none!important;
+   }
+   /* PNG déjà détouré : éviter le halo floutant ses contours métalliques. */
+   main.app:has(> #home.page.active) > header.top .brand img.logo,
+   main.app:has(> #home.page.active) > .top .brand img.logo{
+     filter:none!important;
+     -webkit-filter:none!important;
+     image-rendering:auto!important;
+     transform:none!important;
+     opacity:1!important;
+   }
+ `;
+ document.head.appendChild(css);
+ // Reste en fin de pile dans la carte si des scripts ajoutent des canvas
+ // tardivement, sans modifier l'emplacement visuel ou les écouteurs du bouton.
+ function putOnTop(){
+   const hint=document.getElementById('homeHint');
+   const card=hint?.closest('.home-wheel-card');
+   if(!hint||!card)return;
+   // Ne pas réordonner le bouton en flex : seul son z-index est forcé.
+   hint.style.setProperty('z-index','9999','important');
+   hint.style.setProperty('position','relative','important');
+   hint.style.setProperty('pointer-events','auto','important');
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',putOnTop,{once:true});
+ else putOnTop();
+})();
