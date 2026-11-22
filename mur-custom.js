@@ -8298,3 +8298,132 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  else apply();
  window.MUR_V186={version:'186',fix:'neuroflex-ribbon-visibility'};
 })();
+
+
+/* ================================================================
+   M.U.R. V189 — Audit des noms des 16 cartes EN/FR.
+   Les WebP anglais conservent les noms techniques francais de GitHub
+   et sont situes sous images/exercices/en/.
+   Ne modifier ni les cles EXERCISES, ni l'historique ni les cartes Paniflex.
+   ================================================================ */
+(function(){
+  'use strict';
+  const cards=Object.freeze({
+    mains:{en:'Soothing Hands',fr:'Mains apaisantes',enSub:'Touch · Reassure · Center'},
+    vagues:{en:'No Waves',fr:'Pas de vagues',enSub:'Listen · Slow down · Let go'},
+    bell:{en:'Bell Bell Bell',fr:'Bell Bell Bell',enSub:'Listen · Ground · Return'},
+    lac:{en:'Quiet Lake',fr:'Lac tranquille',enSub:'Observe · Soothe · Stabilize'},
+    presence:{en:'Body Presence',fr:'Présence corporelle',enSub:'Sense · Observe · Return'},
+    pause:{en:'Vagal Pause',fr:'Pause vagale',enSub:'Breathe out · Slow down · Soothe'},
+    lumiere:{en:'Morning Light',fr:'Lumière du matin',enSub:'Open · Breathe · Energize'},
+    regard:{en:'Horizon Gaze',fr:'Regard horizon',enSub:'Open · Broaden · Release'},
+    etincelle:{en:'Spark',fr:'Étincelle',enSub:'Awaken · Energize · Uplift'},
+    foret:{en:'Forest Walk',fr:'Promenade dans la forêt',enSub:'Listen · Slow down · Ground'},
+    fil:{en:'Breath Thread',fr:'Le fil du souffle',enSub:'Breathe · Extend · Regulate'},
+    double:{en:'Double Inhale',fr:'Double inspiration',enSub:'Inhale · Fill · Release'},
+    ancrage:{en:'Grounding',fr:'Ancrage',enSub:'Feel · Stabilize · Anchor'},
+    balancier:{en:'Body Sway',fr:'Balancier du corps',enSub:'Move · Balance · Relax'},
+    merle:{en:'Blackbird Song',fr:'Le chant du merle',enSub:'Listen · Soften · Let go'},
+    elan:{en:'Vertical Lift',fr:'Élan vertical',enSub:'Rise · Open · Expand'}
+  });
+  const files=Object.freeze({
+    mains:'01-mains-apaisantes.webp',vagues:'02-pas-de-vagues.webp',
+    bell:'03-bell-bell-bell.webp',lac:'04-lac-tranquille.webp',
+    presence:'05-presence-corporelle.webp',pause:'06-pause-vagale.webp',
+    lumiere:'07-lumiere-du-matin.webp',regard:'08-regard-horizon.webp',
+    etincelle:'09-etincelle.webp',foret:'10-promenade-foret.webp',
+    fil:'11-fil-du-souffle.webp',double:'12-double-inspiration.webp',
+    ancrage:'13-ancrage.webp',balancier:'14-balancier-du-corps.webp',
+    merle:'15-chant-du-merle.webp',elan:'16-elan-vertical.webp'
+  });
+  let selected='fr';
+  function lang(){
+    const choices=document.querySelectorAll('[data-language],[data-lang]');
+    for(const b of choices){
+      const k=String(b.dataset.language||b.dataset.lang||'').toLowerCase();
+      if(k!=='fr'&&k!=='en')continue;
+      if(b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true'||
+         b.classList.contains('active')||b.classList.contains('selected'))return k;
+    }
+    try{
+      for(const k of ['mur-ui-language','murLanguage','murLang','mur-language','language','appLanguage']){
+        const v=localStorage.getItem(k);
+        if(/^(en|fr)(?:-|_|$)/i.test(v||''))return /^en/i.test(v)?'en':'fr';
+      }
+    }catch(_e){}
+    return /^en/i.test(document.documentElement.lang||'fr')?'en':'fr';
+  }
+  function setText(node,value){if(node&&node.textContent!==value)node.textContent=value;}
+  function imagePath(key,lg){return 'images/exercices/'+(lg==='en'?'en/':'')+files[key];}
+  function setImage(img,key,lg){
+    if(!img||!files[key])return;
+    const desired=imagePath(key,lg);
+    if(img.getAttribute('src')!==desired){
+      img.onerror=function(){if(lg==='en'&&this.getAttribute('src')===desired){this.onerror=null;this.src=imagePath(key,'fr');}};
+      img.src=desired;
+    }
+  }
+  function update(){
+    selected=lang();
+    const en=selected==='en';
+    // Listes des exercices : titres affiches sans modifier les cles ni EXERCISES.
+    document.querySelectorAll('#exerciseList .exercise-card[data-exercise-key], #exercises .exercise-card[data-exercise-key]').forEach(btn=>{
+      const key=btn.getAttribute('data-exercise-key');const card=cards[key];if(!card)return;
+      const original=(typeof EXERCISES!=='undefined'&&EXERCISES[key])?EXERCISES[key]:null;
+      const title=btn.querySelector('strong');
+      setText(title,en?card.en:(original?original.title:card.fr));
+      const sub=btn.querySelector('small');
+      if(sub){if(!sub.dataset.murV189Fr)sub.dataset.murV189Fr=sub.textContent;
+        setText(sub,en?card.enSub:sub.dataset.murV189Fr);}
+    });
+    // Fiche audio ouverte : les titres et sous-titres suivent la langue.
+    const key=window.currentExerciseKey;
+    if(key&&cards[key]){
+      const card=cards[key];const original=(typeof EXERCISES!=='undefined')?EXERCISES[key]:null;
+      const detail=document.querySelector('#exerciseDetail');
+      if(detail){
+        setText(detail.querySelector('h2'),en?card.en:(original?original.title:card.fr));
+        const sub=detail.querySelector('.visual-caption strong');
+        if(sub){if(!sub.dataset.murV189Fr)sub.dataset.murV189Fr=sub.textContent;
+          setText(sub,en?card.enSub:sub.dataset.murV189Fr);}
+        setImage(detail.querySelector('#visualAsset'),key,selected);
+      }
+    }
+    // Cartes de collection, sans retoucher leurs propres images recto/verso.
+    document.querySelectorAll('#exerciseCardsLibrary .exercise-mini-card').forEach(btn=>{
+      const match=(btn.getAttribute('onclick')||'').match(/openExerciseCardFull\(['"]([^'"]+)/);
+      const key=match&&match[1];if(!key||!cards[key])return;
+      setText(btn.querySelector('strong'),en?cards[key].en:cards[key].fr);
+      const img=btn.querySelector('img');setImage(img,key,selected);
+    });
+    // Modal collection : identifier la carte depuis l'image actuelle.
+    const modal=document.getElementById('exerciseCardModal');
+    if(modal&&modal.classList.contains('open')){
+      const img=document.getElementById('exerciseCardFullImg');
+      const raw=img?.getAttribute('src')||'';
+      for(const [key,name] of Object.entries(files)){
+        if(raw.includes(name)|| (key==='regard'&&raw.includes('regard-horizon'))){
+          setText(document.getElementById('exerciseCardFullTitle'),en?cards[key].en:cards[key].fr);break;
+        }
+      }
+    }
+  }
+  function init(){
+    update();
+    document.addEventListener('click',e=>{if(e.target.closest?.('[data-language],[data-lang]')){
+      setTimeout(update,60);setTimeout(update,350);setTimeout(update,1000);
+    }},true);
+    document.addEventListener('mur:languagechange',update);
+    window.addEventListener('storage',update);
+    const root=document.getElementById('exercises');
+    if(root&&typeof MutationObserver!=='undefined'){
+      let queued=false;
+      new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;update();});})
+        .observe(root,{childList:true,subtree:true});
+    }
+    // Restitution si les cartes ont ete reconstruites par l'application.
+    setInterval(()=>{if(!document.hidden)update();},1500);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
