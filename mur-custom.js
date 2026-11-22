@@ -8927,7 +8927,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         // En cas de stockage indisponible, ne bloquer que la fenêtre visible.
         infoValidated=true;
       }
-      const show=source.isConnected && !!home?.classList.contains('active') &&
+      const show=!document.body.classList.contains('mur-sv-active') && source.isConnected && !!home?.classList.contains('active') &&
         !!sphere && !presentationVisible && !infoOpen && infoValidated &&
         !menuOpen && !document.hidden;
       if(!show){
@@ -9167,7 +9167,7 @@ window.MUR_V203={version:203,fix:'fingerprint-no-artificial-delay'};
     const requiredDelay = introAt > 0 ? (isMobileViewport() ? 0 : 220) : 0;
     const delaySatisfied = introAt > 0 ? (performance.now() - introAt >= requiredDelay) : true;
 
-    const show = source.isConnected && home.classList.contains('active') &&
+    const show = !document.body.classList.contains('mur-sv-active') && source.isConnected && home.classList.contains('active') &&
       !isIntroVisible() && !infoOpen && infoValidated && !menuOpen &&
       !document.hidden && delaySatisfied;
 
@@ -9229,3 +9229,29 @@ window.MUR_V203={version:203,fix:'fingerprint-no-artificial-delay'};
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
 })();
+
+
+/* M.U.R. V206 — Souffle vivant : retire l’empreinte parasite de l’accueil.
+   L’empreinte propre au module (#svFinger) reste inchangée.
+   Cette garde CSS agit dès l’ajout de mur-sv-active, sans attendre
+   les synchronisations périodiques du bouton flottant. */
+(function(){
+  'use strict';
+  const id='mur-v206-souffle-fingerprint-guard';
+  function install(){
+    if(document.getElementById(id)) return;
+    const style=document.createElement('style');
+    style.id=id;
+    style.textContent=`
+      html body.mur-sv-active > #mur-v197-fingerprint-portal {
+        display:none!important;
+        visibility:hidden!important;
+        pointer-events:none!important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
+})();
+window.MUR_V206={version:206,fix:'hide-dashboard-fingerprint-in-souffle-vivant'};
