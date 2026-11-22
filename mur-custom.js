@@ -1858,7 +1858,7 @@ if (typeof window.installPresentationFallback !== 'function') {
         ctx.restore();
       }
       ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
-      // V214 — Flèches orbitales tracées sur le MEME canvas que les sphères.
+      // V216 — Flèches orbitales rapprochées, avec points lumineux aux extrémités.
       // Leur centre et leur rayon proviennent de layout() / draw(), et non
       // de la taille approximative du bouton HTML. Elles restent à distance
       // des particules, y compris sur iPhone et sur ordinateur.
@@ -1867,9 +1867,10 @@ if (typeof window.installPresentationFallback !== 'function') {
         for (let i=0;i<GROUPS.length;i++) {
           const g=GROUPS[i],c=coords[i];
           const particleRadius=i===0?centerRadius:radius;
-          // La projection 3D agrandit légèrement les points près du bord.
-          // 1,48 fois le rayon de particules garantit un cercle extérieur.
-          const orbitRadius=particleRadius*1.48+2;
+          // V216 : rapproche les flèches du bord visible sans les faire
+          // traverser les particules (profondeur 3D ≈ 1,11 × rayon).
+          // Espace visuel visé : 4–6 px sur mobile.
+          const orbitRadius=particleRadius*1.18+2.5;
           const color=`${g.rgb[0]},${g.rgb[1]},${g.rgb[2]}`;
           ctx.save();
           ctx.translate(c[0],c[1]);
@@ -1892,13 +1893,21 @@ if (typeof window.installPresentationFallback !== 'function') {
             const x=orbitRadius*Math.cos(endAngle),y=orbitRadius*Math.sin(endAngle);
             const tx=-Math.sin(endAngle),ty=Math.cos(endAngle);
             const nx=-ty,ny=tx;
-            const wing=4.2,shaft=8;
+            const wing=3.5,shaft=7;
             ctx.beginPath();
             ctx.moveTo(x-shaft*tx+wing*nx,y-shaft*ty+wing*ny);
             ctx.lineTo(x,y);
             ctx.lineTo(x-shaft*tx-wing*nx,y-shaft*ty-wing*ny);
-            ctx.lineWidth=2.1;
+            ctx.lineWidth=1.85;
             ctx.stroke();
+            // V216 : chaque flèche se termine par un point lumineux coloré.
+            // Le point est sur la même courbe, à l'extrémité de l'arc.
+            ctx.beginPath();
+            ctx.arc(x,y,2.75,0,TAU);
+            ctx.fillStyle=`rgba(${color},1)`;
+            ctx.shadowColor=`rgba(${color},.94)`;
+            ctx.shadowBlur=10;
+            ctx.fill();
           };
           // Deux arcs indépendants dessinent une rotation autour, pas sur la boule.
           drawArrowArc(-2.62,-.48);
@@ -9309,3 +9318,152 @@ window.MUR_V206={version:206,fix:'hide-dashboard-fingerprint-in-souffle-vivant'}
    Remplace entièrement les SVG V207/V213 mal alignés. */
 window.MUR_V214={version:214,base:213,feature:'five-outside-canvas-orbit-arrows'};
 
+
+/* ========================================================================
+ M.U.R. V215 — RESPIRATION : EMPREINTE PRINCIPALE / 3 CARTOUCHES
+ Basé sur la V214. La véritable commande native demeure active :
+ l'empreinte déclenche le bouton historique, qui lance le moteur et
+ le mode plein écran (intro vocale et arrêt inchangés).
+ ======================================================================== */
+(function(){
+  'use strict';
+  if(window.MUR_V215)return;
+  window.MUR_V215={version:215,base:214,feature:'respiration-fingerprint-start-and-three-settings'};
+  const ID='mur-v215-breath-fingerprint-cards';
+  const fpSVG='<svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 23c0-9 6-15 14-15s14 6 14 15"/><path d="M15 26v-3c0-6 4-10 9-10s9 4 9 10v5"/><path d="M20 30v-7a4 4 0 0 1 8 0v9"/><path d="M11 31v-7"/><path d="M16 35c3-4 3-7 3-11"/><path d="M24 22v8c0 6-2 10-5 13"/><path d="M32 34c-1 5-3 8-5 10"/><path d="M37 29c0 6-2 11-5 15"/></svg>';
+  const labels={rhythm:['Rythme','Rhythm'],duration:['Durée','Duration'],sound:['Son','Sound']};
+  const icons={
+    rhythm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M2 8c3-3 5-3 8 0s5 3 8 0 3-2 4-2M2 14c3-3 5-3 8 0s5 3 8 0 3-2 4-2M2 20c3-3 5-3 8 0s5 3 8 0 3-2 4-2"/></svg>',
+    duration:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V8m0 5 3 2M9 2h6"/></svg>',
+    sound:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5a9.5 9.5 0 0 1 0 14"/></svg>'
+  };
+  const CSS=`
+  /* Uniquement l'écran de préparation ; la séance plein écran est intacte. */
+  #breath.mur-b152.page.active:not(.mur-b154-fullscreen)>.mur-b152-start{display:none!important;}
+  #breath.mur-b152.page.active:not(.mur-b154-fullscreen)>.mur-b152-status{display:none!important;}
+  /* Masquer le texte d'attente quelle que soit l'étape d'initialisation :
+     sur certains appareils, il est encore à l'intérieur de #orb. */
+  #breath.mur-b152.page.active:not(.mur-b154-fullscreen) #phaseText{display:none!important;}
+  #breath.mur-b152.page.active:not(.mur-b154-fullscreen)>.mur-v215-finger{
+    order:3!important;align-self:center!important;display:grid!important;place-items:center!important;
+    flex:0 0 auto!important;width:clamp(72px,10.5dvh,98px)!important;
+    height:clamp(72px,10.5dvh,98px)!important;margin:0 auto 4px!important;
+    padding:0!important;border-radius:50%!important;box-sizing:border-box!important;
+    border:1px solid #6dedce!important;
+    color:#c0fff3!important;background:radial-gradient(circle at 40% 35%,#185e59 0%,#092c3a 68%,#061a2b 100%)!important;
+    box-shadow:0 0 0 6px rgba(57,228,193,.075),0 0 27px rgba(44,221,172,.36),inset 0 0 17px rgba(107,238,209,.17)!important;
+    cursor:pointer!important;touch-action:manipulation!important;position:relative!important;z-index:3!important;
+    transition:box-shadow .18s ease,transform .18s ease!important;
+  }
+  #breath .mur-v215-finger svg{width:52%!important;height:52%!important;filter:drop-shadow(0 0 5px rgba(115,255,222,.45));pointer-events:none;}
+  #breath .mur-v215-finger:active{transform:scale(.94)!important;box-shadow:0 0 0 8px rgba(57,228,193,.15),0 0 30px rgba(44,221,172,.55)!important;}
+  #breath .mur-v215-finger:focus-visible{outline:2px solid #c4fff2!important;outline-offset:8px!important;}
+  #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > section.card:last-of-type{
+    height:clamp(166px,25dvh,230px)!important;
+  }
+  #breath.mur-b152.page.active:not(.mur-b154-fullscreen) #orb.mur-breath-particle-orb{
+    width:min(53vw,23dvh,208px)!important;height:min(53vw,23dvh,208px)!important;
+  }
+  #breath.mur-b152.page.active:not(.mur-b154-fullscreen)>.mur-b152-controls.mur-v165-commands{
+    order:4!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:7px!important;margin:2px 0 0!important;padding:0!important;
+    border:0!important;background:transparent!important;box-shadow:none!important;backdrop-filter:none!important;
+  }
+  #breath.mur-b152.page.active:not(.mur-b154-fullscreen)>.mur-b152-controls.mur-v165-commands>.mur-b152-control{
+    display:flex!important;flex-direction:column!important;gap:5px!important;min-width:0!important;
+    min-height:103px!important;padding:9px 5px 8px!important;border:1px solid var(--mur-v215-border)!important;
+    border-radius:15px!important;background:linear-gradient(165deg,var(--mur-v215-bg),rgba(15,30,46,.86))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 4px 15px rgba(0,0,0,.1)!important;
+    color:#f7fbff!important;
+  }
+  #breath .mur-v165-commands>.mur-b152-control[data-b152="rhythm"]{--mur-v215-border:#25b9ec;--mur-v215-bg:rgba(9,74,112,.52);--mur-v215-accent:#36d6ff;}
+  #breath .mur-v165-commands>.mur-b152-control[data-b152="duration"]{--mur-v215-border:#22bc94;--mur-v215-bg:rgba(13,81,78,.51);--mur-v215-accent:#38ebb4;}
+  #breath .mur-v165-commands>.mur-b152-control[data-b152="sound"]{--mur-v215-border:#7a6ac5;--mur-v215-bg:rgba(65,52,116,.50);--mur-v215-accent:#b5a3ff;}
+  #breath .mur-v215-heading{display:block!important;font-size:11px!important;font-weight:800!important;line-height:1.1!important;color:white!important;}
+  #breath .mur-v215-value{
+    display:block!important;width:100%;min-width:0;padding:5px 2px 4px!important;
+    border-top:1px solid color-mix(in srgb,var(--mur-v215-accent) 36%,transparent);
+    font-size:clamp(12px,3.4vw,15px)!important;font-weight:850!important;line-height:1.2!important;
+    white-space:nowrap!important;color:#fff!important;text-align:center!important;
+  }
+  #breath .mur-v165-commands>.mur-b152-control>.mur-v215-symbol{width:24px!important;height:24px!important;flex:0 0 24px!important;color:var(--mur-v215-accent)!important;stroke:currentColor!important;filter:drop-shadow(0 0 5px var(--mur-v215-accent));}
+  #breath .mur-v165-commands>.mur-b152-control>.mur-v215-original-text{display:none!important;}
+  #breath.mur-b152.page.active.mur-b154-fullscreen>.mur-v215-finger{display:none!important;}
+  #breath.mur-b152.page.active:not(.mur-b154-fullscreen)>.mur-b153-intro-row{order:5!important;}
+  #breath.mur-b152.page.active:not(.mur-b154-fullscreen)>.mur-b152-advanced{order:6!important;margin:1px auto 0!important;}
+  @media(max-height:740px){
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen)>section.card:last-of-type{height:clamp(146px,23dvh,182px)!important;}
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen)>.mur-v215-finger{width:72px!important;height:72px!important;}
+    #breath.mur-b152.page.active:not(.mur-b154-fullscreen)>.mur-b152-controls.mur-v165-commands>.mur-b152-control{min-height:90px!important;padding:5px 3px!important;}
+  }
+  @media(prefers-reduced-motion:reduce){#breath .mur-v215-finger{transition:none!important;}}
+  `;
+  function langEnglish(){return String(document.documentElement.lang||'fr').toLowerCase().startsWith('en');}
+  function install(){
+    const page=document.getElementById('breath');
+    const controls=page?.querySelector('.mur-b152-controls');
+    const start=page?.querySelector('.mur-b152-start');
+    const nativeSection=page?.querySelector(':scope > section.card:last-of-type');
+    if(!page||!controls||!start||!nativeSection||document.getElementById(ID))return;
+    const style=document.createElement('style');style.id=ID;style.textContent=CSS;document.head.appendChild(style);
+    const finger=document.createElement('button');finger.type='button';finger.className='mur-v215-finger';finger.setAttribute('aria-label','Démarrer ma respiration');finger.innerHTML=fpSVG;
+    // Le bouton historique contient la logique native de démarrage ET
+    // la logique V154 qui active le plein écran avant le lancement.
+    finger.addEventListener('click',event=>{
+      event.preventDefault();
+      if(page.classList.contains('mur-b154-fullscreen')||page.classList.contains('breath-immersive')||page.classList.contains('breath-voice-only'))return;
+      if(!page.classList.contains('active'))return;
+      start.click();
+    });
+    nativeSection.insertAdjacentElement('afterend',finger);
+    const cards=['rhythm','duration','sound'];
+    cards.forEach(key=>{
+      const button=controls.querySelector(`[data-b152="${key}"]`);
+      if(!button)return;
+      const old=button.querySelector('span');
+      if(old)old.classList.add('mur-v215-original-text');
+      const presentIcon=button.querySelector('svg');if(presentIcon)presentIcon.remove();
+      button.insertAdjacentHTML('afterbegin',icons[key].replace('<svg ','<svg class="mur-v215-symbol" '));
+      const heading=document.createElement('span');heading.className='mur-v215-heading';
+      const value=document.createElement('strong');value.className='mur-v215-value';
+      button.append(heading,value);
+    });
+    const sources={
+      rhythm:page.querySelector('[data-b152-status="rhythm"]'),
+      duration:page.querySelector('[data-b152-status="duration"]'),
+      sound:page.querySelector('[data-b152-status="sound"]')
+    };
+    function update(){
+      const en=langEnglish();
+      finger.setAttribute('aria-label',en?'Start breathing':'Démarrer ma respiration');
+      cards.forEach(key=>{
+        const button=controls.querySelector(`[data-b152="${key}"]`);
+        if(!button)return;
+        const label=button.querySelector('.mur-v215-heading');
+        const value=button.querySelector('.mur-v215-value');
+        if(label)label.textContent=labels[key][en?1:0];
+        const src=String(sources[key]?.textContent||'').trim();
+        let display=src;
+        if(key==='sound'){
+          const on=document.getElementById('soundBtn')?.getAttribute('aria-pressed')!=='false';
+          display=en?(on?'On':'Off'):(on?'Actif':'Coupé');
+        }
+        if(value && value.textContent!==display)value.textContent=display;
+        button.setAttribute('aria-label',label?.textContent+' : '+display);
+      });
+    }
+    cards.forEach(key=>{if(sources[key])new MutationObserver(update).observe(sources[key],{subtree:true,childList:true,characterData:true});});
+    document.getElementById('soundBtn')?.addEventListener('click',()=>requestAnimationFrame(update));
+    new MutationObserver(update).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    const sound=document.getElementById('soundBtn');if(sound)new MutationObserver(update).observe(sound,{attributes:true,attributeFilter:['aria-pressed']});
+    window.addEventListener('mur-content-loaded',update);
+    window.setInterval(()=>{if(page.classList.contains('active'))update();},650);
+    update();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
+})();
+
+/* M.U.R. V216 — Respiration V215 + flèches rapprochées terminées par un point.
+   Base V214, sans modifier le comportement des cinq sphères ni des tests. */
+window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiration-fingerprint-three-settings']};
