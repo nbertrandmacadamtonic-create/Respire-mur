@@ -9255,3 +9255,66 @@ window.MUR_V203={version:203,fix:'fingerprint-no-artificial-delay'};
   else install();
 })();
 window.MUR_V206={version:206,fix:'hide-dashboard-fingerprint-in-souffle-vivant'};
+
+/* ====================================================================
+ M.U.R. V207 — Petites flèches orbitales des cinq sphères du menu
+ Rétablit les indicateurs de rotation autour des sphères lorsque
+ la transition est terminée. Ne modifie ni particules ni navigation.
+ ==================================================================== */
+(function(){
+  'use strict';
+  const STYLE_ID='mur-v207-five-orbit-arrows';
+  const SVG_NS='http://www.w3.org/2000/svg';
+  const RING=`
+    <path d="M 12 50 A 38 38 0 0 1 66 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".78"/>
+    <path d="M 58 12 L 69 15 L 62 23" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 88 50 A 38 38 0 0 1 34 84" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".65"/>
+    <path d="M 42 88 L 31 85 L 38 77" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+  `;
+  function style(){
+    if(document.getElementById(STYLE_ID))return;
+    const el=document.createElement('style');
+    el.id=STYLE_ID;
+    el.textContent=`
+      .mur-five-target .mur-v207-orbit-arrows {
+        position:absolute;inset:-7px;width:calc(100% + 14px);height:calc(100% + 14px);
+        display:block;pointer-events:none;z-index:0;
+        color:var(--mur-mini-label-color,#8fe9db);
+        opacity:0;transform-origin:center center;
+        transition:opacity .35s ease;
+        filter:drop-shadow(0 0 3px currentColor);
+      }
+      body.mur-five-open .mur-five-target.ready .mur-v207-orbit-arrows {
+        opacity:.9;animation:mur-v207-orbit-rotate 9s linear infinite;
+      }
+      .mur-five-target .mur-five-label {z-index:2;}
+      @keyframes mur-v207-orbit-rotate {from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+      @media(prefers-reduced-motion:reduce){
+        body.mur-five-open .mur-five-target.ready .mur-v207-orbit-arrows {animation:none;opacity:.65}
+      }
+    `;
+    document.head.appendChild(el);
+  }
+  function apply(){
+    document.querySelectorAll('.mur-five-layer .mur-five-target').forEach(button=>{
+      if(button.querySelector('.mur-v207-orbit-arrows'))return;
+      const svg=document.createElementNS(SVG_NS,'svg');
+      svg.setAttribute('class','mur-v207-orbit-arrows');
+      svg.setAttribute('viewBox','0 0 100 100');
+      svg.setAttribute('aria-hidden','true');
+      svg.innerHTML=RING;
+      button.insertBefore(svg,button.firstChild);
+    });
+  }
+  function init(){
+    style();apply();
+    const observer=new MutationObserver(mutations=>{
+      if(mutations.some(m=>[...m.addedNodes].some(n=>n.nodeType===1 &&
+          (n.matches?.('.mur-five-layer') || n.querySelector?.('.mur-five-layer')))))apply();
+    });
+    observer.observe(document.body,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+  window.MUR_V207={version:207,feature:'rotating-arrows-around-small-menu-spheres'};
+})();
