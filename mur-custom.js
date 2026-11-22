@@ -9257,19 +9257,18 @@ window.MUR_V203={version:203,fix:'fingerprint-no-artificial-delay'};
 window.MUR_V206={version:206,fix:'hide-dashboard-fingerprint-in-souffle-vivant'};
 
 /* ====================================================================
- M.U.R. V207 — Petites flèches orbitales des cinq sphères du menu
- Rétablit les indicateurs de rotation autour des sphères lorsque
- la transition est terminée. Ne modifie ni particules ni navigation.
+ M.U.R. V213 — ACCUEIL : Flèches à l'EXTERIEUR des cinq petites sphères.
+ Base exacte de la V207 publiée sur GitHub, sans modifier les autres pages.
+ Le petit cercle des flèches V207 passait sur les particules de la sphère ;
+ ici les arcs et pointes sont positionnés à l'extérieur de chaque boule.
  ==================================================================== */
 (function(){
   'use strict';
   const STYLE_ID='mur-v207-five-orbit-arrows';
   const SVG_NS='http://www.w3.org/2000/svg';
   const RING=`
-    <path d="M 12 50 A 38 38 0 0 1 66 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".78"/>
-    <path d="M 58 12 L 69 15 L 62 23" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M 88 50 A 38 38 0 0 1 34 84" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".65"/>
-    <path d="M 42 88 L 31 85 L 38 77" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M12.5 38.8 A52 52 0 0 1 107.5 38.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".72"/><path d="M107.5 28.4 L107.5 38.8 L99.8 31.8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M107.5 81.2 A52 52 0 0 1 12.5 81.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".72"/><path d="M12.5 91.6 L12.5 81.2 L20.2 88.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
   `;
   function style(){
     if(document.getElementById(STYLE_ID))return;
@@ -9277,33 +9276,47 @@ window.MUR_V206={version:206,fix:'hide-dashboard-fingerprint-in-souffle-vivant'}
     el.id=STYLE_ID;
     el.textContent=`
       .mur-five-target .mur-v207-orbit-arrows {
-        position:absolute;inset:-7px;width:calc(100% + 14px);height:calc(100% + 14px);
-        display:block;pointer-events:none;z-index:0;
-        color:var(--mur-mini-label-color,#8fe9db);
-        opacity:0;transform-origin:center center;
+        position:absolute!important;
+        left:-9px!important;top:-9px!important;
+        right:auto!important;bottom:auto!important;
+        width:calc(100% + 18px)!important;
+        height:calc(100% + 18px)!important;
+        overflow:visible!important;
+        display:block!important;pointer-events:none!important;
+        z-index:3!important;
+        color:var(--mur-mini-label-color,#8fe9db)!important;
+        opacity:0;transform-origin:50% 50%;
         transition:opacity .35s ease;
-        filter:drop-shadow(0 0 3px currentColor);
+        filter:drop-shadow(0 0 4px currentColor);
       }
       body.mur-five-open .mur-five-target.ready .mur-v207-orbit-arrows {
-        opacity:.9;animation:mur-v207-orbit-rotate 9s linear infinite;
+        opacity:.92;
+        animation:mur-v207-orbit-rotate 10s linear infinite;
       }
-      .mur-five-target .mur-five-label {z-index:2;}
-      @keyframes mur-v207-orbit-rotate {from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+      .mur-five-target .mur-five-label {z-index:4!important;}
+      @keyframes mur-v207-orbit-rotate {
+        from{transform:rotate(0deg)}to{transform:rotate(360deg)}
+      }
       @media(prefers-reduced-motion:reduce){
-        body.mur-five-open .mur-five-target.ready .mur-v207-orbit-arrows {animation:none;opacity:.65}
+        body.mur-five-open .mur-five-target.ready .mur-v207-orbit-arrows {
+          animation:none!important;opacity:.85;
+        }
       }
     `;
     document.head.appendChild(el);
   }
   function apply(){
     document.querySelectorAll('.mur-five-layer .mur-five-target').forEach(button=>{
-      if(button.querySelector('.mur-v207-orbit-arrows'))return;
-      const svg=document.createElementNS(SVG_NS,'svg');
-      svg.setAttribute('class','mur-v207-orbit-arrows');
-      svg.setAttribute('viewBox','0 0 100 100');
+      let svg=button.querySelector('.mur-v207-orbit-arrows');
+      if(!svg){
+        svg=document.createElementNS(SVG_NS,'svg');
+        svg.setAttribute('class','mur-v207-orbit-arrows');
+        button.insertBefore(svg,button.firstChild);
+      }
+      svg.setAttribute('viewBox','0 0 120 120');
+      svg.setAttribute('preserveAspectRatio','xMidYMid meet');
       svg.setAttribute('aria-hidden','true');
       svg.innerHTML=RING;
-      button.insertBefore(svg,button.firstChild);
     });
   }
   function init(){
@@ -9314,7 +9327,8 @@ window.MUR_V206={version:206,fix:'hide-dashboard-fingerprint-in-souffle-vivant'}
     });
     observer.observe(document.body,{childList:true,subtree:true});
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
+  if(document.readyState==='loading')
+    document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
-  window.MUR_V207={version:207,feature:'rotating-arrows-around-small-menu-spheres'};
+  window.MUR_V213={version:213,feature:'five-arrows-outside-spheres',base:207};
 })();
