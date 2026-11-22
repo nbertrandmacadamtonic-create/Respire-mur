@@ -8788,111 +8788,148 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 
 /* =====================================================================
- M.U.R. V197 — EMPREINTE DANS UN CALQUE INDEPENDANT
- Résout la superposition sans toucher aux rubans ni à la transition V196.
- L'empreinte est dessinée au niveau de <body>, hors de la pile CSS de
- la sphère. Le #homeHint d'origine garde sa place et son écouteur click.
+ M.U.R. V199 — EMPREINTE ANCRÉE SUR LA SPHÈRE, INTRO MASQUÉE
+ Correctif du portail V197 : il était aligné sur #homeHint, situé
+ sous la sphère, et restait visible pendant la présentation vidéo.
+ Le bouton reste isolé dans body mais se centre sur #homeCircle.
  ===================================================================== */
 (function(){
   'use strict';
-  if (window.MUR_V197_FINGERPRINT_PORTAL) return;
-  window.MUR_V197_FINGERPRINT_PORTAL = true;
-  const id='mur-v197-fingerprint-portal';
+  if (window.MUR_V199_FINGERPRINT_PORTAL) return;
+  window.MUR_V199_FINGERPRINT_PORTAL = true;
+  const id='mur-v197-fingerprint-portal'; // Réutilise le même identifiant DOM.
   const style=document.createElement('style');
-  style.id='mur-v197-fingerprint-portal-css';
+  style.id='mur-v199-fingerprint-portal-css';
   style.textContent=`
-    /* L'élément natif conserve son encombrement dans la carte. */
-    #home.page.active #homeHint.home-hint.mur-v197-source{
-      opacity:0!important;pointer-events:none!important;
+    /* Le bouton source est un déclencheur fonctionnel, jamais visible. */
+    #home #homeHint.home-hint.mur-v199-source{
+      opacity:0!important;visibility:hidden!important;pointer-events:none!important;
     }
     body > #mur-v197-fingerprint-portal{
-      position:fixed!important;left:0;top:0;
-      display:none;box-sizing:border-box!important;
+      position:fixed!important;display:none;box-sizing:border-box!important;
       margin:0!important;padding:0!important;
       border-radius:50%!important;
-      background:radial-gradient(circle at 50% 40%,#1b5f55,#0c2b36 76%)!important;
+      background:radial-gradient(circle at 35% 25%,#1b5f55,#0c2b36 76%)!important;
       border:1px solid #7de5c1!important;
       box-shadow:0 0 23px #33d39e31,inset 0 0 18px #66d6ac14!important;
       color:#a1ffe0!important;cursor:pointer!important;
       align-items:center!important;justify-content:center!important;
       opacity:1!important;visibility:visible!important;
-      z-index:2147481000!important;
-      pointer-events:auto!important;
+      z-index:2147483000!important;pointer-events:auto!important;
       transform:none!important;filter:none!important;
-      touch-action:manipulation!important;
-      -webkit-tap-highlight-color:transparent;
+      touch-action:manipulation!important;-webkit-tap-highlight-color:transparent;
       user-select:none!important;
     }
     body > #mur-v197-fingerprint-portal::after{
       content:'';position:absolute;inset:-7px;border-radius:50%;
       border:1px solid rgba(125,229,193,.57);
-      box-shadow:0 0 11px rgba(51,211,158,.27);
-      pointer-events:none;
+      box-shadow:0 0 11px rgba(51,211,158,.27);pointer-events:none;
     }
     body > #mur-v197-fingerprint-portal svg{
       display:block;width:45%!important;height:45%!important;
-      color:inherit!important;stroke:currentColor;
+      color:inherit!important;stroke:currentColor!important;
       filter:none!important;pointer-events:none!important;
     }
     body > #mur-v197-fingerprint-portal:focus-visible{
       outline:2px solid #a5f2d1;outline-offset:9px;
     }
-    body > #mur-v197-fingerprint-portal:active{
-      background:radial-gradient(circle,#278f70,#125445 76%)!important;
+    /* Même si une autre feuille force la vidéo visible, pas d'empreinte. */
+    body:has(#presentation:not(.hide)) > #mur-v197-fingerprint-portal{
+      display:none!important;pointer-events:none!important;
     }
   `;
   document.head.appendChild(style);
   function install(){
     const source=document.getElementById('homeHint');
     if(!source)return;
-    source.classList.add('mur-v197-source');
+    source.classList.add('mur-v199-source');
+    source.classList.remove('mur-v197-source');
     let portal=document.getElementById(id);
     if(!portal){
       portal=document.createElement('button');
       portal.type='button';portal.id=id;
-      portal.setAttribute('aria-label',source.getAttribute('aria-label')||'Ouvrir le menu');
       document.body.appendChild(portal);
+    }
+    portal.setAttribute('aria-label',source.getAttribute('aria-label')||'Ouvrir le menu');
+    if(!portal.dataset.murV199Click){
+      portal.dataset.murV199Click='1';
       portal.addEventListener('click',function(ev){
         ev.preventDefault();ev.stopPropagation();
-        // Déclenche les écouteurs d'origine de #homeHint, sans les dupliquer.
-        source.click();
+        source.click(); // Conserve le moteur d'ouverture et le son existants.
       });
     }
-    const fingerprint='<svg aria-hidden="true" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M10 23c0-9 6-15 14-15s14 6 14 15"/><path d="M15 26v-3c0-6 4-10 9-10s9 4 9 10v5"/><path d="M20 30v-7a4 4 0 0 1 8 0v9"/><path d="M11 31v-7"/><path d="M16 35c3-4 3-7 3-11"/><path d="M24 22v8c0 6-2 10-5 13"/><path d="M32 34c-1 5-3 8-5 10"/><path d="M37 29c0 6-2 11-5 15"/></svg>';
-    portal.innerHTML=fingerprint;
+    portal.innerHTML='<svg aria-hidden="true" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M10 23c0-9 6-15 14-15s14 6 14 15"/><path d="M15 26v-3c0-6 4-10 9-10s9 4 9 10v5"/><path d="M20 30v-7a4 4 0 0 1 8 0v9"/><path d="M11 31v-7"/><path d="M16 35c3-4 3-7 3-11"/><path d="M24 22v8c0 6-2 10-5 13"/><path d="M32 34c-1 5-3 8-5 10"/><path d="M37 29c0 6-2 11-5 15"/></svg>';
     let last='';
     function sync(){
-      if(!source.isConnected){portal.style.display='none';return;}
       const home=document.getElementById('home');
       const sphere=document.getElementById('homeCircle');
+      const presentation=document.getElementById('presentation');
+      const presentationVisible=!!presentation && !presentation.classList.contains('hide') &&
+        getComputedStyle(presentation).display!=='none' &&
+        getComputedStyle(presentation).visibility!=='hidden';
       const menuOpen=document.body.classList.contains('mur-five-open') ||
         !!sphere?.classList.contains('mur-menu-open') ||
         !!sphere?.classList.contains('mur-particles-transitioning');
-      const show=!!home?.classList.contains('active')&&!menuOpen;
-      const r=source.getBoundingClientRect();
-      if(!show || r.width<10 || r.height<10 || r.bottom<0 || r.top>innerHeight){
+      const show=source.isConnected && !!home?.classList.contains('active') &&
+        !!sphere && !presentationVisible && !menuOpen && !document.hidden;
+      if(!show){
         if(last!=='hidden'){portal.style.display='none';last='hidden';}
         return;
       }
-      const label=source.getAttribute('aria-label')||'Ouvrir le menu';
-      if(portal.getAttribute('aria-label')!==label)portal.setAttribute('aria-label',label);
-      const coords=`${Math.round(r.left*10)/10}px|${Math.round(r.top*10)/10}px|${Math.round(r.width*10)/10}px|${Math.round(r.height*10)/10}px`;
+      // Positionner sur la grande sphère elle-même, PAS sur le #homeHint sous elle.
+      const r=sphere.getBoundingClientRect();
+      if(r.width<30 || r.height<30 || r.bottom<0 || r.top>innerHeight){
+        if(last!=='hidden'){portal.style.display='none';last='hidden';}
+        return;
+      }
+      const size=Math.min(66,Math.max(46,r.width*.23));
+      const left=r.left+r.width/2-size/2;
+      const top=r.top+r.height/2-size/2;
+      const coords=[left,top,size].map(n=>Math.round(n*10)/10).join('|');
       if(coords!==last){
-        portal.style.left=`${r.left}px`;
-        portal.style.top=`${r.top}px`;
-        portal.style.width=`${r.width}px`;
-        portal.style.height=`${r.height}px`;
+        portal.style.left=`${left}px`;
+        portal.style.top=`${top}px`;
+        portal.style.width=`${size}px`;
+        portal.style.height=`${size}px`;
         last=coords;
       }
+      const label=source.getAttribute('aria-label')||'Ouvrir le menu';
+      if(portal.getAttribute('aria-label')!==label)portal.setAttribute('aria-label',label);
       if(portal.style.display!=='flex')portal.style.display='flex';
     }
     sync();
-    // Le menu V196 anime sa présence ; contrôle léger à intervalles réguliers.
-    window.setInterval(sync,120);
+    window.setInterval(sync,100);
     window.addEventListener('resize',sync,{passive:true});
     window.addEventListener('scroll',sync,{passive:true,capture:true});
     document.addEventListener('visibilitychange',sync);
+    document.addEventListener('click',()=>requestAnimationFrame(sync),{capture:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
   else install();
+})();
+
+
+/* M.U.R. V198 — Centrage vertical du ruban NeuroFlex dans son cartouche.
+   Remonte ensemble le tracé et son marqueur de 4px, sans déplacer
+   le titre, le score, les graduations ni modifier les couleurs. */
+(function(){
+  'use strict';
+  const ID='mur-v198-neuroflex-vertical-align';
+  function install(){
+    if(document.getElementById(ID))return;
+    const style=document.createElement('style');
+    style.id=ID;
+    style.textContent=`
+      #home .home-line-card.mur-v185-line .home-curve > svg.mur-v185-graph {
+        top:9px!important;
+      }
+      #home .home-line-card.mur-v185-line .mur-v185-marker {
+        transform:translate(-50%,calc(-50% - 4px))!important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
+  window.MUR_V198={version:'198',fix:'raise-neuroflex-curve-and-marker-4px'};
 })();
