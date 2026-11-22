@@ -8427,3 +8427,40 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();
+
+
+/* ===================================================================
+ M.U.R. V190 — EMPREINTE ACCUEIL AU PREMIER PLAN
+ * La feuille HTML initiale imposait position:static!important sur
+ * #homeHint, annulant le z-index des calques de la sphere (V181/V184).
+ * Correction uniquement du plan d'affichage et du clic, sans
+ * modifier les courbes, la sphere ni l'empreinte elle-meme.
+ =================================================================== */
+(function(){
+  'use strict';
+  const STYLE_ID='mur-v190-fingerprint-foreground';
+  if(document.getElementById(STYLE_ID))return;
+  const style=document.createElement('style');
+  style.id=STYLE_ID;
+  style.textContent=`
+    main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint {
+      position:relative!important;
+      z-index:30!important;
+      isolation:isolate!important;
+      opacity:1!important;
+      pointer-events:auto!important;
+      transform:translateZ(0);
+    }
+    main.app #home.page.active > section.home-wheel-card.card #homeHint.home-hint svg {
+      position:relative!important;
+      z-index:1!important;
+      pointer-events:none!important;
+    }
+    #home .home-wheel-card > .mur-v181-back-canvas,
+    #home .home-wheel-card > .mur-v181-globe-canvas,
+    #home .home-wheel-card > .mur-v181-front-canvas {
+      pointer-events:none!important;
+    }
+  `;
+  document.head.appendChild(style);
+})();
