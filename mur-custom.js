@@ -6933,6 +6933,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     vagues: '02-pas-de-vagues.webp',
     fil: '11-fil-du-souffle.webp',
     mains: '01-mains-apaisantes.webp',
+    regard: '08-regard-horizon.webp',
     foret: '10-promenade-foret.webp',
     lac: '04-lac-tranquille.webp',
     balancier: '14-balancier-du-corps.webp',
@@ -6975,6 +6976,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function keyForImageUrl(url) {
     if (!url) return null;
     const normalized = String(url).split(/[?#]/, 1)[0];
+    if (/(?:^|\/)regard-horizon\.webp$/i.test(normalized) && normalized.includes('images/exercices/')) return 'regard';
     for (const [key, name] of Object.entries(imageNames)) {
       if (normalized.endsWith('/' + name) &&
           (normalized.includes('images/exercices/') || normalized === name)) return key;
@@ -7093,7 +7095,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     pause:'06-pause-vagale.webp',double:'12-double-inspiration.webp',
     merle:'15-chant-du-merle.webp',ancrage:'13-ancrage.webp',
     vagues:'02-pas-de-vagues.webp',fil:'11-fil-du-souffle.webp',
-    mains:'01-mains-apaisantes.webp',foret:'10-promenade-foret.webp',
+    mains:'01-mains-apaisantes.webp',regard:'08-regard-horizon.webp',foret:'10-promenade-foret.webp',
     lac:'04-lac-tranquille.webp',balancier:'14-balancier-du-corps.webp',
     presence:'05-presence-corporelle.webp',bell:'03-bell-bell-bell.webp',
     lumiere:'07-lumiere-du-matin.webp',etincelle:'09-etincelle.webp',
@@ -7130,6 +7132,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function keyFromUrl(src){
     if(!src)return null;
     const clean=String(src).split(/[?#]/)[0];
+    if (/(?:^|\/)regard-horizon\.webp$/i.test(clean) && clean.includes('images/exercices/')) return 'regard';
     for(const [key,name] of Object.entries(names)){
       if(clean.endsWith('/'+name) || clean===name) return key;
     }
