@@ -7337,12 +7337,51 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    ================================================================ */
 (function(){
   'use strict';
+  // V204 : les quatre exercices de chaque zone sont éligibles au tirage.
+  // Les clés correspondent exactement à EXERCISES et ZONES dans l'application.
   const REC={
-    rouge:{key:'pause',file:'06-pause-vagale.webp',fr:'Pause vagale',en:'Vagal Pause',frSub:'Souffler · Ralentir · Apaiser',enSub:'Breathe · Slow down · Soothe',c:'#ef4444'},
-    orange:{key:'mains',file:'01-mains-apaisantes.webp',fr:'Mains apaisantes',en:'Soothing Hands',frSub:'Toucher · Rassurer · Recentrer',enSub:'Touch · Reassure · Center',c:'#f59e0b'},
-    vert:{key:'foret',file:'10-promenade-foret.webp',fr:'Promenade dans la forêt',en:'Forest Walk',frSub:'Écouter · Ralentir · S’ancrer',enSub:'Listen · Slow down · Ground',c:'#22c55e'},
-    bleu:{key:'lumiere',file:'07-lumiere-du-matin.webp',fr:'Lumière du matin',en:'Morning Light',frSub:'Ouvrir · Respirer · Dynamiser',enSub:'Open · Breathe · Energize',c:'#3b82f6'}
+    pause:{key:'pause',file:'06-pause-vagale.webp',fr:'Pause vagale',en:'Vagal Pause',frSub:'Souffler · Ralentir · Apaiser',enSub:'Breathe out · Slow down · Soothe'},
+    double:{key:'double',file:'12-double-inspiration.webp',fr:'Double inspiration',en:'Double Inhale',frSub:'Inspirer · Compléter · Relâcher',enSub:'Inhale · Fill · Release'},
+    merle:{key:'merle',file:'15-chant-du-merle.webp',fr:'Chant du merle',en:'Blackbird Song',frSub:'Écouter · Adoucir · Lâcher prise',enSub:'Listen · Soften · Let go'},
+    ancrage:{key:'ancrage',file:'13-ancrage.webp',fr:'Ancrage',en:'Grounding',frSub:'Sentir · Stabiliser · S’ancrer',enSub:'Feel · Stabilize · Anchor'},
+    vagues:{key:'vagues',file:'02-pas-de-vagues.webp',fr:'Pas de vagues',en:'No Waves',frSub:'Écouter · Ralentir · Se laisser porter',enSub:'Listen · Slow down · Let go'},
+    fil:{key:'fil',file:'11-fil-du-souffle.webp',fr:'Le fil du souffle',en:'Breath Thread',frSub:'Respirer · Prolonger · Réguler',enSub:'Breathe · Extend · Regulate'},
+    regard:{key:'regard',file:'08-regard-horizon.webp',fr:'Regard horizon',en:'Horizon Gaze',frSub:'Ouvrir · Élargir · Relâcher',enSub:'Open · Broaden · Release'},
+    mains:{key:'mains',file:'01-mains-apaisantes.webp',fr:'Mains apaisantes',en:'Soothing Hands',frSub:'Toucher · Rassurer · Recentrer',enSub:'Touch · Reassure · Center'},
+    foret:{key:'foret',file:'10-promenade-foret.webp',fr:'Promenade dans la forêt',en:'Forest Walk',frSub:'Écouter · Ralentir · S’ancrer',enSub:'Listen · Slow down · Ground'},
+    lac:{key:'lac',file:'04-lac-tranquille.webp',fr:'Lac tranquille',en:'Quiet Lake',frSub:'Observer · Apaiser · Stabiliser',enSub:'Observe · Soothe · Stabilize'},
+    balancier:{key:'balancier',file:'14-balancier-du-corps.webp',fr:'Balancier du corps',en:'Body Sway',frSub:'Bouger · Équilibrer · Relâcher',enSub:'Move · Balance · Relax'},
+    presence:{key:'presence',file:'05-presence-corporelle.webp',fr:'Présence corporelle',en:'Body Presence',frSub:'Sentir · Observer · Revenir',enSub:'Sense · Observe · Return'},
+    bell:{key:'bell',file:'03-bell-bell-bell.webp',fr:'Bell Bell Bell',en:'Bell Bell Bell',frSub:'Écouter · S’ancrer · Revenir',enSub:'Listen · Ground · Return'},
+    lumiere:{key:'lumiere',file:'07-lumiere-du-matin.webp',fr:'Lumière du matin',en:'Morning Light',frSub:'Ouvrir · Respirer · Dynamiser',enSub:'Open · Breathe · Energize'},
+    etincelle:{key:'etincelle',file:'09-etincelle.webp',fr:'Étincelle',en:'Spark',frSub:'Éveiller · Dynamiser · Relancer',enSub:'Awaken · Energize · Uplift'},
+    elan:{key:'elan',file:'16-elan-vertical.webp',fr:'Élan vertical',en:'Vertical Lift',frSub:'Se relever · Ouvrir · Élargir',enSub:'Rise · Open · Expand'}
   };
+  const REC_ZONES={
+    rouge:['pause','double','merle','ancrage'],
+    orange:['vagues','fil','regard','mains'],
+    vert:['foret','lac','balancier','presence'],
+    bleu:['bell','lumiere','etincelle','elan']
+  };
+  const REC_COLORS={rouge:'#ef4444',orange:'#f59e0b',vert:'#22c55e',bleu:'#3b82f6'};
+  let selectedZone='',selectedKey='',wasHomeVisible=false;
+  const lastByZone=Object.create(null);
+  function chooseExercise(zone){
+    // ZONES fait autorité si disponible ; la table locale sert de secours.
+    let keys=REC_ZONES[zone]||[];
+    try{
+      if(typeof ZONES!=='undefined'){
+        const entry=ZONES.find(v=>v.key===zone);
+        if(entry&&Array.isArray(entry.items)&&entry.items.length)keys=entry.items;
+      }
+    }catch(_e){}
+    keys=keys.filter(k=>REC[k]&&(!('EXERCISES' in window)||!window.EXERCISES||window.EXERCISES[k]));
+    if(!keys.length)keys=REC_ZONES[zone]||[];
+    const candidates=keys.length>1?keys.filter(k=>k!==lastByZone[zone]):keys;
+    const pick=candidates[Math.floor(Math.random()*candidates.length)];
+    if(pick)lastByZone[zone]=pick;
+    return pick||null;
+  }
   const CSS=`
   /* V174: aucune modification des deux autres cartes d'accueil */
   #home .home-trend-card.mur-v174-rec{cursor:pointer!important;--mur-rec-color:#22c55e;transition:border-color .25s,background .25s!important;}
@@ -7396,9 +7435,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const z=zoneOf(v);
     const lg=language();
     const score=v&&v.score!=null?(Number(v.score)>0?'+':'')+String(v.score):'-';
-    const stamp=[z,lg,score,!!v].join('|');
+    const home=document.getElementById('home');
+    const homeVisible=!!home&&home.classList.contains('active');
+    // Un tirage au premier affichage, au changement de zone et à chaque retour à l'accueil.
+    if(z&&(z!==selectedZone||!selectedKey||(homeVisible&&!wasHomeVisible))){
+      selectedKey=chooseExercise(z);
+      selectedZone=z;
+    }
+    wasHomeVisible=homeVisible;
+    const stamp=[z,lg,score,!!v,selectedKey].join('|');
     if(!z){
       keyNow=null;
+      selectedZone='';selectedKey='';
       signature='';
       card.classList.remove('mur-v174-rec');
       card.removeAttribute('role'); card.removeAttribute('tabindex');
@@ -7407,14 +7455,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(panel)panel.remove();
       return;
     }
-    const rec=REC[z];
+    const rec=REC[selectedKey];
+    if(!rec)return;
     keyNow=rec.key;
     if(stamp===signature && card.querySelector('.mur-rec-row'))return;
     signature=stamp;
     suppress=true;
     try{
       card.classList.add('mur-v174-rec');
-      card.style.setProperty('--mur-rec-color',rec.c);
+      card.style.setProperty('--mur-rec-color',REC_COLORS[z]);
       card.setAttribute('role','button');
       card.setAttribute('tabindex','0');
       card.setAttribute('aria-label',lg==='en'?'Open suggested exercise '+rec.en:'Ouvrir l’exercice conseillé '+rec.fr);
@@ -7464,6 +7513,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     window.addEventListener('storage',render);
     window.addEventListener('focus',render);
     document.addEventListener('mur:languagechange',render);
+    document.addEventListener('click',()=>setTimeout(render,0),false);
     document.addEventListener('click',e=>{
       if(e.target.closest?.('[data-language],[data-lang]')){
         setTimeout(()=>{signature='';render();},150);
@@ -8991,3 +9041,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    Remplace la garde temporelle V202 par l'état réel de validation du
    dialogue de première utilisation (murInfoSeen). */
 window.MUR_V203={version:203,fix:'fingerprint-no-artificial-delay'};
+
+/* M.U.R. V204 — Recommandation aleatoire parmi les 4 exercices de la zone NeuroFlex ; evite la repetition immediate par zone. Base V203. */
