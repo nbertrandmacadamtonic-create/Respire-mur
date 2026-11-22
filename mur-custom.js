@@ -8464,3 +8464,136 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   `;
   document.head.appendChild(style);
 })();
+
+
+/* =====================================================================
+ M.U.R. V191 — FICHE EXERCICES COMPACTE / TEXTES PARASITES MASQUÉS
+ - « Toucher la photo », « Agrandissement de l'image » et
+   « L'image devient une sphère » ne sont plus affichés.
+ - Légende et état audio (Prêt/En cours/...) sur une seule ligne.
+ - Dimensionnement réduit pour une page mobile sans scroll imposé.
+ - Le moteur audio, l'ouverture immersive et la sphère restent actifs.
+ ===================================================================== */
+(function(){
+ 'use strict';
+ const ID='mur-v191-exercises-compact';
+ if(document.getElementById(ID))return;
+ const css=document.createElement('style');
+ css.id=ID;
+ css.textContent=`
+ /* Les messages de guidage apparaissaient sous la photo ou dans
+    la surcouche plein écran. Ils restent dans le DOM pour le moteur. */
+ #exercises #exerciseDetail .mur-exsphere-caption,
+ body .mur-exsphere-fs-overlay .mur-exsphere-fs-caption,
+ body > .mur-exsphere-fs-overlay .mur-exsphere-fs-caption {
+   display:none!important;
+   visibility:hidden!important;
+   opacity:0!important;
+ }
+ /* Rendre de la place à l'image et aux commandes sur téléphone. */
+ body #exercises.exercise-detail-open #exerciseDetail {
+   min-height:0!important;
+   height:auto!important;
+   padding:6px 8px 10px!important;
+   gap:3px!important;
+   justify-content:flex-start!important;
+ }
+ body #exercises.exercise-detail-open #exerciseDetail > h2 {
+   font-size:clamp(16px,2.25vh,21px)!important;
+   margin:0!important;
+   line-height:1.18!important;
+ }
+ body #exercises.exercise-detail-open #exerciseDetail > .exercise-zone-line {
+   margin:0!important;
+   line-height:1.1!important;
+ }
+ body #exercises.exercise-detail-open #exerciseDetail > .mur-exsphere-stage {
+   max-height:min(42svh,350px)!important;
+   margin:2px auto!important;
+ }
+ body #exercises.exercise-detail-open #exerciseDetail > .mur-exsphere-controls {
+   margin:1px auto!important;
+   gap:6px!important;
+ }
+ body #exercises.exercise-detail-open #exerciseDetail > #exerciseControlPanel {
+   padding:2px 5px 4px!important;
+   margin:0 auto!important;
+   gap:3px!important;
+ }
+ /* Une seule ligne : phrase d'exercice à gauche, « Prêt » à droite.
+    Le texte se réduit doucement au lieu de forcer une seconde ligne. */
+ body #exercises.exercise-detail-open #exerciseDetail #exerciseControlPanel .exercise-free-caption {
+   display:flex!important;
+   flex-direction:row!important;
+   align-items:center!important;
+   justify-content:space-between!important;
+   flex-wrap:nowrap!important;
+   gap:7px!important;
+   width:100%!important;
+   min-height:27px!important;
+   padding:4px 7px!important;
+   margin:0!important;
+ }
+ body #exercises.exercise-detail-open #exerciseDetail #exerciseControlPanel .exercise-free-caption strong {
+   flex:1 1 auto!important;
+   min-width:0!important;
+   max-width:none!important;
+   display:block!important;
+   font-size:clamp(9px,2.55vw,11px)!important;
+   white-space:nowrap!important;
+   overflow:hidden!important;
+   text-overflow:ellipsis!important;
+   overflow-wrap:normal!important;
+   word-break:normal!important;
+   line-height:1.15!important;
+   text-align:left!important;
+ }
+ body #exercises.exercise-detail-open #exerciseDetail #exerciseControlPanel .exercise-free-caption #audioStatus {
+   flex:0 0 auto!important;
+   max-width:96px!important;
+   min-width:0!important;
+   font-size:clamp(9px,2.5vw,11px)!important;
+   white-space:nowrap!important;
+   line-height:1.15!important;
+   text-align:right!important;
+ }
+ body #exercises.exercise-detail-open #exerciseDetail #exerciseControlPanel .exercise-audio-actions {
+   margin:1px auto!important;
+   gap:6px!important;
+ }
+ body #exercises.exercise-detail-open #exerciseDetail #exerciseControlPanel .exercise-audio-actions button {
+   min-height:33px!important;
+   padding:6px 11px!important;
+ }
+ body #exercises.exercise-detail-open #exerciseDetail #exerciseControlPanel .why-toggle-btn {
+   margin:2px auto!important;
+   min-height:32px!important;
+   padding:6px 10px!important;
+ }
+ @media(max-height:700px){
+   body #exercises.exercise-detail-open #exerciseDetail > .mur-exsphere-stage {
+     max-height:min(36svh,285px)!important;
+   }
+ }
+ @media(max-height:580px){
+   body #exercises.exercise-detail-open #exerciseDetail > .mur-exsphere-stage {
+     max-height:31svh!important;
+   }
+ }
+ `;
+ document.head.appendChild(css);
+ // Ne modifie que la valeur de statut initiale (pas les mises à jour lecture).
+ function normalizeReady(){
+   const el=document.querySelector('#exerciseDetail #audioStatus');
+   if(el&&/^pret$/i.test((el.textContent||'').trim()))el.textContent='Prêt';
+ }
+ function install(){
+   normalizeReady();
+   const root=document.getElementById('exerciseDetail');
+   if(root&&typeof MutationObserver!=='undefined'){
+     new MutationObserver(normalizeReady).observe(root,{childList:true,subtree:true});
+   }
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+ else install();
+})();
