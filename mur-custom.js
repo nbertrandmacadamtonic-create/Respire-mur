@@ -8258,3 +8258,40 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
+
+/* M.U.R. V186 — Correction ciblée : afficher le ruban NeuroFlex V185.
+   La règle V185 .home-curve > svg {display:none!important} masquait
+   aussi son propre SVG .mur-v185-graph. Les tracés historiques restent cachés. */
+(function(){
+ 'use strict';
+ const STYLE_ID='mur-v186-visible-neuroflex-ribbon';
+ function apply(){
+   if(document.getElementById(STYLE_ID))return;
+   const style=document.createElement('style');
+   style.id=STYLE_ID;
+   style.textContent=`
+     #home .home-line-card.mur-v185-line .home-curve > svg.mur-v185-graph {
+       display:block!important;
+       visibility:visible!important;
+       opacity:1!important;
+       width:100%!important;
+       height:calc(100% - 21px)!important;
+       margin:0!important;
+       position:absolute!important;
+       top:13px!important;
+       left:0!important;
+       right:0!important;
+       overflow:visible!important;
+       pointer-events:none!important;
+       z-index:1!important;
+     }
+     #home .home-line-card.mur-v185-line .home-curve > svg:not(.mur-v185-graph) {
+       display:none!important;
+     }
+   `;
+   document.head.appendChild(style);
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});
+ else apply();
+ window.MUR_V186={version:'186',fix:'neuroflex-ribbon-visibility'};
+})();
