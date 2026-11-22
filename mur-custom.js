@@ -8597,3 +8597,32 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
  else install();
 })();
+
+
+/* =====================================================================
+ M.U.R. V192 — CONSERVER UNIQUEMENT LE STATUT « PRÊT »
+ Dans la fiche Exercice, masquer intégralement la phrase descriptive
+ accolée au statut audio. Conserver tous les états audio et commandes.
+ ===================================================================== */
+(function(){
+ 'use strict';
+ const ID='mur-v192-exercises-status-alone';
+ if(document.getElementById(ID))return;
+ const css=document.createElement('style');
+ css.id=ID;
+ css.textContent=`
+  body #exercises #exerciseDetail #exerciseControlPanel .exercise-free-caption > strong,
+  body #exercises #exerciseDetail #exerciseControlPanel .exercise-free-caption strong {
+    display:none!important;
+  }
+  body #exercises #exerciseDetail #exerciseControlPanel .exercise-free-caption {
+    justify-content:flex-end!important;
+    gap:0!important;
+  }
+  body #exercises #exerciseDetail #exerciseControlPanel .exercise-free-caption #audioStatus {
+    flex:0 0 auto!important;
+    margin-left:auto!important;
+  }
+ `;
+ document.head.appendChild(css);
+})();
