@@ -1634,7 +1634,7 @@ if (typeof window.installPresentationFallback !== 'function') {
 (() => {
   'use strict';
   if(window.MUR_HOME_FIVE_V87)return;
-  const N=280, PER=280, CENTER_PER=280, OPEN_MS=1150, CLOSE_MS=850;
+  const N=2400, PER=280, CENTER_PER=280, OPEN_MS=1350, CLOSE_MS=950;
   const TAU=Math.PI*2, GOLD=Math.PI*(3-Math.sqrt(5));
   const GROUPS=[
     {key:'quick',fr:'Urgence',en:'Urgent',icon:'ϟ',rgb:[239,78,91]},
@@ -1644,8 +1644,9 @@ if (typeof window.installPresentationFallback !== 'function') {
     {key:'stats',fr:'Stats',en:'Stats',icon:'▥',rgb:[218,94,156]}
   ];
   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
-  // Deux populations distinctes : 2400 points de la sphère source et
-  // 1200 points au centre, 350 par sphère périphérique (sans scission).
+  // V194 : continuité de densité avec la sphère d’accueil (2400 particules).
+  // Ces mêmes points se distribuent vers les cinq destinations pendant
+  // la transformation. Le maillage final plus fin prend le relais en douceur.
   const sourcePoints=Array.from({length:N},(_,i)=>{
     const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),a=i*GOLD;
     return {x:r*Math.cos(a),y,z:r*Math.sin(a),seed:((i*67)%1009)/1009};
@@ -1756,12 +1757,13 @@ if (typeof window.installPresentationFallback !== 'function') {
       const color=homeColor();
       const ca=Math.cos(time*.00023),sa=Math.sin(time*.00023);
       const cb=Math.cos(time*.00030),sb=Math.sin(time*.00030);
-      // V163 : transition CONTINUE. Les points de la grosse sphère
-      // voyagent physiquement vers les cinq emplacements au lieu de
-      // disparaître avant l'apparition des sphères du menu.
-      const emerge=ease(progress);
-      const sourceOpacity=1-ease(Math.max(0,Math.min(1,(progress-.70)/.30)));
-      const miniOpacity=ease(Math.max(0,Math.min(1,(progress-.58)/.37)));
+      // V194 : grande sphère -> séparation progressive -> cinq sphères.
+      // Départ dense (2400 points) sans perte brutale à l'ouverture.
+      // Déploiement légèrement différé pour laisser lire la transformation.
+      const emerge=ease(Math.max(0,Math.min(1,(progress-.08)/.88)));
+      const handoff=ease(Math.max(0,Math.min(1,(progress-.72)/.28)));
+      const sourceOpacity=1-handoff;
+      const miniOpacity=handoff;
       if(sourceOpacity>0){
         ctx.save();
         const tilt=.15,ct=Math.cos(tilt),st=Math.sin(tilt);
@@ -1831,7 +1833,7 @@ if (typeof window.installPresentationFallback !== 'function') {
       }
       ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
       buttons.forEach((b,i)=>{
-        const show=progress>.76;
+        const show=progress>.88;
         b.classList.toggle('ready',show);
         b.style.pointerEvents=(show&&open)?'auto':'none';
         const locked=(i>0&&typeof window.testsAreUnlocked==='function'&&!window.testsAreUnlocked());
@@ -1869,7 +1871,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>{if(open)setOpen(false)},{passive:true}));
     window.addEventListener('pagehide',()=>{if(raf)cancelAnimationFrame(raf);layer.remove();document.body.classList.remove('mur-five-open')});
     window.addEventListener('resize',()=>{if(open||progress)layout()},{passive:true});
-    window.MUR_HOME_FIVE_V87={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'v161-native-menu-3d-no-legacy-scatter'};
+    window.MUR_HOME_FIVE_V87={sourceParticles:N,particlesPerSphere:PER,centralSphereParticles:CENTER_PER,smallSpheres:5,openMs:OPEN_MS,closeMs:CLOSE_MS,layout:'v194-continuous-2400-to-five'};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
