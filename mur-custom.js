@@ -9674,3 +9674,48 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
   else install();
 })();
+
+/* =======================================================================
+ M.U.R. V218 — BOUTON INFORMATION RESPIRATION HORS DU TITRE
+ Réserve une ligne d'en-tête à hauteur suffisante et aligne l'icône « i »
+ à droite de « Respiration », au-dessus du cartouche recommandé.
+ Ne déplace pas le bouton dans le DOM : son action reste inchangée.
+ ======================================================================= */
+(function(){
+  'use strict';
+  const ID='mur-v218-breath-info-header';
+  function install(){
+    if(document.getElementById(ID))return;
+    const style=document.createElement('style');
+    style.id=ID;
+    style.textContent=`
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-title {
+        min-height:44px!important;
+        flex:0 0 44px!important;
+        display:flex!important;
+        align-items:center!important;
+        box-sizing:border-box!important;
+        padding:0 58px 0 2px!important;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-b152-title h2 {
+        margin:0!important;
+        min-width:0!important;
+      }
+      #breath.mur-b152.page.active:not(.mur-b154-fullscreen) > .mur-info-page-button {
+        top:3px!important;
+        right:14px!important;
+        left:auto!important;
+        margin:0!important;
+        width:38px!important;
+        height:38px!important;
+        min-width:38px!important;
+        min-height:38px!important;
+        z-index:90!important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
+  window.MUR_V218={version:218,fix:'breath-info-aligned-on-separate-header-row'};
+})();
