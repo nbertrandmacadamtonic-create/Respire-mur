@@ -1858,6 +1858,54 @@ if (typeof window.installPresentationFallback !== 'function') {
         ctx.restore();
       }
       ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+      // V214 — Flèches orbitales tracées sur le MEME canvas que les sphères.
+      // Leur centre et leur rayon proviennent de layout() / draw(), et non
+      // de la taille approximative du bouton HTML. Elles restent à distance
+      // des particules, y compris sur iPhone et sur ordinateur.
+      if (progress > .88) {
+        const arrowFade=Math.min(1,Math.max(0,(progress-.88)/.12));
+        for (let i=0;i<GROUPS.length;i++) {
+          const g=GROUPS[i],c=coords[i];
+          const particleRadius=i===0?centerRadius:radius;
+          // La projection 3D agrandit légèrement les points près du bord.
+          // 1,48 fois le rayon de particules garantit un cercle extérieur.
+          const orbitRadius=particleRadius*1.48+2;
+          const color=`${g.rgb[0]},${g.rgb[1]},${g.rgb[2]}`;
+          ctx.save();
+          ctx.translate(c[0],c[1]);
+          ctx.rotate(time*.00044 + i*.13);
+          ctx.globalAlpha=arrowFade;
+          ctx.lineCap='round';
+          ctx.lineJoin='round';
+          // Cercle d'orientation discret, beaucoup moins visible que les flèches.
+          ctx.beginPath();ctx.arc(0,0,orbitRadius,0,TAU);
+          ctx.strokeStyle=`rgba(${color},.11)`;
+          ctx.lineWidth=1;
+          ctx.stroke();
+          const drawArrowArc=(startAngle,endAngle)=>{
+            ctx.beginPath();ctx.arc(0,0,orbitRadius,startAngle,endAngle,false);
+            ctx.strokeStyle=`rgba(${color},.91)`;
+            ctx.lineWidth=1.8;
+            ctx.shadowColor=`rgba(${color},.70)`;
+            ctx.shadowBlur=7;
+            ctx.stroke();
+            const x=orbitRadius*Math.cos(endAngle),y=orbitRadius*Math.sin(endAngle);
+            const tx=-Math.sin(endAngle),ty=Math.cos(endAngle);
+            const nx=-ty,ny=tx;
+            const wing=4.2,shaft=8;
+            ctx.beginPath();
+            ctx.moveTo(x-shaft*tx+wing*nx,y-shaft*ty+wing*ny);
+            ctx.lineTo(x,y);
+            ctx.lineTo(x-shaft*tx-wing*nx,y-shaft*ty-wing*ny);
+            ctx.lineWidth=2.1;
+            ctx.stroke();
+          };
+          // Deux arcs indépendants dessinent une rotation autour, pas sur la boule.
+          drawArrowArc(-2.62,-.48);
+          drawArrowArc(.46,2.56);
+          ctx.restore();
+        }
+      }
       buttons.forEach((b,i)=>{
         const show=progress>.88;
         b.classList.toggle('ready',show);
@@ -9256,79 +9304,8 @@ window.MUR_V203={version:203,fix:'fingerprint-no-artificial-delay'};
 })();
 window.MUR_V206={version:206,fix:'hide-dashboard-fingerprint-in-souffle-vivant'};
 
-/* ====================================================================
- M.U.R. V213 — ACCUEIL : Flèches à l'EXTERIEUR des cinq petites sphères.
- Base exacte de la V207 publiée sur GitHub, sans modifier les autres pages.
- Le petit cercle des flèches V207 passait sur les particules de la sphère ;
- ici les arcs et pointes sont positionnés à l'extérieur de chaque boule.
- ==================================================================== */
-(function(){
-  'use strict';
-  const STYLE_ID='mur-v207-five-orbit-arrows';
-  const SVG_NS='http://www.w3.org/2000/svg';
-  const RING=`
-    <path d="M12.5 38.8 A52 52 0 0 1 107.5 38.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".72"/><path d="M107.5 28.4 L107.5 38.8 L99.8 31.8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M107.5 81.2 A52 52 0 0 1 12.5 81.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".72"/><path d="M12.5 91.6 L12.5 81.2 L20.2 88.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-  `;
-  function style(){
-    if(document.getElementById(STYLE_ID))return;
-    const el=document.createElement('style');
-    el.id=STYLE_ID;
-    el.textContent=`
-      .mur-five-target .mur-v207-orbit-arrows {
-        position:absolute!important;
-        left:-9px!important;top:-9px!important;
-        right:auto!important;bottom:auto!important;
-        width:calc(100% + 18px)!important;
-        height:calc(100% + 18px)!important;
-        overflow:visible!important;
-        display:block!important;pointer-events:none!important;
-        z-index:3!important;
-        color:var(--mur-mini-label-color,#8fe9db)!important;
-        opacity:0;transform-origin:50% 50%;
-        transition:opacity .35s ease;
-        filter:drop-shadow(0 0 4px currentColor);
-      }
-      body.mur-five-open .mur-five-target.ready .mur-v207-orbit-arrows {
-        opacity:.92;
-        animation:mur-v207-orbit-rotate 10s linear infinite;
-      }
-      .mur-five-target .mur-five-label {z-index:4!important;}
-      @keyframes mur-v207-orbit-rotate {
-        from{transform:rotate(0deg)}to{transform:rotate(360deg)}
-      }
-      @media(prefers-reduced-motion:reduce){
-        body.mur-five-open .mur-five-target.ready .mur-v207-orbit-arrows {
-          animation:none!important;opacity:.85;
-        }
-      }
-    `;
-    document.head.appendChild(el);
-  }
-  function apply(){
-    document.querySelectorAll('.mur-five-layer .mur-five-target').forEach(button=>{
-      let svg=button.querySelector('.mur-v207-orbit-arrows');
-      if(!svg){
-        svg=document.createElementNS(SVG_NS,'svg');
-        svg.setAttribute('class','mur-v207-orbit-arrows');
-        button.insertBefore(svg,button.firstChild);
-      }
-      svg.setAttribute('viewBox','0 0 120 120');
-      svg.setAttribute('preserveAspectRatio','xMidYMid meet');
-      svg.setAttribute('aria-hidden','true');
-      svg.innerHTML=RING;
-    });
-  }
-  function init(){
-    style();apply();
-    const observer=new MutationObserver(mutations=>{
-      if(mutations.some(m=>[...m.addedNodes].some(n=>n.nodeType===1 &&
-          (n.matches?.('.mur-five-layer') || n.querySelector?.('.mur-five-layer')))))apply();
-    });
-    observer.observe(document.body,{childList:true,subtree:true});
-  }
-  if(document.readyState==='loading')
-    document.addEventListener('DOMContentLoaded',init,{once:true});
-  else init();
-  window.MUR_V213={version:213,feature:'five-arrows-outside-spheres',base:207};
-})();
+/* M.U.R. V214 — flèches orbitant HORS des cinq sphères, tracées avec
+   les mêmes coordonnées et rayons que leurs particules (voir draw()).
+   Remplace entièrement les SVG V207/V213 mal alignés. */
+window.MUR_V214={version:214,base:213,feature:'five-outside-canvas-orbit-arrows'};
+
