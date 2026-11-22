@@ -8868,10 +8868,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       const menuOpen=document.body.classList.contains('mur-five-open') ||
         !!sphere?.classList.contains('mur-menu-open') ||
         !!sphere?.classList.contains('mur-particles-transitioning');
-      const introExiting=document.body.dataset.murIntroExiting==='1';
+      // La fenêtre d'information initiale s'ouvre 700 ms après « Commencer ».
+      // Aucun délai d'affichage ajouté : l'empreinte apparaît dès que l'accueil
+      // est disponible ET que l'information initiale a été réellement validée.
       const infoOpen=!!document.getElementById('infoModal')?.classList.contains('open');
+      let infoValidated=false;
+      try{infoValidated=localStorage.getItem('murInfoSeen')==='1';}catch(_){
+        // En cas de stockage indisponible, ne bloquer que la fenêtre visible.
+        infoValidated=true;
+      }
       const show=source.isConnected && !!home?.classList.contains('active') &&
-        !!sphere && !presentationVisible && !introExiting && !infoOpen &&
+        !!sphere && !presentationVisible && !infoOpen && infoValidated &&
         !menuOpen && !document.hidden;
       if(!show){
         if(last!=='hidden'){portal.style.display='none';last='hidden';}
@@ -8980,57 +8987,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   else enforce();
 })();
 
-
-/* =====================================================================
- M.U.R. V202 — EMPREINTE APRÈS LA PRÉSENTATION ET L'INFORMATION INITIALE
-
- L'accueil est déjà marqué active derrière la présentation. Au clic sur
- « Commencer », la fenêtre d'information peut s'ouvrir 700 ms plus tard :
- éviter que l'empreinte apparaisse fugitivement au milieu de la transition.
- Préserve la seule empreinte sous la sphère (V201), son clic et son son.
- ===================================================================== */
-(function(){
-  'use strict';
-  if(window.MUR_V202_INTRO_FINGERPRINT_GUARD)return;
-  window.MUR_V202_INTRO_FINGERPRINT_GUARD=true;
-  const style=document.createElement('style');
-  style.id='mur-v202-intro-fingerprint-guard';
-  style.textContent=`
-    body[data-mur-intro-exiting="1"] > #mur-v197-fingerprint-portal,
-    body:has(#infoModal.open) > #mur-v197-fingerprint-portal,
-    body:has(#presentation:not(.hide)) > #mur-v197-fingerprint-portal {
-      display:none!important;
-      visibility:hidden!important;
-      pointer-events:none!important;
-    }
-  `;
-  document.head.appendChild(style);
-  let token=0;
-  function onIntroExit(){
-    const current=++token;
-    const start=Date.now();
-    document.body.dataset.murIntroExiting='1';
-    const interval=setInterval(()=>{
-      if(current!==token){clearInterval(interval);return;}
-      const elapsed=Date.now()-start;
-      const presentation=document.getElementById('presentation');
-      const info=document.getElementById('infoModal');
-      const videoVisible=!!presentation && !presentation.classList.contains('hide');
-      const infoOpen=!!info?.classList.contains('open');
-      let infoSeen=false;
-      try{infoSeen=localStorage.getItem('murInfoSeen')==='1';}catch(_){}
-      // Pas de flash lors des 700 ms précédant l'ouverture du premier message.
-      // Si l'information initiale est requise, attendre sa fermeture.
-      if(elapsed>=1050 && !videoVisible && !infoOpen && (infoSeen || elapsed>=2800)){
-        clearInterval(interval);
-        delete document.body.dataset.murIntroExiting;
-      }
-    },100);
-  }
-  document.addEventListener('click',e=>{
-    if(e.target.closest?.('#murCommencer,#murIntroSkip'))onIntroExit();
-  },true);
-  // L'autre chemin de sortie (ancienne présentation) ne doit pas relancer
-  // un portail si le dialogue est encore affiché.
-  window.MUR_V202={version:202,fix:'fingerprint-only-after-intro-and-initial-info'};
-})();
+/* M.U.R. V203 — empreinte sous la sphère, sans délai artificiel.
+   Remplace la garde temporelle V202 par l'état réel de validation du
+   dialogue de première utilisation (murInfoSeen). */
+window.MUR_V203={version:203,fix:'fingerprint-no-artificial-delay'};
