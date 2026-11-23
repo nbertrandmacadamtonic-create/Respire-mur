@@ -9723,7 +9723,7 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
 
 
 /* =======================================================================
- M.U.R. V219 — 3 PAGES RESPIRATION : RYTHME / MODE LIBRE / AVANCE
+ M.U.R. V221 — 14 SEANCES GUIDEES SUR UNE PAGE / MODE LIBRE / AVANCE
  Base V218 — conserve intégralement l'application et le moteur natif.
  La navigation existante (V162) ouvre le panneau ; on ne remplace que
  l'interface interne. Durées exprimées en secondes ; plafonds natifs 1–20 min.
@@ -9731,16 +9731,36 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
 (function(){
   'use strict';
   if(window.MUR_V219)return;
-  const VERSION='219';
+  const VERSION='221';
   const ID='mur-v219-breath-screens';
   const STYLE_ID='mur-v219-breath-screens-style';
+  /* 14 séquences organisées par objectif. Les promesses sont des intentions
+     d'usage, jamais des résultats médicaux garantis. */
   const DEF_RHYTHMS=[
-    {id:'calme',name:['Calme express','Quick calm'],promise:['Se recentrer rapidement','Find a moment of focus'],key:'coherence',i:5,hi:0,e:5,ho:0,duration:90,color:'#4ec8f9'},
-    {id:'equilibre',name:['Équilibre 5/5','Balance 5/5'],promise:['Installer un rythme régulier','Build a steady breathing rhythm'],key:'coherence',i:5,hi:0,e:5,ho:0,duration:300,color:'#35e4a0'},
-    {id:'365',name:['Rituel 365','365 ritual'],promise:['Installer une routine : 3 × 5 min/jour','Build a routine: 3 × 5 min/day'],key:'365',i:5,hi:0,e:5,ho:0,duration:300,color:'#6298f7'},
-    {id:'frein',name:['Frein 3/8','Slow down 3/8'],promise:['Favoriser un ralentissement progressif','Support a gradual slowing'],key:'frein',i:3,hi:0,e:8,ho:0,duration:180,color:'#bd8be9'},
-    {id:'apaisement',name:['Apaisement 4/6','Ease 4/6'],promise:['Allonger doucement l’expiration','Gently lengthen the exhale'],key:'regulate',i:4,hi:0,e:6,ho:0,duration:360,color:'#42d8c8'},
-    {id:'boost',name:['Boost 5/2','Boost 5/2'],promise:['Accompagner un regain de vigilance','Support a feeling of alertness'],key:'boost',i:5,hi:0,e:2,ho:0,duration:120,color:'#d6e66b'}
+    {id:'calme',cat:'calme',name:['Pause express','Quick pause'],promise:['90 secondes pour souffler','90 seconds to reset'],key:'coherence',i:5,hi:0,e:5,ho:0,duration:90,color:'#58b9f6'},
+    {id:'frein',cat:'calme',name:['Faire redescendre la pression','Release the pressure'],promise:['Ralentir après un pic de tension','Slow down after a tense moment'],key:'frein',i:3,hi:0,e:8,ho:0,duration:180,color:'#e17876'},
+    {id:'apaisement',cat:'calme',name:['Retrouver le calme','Find calm'],promise:['Relâcher progressivement la tension','Ease into a calmer pace'],key:'regulate',i:4,hi:0,e:6,ho:0,duration:360,color:'#4ad4bb'},
+
+    {id:'sommeil',cat:'sommeil',name:['Préparer le sommeil','Prepare for sleep'],promise:['Créer un sas de détente avant la nuit','Build a relaxing pre-sleep routine'],key:'regulate',i:4,hi:0,e:6,ho:0,duration:480,color:'#a58ae9'},
+    {id:'soir',cat:'sommeil',name:['Déconnecter le soir','Unwind in the evening'],promise:['Laisser le rythme de la journée derrière soi','Leave the day behind'],key:'regulate',i:4,hi:0,e:6,ho:0,duration:360,color:'#9e9ff2'},
+    {id:'coucher478',cat:'sommeil',name:['Rituel du coucher 4/7/8','Bedtime 4/7/8 ritual'],promise:['Installer un moment calme avant de dormir','Make space for calm before bed'],key:'478',i:4,hi:7,e:8,ho:0,duration:180,color:'#ab89dc'},
+
+    {id:'equilibre',cat:'focus',name:['Équilibre intérieur','Inner balance'],promise:['Retrouver un souffle régulier','Find a steady breathing pattern'],key:'coherence',i:5,hi:0,e:5,ho:0,duration:300,color:'#35e4a0'},
+    {id:'concentration',cat:'focus',name:['Place à la concentration','Make space for focus'],promise:['Se rendre disponible avant une tâche','Get ready for a task'],key:'coherence',i:5,hi:0,e:5,ho:0,duration:240,color:'#3bd5d4'},
+
+    {id:'boost',cat:'energie',name:['Reprendre de l’élan','Find new momentum'],promise:['Se remettre en mouvement','Get moving again'],key:'boost',i:5,hi:0,e:2,ho:0,duration:120,color:'#e5c16b'},
+    {id:'reveil',cat:'energie',name:['Réveil en douceur','Gentle wake-up'],promise:['Démarrer sans précipitation','Ease into the day'],key:'coherence',i:5,hi:0,e:5,ho:0,duration:180,color:'#edd079'},
+
+    {id:'recuperation',cat:'recup',name:['S’accorder une récupération','Take time to recover'],promise:['Créer une pause après l’effort','Pause after exertion'],key:'regulate',i:4,hi:0,e:6,ho:0,duration:360,color:'#58cbd3'},
+    {id:'ecrans',cat:'recup',name:['Pause après les écrans','Screen break'],promise:['Relâcher la sollicitation du moment','Step away from constant stimulation'],key:'regulate',i:4,hi:0,e:6,ho:0,duration:240,color:'#7dc3e0'},
+
+    {id:'365',cat:'rituels',name:['Rituel 365','365 ritual'],promise:['Installer 3 pauses de 5 minutes par jour','Build 3 five-minute pauses per day'],key:'365',i:5,hi:0,e:5,ho:0,duration:300,color:'#6298f7'},
+    {id:'rendezvous',cat:'rituels',name:['Avant un rendez-vous','Before an appointment'],promise:['S’offrir un moment pour se recentrer','Take a moment to center yourself'],key:'coherence',i:5,hi:0,e:5,ho:0,duration:120,color:'#6abbd0'}
+  ];
+  const RHYTHM_CATEGORIES=[
+    ['all','Toutes','All'],['calme','Calme','Calm'],['sommeil','Sommeil','Sleep'],
+    ['focus','Concentration','Focus'],['energie','Énergie','Energy'],
+    ['recup','Récupération','Recovery'],['rituels','Rituels','Rituals']
   ];
   const FREE_RHYTHMS=[
     {id:'55',label:'5 s / 5 s',key:'coherence',i:5,hi:0,e:5,ho:0,color:'#2bddb0'},
@@ -9760,7 +9780,7 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
   const isRunning=()=>{try{return typeof running!=='undefined'&&running;}catch(_){return false;}};
   const within=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||a));
   const fmt=s=>{const m=Math.floor(s/60),r=s%60;return r?`${m}:${String(r).padStart(2,'0')}`:`${m} min`;};
-  const state={selected:'equilibre',freeRhythm:'55',freeDuration:300,advanced:{i:5,hi:0,e:5,ho:0,duration:300}, screen:'rhythm'};
+  const state={selected:'equilibre',freeRhythm:'55',freeDuration:300,advanced:{i:5,hi:0,e:5,ho:0,duration:300}, screen:'rhythm',rhythmFilter:'all'};
   const I={waves:'≋',clock:'◷',check:'✓',finger:'◉'};
   const CSS=`
     #breath.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type{
@@ -9848,6 +9868,38 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
     #breath .mur-v219-summary{font-size:12px;color:#d9faf0;border:1px solid #346d66;border-radius:13px;padding:11px;background:#1241396b;}
     @media(min-width:650px){#breath .mur-v219-screen{max-width:640px;margin:auto;}}
     @media(max-width:390px){#breath .mur-v219-choice{grid-template-columns:23px minmax(0,1fr) auto;gap:5px;padding:7px;}#breath .mur-v219-globe{width:23px;height:23px;}#breath .mur-v219-choice b{font-size:12px;}#breath .mur-v219-values{font-size:10px;}#breath .mur-v219-tab{font-size:10px!important;}}
+
+    /* V220 — filtres d'objectifs et sélection actuelle */
+    #breath .mur-v220-filter-wrap{overflow:hidden;min-width:0;}
+    #breath .mur-v220-filters{display:flex;gap:6px;overflow-x:auto;max-width:100%;padding:2px 1px 7px;
+      scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#3c7e81 transparent;-webkit-overflow-scrolling:touch;}
+    #breath .mur-v220-filters button{flex:0 0 auto;scroll-snap-align:start;padding:8px 10px;min-height:35px;
+      border:1px solid #55798b;border-radius:999px;background:#142d42;color:#d2e7f0;font-weight:700;font-size:11px;cursor:pointer;}
+    #breath .mur-v220-filters button[aria-pressed="true"]{border-color:#71f4bd;background:linear-gradient(125deg,#277557,#127173);
+      box-shadow:0 0 12px #2cdca744;color:white;}
+    #breath .mur-v220-selected{display:flex;flex-direction:column;gap:3px;padding:11px 12px;border:1px solid #338d80;
+      border-radius:12px;background:linear-gradient(120deg,rgba(27,88,74,.45),rgba(11,39,54,.6));}
+    #breath .mur-v220-selected b{font-size:12px;color:#d9fff2;}
+    #breath .mur-v220-selected small{font-size:11px;color:#c3e7e2;line-height:1.4;}
+    #breath .mur-v219-choice{min-height:70px;}
+    /* V221 : les six familles sont visibles ensemble dans une seule liste défilante. */
+    #breath .mur-v221-session-list{display:flex;flex-direction:column;gap:11px;}
+    #breath .mur-v221-category{display:flex;flex-direction:column;gap:6px;min-width:0;}
+    #breath .mur-v221-category-head{display:flex;align-items:center;gap:8px;margin:0 2px 2px;
+      font-size:12px;letter-spacing:.025em;font-weight:800;color:#e2f7fc;}
+    #breath .mur-v221-category-head::before{content:'';width:3px;height:17px;border-radius:5px;
+      background:var(--v221-group-color,#3ce9b2);box-shadow:0 0 9px var(--v221-group-color,#3ce9b2);}
+    #breath .mur-v221-category-head small{margin-left:auto;font-size:10px;font-weight:600;color:#a6c9d7;}
+    #breath .mur-v221-category .mur-v219-choice{min-height:68px;}
+    #breath .mur-v221-action-bar{position:sticky;bottom:-16px;z-index:5;padding:8px 7px 10px;
+      border:1px solid rgba(87,208,176,.55);border-radius:14px;
+      box-shadow:0 -12px 28px rgba(3,22,37,.85),0 8px 22px rgba(0,0,0,.28);
+      background:linear-gradient(180deg,rgba(8,35,47,.97),rgba(5,26,42,.99));
+      display:flex;flex-direction:column;gap:7px;}
+    #breath .mur-v221-action-bar .mur-v220-selected{padding:7px 10px;}
+    #breath .mur-v221-action-bar .mur-v219-action{margin:0;min-height:43px;}
+    #breath .mur-v221-scroll-note{font-size:11px;color:#b8d3de;line-height:1.4;margin:0 2px;}
+    @media(max-width:380px){#breath .mur-v220-filters button{font-size:10px;padding:7px 9px;}}
     @media(prefers-reduced-motion:reduce){#breath .mur-v219-screen *{animation:none!important;transition:none!important;}}
   `;
   function installCSS(){if($(STYLE_ID))return;const s=document.createElement('style');s.id=STYLE_ID;s.textContent=CSS;document.head.appendChild(s);}
@@ -9859,19 +9911,54 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
   function getValues(){const b=native();return b?{i:b.i,hi:b.hi,e:b.e,ho:b.ho,duration:b.duration}:null;}
   function iconGlobe(color){return `<span class="mur-v219-globe" style="--v219-color:${color}" aria-hidden="true"></span>`;}
   function tabs(){return `<nav class="mur-v219-modes" aria-label="${tr('Réglages respiratoires','Breathing settings')}">
-    ${[['rhythm','Mode rythme','Rhythms'],['free','Mode libre','Free mode'],['advanced','Avancés','Advanced']].map(v=>`<button type="button" class="mur-v219-tab" data-v219-nav="${v[0]}" aria-current="${state.screen===v[0]}">${tr(v[1],v[2])}</button>`).join('')}
+    ${[['rhythm','Séances guidées','Guided sessions'],['free','Mode libre','Free mode'],['advanced','Avancés','Advanced']].map(v=>`<button type="button" class="mur-v219-tab" data-v219-nav="${v[0]}" aria-current="${state.screen===v[0]}">${tr(v[1],v[2])}</button>`).join('')}
     </nav>`;}
   function layout(title,subtitle,body){return `<header class="mur-v219-top"><span class="mur-v219-dot"></span><strong>${tr('Respirer','Breathe')}</strong></header>
       <h2 class="mur-v219-title">${title}</h2><div class="mur-v219-intro">${subtitle}</div>${tabs()}${body}`;}
   function renderRhythm(){
-    const list=DEF_RHYTHMS.map(r=>`<button type="button" class="mur-v219-choice" data-v219-preset="${r.id}" aria-selected="${state.selected===r.id}">
+    const selected=DEF_RHYTHMS.find(r=>r.id===state.selected)||DEF_RHYTHMS[0];
+    const headings=[
+      ['calme','Calme','Calm','#54bff1'],
+      ['sommeil','Sommeil','Sleep','#ae98ef'],
+      ['focus','Concentration','Focus','#37d7c3'],
+      ['energie','Énergie','Energy','#e9bc65'],
+      ['recup','Récupération','Recovery','#64c8da'],
+      ['rituels','Rituels','Rituals','#78a8fa']
+    ];
+    const groupList=headings.map(([id,fr,english,color])=>{
+      const sessions=DEF_RHYTHMS.filter(r=>r.cat===id);
+      const choices=sessions.map(r=>`<button type="button" class="mur-v219-choice" data-v219-preset="${r.id}" aria-selected="${state.selected===r.id}" aria-pressed="${state.selected===r.id}">
         ${iconGlobe(r.color)}<span><b>${button(...r.name)}</b><small>${button(...r.promise)}</small></span>
-        <span class="mur-v219-values"><span>${r.i} / ${r.hi?`${r.hi} / `:''}${r.e}${r.ho?` / ${r.ho}`:''}</span><span>${r.id==='365'?'5 min × 3/j':fmt(r.duration)}</span></span>
+        <span class="mur-v219-values"><span>${r.i} / ${r.hi?`${r.hi} / `:''}${r.e}${r.ho?` / ${r.ho}`:''}</span>
+        <span>${r.id==='365'?tr('5 min × 3/j','5 min × 3/day'):fmt(r.duration)}</span></span>
       </button>`).join('');
-    return layout(tr('Mode rythme','Rhythm mode'),tr('Choisissez une séance guidée prête à l’emploi.','Choose a ready-made guided session.'),
-      `<section class="mur-v219-group mur-v219-grid">${list}</section>
-       <p class="mur-v219-note">${tr('Les intitulés décrivent des objectifs, pas des résultats garantis. Le rituel 365 correspond à trois séances de 5 minutes par jour.','Program names describe goals, not guaranteed results. The 365 ritual consists of three 5-minute sessions per day.')}</p>
-       <button type="button" class="mur-v219-action" data-v219-apply="rhythm">✓ ${tr('Appliquer ce rythme','Apply this rhythm')}</button>`);
+      return `<section class="mur-v221-category" aria-label="${tr(fr,english)}" style="--v221-group-color:${color}">
+        <h3 class="mur-v221-category-head">${tr(fr,english)}<small>${sessions.length} ${tr('séances','sessions')}</small></h3>${choices}</section>`;
+    }).join('');
+    return layout(tr('Séances guidées','Guided sessions'),
+      tr('14 séances, réunies sur une seule page. Faites défiler puis choisissez votre séance.',
+      '14 sessions on one page. Scroll and choose your session.'),
+      `<div class="mur-v221-session-list">${groupList}</div>
+       <p class="mur-v221-scroll-note">${tr('Objectifs recherchés, sans garantie de résultat. Respirez sans forcer ; en cas d’inconfort, revenez à un souffle naturel. Le Rituel 365 correspond à trois séances distinctes de cinq minutes par jour.',
+       'Intended outcomes, not guaranteed. Breathe comfortably; if you feel discomfort, return to your natural breathing. The 365 ritual consists of three separate five-minute sessions per day.')}</p>
+       <div class="mur-v221-action-bar"><div class="mur-v220-selected"><b>${tr('Séance choisie','Selected session')} : ${button(...selected.name)}</b>
+       <small>${button(...selected.promise)} · ${selected.i}${selected.hi?'/'+selected.hi:''}/${selected.e} · ${fmt(selected.duration)}</small></div>
+       <button type="button" class="mur-v219-action" data-v219-apply="rhythm">✓ ${tr('Choisir cette séance','Choose this session')}</button></div>`);
+  }
+  function updateSelectedInPlace(){
+    const selected=DEF_RHYTHMS.find(r=>r.id===state.selected)||DEF_RHYTHMS[0];
+    screen.querySelectorAll('[data-v219-preset]').forEach(button=>{
+      const on=button.dataset.v219Preset===selected.id;
+      button.setAttribute('aria-selected',String(on));
+      button.setAttribute('aria-pressed',String(on));
+    });
+    const box=screen.querySelector('.mur-v220-selected');
+    if(box){
+      const title=box.querySelector('b');
+      const desc=box.querySelector('small');
+      if(title)title.textContent=tr('Séance choisie','Selected session')+' : '+button(...selected.name);
+      if(desc)desc.textContent=button(...selected.promise)+' · '+selected.i+(selected.hi?'/'+selected.hi:'')+'/'+selected.e+' · '+fmt(selected.duration);
+    }
   }
   function renderFree(){
     const presets=[120,300,600,900];
@@ -9942,7 +10029,8 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
     });}
   function onClick(e){const t=e.target.closest('button');if(!t||!screen.contains(t))return;
     if(t.dataset.v219Nav){e.preventDefault();const m=t.dataset.v219Nav;state.screen=m;page.dataset.murOption=m==='free'?'duration':m;render();return;}
-    if(t.dataset.v219Preset){state.selected=t.dataset.v219Preset;screen.querySelectorAll('[data-v219-preset]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.v219Preset===state.selected)));return;}
+    if(t.dataset.v220Filter){state.rhythmFilter=t.dataset.v220Filter;const group=DEF_RHYTHMS.filter(r=>state.rhythmFilter==='all'||r.cat===state.rhythmFilter);if(group.length&&!group.some(r=>r.id===state.selected))state.selected=group[0].id;const pos=panel.scrollTop;screen.innerHTML=renderRhythm();panel.scrollTop=pos;return;}
+    if(t.dataset.v219Preset){state.selected=t.dataset.v219Preset;updateSelectedInPlace();return;}
     if(t.dataset.v219FreeRhythm){state.freeRhythm=t.dataset.v219FreeRhythm;screen.querySelectorAll('[data-v219-free-rhythm]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v219FreeRhythm===state.freeRhythm)));return;}
     if(t.dataset.v219Quick){state.freeDuration=Number(t.dataset.v219Quick);updateFreeUI();return;}
     if(t.dataset.v219TimeStep){state.freeDuration=within(state.freeDuration+Number(t.dataset.v219TimeStep),60,1200);updateFreeUI();return;}
@@ -9971,5 +10059,7 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
     if(page.classList.contains('mur-b152-settings'))render();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  window.MUR_V219={version:VERSION,features:['rythmes-nommes','duree-libre-manuelle','reglages-avances-natifs','son-intro-natifs']};
+  window.MUR_V219={version:VERSION,features:['14-seances-guidees-sur-une-page','duree-libre-manuelle','reglages-avances-natifs','son-intro-natifs']};
+  window.MUR_V220={version:220,feature:'seances-guidees-par-objectif'};
+  window.MUR_V221={version:221,feature:'all-guided-sessions-single-scrollable-page'};
 })();
