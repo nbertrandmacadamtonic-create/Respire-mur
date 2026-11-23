@@ -9723,7 +9723,7 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
 
 
 /* =======================================================================
- M.U.R. V221 — 14 SEANCES GUIDEES SUR UNE PAGE / MODE LIBRE / AVANCE
+ M.U.R. V222 — DUREE SEULE / AVANCES COMPACTS SANS CURSEUR
  Base V218 — conserve intégralement l'application et le moteur natif.
  La navigation existante (V162) ouvre le panneau ; on ne remplace que
  l'interface interne. Durées exprimées en secondes ; plafonds natifs 1–20 min.
@@ -9731,7 +9731,7 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
 (function(){
   'use strict';
   if(window.MUR_V219)return;
-  const VERSION='221';
+  const VERSION='222';
   const ID='mur-v219-breath-screens';
   const STYLE_ID='mur-v219-breath-screens-style';
   /* 14 séquences organisées par objectif. Les promesses sont des intentions
@@ -9900,6 +9900,106 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
     #breath .mur-v221-action-bar .mur-v219-action{margin:0;min-height:43px;}
     #breath .mur-v221-scroll-note{font-size:11px;color:#b8d3de;line-height:1.4;margin:0 2px;}
     @media(max-width:380px){#breath .mur-v220-filters button{font-size:10px;padding:7px 9px;}}
+    /* V222 : pages Durée et Avancés sur une seule vue, sans barre colorée. */
+    #breath.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type:has(>.mur-v219-screen[data-v222-view="free"]),
+    #breath.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type:has(>.mur-v219-screen[data-v222-view="advanced"]){
+      overflow-y:hidden!important;padding:9px 11px 10px!important;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]){
+      gap:clamp(5px,1dvh,9px)!important;padding:0!important;min-height:0!important;height:100%!important;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-top{
+      margin:0!important;min-height:25px!important;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-dot{
+      width:25px;height:25px;flex-basis:25px;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-title{
+      font-size:clamp(19px,5.2vw,25px)!important;line-height:1.1!important;margin:0!important;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-intro{
+      padding:8px 10px!important;border-left:1px solid #45798d!important;
+      font-size:11px!important;line-height:1.25!important;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-modes{margin:0!important;}
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-tab{
+      min-height:32px!important;padding:4px 2px!important;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-group{
+      padding:9px 10px!important;border-radius:14px!important;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-label{
+      font-size:14px!important;margin-bottom:6px!important;line-height:1.2!important;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-settingsrow{
+      padding:5px 0!important;min-height:38px!important;font-size:11px!important;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-counter button{
+      width:34px;height:34px;min-height:34px;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-counter output{
+      min-width:41px;font-size:13px;
+    }
+    #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-action{
+      min-height:44px!important;margin-top:0!important;flex-shrink:0;
+    }
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-step{
+      min-height:76px;padding:6px 3px;
+    }
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-step-value{
+      font-size:clamp(28px,8vw,38px)!important;color:#a4f9d7;
+    }
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-step button{
+      width:52px;height:51px;border-radius:15px;
+    }
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-quick{
+      margin:7px 0 0!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+    }
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-quick button{
+      min-height:37px!important;
+    }
+    #breath .mur-v222-current-rhythm{font-size:12px;line-height:1.25;color:#bed7de;
+      border:1px solid #35586a;border-radius:12px;padding:9px 11px;background:#13374a9c;}
+    #breath .mur-v222-current-rhythm b{color:#a4f9d7;}
+    #breath .mur-v219-screen[data-v222-view="advanced"] .mur-v219-summary{
+      padding:7px 9px!important;font-size:11px!important;line-height:1.3!important;
+    }
+    @media(max-height:690px){
+      #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]){gap:4px!important;}
+      #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-group{padding:7px 9px!important;}
+      #breath .mur-v219-screen:is([data-v222-view="free"],[data-v222-view="advanced"]) .mur-v219-settingsrow{min-height:33px!important;padding:3px 0!important;}
+      #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-step{min-height:60px;}
+    }
+
+
+    /* V223 — roue de durée interactive, uniquement dans Mode libre. */
+    #breath .mur-v219-screen[data-v222-view="free"]{--mur-wheel-green:#39f5a4;}
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v223-wheel-section{border:0!important;background:transparent!important;padding:0!important;display:flex;flex-direction:column;align-items:center;gap:4px;}
+    #breath .mur-v223-wheel-caption{font-size:clamp(11px,2.7vw,14px);color:#c6dce6;text-align:center;margin:0;}
+    #breath .mur-v223-wheel{width:min(100%,min(43dvh,360px));aspect-ratio:1;position:relative;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;flex:0 0 auto;isolation:isolate;}
+    #breath .mur-v223-wheel:active{cursor:grabbing;}
+    #breath .mur-v223-wheel::before{content:'';position:absolute;inset:2%;border-radius:50%;background:radial-gradient(circle,rgba(4,125,101,.13),rgba(0,160,182,.075) 53%,transparent 75%);border:1px solid rgba(26,218,230,.16);box-shadow:inset 0 0 40px rgba(13,235,185,.05);}
+    #breath .mur-v223-wave{position:absolute;inset:14% 1%;width:98%;height:72%;overflow:visible;pointer-events:none;filter:drop-shadow(0 0 9px rgba(0,236,241,.5));}
+    #breath .mur-v223-dial{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;filter:drop-shadow(0 0 7px #0af8be77);}
+    #breath .mur-v223-wheel-face{position:absolute;inset:25%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;pointer-events:none;background:radial-gradient(circle at 42% 34%,#0a4b48b8,#041d2bcc 70%);border:1px solid rgba(60,247,194,.43);box-shadow:inset 0 0 32px #15e3a433,0 0 28px #1cf2ae26;}
+    #breath .mur-v223-dots{position:absolute;inset:0;border-radius:50%;overflow:hidden;opacity:.9;}
+    #breath .mur-v223-dots::before{content:'';position:absolute;inset:-15%;border-radius:50%;background-image:radial-gradient(circle,#38fbd3 0 1px,transparent 1.4px);background-size:12px 12px;mask-image:radial-gradient(circle,transparent 0 29%,#000 69%,transparent 100%);-webkit-mask-image:radial-gradient(circle,transparent 0 29%,#000 69%,transparent 100%);transform:perspective(210px) rotateY(17deg) rotateX(-16deg);}
+    #breath .mur-v223-wheel-number{position:relative;z-index:2;color:#fff;font-size:clamp(36px,9vw,64px);font-weight:850;line-height:1;text-shadow:0 0 18px #23e995aa;white-space:nowrap;font-variant-numeric:tabular-nums;}
+    #breath .mur-v223-wheel-number small{font-size:.43em;font-weight:700;}
+    #breath .mur-v223-wheel-wave-icon{position:relative;z-index:2;color:#58ffd6;font-size:clamp(22px,6vw,35px);letter-spacing:-4px;text-shadow:0 0 12px #32ffd3;line-height:1.1;}
+    #breath .mur-v223-instructions{color:#c3d4e0;text-align:center;font-size:12px;margin:0 0 4px;}
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-quick{width:100%;margin:0!important;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-quick button{min-height:39px!important;border-radius:999px!important;font-size:clamp(12px,3.6vw,15px)!important;font-weight:650;background:linear-gradient(115deg,#1d384b,#102739);border-color:#607b88;}
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-quick button[aria-pressed="true"]{background:linear-gradient(150deg,#08633f,#084b3c);border:2px solid #88ffd1;box-shadow:inset 0 0 12px #18f5b650,0 0 13px #1bfa9e77;color:white;}
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-action{border-radius:999px;background:linear-gradient(125deg,#f1f9fc,#cee4ea);color:#06263a;font-size:16px;box-shadow:0 0 23px #41f9c74f;}
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v222-current-rhythm{width:100%;padding:7px 10px;font-size:11px;}
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-intro{display:none!important;}
+    #breath .mur-v219-screen[data-v222-view="free"]{align-items:center!important;gap:clamp(5px,.9dvh,10px)!important;}
+    #breath .mur-v219-screen[data-v222-view="free"] > :is(.mur-v219-top,.mur-v219-title,.mur-v219-modes){width:100%;}
+    #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-title{font-size:clamp(20px,5vw,28px)!important;}
+    #breath.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type:has(>.mur-v219-screen[data-v222-view="free"]){overflow-y:auto!important;}
+    @media(max-height:700px){#breath .mur-v223-wheel{width:min(100%,37dvh,310px)}#breath .mur-v223-wheel-caption{display:none}#breath .mur-v219-screen[data-v222-view="free"] .mur-v222-current-rhythm{padding:5px 8px}}
+
     @media(prefers-reduced-motion:reduce){#breath .mur-v219-screen *{animation:none!important;transition:none!important;}}
   `;
   function installCSS(){if($(STYLE_ID))return;const s=document.createElement('style');s.id=STYLE_ID;s.textContent=CSS;document.head.appendChild(s);}
@@ -9960,36 +10060,58 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
       if(desc)desc.textContent=button(...selected.promise)+' · '+selected.i+(selected.hi?'/'+selected.hi:'')+'/'+selected.e+' · '+fmt(selected.duration);
     }
   }
+  function wheelSVG(seconds){
+    const minutes=seconds/60, cx=160,cy=160,r=119;
+    const angle=-Math.PI/2+(minutes-1)/19*Math.PI*2;
+    const endX=cx+r*Math.cos(angle),endY=cy+r*Math.sin(angle);
+    const sweep=((minutes-1)/19)*359.99;
+    const ticks=Array.from({length:60},(_,i)=>{
+      const a=-Math.PI/2+i*Math.PI*2/60;
+      const major=i%5===0;
+      const r1=major?109:116,r2=major?119:118;
+      return `<line x1="${(cx+Math.cos(a)*r1).toFixed(2)}" y1="${(cy+Math.sin(a)*r1).toFixed(2)}" x2="${(cx+Math.cos(a)*r2).toFixed(2)}" y2="${(cy+Math.sin(a)*r2).toFixed(2)}" stroke="${major?'#bbfff0':'#87fad3'}" stroke-width="${major?1.8:1.2}" stroke-linecap="round" opacity="${major?1:.84}"/>`;
+    }).join('');
+    return `<svg class="mur-v223-dial" viewBox="0 0 320 320" aria-hidden="true">
+      <circle cx="160" cy="160" r="119" fill="none" stroke="#15ccbc" stroke-opacity=".17" stroke-width="1"/>
+      ${ticks}
+      <circle cx="160" cy="160" r="119" fill="none" stroke="#48f8a4" stroke-width="7" stroke-linecap="round" stroke-dasharray="${(sweep/360*2*Math.PI*119).toFixed(2)} 1000" transform="rotate(-90 160 160)" style="filter:drop-shadow(0 0 6px #39fba2)"/>
+      <circle cx="${endX.toFixed(2)}" cy="${endY.toFixed(2)}" r="10" fill="#dffff0" stroke="#7affc7" stroke-width="2" style="filter:drop-shadow(0 0 9px #28ff9f)"/>
+    </svg>`;
+  }
   function renderFree(){
-    const presets=[120,300,600,900];
-    return layout(tr('Mode libre','Free mode'),tr('Réglez vous-même la durée de votre séance.','Set the duration of your session yourself.'),
-      `<section class="mur-v219-group"><h3 class="mur-v219-label">${tr('Durée de la séance','Session duration')}</h3>
-      <div class="mur-v219-step"><button type="button" data-v219-time-step="-60" aria-label="-1 minute">−</button>
-      <output class="mur-v219-step-value">${fmt(state.freeDuration)}</output><button type="button" data-v219-time-step="60" aria-label="+1 minute">+</button></div>
-      <div class="mur-v219-quick">${presets.map(s=>`<button type="button" data-v219-quick="${s}" aria-pressed="${state.freeDuration===s}">${fmt(s)}</button>`).join('')}</div>
-      <p class="mur-v219-note">${tr('Durée personnalisable de 1 à 20 minutes. La séance s’arrête à la fin du temps choisi.','Customize from 1 to 20 minutes. The session ends when the selected time is up.')}</p></section>
-      <section class="mur-v219-group"><h3 class="mur-v219-label">${tr('Rythme choisi','Selected rhythm')}</h3>
-      <div class="mur-v219-freeRhythms">${FREE_RHYTHMS.map(r=>`<button type="button" data-v219-free-rhythm="${r.id}" aria-pressed="${state.freeRhythm===r.id}">
-        ${iconGlobe(r.color)}<span>${r.label}</span></button>`).join('')}</div></section>
-      <section class="mur-v219-group">${renderToggles()}</section>
-      <button type="button" class="mur-v219-action" data-v219-apply="free">✓ ${tr('Appliquer les réglages','Apply settings')}</button>`);
+    const presets=[120,180,300,600,900,1200];
+    const b=getValues()||{i:5,hi:0,e:5,ho:0};
+    const rhythm=[b.i,b.hi,b.e,b.ho].filter((x,i)=>(i===0||i===2||x>0)).join(' / ');
+    return layout(tr('Durée','Duration'),
+      tr('Choisissez la durée de votre séance','Choose your session duration'),
+      `<section class="mur-v219-group mur-v223-wheel-section">
+        <p class="mur-v223-wheel-caption">${tr('Choisissez la durée de votre séance','Choose your session duration')}</p>
+        <div class="mur-v223-wheel" role="slider" tabindex="0" aria-label="${tr('Durée de la séance','Session duration')}" aria-valuemin="1" aria-valuemax="20" aria-valuenow="${state.freeDuration/60}" aria-valuetext="${fmt(state.freeDuration)}" data-v223-wheel>
+          <svg class="mur-v223-wave" viewBox="0 0 320 230" aria-hidden="true"><path d="M8 160 C55 5 116 35 159 118 S255 217 310 74" stroke="#00e9ee" stroke-opacity=".75" stroke-width="2" fill="none"/><path d="M3 167 C85 84 101 194 170 170 S280 22 320 126" stroke="#02a9fa" stroke-opacity=".45" stroke-width="1.5" fill="none"/></svg>
+          ${wheelSVG(state.freeDuration)}
+          <div class="mur-v223-wheel-face"><div class="mur-v223-dots"></div><output class="mur-v223-wheel-number" aria-live="polite">${state.freeDuration/60} <small>min</small></output><span class="mur-v223-wheel-wave-icon">≋</span></div>
+        </div>
+        <p class="mur-v223-instructions">${tr('Tournez la roue pour ajuster la durée','Turn the dial to adjust duration')}</p>
+        <div class="mur-v219-quick">${presets.map(t=>`<button type="button" data-v219-quick="${t}" aria-pressed="${state.freeDuration===t}">${fmt(t)}</button>`).join('')}</div>
+      </section>
+      <div class="mur-v222-current-rhythm">${tr('Rythme conservé','Rhythm kept')} : <b>${rhythm} s</b></div>
+      <button type="button" class="mur-v219-action" data-v219-apply="free">▶ ${tr('Valider','Confirm')}</button>`);
   }
   function renderToggles(){const flags=syncNativeSound();return [['intro',tr('Intro active','Intro on'),flags.intro],['sound',tr('Son actif','Sound on'),flags.sound]].map(([id,label,val])=>`<div class="mur-v219-settingsrow"><span>${label}</span>
       <button type="button" class="mur-v219-toggle" data-v219-toggle="${id}" aria-pressed="${val}" aria-label="${label}"><span>${val?tr('Oui','On'):tr('Non','Off')}</span><span class="mur-v219-switch"></span></button></div>`).join('');}
   function renderAdvanced(){
     const a=state.advanced;
-    const rows=[['i','Inspiration','Inhale',1,12],['hi','Pause après inspiration','Hold after inhale',0,12],['e','Expiration','Exhale',1,12],['ho','Pause après expiration','Hold after exhale',0,12]];
-    return layout(tr('Réglages avancés','Advanced settings'),tr('Affinez le rythme et la durée de la séance.','Fine-tune rhythm and session duration.'),
+    const rows=[['i','Inspiration','Inhale'],['hi','Pause après inspiration','Hold after inhale'],['e','Expiration','Exhale'],['ho','Pause après expiration','Hold after exhale']];
+    return layout(tr('Réglages avancés','Advanced settings'),
+      tr('Personnalisez les phases et la durée de votre respiration.','Adjust breathing phases and duration.'),
       `<section class="mur-v219-group"><h3 class="mur-v219-label">${tr('Rythme respiratoire','Breathing rhythm')}</h3>
-      ${rows.map(([id,fr,english,min,max])=>`<div class="mur-v219-settingsrow"><span>${tr(fr,english)}</span><div class="mur-v219-counter">
-       <button type="button" data-v219-adjust="${id}" data-delta="-1" aria-label="${tr('Diminuer','Decrease')} ${tr(fr,english)}">−</button><output>${a[id]} s</output>
-       <button type="button" data-v219-adjust="${id}" data-delta="1" aria-label="${tr('Augmenter','Increase')} ${tr(fr,english)}">+</button></div></div>`).join('')}
+      ${rows.map(([id,fr,english])=>`<div class="mur-v219-settingsrow"><span>${tr(fr,english)}</span><div class="mur-v219-counter">
+       <button type="button" data-v219-adjust="${id}" data-delta="-1" aria-label="${tr('Diminuer','Decrease')} ${tr(fr,english)}">−</button>
+       <output>${a[id]} s</output><button type="button" data-v219-adjust="${id}" data-delta="1" aria-label="${tr('Augmenter','Increase')} ${tr(fr,english)}">+</button></div></div>`).join('')}
       </section><section class="mur-v219-group"><h3 class="mur-v219-label">${tr('Durée de la séance','Session duration')}</h3>
       <div class="mur-v219-settingsrow"><span>${tr('Durée totale','Total duration')}</span><div class="mur-v219-counter">
-       <button type="button" data-v219-adjust="duration" data-delta="-60">−</button><output>${fmt(a.duration)}</output><button type="button" data-v219-adjust="duration" data-delta="60">+</button></div></div>
-       <input type="range" min="1" max="20" step="1" value="${a.duration/60}" data-v219-slider="duration" aria-label="${tr('Durée en minutes','Duration in minutes')}" style="width:100%;accent-color:#40dfab;margin-top:12px"/>
-       <p class="mur-v219-note">${tr('De 1 à 20 minutes. Les changements ne seront appliqués qu’après validation.','Between 1 and 20 minutes. Changes take effect after you save.')}</p></section>
-      <section class="mur-v219-group">${renderToggles()}</section>
+       <button type="button" data-v219-adjust="duration" data-delta="-60" aria-label="${tr('Réduire la durée','Shorten duration')}">−</button>
+       <output>${fmt(a.duration)}</output><button type="button" data-v219-adjust="duration" data-delta="60" aria-label="${tr('Augmenter la durée','Lengthen duration')}">+</button></div></div></section>
       <div class="mur-v219-summary">${tr('Séance personnalisée','Custom session')} : ${a.i} / ${a.hi} / ${a.e} / ${a.ho} · ${fmt(a.duration)}</div>
       <button type="button" class="mur-v219-action" data-v219-apply="advanced">✓ ${tr('Enregistrer','Save settings')}</button>`);
   }
@@ -10003,6 +10125,7 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
   }
   function render(){if(!page.classList.contains('mur-b152-settings'))return;
     const m=mode();if(state.screen!==m){state.screen=m;syncState();}
+    screen.dataset.v222View=m;
     screen.innerHTML=m==='rhythm'?renderRhythm():m==='free'?renderFree():renderAdvanced();
     panel.scrollTop=0;
   }
@@ -10021,14 +10144,34 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
     try{if(typeof updateBreath==='function')updateBreath(true);}catch(e){console.warn('MUR V219 refresh',e);}
     return true;
   }
-  function updateFreeUI(){const output=screen.querySelector('.mur-v219-step-value');if(output)output.textContent=fmt(state.freeDuration);
-    screen.querySelectorAll('[data-v219-quick]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v219Quick)===state.freeDuration)));}
+  function updateFreeUI(){
+    const wheel=screen.querySelector('[data-v223-wheel]');
+    if(wheel){
+      const svg=wheel.querySelector('.mur-v223-dial');
+      if(svg)svg.outerHTML=wheelSVG(state.freeDuration);
+      const output=wheel.querySelector('.mur-v223-wheel-number');
+      if(output)output.innerHTML=(state.freeDuration/60)+' <small>min</small>';
+      wheel.setAttribute('aria-valuenow',String(state.freeDuration/60));
+      wheel.setAttribute('aria-valuetext',fmt(state.freeDuration));
+    }
+    screen.querySelectorAll('[data-v219-quick]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v219Quick)===state.freeDuration)));
+  }
+  function wheelFromPointer(event){
+    const wheel=event.target.closest?.('[data-v223-wheel]');if(!wheel)return;
+    const box=wheel.getBoundingClientRect();
+    const dx=event.clientX-(box.left+box.width/2),dy=event.clientY-(box.top+box.height/2);
+    if(Math.hypot(dx,dy)<box.width*.23)return;
+    const angle=(Math.atan2(dy,dx)+Math.PI/2+Math.PI*2)%(Math.PI*2);
+    const raw=1+angle/(Math.PI*2)*19;
+    state.freeDuration=within(Math.round(raw)*60,60,1200);updateFreeUI();
+  }
+
   function toggleNative(id){const target=id==='sound'?$('soundBtn'):$('breathIntroToggle');target?.click();
     const flags=syncNativeSound();screen.querySelectorAll('[data-v219-toggle]').forEach(btn=>{
       const v=flags[btn.dataset.v219Toggle];btn.setAttribute('aria-pressed',String(v));btn.querySelector('span')?.replaceChildren(document.createTextNode(v?tr('Oui','On'):tr('Non','Off')));
     });}
   function onClick(e){const t=e.target.closest('button');if(!t||!screen.contains(t))return;
-    if(t.dataset.v219Nav){e.preventDefault();const m=t.dataset.v219Nav;state.screen=m;page.dataset.murOption=m==='free'?'duration':m;render();return;}
+    if(t.dataset.v219Nav){e.preventDefault();const m=t.dataset.v219Nav;state.screen=m;syncState();page.dataset.murOption=m==='free'?'duration':m;render();return;}
     if(t.dataset.v220Filter){state.rhythmFilter=t.dataset.v220Filter;const group=DEF_RHYTHMS.filter(r=>state.rhythmFilter==='all'||r.cat===state.rhythmFilter);if(group.length&&!group.some(r=>r.id===state.selected))state.selected=group[0].id;const pos=panel.scrollTop;screen.innerHTML=renderRhythm();panel.scrollTop=pos;return;}
     if(t.dataset.v219Preset){state.selected=t.dataset.v219Preset;updateSelectedInPlace();return;}
     if(t.dataset.v219FreeRhythm){state.freeRhythm=t.dataset.v219FreeRhythm;screen.querySelectorAll('[data-v219-free-rhythm]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v219FreeRhythm===state.freeRhythm)));return;}
@@ -10039,7 +10182,7 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
     if(t.dataset.v219Toggle){toggleNative(t.dataset.v219Toggle);return;}
     if(t.dataset.v219Apply){let ok=false;
       if(t.dataset.v219Apply==='rhythm'){const r=DEF_RHYTHMS.find(x=>x.id===state.selected);ok=applyBreath(r,r.duration);}
-      if(t.dataset.v219Apply==='free'){const r=FREE_RHYTHMS.find(x=>x.id===state.freeRhythm);ok=applyBreath(r,state.freeDuration);}
+      if(t.dataset.v219Apply==='free'){const b=native();if(b&&!isRunning()){b.duration=within(state.freeDuration,60,1200);try{if(typeof updateBreath==='function')updateBreath(true);}catch(err){console.warn('MUR V222 duration refresh',err);}ok=true;}}
       if(t.dataset.v219Apply==='advanced'){ok=applyBreath({...state.advanced,key:'manual'},state.advanced.duration);}
       if(ok)close();return;
     }
@@ -10053,6 +10196,13 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
     if(summary)summary.textContent=`${tr('Séance personnalisée','Custom session')} : ${state.advanced.i} / ${state.advanced.hi} / ${state.advanced.e} / ${state.advanced.ho} · ${fmt(state.advanced.duration)}`;
   }
   function boot(){installCSS();screen.addEventListener('click',onClick);screen.addEventListener('input',onInput);
+    let wheelPointer=null;
+    screen.addEventListener('pointerdown',e=>{const wheel=e.target.closest?.('[data-v223-wheel]');if(!wheel)return;wheelPointer=e.pointerId;wheel.setPointerCapture?.(e.pointerId);wheelFromPointer(e);});
+    screen.addEventListener('pointermove',e=>{if(e.pointerId===wheelPointer)wheelFromPointer(e);});
+    screen.addEventListener('pointerup',e=>{if(e.pointerId===wheelPointer){wheelFromPointer(e);wheelPointer=null;}});
+    screen.addEventListener('pointercancel',()=>{wheelPointer=null;});
+    screen.addEventListener('keydown',e=>{if(!e.target.closest?.('[data-v223-wheel]'))return;let d=0;if(e.key==='ArrowRight'||e.key==='ArrowUp')d=60;if(e.key==='ArrowLeft'||e.key==='ArrowDown')d=-60;if(e.key==='Home')d=60-state.freeDuration;if(e.key==='End')d=1200-state.freeDuration;if(d){e.preventDefault();state.freeDuration=within(state.freeDuration+d,60,1200);updateFreeUI();}});
+
     new MutationObserver(()=>{if(page.classList.contains('mur-b152-settings'))render();}).observe(page,{attributes:true,attributeFilter:['class','data-mur-option']});
     new MutationObserver(()=>{if(page.classList.contains('mur-b152-settings'))render();}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
     window.addEventListener('mur-content-loaded',()=>{if(page.classList.contains('mur-b152-settings'))render();});
@@ -10062,4 +10212,5 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
   window.MUR_V219={version:VERSION,features:['14-seances-guidees-sur-une-page','duree-libre-manuelle','reglages-avances-natifs','son-intro-natifs']};
   window.MUR_V220={version:220,feature:'seances-guidees-par-objectif'};
   window.MUR_V221={version:221,feature:'all-guided-sessions-single-scrollable-page'};
+  window.MUR_V222={version:223,feature:'duration-interactive-wheel-native-breath-preserved'};
 })();
