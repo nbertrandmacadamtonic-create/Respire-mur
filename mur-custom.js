@@ -9719,3 +9719,257 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
   else install();
   window.MUR_V218={version:218,fix:'breath-info-aligned-on-separate-header-row'};
 })();
+
+
+
+/* =======================================================================
+ M.U.R. V219 — 3 PAGES RESPIRATION : RYTHME / MODE LIBRE / AVANCE
+ Base V218 — conserve intégralement l'application et le moteur natif.
+ La navigation existante (V162) ouvre le panneau ; on ne remplace que
+ l'interface interne. Durées exprimées en secondes ; plafonds natifs 1–20 min.
+ ======================================================================= */
+(function(){
+  'use strict';
+  if(window.MUR_V219)return;
+  const VERSION='219';
+  const ID='mur-v219-breath-screens';
+  const STYLE_ID='mur-v219-breath-screens-style';
+  const DEF_RHYTHMS=[
+    {id:'calme',name:['Calme express','Quick calm'],promise:['Se recentrer rapidement','Find a moment of focus'],key:'coherence',i:5,hi:0,e:5,ho:0,duration:90,color:'#4ec8f9'},
+    {id:'equilibre',name:['Équilibre 5/5','Balance 5/5'],promise:['Installer un rythme régulier','Build a steady breathing rhythm'],key:'coherence',i:5,hi:0,e:5,ho:0,duration:300,color:'#35e4a0'},
+    {id:'365',name:['Rituel 365','365 ritual'],promise:['Installer une routine : 3 × 5 min/jour','Build a routine: 3 × 5 min/day'],key:'365',i:5,hi:0,e:5,ho:0,duration:300,color:'#6298f7'},
+    {id:'frein',name:['Frein 3/8','Slow down 3/8'],promise:['Favoriser un ralentissement progressif','Support a gradual slowing'],key:'frein',i:3,hi:0,e:8,ho:0,duration:180,color:'#bd8be9'},
+    {id:'apaisement',name:['Apaisement 4/6','Ease 4/6'],promise:['Allonger doucement l’expiration','Gently lengthen the exhale'],key:'regulate',i:4,hi:0,e:6,ho:0,duration:360,color:'#42d8c8'},
+    {id:'boost',name:['Boost 5/2','Boost 5/2'],promise:['Accompagner un regain de vigilance','Support a feeling of alertness'],key:'boost',i:5,hi:0,e:2,ho:0,duration:120,color:'#d6e66b'}
+  ];
+  const FREE_RHYTHMS=[
+    {id:'55',label:'5 s / 5 s',key:'coherence',i:5,hi:0,e:5,ho:0,color:'#2bddb0'},
+    {id:'46',label:'4 s / 6 s',key:'regulate',i:4,hi:0,e:6,ho:0,color:'#44cbd5'},
+    {id:'38',label:'3 s / 8 s',key:'frein',i:3,hi:0,e:8,ho:0,color:'#b58be0'},
+    {id:'52',label:'5 s / 2 s',key:'boost',i:5,hi:0,e:2,ho:0,color:'#c8e35f'},
+    {id:'478',label:'4 / 7 / 8',key:'478',i:4,hi:7,e:8,ho:0,color:'#87b2ff'}
+  ];
+  const $=id=>document.getElementById(id);
+  const page=$('breath');
+  if(!page)return;
+  const panel=page.querySelector(':scope > section.card:first-of-type');
+  if(!panel)return;
+  const en=()=>/^en/i.test(document.documentElement.lang||'fr');
+  const tr=(fr,english)=>en()?english:fr;
+  const native=()=>{try{return typeof breath!=='undefined'?breath:null;}catch(_){return null;}};
+  const isRunning=()=>{try{return typeof running!=='undefined'&&running;}catch(_){return false;}};
+  const within=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||a));
+  const fmt=s=>{const m=Math.floor(s/60),r=s%60;return r?`${m}:${String(r).padStart(2,'0')}`:`${m} min`;};
+  const state={selected:'equilibre',freeRhythm:'55',freeDuration:300,advanced:{i:5,hi:0,e:5,ho:0,duration:300}, screen:'rhythm'};
+  const I={waves:'≋',clock:'◷',check:'✓',finger:'◉'};
+  const CSS=`
+    #breath.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type{
+      padding:13px 13px 22px!important;background:radial-gradient(circle at 86% 12%,rgba(8,163,144,.12),transparent 39%),linear-gradient(175deg,#122e46,#061a2d 88%)!important;
+      border:1px solid rgba(110,196,213,.34)!important;border-radius:23px!important;
+      scrollbar-width:thin!important;scrollbar-color:#38857f transparent!important;
+    }
+    /* Cache seulement l'ancienne présentation. Les éléments natifs restent dans le DOM. */
+    #breath.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type > :not(.mur-v219-screen){display:none!important;}
+    #breath.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type > .mur-v219-screen{
+      display:flex!important;position:relative;flex-direction:column;align-items:stretch;gap:12px;
+      width:100%;min-width:0;min-height:100%;color:#f3faff;box-sizing:border-box;
+      padding:3px 0 16px;font:inherit;
+    }
+    /* La V162 masque tous les autres enfants en mode durée. Cette règle
+       volontairement plus spécifique laisse passer la page Mode libre. */
+    #breath.mur-b152-settings[data-mur-option="duration"]:not(.mur-b154-fullscreen) > section.card:first-of-type > .mur-v219-screen{
+      display:flex!important;
+    }
+    #breath:not(.mur-b152-settings) .mur-v219-screen{display:none!important;}
+    #breath.mur-b152-settings:not(.mur-b154-fullscreen) > .mur-b152-close{
+      position:fixed!important;z-index:18150!important;top:calc(23px + env(safe-area-inset-top))!important;
+      right:max(22px,calc((100vw - 382px)/2))!important;
+      width:37px!important;height:37px!important;min-width:37px!important;
+      border-radius:12px!important;border:1px solid #6a96aa!important;
+      color:#fff!important;background:#092638!important;
+    }
+    #breath .mur-v219-screen *{box-sizing:border-box;}
+    #breath .mur-v219-screen button,#breath .mur-v219-screen input{font:inherit;}
+    #breath .mur-v219-top{position:relative;display:flex;gap:10px;align-items:center;padding-right:45px;margin-bottom:2px;}
+    #breath .mur-v219-dot{width:31px;height:31px;border-radius:50%;flex:0 0 31px;border:1px solid #25d1a8;box-shadow:0 0 12px #17ad8c5c;
+      background:radial-gradient(circle,#79fce7 0 1.1px,transparent 1.7px) 0 0/6px 6px,radial-gradient(circle at 40% 30%,#146968,#061e34 77%);}
+    #breath .mur-v219-top strong{font-size:15px;line-height:1.15;}
+    #breath .mur-v219-title{font-size:clamp(22px,6vw,28px);line-height:1.15;font-weight:850;letter-spacing:-.03em;margin:3px 0 0;}
+    #breath .mur-v219-intro{padding:13px 12px;border:1px solid #45798d;border-left:3px solid #31e7a3;border-radius:15px;
+      background:linear-gradient(130deg,#16414ccc,#0d293dcc);font-size:12px;line-height:1.4;color:#d4e9f4;}
+    #breath .mur-v219-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:2px 0 1px;}
+    #breath .mur-v219-tab{min-width:0;min-height:34px;padding:5px 2px;border:1px solid #467084;border-radius:12px;
+      background:#122e43;color:#bad9e6;font-weight:700;font-size:11px!important;cursor:pointer;}
+    #breath .mur-v219-tab[aria-current="true"]{color:#081d25;background:linear-gradient(120deg,#60eaaa,#35d4d2);border-color:#7bf7d0;}
+    #breath .mur-v219-group{padding:12px 9px;border-radius:17px;border:1px solid #456d80;background:linear-gradient(150deg,#1b3c50cb,#0b2238dc);}
+    #breath .mur-v219-label{font-weight:800;font-size:15px;margin:0 0 8px;}
+    #breath .mur-v219-grid{display:grid;grid-template-columns:1fr;gap:7px;}
+    #breath .mur-v219-choice{width:100%;display:grid;grid-template-columns:29px minmax(0,1fr) auto;align-items:center;gap:8px;
+      min-height:67px;padding:9px;border:1px solid #39576d;border-radius:14px;background:linear-gradient(100deg,#0c293d,#10283b);
+      text-align:left;color:white;cursor:pointer;}
+    #breath .mur-v219-choice[aria-selected="true"]{border-color:#5ce8ab;background:linear-gradient(110deg,#11473f,#102b3b);
+      box-shadow:inset 0 0 0 1px #38cc9f75,0 0 15px #27ba9140;}
+    #breath .mur-v219-globe{width:27px;height:27px;display:block;flex:none;border-radius:50%;border:1px solid var(--v219-color,#38d7b1);
+      box-shadow:0 0 9px var(--v219-color,#38d7b1);background:radial-gradient(circle,#e3fff9 0 .8px,transparent 1.15px) 0 0/5px 5px,
+      radial-gradient(circle at 36% 30%,color-mix(in srgb,var(--v219-color,#38d7b1) 47%,transparent),#031b2c 75%);}
+    #breath .mur-v219-choice b{display:block;font-size:14px;line-height:1.15;}
+    #breath .mur-v219-choice small{display:block;font-size:10px;font-weight:450;color:#b3ccda;margin-top:3px;line-height:1.3;}
+    #breath .mur-v219-values{font-size:11px;color:#cde7f1;text-align:right;white-space:nowrap;}
+    #breath .mur-v219-values span{display:block;margin:2px 0;}
+    #breath .mur-v219-action{width:100%;margin:4px 0 0;min-height:46px;border:1px solid #b5fff0;border-radius:15px;
+      background:linear-gradient(115deg,#50e9aa,#20c7d3);color:#072333;font-size:14px;font-weight:850;cursor:pointer;}
+    #breath .mur-v219-choice:focus-visible,#breath .mur-v219-action:focus-visible,#breath .mur-v219-tab:focus-visible{outline:2px solid #d9fff5;outline-offset:2px;}
+    #breath .mur-v219-step{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    #breath .mur-v219-step-value{font-size:30px;font-weight:850;font-variant-numeric:tabular-nums;}
+    #breath .mur-v219-step button{width:45px;height:42px;border-radius:13px;background:#163e53;color:#fff;border:1px solid #5e91a7;font-size:25px;cursor:pointer;}
+    #breath .mur-v219-quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:11px 0 1px;}
+    #breath .mur-v219-quick button{min-width:0;min-height:39px;padding:3px 0;border-radius:12px;border:1px solid #5b7b8d;
+      background:#183449;color:#f8ffff;font-size:11px;font-weight:700;cursor:pointer;}
+    #breath .mur-v219-quick button[aria-pressed="true"]{background:#146853;border-color:#43e5a5;box-shadow:0 0 12px #30dc9e4d;}
+    #breath .mur-v219-freeRhythms{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;}
+    #breath .mur-v219-freeRhythms button{min-width:0;min-height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:5px;padding:6px 1px;border-radius:12px;border:1px solid #41667a;background:#103049;color:#ecf7ff;font-size:10px;cursor:pointer;}
+    #breath .mur-v219-freeRhythms button[aria-pressed="true"]{border-color:#3ef8b0;box-shadow:0 0 12px #37db9c70;background:#104a3d;}
+    #breath .mur-v219-freeRhythms .mur-v219-globe{width:28px;height:28px;}
+    #breath .mur-v219-settingsrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;
+      border-bottom:1px solid #3c5866;padding:10px 0;font-size:12px;}
+    #breath .mur-v219-settingsrow:last-child{border:0;}
+    #breath .mur-v219-counter{display:flex;align-items:center;gap:4px;}
+    #breath .mur-v219-counter button{width:32px;height:32px;border-radius:10px;border:1px solid #598298;background:#12374a;color:#c9fff0;
+      font-size:20px;cursor:pointer;}
+    #breath .mur-v219-counter output{display:block;min-width:34px;text-align:center;font-weight:850;font-size:13px;font-variant-numeric:tabular-nums;}
+    #breath .mur-v219-toggle{min-height:37px;padding:4px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;
+      border:1px solid #4c7183;border-radius:10px;background:#173648;color:white;cursor:pointer;font-size:12px;}
+    #breath .mur-v219-switch{width:32px;height:19px;border-radius:99px;display:inline-flex;align-items:center;padding:2px;background:#607383;}
+    #breath .mur-v219-switch:before{content:'';width:15px;height:15px;border-radius:50%;background:white;display:block;transition:transform .15s;}
+    #breath .mur-v219-toggle[aria-pressed="true"] .mur-v219-switch{background:#32d99c;}
+    #breath .mur-v219-toggle[aria-pressed="true"] .mur-v219-switch:before{transform:translateX(13px);}
+    #breath .mur-v219-note{font-size:11px;color:#b9d4df;line-height:1.4;}
+    #breath .mur-v219-summary{font-size:12px;color:#d9faf0;border:1px solid #346d66;border-radius:13px;padding:11px;background:#1241396b;}
+    @media(min-width:650px){#breath .mur-v219-screen{max-width:640px;margin:auto;}}
+    @media(max-width:390px){#breath .mur-v219-choice{grid-template-columns:23px minmax(0,1fr) auto;gap:5px;padding:7px;}#breath .mur-v219-globe{width:23px;height:23px;}#breath .mur-v219-choice b{font-size:12px;}#breath .mur-v219-values{font-size:10px;}#breath .mur-v219-tab{font-size:10px!important;}}
+    @media(prefers-reduced-motion:reduce){#breath .mur-v219-screen *{animation:none!important;transition:none!important;}}
+  `;
+  function installCSS(){if($(STYLE_ID))return;const s=document.createElement('style');s.id=STYLE_ID;s.textContent=CSS;document.head.appendChild(s);}
+  let screen=panel.querySelector('.mur-v219-screen');
+  if(!screen){screen=document.createElement('div');screen.className='mur-v219-screen';screen.id=ID;panel.appendChild(screen);}
+  function mode(){const key=page.dataset.murOption;return key==='rhythm'?'rhythm':key==='duration'?'free':'advanced';}
+  function syncNativeSound(){const sound=$('soundBtn'),intro=$('breathIntroToggle');return{sound:sound?.getAttribute('aria-pressed')!=='false',intro:intro?.getAttribute('aria-pressed')==='true'};}
+  function button(fr,english){return tr(fr,english);}
+  function getValues(){const b=native();return b?{i:b.i,hi:b.hi,e:b.e,ho:b.ho,duration:b.duration}:null;}
+  function iconGlobe(color){return `<span class="mur-v219-globe" style="--v219-color:${color}" aria-hidden="true"></span>`;}
+  function tabs(){return `<nav class="mur-v219-modes" aria-label="${tr('Réglages respiratoires','Breathing settings')}">
+    ${[['rhythm','Mode rythme','Rhythms'],['free','Mode libre','Free mode'],['advanced','Avancés','Advanced']].map(v=>`<button type="button" class="mur-v219-tab" data-v219-nav="${v[0]}" aria-current="${state.screen===v[0]}">${tr(v[1],v[2])}</button>`).join('')}
+    </nav>`;}
+  function layout(title,subtitle,body){return `<header class="mur-v219-top"><span class="mur-v219-dot"></span><strong>${tr('Respirer','Breathe')}</strong></header>
+      <h2 class="mur-v219-title">${title}</h2><div class="mur-v219-intro">${subtitle}</div>${tabs()}${body}`;}
+  function renderRhythm(){
+    const list=DEF_RHYTHMS.map(r=>`<button type="button" class="mur-v219-choice" data-v219-preset="${r.id}" aria-selected="${state.selected===r.id}">
+        ${iconGlobe(r.color)}<span><b>${button(...r.name)}</b><small>${button(...r.promise)}</small></span>
+        <span class="mur-v219-values"><span>${r.i} / ${r.hi?`${r.hi} / `:''}${r.e}${r.ho?` / ${r.ho}`:''}</span><span>${r.id==='365'?'5 min × 3/j':fmt(r.duration)}</span></span>
+      </button>`).join('');
+    return layout(tr('Mode rythme','Rhythm mode'),tr('Choisissez une séance guidée prête à l’emploi.','Choose a ready-made guided session.'),
+      `<section class="mur-v219-group mur-v219-grid">${list}</section>
+       <p class="mur-v219-note">${tr('Les intitulés décrivent des objectifs, pas des résultats garantis. Le rituel 365 correspond à trois séances de 5 minutes par jour.','Program names describe goals, not guaranteed results. The 365 ritual consists of three 5-minute sessions per day.')}</p>
+       <button type="button" class="mur-v219-action" data-v219-apply="rhythm">✓ ${tr('Appliquer ce rythme','Apply this rhythm')}</button>`);
+  }
+  function renderFree(){
+    const presets=[120,300,600,900];
+    return layout(tr('Mode libre','Free mode'),tr('Réglez vous-même la durée de votre séance.','Set the duration of your session yourself.'),
+      `<section class="mur-v219-group"><h3 class="mur-v219-label">${tr('Durée de la séance','Session duration')}</h3>
+      <div class="mur-v219-step"><button type="button" data-v219-time-step="-60" aria-label="-1 minute">−</button>
+      <output class="mur-v219-step-value">${fmt(state.freeDuration)}</output><button type="button" data-v219-time-step="60" aria-label="+1 minute">+</button></div>
+      <div class="mur-v219-quick">${presets.map(s=>`<button type="button" data-v219-quick="${s}" aria-pressed="${state.freeDuration===s}">${fmt(s)}</button>`).join('')}</div>
+      <p class="mur-v219-note">${tr('Durée personnalisable de 1 à 20 minutes. La séance s’arrête à la fin du temps choisi.','Customize from 1 to 20 minutes. The session ends when the selected time is up.')}</p></section>
+      <section class="mur-v219-group"><h3 class="mur-v219-label">${tr('Rythme choisi','Selected rhythm')}</h3>
+      <div class="mur-v219-freeRhythms">${FREE_RHYTHMS.map(r=>`<button type="button" data-v219-free-rhythm="${r.id}" aria-pressed="${state.freeRhythm===r.id}">
+        ${iconGlobe(r.color)}<span>${r.label}</span></button>`).join('')}</div></section>
+      <section class="mur-v219-group">${renderToggles()}</section>
+      <button type="button" class="mur-v219-action" data-v219-apply="free">✓ ${tr('Appliquer les réglages','Apply settings')}</button>`);
+  }
+  function renderToggles(){const flags=syncNativeSound();return [['intro',tr('Intro active','Intro on'),flags.intro],['sound',tr('Son actif','Sound on'),flags.sound]].map(([id,label,val])=>`<div class="mur-v219-settingsrow"><span>${label}</span>
+      <button type="button" class="mur-v219-toggle" data-v219-toggle="${id}" aria-pressed="${val}" aria-label="${label}"><span>${val?tr('Oui','On'):tr('Non','Off')}</span><span class="mur-v219-switch"></span></button></div>`).join('');}
+  function renderAdvanced(){
+    const a=state.advanced;
+    const rows=[['i','Inspiration','Inhale',1,12],['hi','Pause après inspiration','Hold after inhale',0,12],['e','Expiration','Exhale',1,12],['ho','Pause après expiration','Hold after exhale',0,12]];
+    return layout(tr('Réglages avancés','Advanced settings'),tr('Affinez le rythme et la durée de la séance.','Fine-tune rhythm and session duration.'),
+      `<section class="mur-v219-group"><h3 class="mur-v219-label">${tr('Rythme respiratoire','Breathing rhythm')}</h3>
+      ${rows.map(([id,fr,english,min,max])=>`<div class="mur-v219-settingsrow"><span>${tr(fr,english)}</span><div class="mur-v219-counter">
+       <button type="button" data-v219-adjust="${id}" data-delta="-1" aria-label="${tr('Diminuer','Decrease')} ${tr(fr,english)}">−</button><output>${a[id]} s</output>
+       <button type="button" data-v219-adjust="${id}" data-delta="1" aria-label="${tr('Augmenter','Increase')} ${tr(fr,english)}">+</button></div></div>`).join('')}
+      </section><section class="mur-v219-group"><h3 class="mur-v219-label">${tr('Durée de la séance','Session duration')}</h3>
+      <div class="mur-v219-settingsrow"><span>${tr('Durée totale','Total duration')}</span><div class="mur-v219-counter">
+       <button type="button" data-v219-adjust="duration" data-delta="-60">−</button><output>${fmt(a.duration)}</output><button type="button" data-v219-adjust="duration" data-delta="60">+</button></div></div>
+       <input type="range" min="1" max="20" step="1" value="${a.duration/60}" data-v219-slider="duration" aria-label="${tr('Durée en minutes','Duration in minutes')}" style="width:100%;accent-color:#40dfab;margin-top:12px"/>
+       <p class="mur-v219-note">${tr('De 1 à 20 minutes. Les changements ne seront appliqués qu’après validation.','Between 1 and 20 minutes. Changes take effect after you save.')}</p></section>
+      <section class="mur-v219-group">${renderToggles()}</section>
+      <div class="mur-v219-summary">${tr('Séance personnalisée','Custom session')} : ${a.i} / ${a.hi} / ${a.e} / ${a.ho} · ${fmt(a.duration)}</div>
+      <button type="button" class="mur-v219-action" data-v219-apply="advanced">✓ ${tr('Enregistrer','Save settings')}</button>`);
+  }
+  function syncState(){
+    const b=getValues();if(!b)return;
+    state.advanced={...b};
+    state.freeDuration=within(Math.round(b.duration/60)*60,60,1200);
+    const found=FREE_RHYTHMS.find(r=>['i','hi','e','ho'].every(k=>Number(b[k])===r[k]));if(found)state.freeRhythm=found.id;
+    const named=DEF_RHYTHMS.find(r=>['i','hi','e','ho'].every(k=>Number(b[k])===r[k])&&Number(b.duration)===r.duration);
+    if(named)state.selected=named.id;
+  }
+  function render(){if(!page.classList.contains('mur-b152-settings'))return;
+    const m=mode();if(state.screen!==m){state.screen=m;syncState();}
+    screen.innerHTML=m==='rhythm'?renderRhythm():m==='free'?renderFree():renderAdvanced();
+    panel.scrollTop=0;
+  }
+  function close(){const nativeClose=page.querySelector(':scope > .mur-b152-close');if(nativeClose)nativeClose.click();else{page.classList.remove('mur-b152-settings');delete page.dataset.murOption;}}
+  function applyBreath(input,duration){
+    if(!native()||isRunning())return false;
+    const key=input.key;
+    try{if(typeof selectBreath==='function'&&key!=='manual')selectBreath(key);}catch(e){console.warn('MUR V219 preset',e);}
+    const b=native();if(!b)return false;
+    ['i','hi','e','ho'].forEach(k=>b[k]=Number(input[k]));
+    b.duration=within(duration,60,1200);
+    const defaults=(()=>{try{return typeof BREATHS!=='undefined'?BREATHS[key]:null;}catch(_){return null;}})();
+    if(key==='manual'||!defaults||['i','hi','e','ho'].some(k=>Number(defaults[k])!==Number(input[k]))){
+      try{if(typeof applyManualBreathProfile==='function')applyManualBreathProfile();}catch(_){b.key='manual';}
+    }
+    try{if(typeof updateBreath==='function')updateBreath(true);}catch(e){console.warn('MUR V219 refresh',e);}
+    return true;
+  }
+  function updateFreeUI(){const output=screen.querySelector('.mur-v219-step-value');if(output)output.textContent=fmt(state.freeDuration);
+    screen.querySelectorAll('[data-v219-quick]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.v219Quick)===state.freeDuration)));}
+  function toggleNative(id){const target=id==='sound'?$('soundBtn'):$('breathIntroToggle');target?.click();
+    const flags=syncNativeSound();screen.querySelectorAll('[data-v219-toggle]').forEach(btn=>{
+      const v=flags[btn.dataset.v219Toggle];btn.setAttribute('aria-pressed',String(v));btn.querySelector('span')?.replaceChildren(document.createTextNode(v?tr('Oui','On'):tr('Non','Off')));
+    });}
+  function onClick(e){const t=e.target.closest('button');if(!t||!screen.contains(t))return;
+    if(t.dataset.v219Nav){e.preventDefault();const m=t.dataset.v219Nav;state.screen=m;page.dataset.murOption=m==='free'?'duration':m;render();return;}
+    if(t.dataset.v219Preset){state.selected=t.dataset.v219Preset;screen.querySelectorAll('[data-v219-preset]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.v219Preset===state.selected)));return;}
+    if(t.dataset.v219FreeRhythm){state.freeRhythm=t.dataset.v219FreeRhythm;screen.querySelectorAll('[data-v219-free-rhythm]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v219FreeRhythm===state.freeRhythm)));return;}
+    if(t.dataset.v219Quick){state.freeDuration=Number(t.dataset.v219Quick);updateFreeUI();return;}
+    if(t.dataset.v219TimeStep){state.freeDuration=within(state.freeDuration+Number(t.dataset.v219TimeStep),60,1200);updateFreeUI();return;}
+    if(t.dataset.v219Adjust){const k=t.dataset.v219Adjust,d=Number(t.dataset.delta),a=state.advanced;
+      a[k]=k==='duration'?within(a[k]+d,60,1200):within(a[k]+d,k==='i'||k==='e'?1:0,12);renderAdvancedInPlace();return;}
+    if(t.dataset.v219Toggle){toggleNative(t.dataset.v219Toggle);return;}
+    if(t.dataset.v219Apply){let ok=false;
+      if(t.dataset.v219Apply==='rhythm'){const r=DEF_RHYTHMS.find(x=>x.id===state.selected);ok=applyBreath(r,r.duration);}
+      if(t.dataset.v219Apply==='free'){const r=FREE_RHYTHMS.find(x=>x.id===state.freeRhythm);ok=applyBreath(r,state.freeDuration);}
+      if(t.dataset.v219Apply==='advanced'){ok=applyBreath({...state.advanced,key:'manual'},state.advanced.duration);}
+      if(ok)close();return;
+    }
+  }
+  function renderAdvancedInPlace(){const saved=panel.scrollTop;screen.innerHTML=renderAdvanced();panel.scrollTop=saved;}
+  function onInput(e){const slider=e.target.closest?.('[data-v219-slider]');if(!slider)return;
+    state.advanced.duration=within(Number(slider.value)*60,60,1200);
+    const out=screen.querySelector('[data-v219-adjust="duration"] + output');
+    if(out)out.textContent=fmt(state.advanced.duration);
+    const summary=screen.querySelector('.mur-v219-summary');
+    if(summary)summary.textContent=`${tr('Séance personnalisée','Custom session')} : ${state.advanced.i} / ${state.advanced.hi} / ${state.advanced.e} / ${state.advanced.ho} · ${fmt(state.advanced.duration)}`;
+  }
+  function boot(){installCSS();screen.addEventListener('click',onClick);screen.addEventListener('input',onInput);
+    new MutationObserver(()=>{if(page.classList.contains('mur-b152-settings'))render();}).observe(page,{attributes:true,attributeFilter:['class','data-mur-option']});
+    new MutationObserver(()=>{if(page.classList.contains('mur-b152-settings'))render();}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    window.addEventListener('mur-content-loaded',()=>{if(page.classList.contains('mur-b152-settings'))render();});
+    if(page.classList.contains('mur-b152-settings'))render();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  window.MUR_V219={version:VERSION,features:['rythmes-nommes','duree-libre-manuelle','reglages-avances-natifs','son-intro-natifs']};
+})();
