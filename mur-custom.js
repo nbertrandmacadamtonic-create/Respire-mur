@@ -10400,3 +10400,100 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
+
+
+/* =====================================================================
+   M.U.R. V226 — 14 MINI-SPHERES 3D ROTATIVES, SEANCES GUIDEES
+   Ajout visuel non destructif sur la V225. Aucune modification des rythmes.
+   ===================================================================== */
+(() => {
+  'use strict';
+  if (window.MUR_GUIDED_SPIN_V226) return;
+  window.MUR_GUIDED_SPIN_V226 = {version:226, count:14, rotation:'3d', reducedMotion:true};
+  const style=document.createElement('style');
+  style.id='mur-guided-spin-v226-css';
+  style.textContent=`
+    #breath .mur-v219-choice .mur-v219-globe.mur-v226-globe{
+      position:relative!important;display:block!important;overflow:hidden!important;
+      background:radial-gradient(circle at 36% 26%,rgba(142,255,232,.12),rgba(3,20,36,.8) 80%)!important;
+      isolation:isolate!important;
+    }
+    #breath .mur-v219-choice .mur-v219-globe.mur-v226-globe canvas{
+      position:absolute;inset:0;width:100%;height:100%;display:block;
+      pointer-events:none!important;
+    }
+  `;
+  document.head.appendChild(style);
+  const page=document.getElementById('breath');
+  if(!page)return;
+  const screen=page.querySelector('.mur-v219-screen');
+  if(!screen)return;
+  const COUNT=175,TAU=2*Math.PI,GOLD=Math.PI*(3-Math.sqrt(5));
+  const points=Array.from({length:COUNT},(_,i)=>{
+    const y=1-2*(i+.5)/COUNT,r=Math.sqrt(Math.max(0,1-y*y)),a=i*GOLD;
+    return {x:r*Math.cos(a),y,z:r*Math.sin(a)};
+  });
+  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)');
+  const components=new Map();
+  function colorOf(el){
+    const raw=getComputedStyle(el).getPropertyValue('--v219-color').trim();
+    if(/^#[a-f\d]{6}$/i.test(raw))return [1,3,5].map(i=>parseInt(raw.slice(i,i+2),16));
+    if(/^#[a-f\d]{3}$/i.test(raw))return [1,2,3].map(i=>parseInt(raw[i]+raw[i],16));
+    return [71,231,173];
+  }
+  function mount(){
+    const globes=screen.querySelectorAll('.mur-v219-session-list .mur-v219-globe');
+    globes.forEach((el,index)=>{
+      if(components.has(el))return;
+      el.classList.add('mur-v226-globe');
+      const canvas=document.createElement('canvas');
+      canvas.setAttribute('aria-hidden','true');
+      el.appendChild(canvas);
+      const ctx=canvas.getContext('2d',{alpha:true});
+      if(ctx)components.set(el,{canvas,ctx,color:colorOf(el),index});
+    });
+    for(const [el] of components)if(!el.isConnected)components.delete(el);
+  }
+  let scheduled=false;
+  const observer=new MutationObserver(()=>{
+    if(scheduled)return;
+    scheduled=true;
+    queueMicrotask(()=>{scheduled=false;mount();});
+  });
+  observer.observe(screen,{childList:true,subtree:true});
+  mount();
+  let raf=0,last=0;
+  const fpsInterval=1000/30;
+  function draw(t){
+    raf=requestAnimationFrame(draw);
+    if(document.hidden||!page.classList.contains('active')||!page.classList.contains('mur-b152-settings'))return;
+    if(screen.dataset.v222View!=='rhythm' && screen.dataset.v219View!=='rhythm' && !screen.querySelector('.mur-v221-session-list'))return;
+    if(t-last<fpsInterval)return;
+    last=t;
+    for(const [el,item] of components){
+      if(!el.isConnected)continue;
+      const {canvas,ctx,color,index}=item;
+      const rect=el.getBoundingClientRect(),w=rect.width,h=rect.height;
+      if(w<8||h<8)continue;
+      const dpr=Math.min(devicePixelRatio||1,2),cw=Math.round(w*dpr),ch=Math.round(h*dpr);
+      if(canvas.width!==cw||canvas.height!==ch){canvas.width=cw;canvas.height=ch;}
+      ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+      const a=reduced?.matches?.32+index*.08:t*.00019+index*.23;
+      const co=Math.cos(a),si=Math.sin(a),radius=Math.min(w,h)*.42,cx=w/2,cy=h/2;
+      ctx.globalCompositeOperation='lighter';
+      for(const p of points){
+        const x=p.x*co-p.z*si,z=p.x*si+p.z*co;
+        const depth=(z+1)*.5,perspective=2.85/(2.85-z*.24);
+        const r=Math.round(color[0]+(255-color[0])*(depth*.40));
+        const g=Math.round(color[1]+(255-color[1])*(depth*.40));
+        const b=Math.round(color[2]+(255-color[2])*(depth*.40));
+        ctx.fillStyle=`rgb(${r},${g},${b})`;
+        ctx.globalAlpha=.28+.70*depth;
+        ctx.beginPath();ctx.arc(cx+x*radius*perspective,cy+p.y*radius*perspective,.24+.40*depth,0,TAU);ctx.fill();
+      }
+      ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+    }
+  }
+  raf=requestAnimationFrame(draw);
+  window.addEventListener('pagehide',()=>{cancelAnimationFrame(raf);observer.disconnect();},{once:true});
+})();
