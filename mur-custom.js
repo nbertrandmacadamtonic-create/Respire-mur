@@ -9073,7 +9073,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       }
       const size=Math.min(80,Math.max(54,r.height||66));
       const left=r.left+r.width/2-size/2;
-      const top=r.top+r.height/2-size/2;
+      const top=r.top+r.height/2-size/2+12; // V231 : empreinte abaissée de 12 px sous le visuel
       const coords=[left,top,size].map(n=>Math.round(n*10)/10).join('|');
       if(coords!==last){
         portal.style.left=`${left}px`;
@@ -9316,7 +9316,7 @@ window.MUR_V203={version:203,fix:'fingerprint-no-artificial-delay'};
 
     const size = Math.min(80, Math.max(54, r.height || 66));
     const left = r.left + r.width / 2 - size / 2;
-    const top = r.top + r.height / 2 - size / 2;
+    const top = r.top + r.height / 2 - size / 2 + 12; // V231 : même décalage dans le synchroniseur mobile
     const coords = [left, top, size].map(n => Math.round(n * 10) / 10).join('|');
     if (coords !== portalLast) {
       portal.style.left = `${left}px`;
