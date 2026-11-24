@@ -10585,3 +10585,135 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
   raf=requestAnimationFrame(draw);
   window.addEventListener('pagehide',()=>{cancelAnimationFrame(raf);observer.disconnect();},{once:true});
 })();
+
+
+/* ===============================================================
+ M.U.R. V230 — Détail du rythme recommandé au toucher
+ La carte NeuroFlex existante ouvre une fenêtre FR/EN explicative.
+ Les valeurs du protocole sont lues depuis BREATHS, sans changer
+ les réglages, la sélection ni la séance en cours.
+ =============================================================== */
+(() => {
+  'use strict';
+  if (window.MUR_RECOMMENDED_RHYTHM_POPUP_V230) return;
+  const RECOMMEND = {bleu:'boost',vert:'365',orange:'regulate',rouge:'frein'};
+  const COLORS = {bleu:'#3b82f6',vert:'#22c55e',orange:'#f59e0b',rouge:'#ef4444'};
+  const INFO = {
+    bleu: {
+      fr:['Activation douce','Un rythme qui donne davantage de place à l’inspiration, pour accompagner une remise en mouvement progressive, sans forcer.'],
+      en:['Gentle activation','A rhythm that gives a little more room to inhalation to support gradual activation, without forcing.']
+    },
+    vert: {
+      fr:['Rythme équilibré','Un rythme régulier avec inspiration et expiration de durées comparables, facile à suivre pour entretenir une respiration calme.'],
+      en:['Balanced rhythm','A regular rhythm with similar inhalation and exhalation times, designed to be easy to follow for calm breathing.']
+    },
+    orange: {
+      fr:['Régulation progressive','Une expiration un peu plus longue que l’inspiration, pour inviter à ralentir progressivement et retrouver un rythme confortable.'],
+      en:['Gradual regulation','A slightly longer exhale than inhale to encourage a progressive slowing down and a comfortable rhythm.']
+    },
+    rouge: {
+      fr:['Ralentissement marqué','Une expiration sensiblement prolongée, proposée pour favoriser l’apaisement. Adaptez-la à votre confort et raccourcissez-la si nécessaire.'],
+      en:['More pronounced slowing','A noticeably longer exhale, suggested to support calming. Adapt it to your comfort and shorten it if needed.']
+    }
+  };
+  function english(){return String(document.documentElement.lang||'fr').toLowerCase().startsWith('en');}
+  function zoneKey(){
+    let zone=null;
+    try {zone=window.getCurrentNeuroRecommendation?.()?.zone || null;}catch(_){ }
+    if (!zone) try {zone=JSON.parse(localStorage.getItem('murLastNeuro')||'null')?.zone||null;}catch(_){ }
+    const raw=String(zone?.key||zone?.name||zone||'').toLowerCase();
+    if (raw.includes('bleu')||raw.includes('blue')) return 'bleu';
+    if (raw.includes('rouge')||raw.includes('red')) return 'rouge';
+    if (raw.includes('orange')) return 'orange';
+    if (raw.includes('vert')||raw.includes('green')) return 'vert';
+    return null;
+  }
+  function getData(key){
+    try {return typeof BREATHS!=='undefined' && BREATHS ? BREATHS[key]||null : null;}
+    catch(_){return null;}
+  }
+  const css=document.createElement('style');
+  css.id='mur-v230-recommended-popup-style';
+  css.textContent=`
+    #breath .mur-b152-recommend.mur-v230-pressable{cursor:pointer!important;touch-action:manipulation;position:relative}
+    #breath .mur-b152-recommend.mur-v230-pressable:focus-visible{outline:2px solid #80f5d1!important;outline-offset:3px!important}
+    #breath .mur-b152-recommend.mur-v230-pressable::after{content:'ⓘ';position:absolute;right:12px;top:9px;font-size:16px;color:#bcf9eb;opacity:.85}
+    #breath .mur-b152-recommend.mur-v230-pressable .mur-b152-rec-top{padding-right:25px}
+    #mur-v230-popup[hidden]{display:none!important}
+    #mur-v230-popup{position:fixed;inset:0;z-index:2147483200;background:rgba(2,10,21,.83);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:18px}
+    #mur-v230-popup .mur-v230-panel{--v230-accent:#22c55e;position:relative;max-width:440px;width:100%;max-height:85dvh;overflow:auto;border-radius:22px;padding:27px 22px 22px;color:#f5fffd;background:linear-gradient(150deg,#13334a,#081927 82%);border:1px solid rgba(119,222,212,.40);box-shadow:0 22px 65px rgba(0,0,0,.55),inset 0 1px rgba(255,255,255,.09)}
+    #mur-v230-popup .mur-v230-heading{display:flex;align-items:center;gap:10px;margin:0 32px 11px 0;font-weight:850;font-size:20px;line-height:1.25}
+    #mur-v230-popup .mur-v230-indicator{width:11px;height:11px;border-radius:50%;background:var(--v230-accent);box-shadow:0 0 12px var(--v230-accent);flex:none}
+    #mur-v230-popup .mur-v230-rhythm{font-size:28px;font-weight:850;color:#b9ffe7;letter-spacing:.015em;margin:12px 0 13px}
+    #mur-v230-popup .mur-v230-body{font-size:15px;line-height:1.55;color:#d2e5ec;margin:0 0 12px}
+    #mur-v230-popup .mur-v230-caption{font-size:12px;line-height:1.5;color:#aac8d2;margin:14px 0}
+    #mur-v230-popup .mur-v230-close-x{position:absolute;right:12px;top:12px;border-radius:10px;border:1px solid rgba(164,213,219,.38);width:38px;height:38px;background:#112f43;color:white;font-size:24px;cursor:pointer}
+    #mur-v230-popup .mur-v230-ok{display:block;width:100%;min-height:46px;border-radius:13px;border:1px solid rgba(153,255,221,.65);background:linear-gradient(105deg,#49e5a9,#24c5ca);color:#062a34;font-size:15px;font-weight:850;cursor:pointer}
+    #mur-v230-popup button:focus-visible{outline:2px solid white;outline-offset:2px}
+  `;
+  document.head.appendChild(css);
+  const modal=document.createElement('div');
+  modal.id='mur-v230-popup';
+  modal.hidden=true;
+  modal.setAttribute('role','dialog');
+  modal.setAttribute('aria-modal','true');
+  modal.setAttribute('aria-labelledby','mur-v230-title');
+  modal.innerHTML='<section class="mur-v230-panel"><button type="button" class="mur-v230-close-x" aria-label="Fermer">×</button><h2 class="mur-v230-heading" id="mur-v230-title"><span class="mur-v230-indicator"></span><span class="mur-v230-title-text"></span></h2><div class="mur-v230-rhythm"></div><p class="mur-v230-body"></p><p class="mur-v230-caption"></p><button type="button" class="mur-v230-ok">Compris</button></section>';
+  let lastFocus=null;
+  function close(){
+    if(modal.hidden)return;
+    modal.hidden=true;
+    lastFocus?.focus?.({preventScroll:true});
+    lastFocus=null;
+  }
+  function open(){
+    const en=english(),lang=en?'en':'fr',zone=zoneKey();
+    const data=zone?getData(RECOMMEND[zone]):null;
+    const info=zone?INFO[zone][lang]:null;
+    const sec=(n)=>Number.isFinite(Number(n))?`${Number(n)} s`:'—';
+    const i=data?.i??(zone==='bleu'?5:zone==='orange'?4:zone==='rouge'?3:5);
+    const e=data?.e??(zone==='bleu'?3:zone==='orange'?6:zone==='rouge'?8:5);
+    const hi=data?.hi??0,ho=data?.ho??0;
+    const title=info?.[0] || (en?'Personalized rhythm':'Rythme personnalisé');
+    const body=info?.[1] || (en?'Complete both NeuroFlex tests to display a personalized recommendation.':'Effectuez les deux tests NeuroFlex pour découvrir un rythme adapté à votre résultat.');
+    const pause=(Number(hi)>0||Number(ho)>0)?(en?` · pauses ${sec(hi)} / ${sec(ho)}`:` · pauses ${sec(hi)} / ${sec(ho)}`):'';
+    const heading=en?'Recommended rhythm — '+title:'Rythme recommandé — '+title;
+    modal.querySelector('.mur-v230-panel').style.setProperty('--v230-accent',COLORS[zone]||'#22c55e');
+    modal.querySelector('.mur-v230-title-text').textContent=heading;
+    modal.querySelector('.mur-v230-rhythm').textContent=zone?`${sec(i)} / ${sec(e)}${pause}`:(en?'NeuroFlex tests pending':'Tests NeuroFlex à compléter');
+    modal.querySelector('.mur-v230-body').textContent=body;
+    modal.querySelector('.mur-v230-caption').textContent=en?'These are suggested breathing cues, not a medical diagnosis. Breathe comfortably; stop if you feel dizzy or unwell.':'Ce rythme est un repère de pratique, pas un diagnostic médical. Respirez sans forcer et arrêtez en cas de vertige ou de gêne.';
+    modal.querySelector('.mur-v230-close-x').setAttribute('aria-label',en?'Close':'Fermer');
+    modal.querySelector('.mur-v230-ok').textContent=en?'Got it':'Compris';
+    lastFocus=document.activeElement;
+    modal.hidden=false;
+    modal.querySelector('.mur-v230-close-x').focus({preventScroll:true});
+  }
+  function setup(){
+    if(!modal.isConnected)document.body.appendChild(modal);
+    const rec=document.querySelector('#breath .mur-b152-recommend');
+    if(!rec||rec.dataset.murV230Popup==='1')return;
+    rec.dataset.murV230Popup='1';
+    rec.classList.add('mur-v230-pressable');
+    rec.setAttribute('role','button');
+    rec.tabIndex=0;
+    rec.setAttribute('aria-haspopup','dialog');
+    rec.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open();});
+    rec.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
+  }
+  modal.querySelector('.mur-v230-close-x').addEventListener('click',close);
+  modal.querySelector('.mur-v230-ok').addEventListener('click',close);
+  modal.addEventListener('click',e=>{if(e.target===modal)close();});
+  document.addEventListener('keydown',e=>{
+    if(modal.hidden)return;
+    if(e.key==='Escape'){e.preventDefault();close();}
+    if(e.key==='Tab'){
+      const buttons=[...modal.querySelectorAll('button:not([disabled])')];
+      const first=buttons[0],last=buttons[buttons.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+    }
+  });
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true}); else setup();
+  window.MUR_RECOMMENDED_RHYTHM_POPUP_V230={open,close};
+})();
