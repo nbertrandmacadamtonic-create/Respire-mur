@@ -8195,6 +8195,81 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       ctx.stroke(path);
       ctx.restore();
     }
+    /* V228 — aperçu SUR LE VRAI ACCUEIL, activé seulement par ?murOrbitPreview=1.
+       On conserve la carte, le globe V181, le doigt et le menu natif à 5 choix. */
+    const orbitPreview = new URLSearchParams(window.location.search).get('murOrbitPreview') === '1';
+    const orbitDefs = [
+      {rgb:[56,177,255], tilt:.48, yaw:.10, roll:.18, speed:.36, phase:.3, reach:1.51},
+      {rgb:[55,235,172], tilt:1.12, yaw:.48, roll:1.05, speed:-.29, phase:1.8, reach:1.56},
+      {rgb:[81,203,246], tilt:.78, yaw:-.54, roll:2.08, speed:.24, phase:3.7, reach:1.59},
+      {rgb:[91,241,174], tilt:1.32, yaw:.33, roll:2.76, speed:-.41, phase:5.2, reach:1.48}
+    ];
+    const orbitDots=Array.from({length:110},(_,i)=>{
+      const y=1-2*(i+.5)/110,a=i*Math.PI*(3-Math.sqrt(5)),q=Math.sqrt(1-y*y);
+      return {x:q*Math.cos(a),y,z:q*Math.sin(a)};
+    });
+    function orbitProject(o,angle,cx,cy,r){
+      let x=Math.cos(angle)*r*o.reach, y=Math.sin(angle)*r*o.reach, z=0;
+      // inclinaisons réelles : axe X, puis Y, puis rotation sur l'écran.
+      const ct=Math.cos(o.tilt),st=Math.sin(o.tilt);
+      [y,z]=[y*ct-z*st,y*st+z*ct];
+      const cyaw=Math.cos(o.yaw),syaw=Math.sin(o.yaw);
+      [x,z]=[x*cyaw+z*syaw,-x*syaw+z*cyaw];
+      const cr=Math.cos(o.roll),sr=Math.sin(o.roll);
+      [x,y]=[x*cr-y*sr,x*sr+y*cr];
+      const k=3.9/(3.9-z/r*.40);
+      return {x:cx+x*k,y:cy+y*k,z};
+    }
+    function orbitStroke(ctx,o,pts,front){
+      ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+      const rgb=o.rgb.join(',');
+      ctx.beginPath();
+      for(let i=0;i<pts.length;i++){
+        const p=pts[i], visible=front?p.z>=0:p.z<0;
+        if(!visible){ctx.stroke();ctx.beginPath();continue;}
+        if(i===0 || (front?pts[i-1].z<0:pts[i-1].z>=0))ctx.moveTo(p.x,p.y);
+        else ctx.lineTo(p.x,p.y);
+      }
+      ctx.strokeStyle=`rgba(${rgb},${front?.39:.17})`;
+      ctx.lineWidth=front?1.15:.9;
+      ctx.shadowColor=`rgba(${rgb},.58)`;ctx.shadowBlur=front?7:3;
+      ctx.stroke();ctx.restore();
+    }
+    function orbitSatellite(ctx,o,p,depth,ms,r){
+      const size=r*.103*(.80+depth*.37);
+      ctx.save();ctx.translate(p.x,p.y);
+      const halo=ctx.createRadialGradient(0,0,size*.15,0,0,size*1.8);
+      halo.addColorStop(0,`rgba(${o.rgb.join(',')},.22)`);
+      halo.addColorStop(1,`rgba(${o.rgb.join(',')},0)`);
+      ctx.fillStyle=halo;ctx.beginPath();ctx.arc(0,0,size*1.8,0,TAU);ctx.fill();
+      ctx.beginPath();ctx.arc(0,0,size,0,TAU);
+      const g=ctx.createRadialGradient(-size*.30,-size*.34,0,0,0,size);
+      g.addColorStop(0,'rgba(16,110,115,.72)');g.addColorStop(.67,'rgba(3,50,62,.95)');g.addColorStop(1,'rgba(0,21,39,.98)');
+      ctx.fillStyle=g;ctx.fill();ctx.clip();
+      const spin=ms*.00030+o.phase;
+      const ca=Math.cos(spin),sa=Math.sin(spin);
+      for(const q of orbitDots){
+        const x=q.x*ca-q.z*sa,z=q.x*sa+q.z*ca;
+        const k=2.8/(2.8-z*.25),d=(z+1)/2;
+        ctx.globalAlpha=.28+d*.66;
+        ctx.fillStyle=`rgb(${o.rgb.map(v=>Math.round(v+(255-v)*d*.40)).join(',')})`;
+        ctx.beginPath();ctx.arc(x*size*.91*k,q.y*size*.91*k,Math.max(.4,size*.028)*(0.6+d*.7),0,TAU);ctx.fill();
+      }
+      ctx.restore();
+      ctx.save();ctx.strokeStyle=`rgba(${o.rgb.join(',')},.82)`;
+      ctx.lineWidth=1.05;ctx.shadowColor=`rgba(${o.rgb.join(',')},.87)`;ctx.shadowBlur=8;
+      ctx.beginPath();ctx.arc(p.x,p.y,size,0,TAU);ctx.stroke();ctx.restore();
+    }
+    function drawRealHomeOrbitLayer(ctx,front,cx,cy,r,ms){
+      orbitDefs.forEach(o=>{
+        const angle=(reduce?.matches?0:ms*.001*o.speed)+o.phase;
+        const pts=Array.from({length:129},(_,i)=>orbitProject(o,i*TAU/128,cx,cy,r));
+        orbitStroke(ctx,o,pts,front);
+        const dot=orbitProject(o,angle,cx,cy,r);
+        const ahead=dot.z>=0;
+        if(ahead===front)orbitSatellite(ctx,o,dot,Math.max(0,Math.min(1,(dot.z/r+1)*.5)),ms,r);
+      });
+    }
     function frame(ms){
       requestAnimationFrame(frame);
       if(!card.isConnected)return;
@@ -8222,7 +8297,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       const drift=reduce?.matches?0:Math.sin(tm*.36)*.010;
 
       // V184: exact blue curves, already rasterized + fog from their alpha.
-      drawApprovedImage(back,waveImages[0],cx,cy,r,ms,.15);
+      if(orbitPreview) drawRealHomeOrbitLayer(back,false,cx,cy,r,ms);
+      else drawApprovedImage(back,waveImages[0],cx,cy,r,ms,.15);
       // 2. SPHERE: full opaque circular surface for correct occlusion, glowing
       // cyan glass upper rim, luminous green core and individually rotating dots.
       sphere.save();
@@ -8296,8 +8372,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       sphere.restore();
 
       // V184: original turquoise and red/amber curves in the foreground.
-      drawApprovedImage(front,waveImages[1],cx,cy,r,ms,.90);
-      drawApprovedImage(front,waveImages[2],cx,cy,r,ms,1.85);
+      if(orbitPreview) drawRealHomeOrbitLayer(front,true,cx,cy,r,ms);
+      else {
+        drawApprovedImage(front,waveImages[1],cx,cy,r,ms,.90);
+        drawApprovedImage(front,waveImages[2],cx,cy,r,ms,1.85);
+      }
     }
     requestAnimationFrame(frame);
   }
@@ -9984,8 +10063,8 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
     #breath .mur-v223-wheel-face{position:absolute;inset:25%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;pointer-events:none;background:radial-gradient(circle at 42% 34%,#0a4b48b8,#041d2bcc 70%);border:1px solid rgba(60,247,194,.43);box-shadow:inset 0 0 32px #15e3a433,0 0 28px #1cf2ae26;}
     #breath .mur-v223-dots{position:absolute;inset:0;border-radius:50%;overflow:hidden;opacity:.9;}
     #breath .mur-v223-dots::before{content:'';position:absolute;inset:-15%;border-radius:50%;background-image:radial-gradient(circle,#38fbd3 0 1px,transparent 1.4px);background-size:12px 12px;mask-image:radial-gradient(circle,transparent 0 29%,#000 69%,transparent 100%);-webkit-mask-image:radial-gradient(circle,transparent 0 29%,#000 69%,transparent 100%);transform:perspective(210px) rotateY(17deg) rotateX(-16deg);}
-    #breath .mur-v223-wheel-number{position:relative;z-index:2;color:#fff;font-size:clamp(36px,9vw,64px);font-weight:850;line-height:1;text-shadow:0 0 18px #23e995aa;white-space:nowrap;font-variant-numeric:tabular-nums;}
-    #breath .mur-v223-wheel-number small{font-size:.43em;font-weight:700;}
+    #breath .mur-v223-wheel-number{position:relative;z-index:2;color:#fff;font-size:clamp(24px,6.2vw,40px);font-weight:850;line-height:1;text-shadow:0 0 18px #23e995aa;white-space:nowrap;font-variant-numeric:tabular-nums;}
+    #breath .mur-v223-wheel-number small{font-size:.40em;font-weight:700;}
     #breath .mur-v223-wheel-wave-icon{position:relative;z-index:2;color:#58ffd6;font-size:clamp(22px,6vw,35px);letter-spacing:-4px;text-shadow:0 0 12px #32ffd3;line-height:1.1;}
     #breath .mur-v223-instructions{color:#c3d4e0;text-align:center;font-size:12px;margin:0 0 4px;}
     #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-quick{width:100%;margin:0!important;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
