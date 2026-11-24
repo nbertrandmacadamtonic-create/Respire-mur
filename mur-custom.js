@@ -2182,13 +2182,25 @@ if (typeof window.installPresentationFallback !== 'function') {
     page.addEventListener('click',e=>{
       if(e.target.closest?.('.breath-choice'))intentionalSelection();
     });
+    // V232 — À CHAQUE ouverture de Respirer : appliquer immédiatement
+    // la vraie couleur de la dernière tendance NeuroFlex, sans fondu
+    // depuis le protocole précédent. Les choix manuels ultérieurs
+    // continuent de modifier la couleur via intentionalSelection().
+    function resetToNeuroFlexImmediately(){
+      const color=[...neuroFlexColor()];
+      selectedProtocolColor=null;
+      displayColor=[...color];
+      fromColor=[...color];
+      toColor=[...color];
+      colorChangedAt=0;
+      orb.dataset.murBreathColorMode='neuroflex';
+      orb.dataset.murNeuroflexColor=color.join(',');
+    }
     let pageWasActive=page.classList.contains('active');
+    if(pageWasActive) resetToNeuroFlexImmediately();
     new MutationObserver(()=>{
       const active=page.classList.contains('active');
-      if(active&&!pageWasActive){
-        selectedProtocolColor=null;
-        beginColorChange(neuroFlexColor());
-      }
+      if(active&&!pageWasActive) resetToNeuroFlexImmediately();
       pageWasActive=active;
     }).observe(page,{attributes:true,attributeFilter:['class']});
     function render(t){
