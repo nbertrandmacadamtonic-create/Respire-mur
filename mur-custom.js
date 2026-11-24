@@ -10261,3 +10261,142 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
   window.MUR_V221={version:221,feature:'all-guided-sessions-single-scrollable-page'};
   window.MUR_V222={version:224,feature:'duration-interactive-wheel-soft-web-audio-ticks-native-breath-preserved'};
 })();
+
+/* =====================================================================
+   M.U.R. V225 — UNIVERS RESPIRATION UNIFIE (4 ECRANS)
+   Base V224 preservee : moteur, 14 seances, sons, voix, tests,
+   profils, historique et controles natifs non modifies.
+   ===================================================================== */
+(() => {
+  'use strict';
+  if (window.MUR_RESPIRATION_UNIFIEE_V225) return;
+  window.MUR_RESPIRATION_UNIFIEE_V225 = {version:225, screens:['respiration','guided','duration','advanced'], particles:true};
+  const CSS = `
+  /* Palette partagee dans les quatre ecrans de respiration. */
+  #breath{--mur-u-night:#06172a;--mur-u-mid:#0b2d40;--mur-u-line:rgba(100,207,220,.46);--mur-u-mint:#59f2ae;--mur-u-cyan:#2bdcdb;--mur-u-white:#f1fbff;}
+  #breath.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type{
+    position:relative!important;isolation:isolate!important;
+    border:1px solid rgba(93,194,222,.48)!important;
+    border-radius:25px!important;
+    background:radial-gradient(ellipse at 52% 27%,rgba(11,117,120,.18),transparent 48%),linear-gradient(165deg,#082a41 0%,#061b30 51%,#041628 100%)!important;
+    box-shadow:inset 0 0 0 1px rgba(141,241,245,.055),0 12px 32px rgba(0,0,0,.15)!important;
+    color:var(--mur-u-white)!important;
+  }
+  #breath .mur-v219-screen{position:relative!important;z-index:1!important;}
+  /* Un meme en-tete avec petit globe 3D et terminologie coherente. */
+  #breath .mur-v219-top{gap:11px!important;min-height:38px!important;}
+  #breath .mur-v219-top strong{font-size:15px!important;color:#f3fcff!important;letter-spacing:.015em;}
+  #breath .mur-v219-dot{position:relative!important;background:none!important;border:0!important;box-shadow:none!important;overflow:visible!important;width:36px!important;height:36px!important;flex:0 0 36px!important;}
+  #breath .mur-v225-head-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+  #breath .mur-v219-title{font-weight:850!important;color:#f5fbff!important;text-shadow:0 2px 13px rgba(2,12,30,.34)!important;letter-spacing:-.026em!important;}
+  #breath .mur-v219-title::after{content:'';display:block;width:76px;height:2px;margin-top:9px;border-radius:99px;background:linear-gradient(90deg,#e8f16c,#4cf9ae,transparent);box-shadow:0 0 12px #7bffc14d;}
+  #breath .mur-v219-intro{background:linear-gradient(120deg,rgba(21,63,78,.70),rgba(8,36,55,.86))!important;border:1px solid rgba(92,173,196,.49)!important;border-radius:14px!important;color:#cadce9!important;}
+  #breath .mur-v219-modes{gap:6px!important;}
+  #breath .mur-v219-tab{border-radius:999px!important;background:linear-gradient(180deg,rgba(30,62,81,.9),rgba(10,37,56,.94))!important;border:1px solid rgba(115,172,195,.48)!important;color:#c5dbe7!important;transition:background .2s,box-shadow .2s,transform .2s;}
+  #breath .mur-v219-tab[aria-current="true"]{background:linear-gradient(105deg,#57ecab,#28ced1)!important;color:#05273a!important;border-color:#b3ffe1!important;box-shadow:0 0 16px #2cddb352!important;font-weight:850!important;}
+  #breath .mur-v219-group{background:linear-gradient(150deg,rgba(21,63,81,.72),rgba(7,37,58,.86))!important;border:1px solid rgba(96,164,192,.52)!important;border-radius:18px!important;box-shadow:inset 0 1px 0 rgba(231,255,255,.055)!important;}
+  #breath .mur-v219-label{color:#f4faff!important;}
+  #breath .mur-v219-choice{border-radius:15px!important;background:linear-gradient(120deg,rgba(13,46,66,.92),rgba(9,34,55,.94))!important;border-color:rgba(94,154,180,.5)!important;}
+  #breath .mur-v219-choice[aria-selected="true"]{background:linear-gradient(110deg,rgba(12,88,77,.88),rgba(11,47,58,.94))!important;border-color:#7affc9!important;box-shadow:inset 0 0 0 1px #39efb366,0 0 15px #3eedad35!important;}
+  #breath .mur-v219-counter button,#breath .mur-v219-step button{border-radius:12px!important;border:1px solid rgba(120,207,220,.55)!important;background:linear-gradient(140deg,#1b5060,#0d3046)!important;color:#e7fffd!important;}
+  #breath .mur-v219-counter button:active,#breath .mur-v219-step button:active{background:#176c66!important;}
+  #breath .mur-v219-summary,#breath .mur-v222-current-rhythm{background:linear-gradient(110deg,rgba(6,78,76,.42),rgba(7,43,58,.78))!important;border-color:rgba(80,210,172,.48)!important;color:#d9f8f1!important;}
+  #breath .mur-v219-action{border:1px solid #afffe5!important;border-radius:999px!important;background:linear-gradient(110deg,#5bedad 0%,#29d6d0 100%)!important;color:#07283a!important;font-weight:850!important;box-shadow:0 0 20px rgba(36,218,184,.25),inset 0 1px 0 rgba(255,255,255,.33)!important;}
+  #breath .mur-v219-action:active{transform:scale(.985);}
+  #breath .mur-v221-category-head{color:#eafcff!important;}
+  #breath .mur-v221-action-bar{background:linear-gradient(180deg,rgba(9,37,54,.97),rgba(5,24,41,.99))!important;border-color:rgba(69,218,175,.48)!important;backdrop-filter:blur(10px);}
+  /* Spheres marqueurs de seances : couleurs de la palette native. */
+  #breath .mur-v219-globe{background:radial-gradient(circle,#c6fff4 0 .85px,transparent 1.3px) 0 0/5px 5px,radial-gradient(circle at 38% 27%,color-mix(in srgb,var(--v219-color) 58%,#053244),#031827 77%)!important;box-shadow:0 0 11px color-mix(in srgb,var(--v219-color) 60%,transparent),inset -4px -4px 8px #001e2ca8!important;}
+  /* La roue garde le geste tactile et le cliquetis de V224. Le globe est dessine en vraies particules 3D. */
+  #breath .mur-v223-wheel{filter:drop-shadow(0 0 13px rgba(10,216,189,.16));}
+  #breath .mur-v223-wheel-face{isolation:isolate!important;background:radial-gradient(circle at 40% 30%,rgba(8,92,81,.42),rgba(2,24,39,.90) 75%)!important;border-color:rgba(82,247,191,.35)!important;box-shadow:0 0 30px rgba(15,237,179,.27),inset 0 0 25px rgba(32,219,173,.12)!important;overflow:hidden;}
+  #breath .mur-v223-dots{display:none!important;}
+  #breath .mur-v225-wheel-particles{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+  #breath .mur-v223-wheel-number,#breath .mur-v223-wheel-wave-icon{z-index:2!important;}
+  #breath .mur-v223-wheel-number{color:#f7fffc!important;text-shadow:0 0 12px rgba(45,237,164,.5)!important;}
+  #breath .mur-v223-wheel-wave-icon{color:#69ffd3!important;}
+  #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-action{background:linear-gradient(115deg,#f5fbfe,#d4e9ef)!important;color:#09293c!important;}
+  #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-quick button{border-radius:999px!important;}
+  #breath .mur-v219-screen[data-v222-view="free"] .mur-v219-quick button[aria-pressed="true"]{box-shadow:inset 0 0 11px #18f5b650,0 0 15px #1bfa9e77!important;}
+  /* Fil lumineux des fonds, identique aux rubans de la page de reference. */
+  #breath.mur-b152-settings:not(.mur-b154-fullscreen) > section.card:first-of-type::before{content:'';position:absolute;left:4%;right:4%;bottom:15px;height:46px;pointer-events:none;opacity:.32;background:radial-gradient(ellipse at 44% 90%,rgba(30,240,173,.38),transparent 64%);border-bottom:1px solid rgba(30,231,187,.32);border-radius:50%;}
+  /* La vraie page de respiration native partage les memes fonds et lueur. */
+  #breath.page.active:not(.mur-b152-settings):not(.breath-immersive) > section.card,
+  #breath.page.active.breath-immersive > section.card:last-child{color:#f1fbff!important;border-color:rgba(92,194,217,.45)!important;background:radial-gradient(ellipse at 50% 42%,#123b4b 0%,#081f34 58%,#041527 100%)!important;}
+  #breath:not(.mur-b152-settings) #orb.mur-breath-particle-orb{filter:drop-shadow(0 0 18px rgba(37,235,173,.2));}
+  #breath .mur-v219-screen button:focus-visible,#breath .mur-v223-wheel:focus-visible{outline:2px solid #c6ffed!important;outline-offset:3px!important;}
+  @media(max-width:400px){
+    #breath .mur-v219-top{min-height:30px!important;gap:8px!important;}
+    #breath .mur-v219-dot{width:29px!important;height:29px!important;flex-basis:29px!important;}
+    #breath .mur-v219-title::after{margin-top:5px!important;}
+    #breath .mur-v219-screen[data-v222-view="advanced"] .mur-v219-group{padding:8px 10px!important;}
+  }
+  @media(prefers-reduced-motion:reduce){#breath .mur-v219-action{transition:none!important;}}
+  `;
+  const style=document.createElement('style');
+  style.id='mur-respiration-v225-style';
+  style.textContent=CSS;
+  document.head.appendChild(style);
+
+  // Vraies particules 3D avec projection en profondeur et rotation lente.
+  const GOLD=Math.PI*(3-Math.sqrt(5)), TAU=Math.PI*2;
+  function spherePoints(count){return Array.from({length:count},(_,i)=>{
+    const y=1-2*(i+.5)/count, r=Math.sqrt(Math.max(0,1-y*y)),a=i*GOLD;
+    return {x:r*Math.cos(a),y,z:r*Math.sin(a)};
+  });}
+  const MINI=spherePoints(260), MAIN=spherePoints(950);
+  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)');
+  let components=[];
+  const page=document.getElementById('breath');
+  if(!page)return;
+  function mount(){
+    const screen=page.querySelector('.mur-v219-screen');
+    if(!screen)return;
+    const header=screen.querySelector('.mur-v219-dot');
+    if(header&&!header.querySelector('.mur-v225-head-canvas')){
+      const c=document.createElement('canvas');c.className='mur-v225-head-canvas';c.setAttribute('aria-hidden','true');header.append(c);
+      components.push({canvas:c,ctx:c.getContext('2d'),points:MINI,kind:'mini'});
+    }
+    const face=screen.querySelector('.mur-v223-wheel-face');
+    if(face&&!face.querySelector('.mur-v225-wheel-particles')){
+      const c=document.createElement('canvas');c.className='mur-v225-wheel-particles';c.setAttribute('aria-hidden','true');face.prepend(c);
+      components.push({canvas:c,ctx:c.getContext('2d'),points:MAIN,kind:'main'});
+    }
+    components=components.filter(x=>x.canvas.isConnected);
+  }
+  let raf=0;
+  function draw(time){
+    raf=requestAnimationFrame(draw);
+    if(document.hidden||!page.classList.contains('active')||!page.classList.contains('mur-b152-settings'))return;
+    for(const component of components){
+      const {canvas,ctx,points,kind}=component;
+      if(!canvas.isConnected||!ctx)continue;
+      const width=canvas.clientWidth,height=canvas.clientHeight;
+      if(width<10||height<10)continue;
+      const dpr=Math.min(devicePixelRatio||1,2), cw=Math.round(width*dpr),ch=Math.round(height*dpr);
+      if(canvas.width!==cw||canvas.height!==ch){canvas.width=cw;canvas.height=ch;}
+      ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
+      const phi=reduced?.matches?.35:time*(kind==='main'?.00019:.00034);
+      const co=Math.cos(phi),si=Math.sin(phi),radius=Math.min(width,height)*(kind==='main'?.43:.40);
+      const cx=width/2,cy=height/2;
+      ctx.globalCompositeOperation='lighter';
+      for(const p of points){
+        const x=p.x*co-p.z*si,z=p.x*si+p.z*co;
+        const depth=(z+1)/2,perspective=2.9/(2.9-z*.28);
+        const red=Math.round(28+116*depth),green=Math.round(167+87*depth),blue=Math.round(134+91*depth);
+        ctx.fillStyle=`rgb(${red},${green},${blue})`;
+        ctx.globalAlpha=.23+.72*depth;
+        ctx.beginPath();ctx.arc(cx+x*radius*perspective,cy+p.y*radius*perspective,(kind==='main'?.55:.36)+depth*(kind==='main'?.50:.44),0,TAU);ctx.fill();
+      }
+      ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+    }
+  }
+  function start(){
+    const screen=page.querySelector('.mur-v219-screen');if(!screen)return;
+    mount();
+    new MutationObserver(mount).observe(screen,{childList:true,subtree:true});
+    raf=requestAnimationFrame(draw);
+    window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
