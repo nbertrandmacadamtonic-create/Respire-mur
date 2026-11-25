@@ -1,78 +1,154 @@
 /* =============================================================
-   M.U.R. V233 — SOURCE COMMUNE DE LA TENDANCE NEUROFLEX
-   Relecture a chaque utilisation, y compris apres rechargement.
-   Les couleurs reprennent exactement celles du ruban de tendance.
-   Cette couche n'intervient PAS dans l'authentification ni Supabase.
+   M.U.R. V234 — PERSISTANCE DE LA DERNIERE TENDANCE NEUROFLEX
+   Corrige le retour au VERT par defaut apres fermeture/reouverture.
+
+   Le resultat confirme est sauvegarde dans une cle durable separee,
+   sans ecraser un resultat avec une valeur provisoire au demarrage.
+   Cette protection est locale au navigateur : elle ne remplace pas
+   la synchronisation de compte (index.html / backend non fournis).
    ============================================================= */
 (() => {
   'use strict';
-  if (window.MUR_TREND_COLOR_V233) return;
-  const PALETTE=Object.freeze({
-    bleu:'#3b82f6', vert:'#22c55e', orange:'#f59e0b', rouge:'#ef4444'
-  });
-  function zoneName(obj){
-    if (!obj) return null;
-    const raw=obj.zone||obj;
+  if (window.MUR_TREND_COLOR_V234) return;
+  const PALETTE=Object.freeze({bleu:'#3b82f6',vert:'#22c55e',orange:'#f59e0b',rouge:'#ef4444'});
+  const SOURCE_KEY='murLastNeuro';
+  const BACKUP_KEY='murNeuroFlexLastConfirmedV234';
+  let lastGenuineTestWrite=0;
+  const originalSetItem=Storage.prototype.setItem;
+  const safeRead=key=>{try{return JSON.parse(localStorage.getItem(key)||'null');}catch(_){return null;}};
+  function zoneName(record){
+    if(!record)return null;
+    const raw=record.zone||record;
     const text=String(typeof raw==='string'?raw:[raw.key,raw.name,raw.label].filter(Boolean).join(' ')).toLowerCase();
-    if (/(rouge|red)/.test(text)) return 'rouge';
-    if (/(orange)/.test(text)) return 'orange';
-    if (/(bleu|blue)/.test(text)) return 'bleu';
-    if (/(vert|verte|green)/.test(text)) return 'vert';
-    const color=String(raw.color||'').toLowerCase();
-    if (/^#[0-9a-f]{6}$/.test(color)) {
-      const rgb=[1,3,5].map(i=>parseInt(color.slice(i,i+2),16));
-      // Couleur presente dans les anciens tests : choisir la zone standard
-      // la plus proche sans supposer que les couleurs intermediaires
-      // sont des resultats de tests.
-      let best=null,dist=Infinity;
-      for (const [name,hex] of Object.entries(PALETTE)) {
-        const ref=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
-        const d=rgb.reduce((sum,v,i)=>sum+(v-ref[i])**2,0);
-        if (d<dist){best=name;dist=d;}
-      }
-      return best;
+    if(/rouge|red/.test(text))return'rouge';
+    if(/orange/.test(text))return'orange';
+    if(/bleu|blue/.test(text))return'bleu';
+    if(/vert|verte|green/.test(text))return'vert';
+    // Ne pas deviner une zone a partir d'une couleur intermediaire :
+    // seules les quatre couleurs officielles peuvent servir de secours.
+    const c=String(raw.color||'').trim().toLowerCase();
+    return Object.keys(PALETTE).find(k=>PALETTE[k]===c)||null;
+  }
+  function unpack(input){
+    const zone=zoneName(input);
+    if(!zone)return null;
+    const value=Number(input?.score);
+    const score=(input?.score!==undefined && input?.score!==null && Number.isFinite(value))?value:null;
+    return {zone,score};
+  }
+  function hasRecentTestUpdate(){
+    // Evite qu'un VERT provisoire de demarrage remplace le vrai resultat.
+    return lastGenuineTestWrite>0 && Date.now()-lastGenuineTestWrite<120000;
+  }
+  function backup(){
+    const b=safeRead(BACKUP_KEY);
+    return b && zoneName(b) && b.source==='murLastNeuro' ? b : null;
+  }
+  function persist(record){
+    const obj=unpack(record);if(!obj)return null;
+    const payload={zone:obj.zone,score:obj.score,savedAt:Date.now(),source:'murLastNeuro'};
+    try{originalSetItem.call(localStorage,BACKUP_KEY,JSON.stringify(payload));}catch(_){return null;}
+    return payload;
+  }
+  function timestamp(record){
+    if(!record || typeof record!=='object')return 0;
+    for(const k of ['savedAt','updatedAt','createdAt','date','timestamp','at','testedAt']){
+      const raw=record[k];
+      if(!raw)continue;
+      const n=typeof raw==='number'?raw:Date.parse(raw);
+      const ms=n>1e9 && n<1e11?n*1000:n;
+      if(Number.isFinite(ms)&&ms>0)return ms;
     }
-    return null;
+    return 0;
   }
-  function readSaved(){
-    try {
-      const value=JSON.parse(localStorage.getItem('murLastNeuro')||'null');
-      return value && zoneName(value)?value:null;
-    } catch (_) {return null;}
+  function isFreshNewResult(record, prior){
+    if(!unpack(record))return false;
+    if(!prior)return true;
+    const prevMs=Number(prior.savedAt)||0, newMs=timestamp(record);
+    // Un resultat authentiquement plus recent prime toujours, meme VERT.
+    if(newMs && newMs>prevMs+1000)return true;
+    // Si le moteur n'horodate pas le resultat, on exige une modification
+    // effective de l'un des deux tests pendant cette session.
+    return hasRecentTestUpdate();
   }
-  function readLatest(){
-    try {
-      const value=typeof latestNeuro==='function'?latestNeuro():null;
-      return value && zoneName(value)?value:null;
-    } catch (_) {return null;}
+  // Attraper uniquement les nouvelles sauvegardes NeuroFlex faites par
+  // le moteur existant. Les autres appels setItem restent inchanges.
+  // Aucune donnee de sante supplementaire : zone et score seulement.
+  try{
+    Storage.prototype.setItem=function(key,value){
+      const tracked=this===localStorage;
+      let before=null;
+      if(tracked && (key==='murNow'||key==='murKis')){
+        try{before=this.getItem(key);}catch(_){}
+      }
+      const ret=originalSetItem.apply(this,arguments);
+      if(tracked && (key==='murNow'||key==='murKis') && before!==String(value)){
+        let validFirstWrite=false;
+        try{
+          const test=JSON.parse(String(value));
+          validFirstWrite=!!(test && typeof test==='object' && (
+            Number.isFinite(Number(test.score)) && test.score!==null && test.score!==undefined ||
+            typeof test.cardKey==='string' && test.cardKey.length>0 ||
+            Array.isArray(test.answers) && test.answers.length>0));
+        }catch(_){}
+        if(before!==null || validFirstWrite)lastGenuineTestWrite=Date.now();
+      }
+      if(tracked && String(key)===SOURCE_KEY){
+        try{
+          const rec=JSON.parse(String(value));
+          if(isFreshNewResult(rec,backup()))persist(rec);
+        }catch(_){}
+      }
+      return ret;
+    };
+  }catch(_){}
+  function initialize(){
+    const current=safeRead(SOURCE_KEY), previous=backup();
+    if(!previous && unpack(current)){
+      // Migration V233 -> V234 sans refaire les tests, si la donnee est la.
+      persist(current);
+    }else if(previous && !unpack(current)){
+      // Recuperation si l'app ne recharge pas murLastNeuro au lancement.
+      try{originalSetItem.call(localStorage,SOURCE_KEY,JSON.stringify({
+        zone:previous.zone,score:previous.score,restoredFrom:'v234'}));}catch(_){}
+    }
   }
+  initialize();
   function resolve(){
-    // Meme priorite que le Dashboard: resultat actif, puis resultat conserve.
-    const live=readLatest();
-    const saved=readSaved();
-    const source=live?'current':saved?'local':null;
-    const record=live||saved;
-    let zone=zoneName(record);
-    if (!zone) {
-      // Meme logique de secours que la tendance historique V185.
-      const display=document.getElementById('homeScore');
-      const css=String(display?.style?.color||'').toLowerCase();
-      const colorMap={
-        'rgb(239, 68, 68)':'rouge','rgb(245, 158, 11)':'orange',
-        'rgb(34, 197, 94)':'vert','rgb(59, 130, 246)':'bleu'
-      };
-      zone=colorMap[css]||null;
-      if (!zone) {
-        const score=Number.parseFloat(String(display?.textContent||'').replace(',','.'));
-        zone=Number.isFinite(score)?
-          (score>=25?'rouge':score>=10?'orange':score<=-25?'bleu':'vert'):'vert';
+    const saved=safeRead(SOURCE_KEY), prior=backup();
+    // Un vrai resultat dans le stockage principal est prioritaire,
+    // sauf un VERT recree a l'ouverture apres une tendance anterieure.
+    let record=null,source='none';
+    if(prior && unpack(prior)){
+      record=prior;source='backup';
+      const main=unpack(saved);
+      if(main && main.zone===prior.zone && main.score===prior.score){record=saved;source='local';}
+      else if(main && isFreshNewResult(saved,prior) && timestamp(saved)>prior.savedAt+1000){
+        record=saved;source='local-newer';persist(saved);
       }
+    }else if(unpack(saved)){
+      record=saved;source='local';persist(saved);
+    }else{
+      // Dernier recours : resultat live ; ne JAMAIS persister ici
+      // une valeur de demarrage potentiellement provisoire.
+      try{const live=typeof latestNeuro==='function'?latestNeuro():null;
+        if(unpack(live)){record=live;source='live';}}catch(_){}
     }
+    const zone=zoneName(record)||'vert';
     const hex=PALETTE[zone];
     const rgb=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
     return {zone,hex,rgb,source,record};
   }
-  window.MUR_TREND_COLOR_V233=Object.freeze({resolve,hex:()=>resolve().hex,rgb:()=>resolve().rgb});
+  const api=Object.freeze({resolve,hex:()=>resolve().hex,rgb:()=>resolve().rgb,
+    storageKey:BACKUP_KEY,version:'234'});
+  window.MUR_TREND_COLOR_V234=api;
+  // Compatibilite descendante avec les modules V233 deja livres.
+  window.MUR_TREND_COLOR_V233=api;
+  window.addEventListener('storage',e=>{
+    if(e.key===SOURCE_KEY && unpack(safeRead(SOURCE_KEY)) && isFreshNewResult(safeRead(SOURCE_KEY),backup())){
+      persist(safeRead(SOURCE_KEY));
+    }
+  });
 })();
 
 /*
@@ -2200,8 +2276,7 @@ if (typeof window.installPresentationFallback !== 'function') {
     function neuroFlexColor(){
       let zone=null;
       try {
-        const saved=JSON.parse(localStorage.getItem('murLastNeuro')||'null');
-        zone=saved?.zone||null;
+        zone=window.MUR_TREND_COLOR_V234?.resolve()?.zone || null;
       } catch(e) {}
       if(!zone){
         try {zone=window.getCurrentNeuroRecommendation?.()?.zone || null;} catch(e) {}
@@ -5649,7 +5724,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function neuroFlexRGB(){
     const palette = {bleu:[59,150,247], vert:[85,233,153], orange:[255,165,63], rouge:[255,88,100]};
     let zone = null;
-    try { zone = JSON.parse(localStorage.getItem('murLastNeuro') || 'null')?.zone || null; } catch (_) {}
+    try { zone = window.MUR_TREND_COLOR_V234?.resolve()?.zone || JSON.parse(localStorage.getItem('murLastNeuro') || 'null')?.zone || null; } catch (_) {}
     if (!zone) {
       try { zone = window.getCurrentNeuroRecommendation?.()?.zone || null; } catch (_) {}
     }
@@ -7554,7 +7629,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   function recent(){
     let v=null;
-    try{v=typeof latestNeuro==='function'?latestNeuro():JSON.parse(localStorage.getItem('murLastNeuro')||'null')}catch(_e){}
+    try{v=window.MUR_TREND_COLOR_V234?.resolve()?.record || null;}catch(_e){}
     return v && v.zone ?v:null;
   }
   function zoneOf(v){
@@ -8549,7 +8624,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   try{for(const k of ['mur-ui-language','murLanguage','murLang','mur-language','language']){const v=localStorage.getItem(k);if(v&&/^(en|fr)/i.test(v))return /^en/i.test(v)?'en':'fr';}}catch(_e){}
   return /^en/i.test(document.documentElement.lang||'')?'en':'fr';
  }
- function getScore(){const t=document.getElementById('homeScore');const n=parseFloat(String(t?.textContent||'').replace(',','.'));return Number.isFinite(n)?n:null;}
+ function getScore(){const remembered=window.MUR_TREND_COLOR_V234?.resolve()?.record; if(remembered?.score!=null && Number.isFinite(Number(remembered.score)))return Number(remembered.score);const t=document.getElementById('homeScore');const n=parseFloat(String(t?.textContent||'').replace(',','.'));return Number.isFinite(n)?n:null;}
  function getZone(score){return window.MUR_TREND_COLOR_V233.hex();}
  function init(){
   if(!document.getElementById(ID)){const style=document.createElement('style');style.id=ID;style.textContent=CSS;document.head.appendChild(style);}
@@ -9280,6 +9355,8 @@ window.MUR_V203={version:203,fix:'fingerprint-no-artificial-delay'};
   }
 
   function getScore(){
+    const remembered=window.MUR_TREND_COLOR_V234?.resolve()?.record;
+    if(remembered?.score!=null && Number.isFinite(Number(remembered.score))) return Number(remembered.score);
     const raw = String(document.getElementById('homeScore')?.textContent || '').replace(',', '.');
     const n = parseFloat(raw);
     return Number.isFinite(n) ? n : null;
@@ -10689,7 +10766,7 @@ window.MUR_V216={version:216,fixes:['orbit-arrows-closer-and-dotted','respiratio
   function english(){return String(document.documentElement.lang||'fr').toLowerCase().startsWith('en');}
   function zoneKey(){
     let zone=null;
-    try {zone=window.getCurrentNeuroRecommendation?.()?.zone || null;}catch(_){ }
+    try {zone=window.MUR_TREND_COLOR_V234?.resolve()?.zone||null;}catch(_){ }
     if (!zone) try {zone=JSON.parse(localStorage.getItem('murLastNeuro')||'null')?.zone||null;}catch(_){ }
     const raw=String(zone?.key||zone?.name||zone||'').toLowerCase();
     if (raw.includes('bleu')||raw.includes('blue')) return 'bleu';
