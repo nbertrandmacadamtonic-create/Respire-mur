@@ -1,3 +1,80 @@
+/* =============================================================
+   M.U.R. V233 — SOURCE COMMUNE DE LA TENDANCE NEUROFLEX
+   Relecture a chaque utilisation, y compris apres rechargement.
+   Les couleurs reprennent exactement celles du ruban de tendance.
+   Cette couche n'intervient PAS dans l'authentification ni Supabase.
+   ============================================================= */
+(() => {
+  'use strict';
+  if (window.MUR_TREND_COLOR_V233) return;
+  const PALETTE=Object.freeze({
+    bleu:'#3b82f6', vert:'#22c55e', orange:'#f59e0b', rouge:'#ef4444'
+  });
+  function zoneName(obj){
+    if (!obj) return null;
+    const raw=obj.zone||obj;
+    const text=String(typeof raw==='string'?raw:[raw.key,raw.name,raw.label].filter(Boolean).join(' ')).toLowerCase();
+    if (/(rouge|red)/.test(text)) return 'rouge';
+    if (/(orange)/.test(text)) return 'orange';
+    if (/(bleu|blue)/.test(text)) return 'bleu';
+    if (/(vert|verte|green)/.test(text)) return 'vert';
+    const color=String(raw.color||'').toLowerCase();
+    if (/^#[0-9a-f]{6}$/.test(color)) {
+      const rgb=[1,3,5].map(i=>parseInt(color.slice(i,i+2),16));
+      // Couleur presente dans les anciens tests : choisir la zone standard
+      // la plus proche sans supposer que les couleurs intermediaires
+      // sont des resultats de tests.
+      let best=null,dist=Infinity;
+      for (const [name,hex] of Object.entries(PALETTE)) {
+        const ref=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
+        const d=rgb.reduce((sum,v,i)=>sum+(v-ref[i])**2,0);
+        if (d<dist){best=name;dist=d;}
+      }
+      return best;
+    }
+    return null;
+  }
+  function readSaved(){
+    try {
+      const value=JSON.parse(localStorage.getItem('murLastNeuro')||'null');
+      return value && zoneName(value)?value:null;
+    } catch (_) {return null;}
+  }
+  function readLatest(){
+    try {
+      const value=typeof latestNeuro==='function'?latestNeuro():null;
+      return value && zoneName(value)?value:null;
+    } catch (_) {return null;}
+  }
+  function resolve(){
+    // Meme priorite que le Dashboard: resultat actif, puis resultat conserve.
+    const live=readLatest();
+    const saved=readSaved();
+    const source=live?'current':saved?'local':null;
+    const record=live||saved;
+    let zone=zoneName(record);
+    if (!zone) {
+      // Meme logique de secours que la tendance historique V185.
+      const display=document.getElementById('homeScore');
+      const css=String(display?.style?.color||'').toLowerCase();
+      const colorMap={
+        'rgb(239, 68, 68)':'rouge','rgb(245, 158, 11)':'orange',
+        'rgb(34, 197, 94)':'vert','rgb(59, 130, 246)':'bleu'
+      };
+      zone=colorMap[css]||null;
+      if (!zone) {
+        const score=Number.parseFloat(String(display?.textContent||'').replace(',','.'));
+        zone=Number.isFinite(score)?
+          (score>=25?'rouge':score>=10?'orange':score<=-25?'bleu':'vert'):'vert';
+      }
+    }
+    const hex=PALETTE[zone];
+    const rgb=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
+    return {zone,hex,rgb,source,record};
+  }
+  window.MUR_TREND_COLOR_V233=Object.freeze({resolve,hex:()=>resolve().hex,rgb:()=>resolve().rgb});
+})();
+
 /*
  M.U.R. — Introduction videointromur.mp4
  - Lecture automatique, son activable par clic
@@ -8140,15 +8217,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
 
     const reduce=window.matchMedia?.('(prefers-reduced-motion:reduce)');
-    const getColor=()=>{
-      const raw=(orb.style.getPropertyValue('--home-color')||getComputedStyle(orb).getPropertyValue('--home-color')).trim();
-      if(/^#[\da-f]{6}$/i.test(raw))return [1,3,5].map(i=>parseInt(raw.slice(i,i+2),16));
-      if(/^rgba?\(/i.test(raw)){
-        const nums=(raw.match(/[\d.]+/g)||[]).slice(0,3).map(Number);
-        if(nums.length===3&&nums.every(Number.isFinite))return nums;
-      }
-      return [40,225,155];
-    };
+    const getColor=()=>window.MUR_TREND_COLOR_V233.rgb();
     // The reference curves are defined in multiples of the globe radius.
     // The first two begin BEHIND the globe and are then occluded naturally
     // by the globe canvas, preventing the former 'Saturn rings' issue.
@@ -8311,39 +8380,39 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       // V184: exact blue curves, already rasterized + fog from their alpha.
       if(orbitPreview) drawRealHomeOrbitLayer(back,false,cx,cy,r,ms);
       else drawApprovedImage(back,waveImages[0],cx,cy,r,ms,.15);
-      // 2. SPHERE: full opaque circular surface for correct occlusion, glowing
-      // cyan glass upper rim, luminous green core and individually rotating dots.
-      sphere.save();
-      let fog=sphere.createRadialGradient(cx,cy,r*.42,cx,cy,r*1.36);
-      fog.addColorStop(0,'rgba(4,245,183,.17)');
-      fog.addColorStop(.65,'rgba(24,160,224,.13)');
-      fog.addColorStop(1,'rgba(19,107,220,0)');
-      sphere.fillStyle=fog;sphere.beginPath();sphere.arc(cx,cy,r*1.37,0,TAU);sphere.fill();
-      let body=sphere.createRadialGradient(cx-r*.20,cy-r*.32,r*.02,cx,cy,r*1.03);
-      body.addColorStop(0,'rgba(7,104,92,1)');
-      body.addColorStop(.49,'rgba(3,72,76,1)');
-      body.addColorStop(.77,'rgba(2,36,50,1)');
-      body.addColorStop(1,'rgba(1,17,34,1)');
-      sphere.fillStyle=body;sphere.beginPath();sphere.arc(cx,cy,r,0,TAU);sphere.fill();
+      // V233 — la grande sphere prend exactement la couleur de la tendance.
+      // Aucune couleur verte/rouge/orange fixe ne doit recouvrir sa teinte.
+      // Les vagues exterieures et les 5 satellites restent multicolores.
       const tint=getColor();
+      const tintLight=tint.map(v=>Math.round(v+(255-v)*.43));
+      const tintSoft=tint.map(v=>Math.round(v+(255-v)*.22));
+      const tintDark=tint.map(v=>Math.round(v*.33));
+      const tintDeep=tint.map(v=>Math.round(v*.16));
+      const rgba=(c,alpha)=>`rgba(${c.join(',')},${alpha})`;
+      sphere.save();
+      const fog=sphere.createRadialGradient(cx,cy,r*.42,cx,cy,r*1.36);
+      fog.addColorStop(0,rgba(tint,.20));
+      fog.addColorStop(.65,rgba(tint,.13));
+      fog.addColorStop(1,rgba(tint,0));
+      sphere.fillStyle=fog;
+      sphere.beginPath();sphere.arc(cx,cy,r*1.37,0,TAU);sphere.fill();
+      const body=sphere.createRadialGradient(cx-r*.20,cy-r*.32,r*.02,cx,cy,r*1.03);
+      body.addColorStop(0,rgba(tintDark,1));
+      body.addColorStop(.49,rgba(tintDeep,1));
+      body.addColorStop(.77,rgba(tintDeep.map(v=>Math.round(v*.62)),1));
+      body.addColorStop(1,'rgba(1,13,29,1)');
+      sphere.fillStyle=body;sphere.beginPath();sphere.arc(cx,cy,r,0,TAU);sphere.fill();
       const center=sphere.createRadialGradient(cx+.03*r,cy+.02*r,0,cx+.03*r,cy+.02*r,r*.93);
-      center.addColorStop(0,'rgba(27,255,170,.90)');
-      center.addColorStop(.16,'rgba(20,244,162,.53)');
-      center.addColorStop(.43,'rgba(8,195,155,.16)');
-      center.addColorStop(1,'rgba(0,97,127,0)');
+      center.addColorStop(0,rgba(tintLight,.90));
+      center.addColorStop(.16,rgba(tint,.52));
+      center.addColorStop(.43,rgba(tint,.17));
+      center.addColorStop(1,rgba(tint,0));
       sphere.fillStyle=center;sphere.beginPath();sphere.arc(cx,cy,r,0,TAU);sphere.fill();
-      // RGB orange warmth stays inside the lower-right boundary.
-      sphere.save();sphere.beginPath();sphere.arc(cx,cy,r,0,TAU);sphere.clip();
-      const warm=sphere.createRadialGradient(cx+r*.37,cy+r*.88,r*.05,cx+r*.37,cy+r*.88,r*.63);
-      warm.addColorStop(0,'rgba(255,113,55,.84)');
-      warm.addColorStop(.48,'rgba(255,88,52,.35)');
-      warm.addColorStop(1,'rgba(255,95,69,0)');
-      sphere.fillStyle=warm;sphere.fillRect(cx-r,cy-r,r*2,r*2);
-      const redBloom=sphere.createRadialGradient(cx+r*.82,cy+r*.73,0,cx+r*.82,cy+r*.73,r*.74);
-      redBloom.addColorStop(0,'rgba(255,42,75,.76)');
-      redBloom.addColorStop(.46,'rgba(255,55,73,.30)');
-      redBloom.addColorStop(1,'rgba(255,57,77,0)');
-      sphere.fillStyle=redBloom;sphere.fillRect(cx-r,cy-r,r*2,r*2);
+      sphere.beginPath();sphere.arc(cx,cy,r,0,TAU);sphere.clip();
+      const lower=sphere.createRadialGradient(cx+r*.29,cy+r*.73,0,cx+r*.29,cy+r*.73,r*.67);
+      lower.addColorStop(0,rgba(tint,.24));
+      lower.addColorStop(1,rgba(tint,0));
+      sphere.fillStyle=lower;sphere.fillRect(cx-r,cy-r,r*2,r*2);
       const angle=.20+tm*.09,co=Math.cos(angle),si=Math.sin(angle);
       const rotated=POINTS.map(p=>{
         const x=p.x*co-p.z*si,z=p.x*si+p.z*co;
@@ -8352,33 +8421,29 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       for(const p of rotated){
         const depth=(p.z+1)*.5,persp=2.9/(2.9-.25*p.z);
         const xx=cx+p.x*r*.97*persp, yy=cy+p.y*r*.97*persp;
-        const alpha=(.36+depth*.57)*(.88+p.tw*.12);
-        sphere.globalAlpha=alpha;
-        sphere.fillStyle=depth>.35?`rgb(${Math.round(50+tint[0]*.28)},${Math.round(144+tint[1]*.45)},${Math.round(117+tint[2]*.39)})`:'rgb(40,169,160)';
+        sphere.globalAlpha=(.36+depth*.57)*(.88+p.tw*.12);
+        sphere.fillStyle=rgba(depth>.35?tintLight:tintSoft,1);
         sphere.beginPath();sphere.arc(xx,yy,(.9+depth*.72)*Math.max(.88,w/490),0,TAU);sphere.fill();
       }
       sphere.restore();sphere.globalAlpha=1;
-      // Narrow glass rim on the TOP half, with a soft blue halo.
       sphere.save();sphere.globalCompositeOperation='screen';
-      let rim=sphere.createLinearGradient(cx,cy-r,cx,cy+r);
-      rim.addColorStop(0,'rgba(90,239,255,.96)');
-      rim.addColorStop(.18,'rgba(45,211,255,.65)');
-      rim.addColorStop(.50,'rgba(20,179,240,.21)');
-      rim.addColorStop(1,'rgba(255,161,92,.38)');
+      const rim=sphere.createLinearGradient(cx,cy-r,cx,cy+r);
+      rim.addColorStop(0,rgba(tintLight,.94));
+      rim.addColorStop(.18,rgba(tint,.67));
+      rim.addColorStop(.50,rgba(tint,.22));
+      rim.addColorStop(1,rgba(tintSoft,.40));
       sphere.strokeStyle=rim;
-      sphere.shadowColor='rgba(24,174,255,.92)';sphere.shadowBlur=r*.17;
+      sphere.shadowColor=rgba(tint,.88);sphere.shadowBlur=r*.17;
       sphere.lineWidth=Math.max(1.5,r*.013);
       sphere.beginPath();sphere.arc(cx,cy,r-.8,Math.PI*.93,TAU*1.06);sphere.stroke();
-      // A glass crescent, not a whole thick ring; brightest on upper-left.
-      sphere.strokeStyle='rgba(164,248,255,.49)';sphere.shadowBlur=r*.19;
+      sphere.strokeStyle=rgba(tintLight,.47);sphere.shadowBlur=r*.19;
       sphere.lineWidth=Math.max(3.0,r*.030);
       sphere.beginPath();sphere.arc(cx,cy,r-3,Math.PI*1.09,Math.PI*1.54);sphere.stroke();
-      // Light source at central green focus.
       const shine=sphere.createRadialGradient(cx,cy+r*.015,0,cx,cy+r*.015,r*.20);
-      shine.addColorStop(0,'rgba(232,255,243,1)');
-      shine.addColorStop(.08,'rgba(45,255,181,.93)');
-      shine.addColorStop(.35,'rgba(26,251,174,.33)');
-      shine.addColorStop(1,'rgba(22,236,174,0)');
+      shine.addColorStop(0,'rgba(247,255,255,.94)');
+      shine.addColorStop(.08,rgba(tintLight,.91));
+      shine.addColorStop(.35,rgba(tint,.32));
+      shine.addColorStop(1,rgba(tint,0));
       sphere.shadowBlur=0;sphere.fillStyle=shine;
       sphere.beginPath();sphere.arc(cx,cy+r*.015,r*.20,0,TAU);sphere.fill();
       sphere.restore();
@@ -8485,14 +8550,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   return /^en/i.test(document.documentElement.lang||'')?'en':'fr';
  }
  function getScore(){const t=document.getElementById('homeScore');const n=parseFloat(String(t?.textContent||'').replace(',','.'));return Number.isFinite(n)?n:null;}
- function getZone(score){
-  let zone=null;
-  try{if(typeof latestNeuro==='function')zone=latestNeuro()?.zone?.name?.toLowerCase();}catch(_e){}
-  if(zone){if(zone.includes('rouge')||zone.includes('red'))return'#ef4444';if(zone.includes('orange'))return'#f59e0b';if(zone.includes('vert')||zone.includes('green'))return'#22c55e';if(zone.includes('bleu')||zone.includes('blue'))return'#3b82f6';}
-  const direct=document.getElementById('homeScore')?.style.color;if(direct)return direct;
-  if(score===null)return'#22c55e';
-  return score>=25?'#ef4444':score>=10?'#f59e0b':score<=-25?'#3b82f6':'#22c55e';
- }
+ function getZone(score){return window.MUR_TREND_COLOR_V233.hex();}
  function init(){
   if(!document.getElementById(ID)){const style=document.createElement('style');style.id=ID;style.textContent=CSS;document.head.appendChild(style);}
   const home=document.getElementById('home'),card=home?.querySelector('.home-line-card'),curve=card?.querySelector('.home-curve');
