@@ -1,154 +1,221 @@
-/* =============================================================
-   M.U.R. V234 — PERSISTANCE DE LA DERNIERE TENDANCE NEUROFLEX
-   Corrige le retour au VERT par defaut apres fermeture/reouverture.
-
-   Le resultat confirme est sauvegarde dans une cle durable separee,
-   sans ecraser un resultat avec une valeur provisoire au demarrage.
-   Cette protection est locale au navigateur : elle ne remplace pas
-   la synchronisation de compte (index.html / backend non fournis).
-   ============================================================= */
+/* ================================================================
+   M.U.R. V235 — SAUVEGARDE DES RÉSULTATS / REPRISE APRÈS FERMETURE
+   Sources: murNow (Ici & Maintenant), murKis, murLastNeuro,
+            murNowNuanceV129. LocalStorage + IndexedDB, même origine.
+   Ne réalise aucune synchronisation serveur ou entre comptes.
+   ================================================================ */
 (() => {
   'use strict';
-  if (window.MUR_TREND_COLOR_V234) return;
-  const PALETTE=Object.freeze({bleu:'#3b82f6',vert:'#22c55e',orange:'#f59e0b',rouge:'#ef4444'});
-  const SOURCE_KEY='murLastNeuro';
-  const BACKUP_KEY='murNeuroFlexLastConfirmedV234';
-  let lastGenuineTestWrite=0;
-  const originalSetItem=Storage.prototype.setItem;
-  const safeRead=key=>{try{return JSON.parse(localStorage.getItem(key)||'null');}catch(_){return null;}};
-  function zoneName(record){
-    if(!record)return null;
-    const raw=record.zone||record;
-    const text=String(typeof raw==='string'?raw:[raw.key,raw.name,raw.label].filter(Boolean).join(' ')).toLowerCase();
-    if(/rouge|red/.test(text))return'rouge';
-    if(/orange/.test(text))return'orange';
-    if(/bleu|blue/.test(text))return'bleu';
-    if(/vert|verte|green/.test(text))return'vert';
-    // Ne pas deviner une zone a partir d'une couleur intermediaire :
-    // seules les quatre couleurs officielles peuvent servir de secours.
-    const c=String(raw.color||'').trim().toLowerCase();
+  if (window.MUR_RESULTS_PERSIST_V235) return;
+
+  const FIELDS = Object.freeze(['murNow','murKis','murLastNeuro','murNowNuanceV129']);
+  const SNAPSHOT_KEY = 'murResultsConfirmedSnapshotV235';
+  const LEGACY_KEY = 'murNeuroFlexLastConfirmedV234';
+  const DB_NAME = 'mur-neuroflex-results-v235';
+  const DB_STORE = 'snapshots';
+  const DB_KEY = 'current';
+  const PALETTE = Object.freeze({bleu:'#3b82f6',vert:'#22c55e',orange:'#f59e0b',rouge:'#ef4444'});
+  const nativeSet = Storage.prototype.setItem;
+  const nativeGet = Storage.prototype.getItem;
+  let snapshot = null;
+  let restoring = false;
+  let realTestWriteAt = 0;
+  let db = null;
+  let backend = 'localStorage';
+  let saveChain = Promise.resolve();
+
+  const getRaw = key => { try { return nativeGet.call(localStorage,key); } catch (_) { return null; } };
+  const readJSON = key => { try { return JSON.parse(getRaw(key)||'null'); } catch (_) { return null; } };
+  const copy = value => { try { return JSON.parse(JSON.stringify(value)); } catch (_) { return null; } };
+  const writeRaw = (key,value) => { try {nativeSet.call(localStorage,key,value);return true;} catch (_) {return false;} };
+  function zoneName(record) {
+    if (!record) return null;
+    const raw = record.zone || record;
+    const text = String(typeof raw === 'string' ? raw : [raw.key,raw.name,raw.label].filter(Boolean).join(' ')).toLowerCase();
+    if (/rouge|red/.test(text)) return 'rouge';
+    if (/orange/.test(text)) return 'orange';
+    if (/bleu|blue/.test(text)) return 'bleu';
+    if (/vert|verte|green/.test(text)) return 'vert';
+    const c = String(raw.color||'').trim().toLowerCase();
     return Object.keys(PALETTE).find(k=>PALETTE[k]===c)||null;
   }
-  function unpack(input){
-    const zone=zoneName(input);
-    if(!zone)return null;
-    const value=Number(input?.score);
-    const score=(input?.score!==undefined && input?.score!==null && Number.isFinite(value))?value:null;
-    return {zone,score};
+  const finiteScore = r => r && r.score!==null && r.score!==undefined && Number.isFinite(Number(r.score));
+  function valid(field, record) {
+    if (!record || typeof record !== 'object' || Array.isArray(record)) return false;
+    if (field === 'murNow') return finiteScore(record) && !!zoneName(record);
+    if (field === 'murKis') return !!String(record.cardKey||'').trim() || finiteScore(record);
+    if (field === 'murLastNeuro') return !!zoneName(record);
+    if (field === 'murNowNuanceV129') return !!String(record.choice||'').trim() && !!zoneName(record);
+    return false;
   }
-  function hasRecentTestUpdate(){
-    // Evite qu'un VERT provisoire de demarrage remplace le vrai resultat.
-    return lastGenuineTestWrite>0 && Date.now()-lastGenuineTestWrite<120000;
+  function emptySnapshot() { return {version:235,updatedAt:0,records:{}}; }
+  function usable(input) {
+    if (!input || typeof input !== 'object' || !input.records || typeof input.records !== 'object') return null;
+    const records={};
+    for (const key of FIELDS) if(valid(key,input.records[key])) records[key]=copy(input.records[key]);
+    if (!Object.keys(records).length) return null;
+    return {version:235,updatedAt:Number(input.updatedAt)||0,records};
   }
-  function backup(){
-    const b=safeRead(BACKUP_KEY);
-    return b && zoneName(b) && b.source==='murLastNeuro' ? b : null;
+  function fromLegacy() {
+    const old=readJSON(LEGACY_KEY);
+    if (!old || !zoneName(old) || old.source!=='murLastNeuro') return null;
+    return {zone:old.zone,score:old.score,savedAt:old.savedAt||Date.now(),restoredFrom:'v234'};
   }
-  function persist(record){
-    const obj=unpack(record);if(!obj)return null;
-    const payload={zone:obj.zone,score:obj.score,savedAt:Date.now(),source:'murLastNeuro'};
-    try{originalSetItem.call(localStorage,BACKUP_KEY,JSON.stringify(payload));}catch(_){return null;}
-    return payload;
-  }
-  function timestamp(record){
-    if(!record || typeof record!=='object')return 0;
-    for(const k of ['savedAt','updatedAt','createdAt','date','timestamp','at','testedAt']){
-      const raw=record[k];
-      if(!raw)continue;
-      const n=typeof raw==='number'?raw:Date.parse(raw);
-      const ms=n>1e9 && n<1e11?n*1000:n;
-      if(Number.isFinite(ms)&&ms>0)return ms;
+  function currentSnapshot() {
+    const s=emptySnapshot();
+    for (const key of FIELDS){const value=readJSON(key); if(valid(key,value)) s.records[key]=value;}
+    if (!s.records.murLastNeuro) {
+      const legacy=fromLegacy();
+      if(legacy)s.records.murLastNeuro=legacy;
     }
-    return 0;
+    return Object.keys(s.records).length ? s : null;
   }
-  function isFreshNewResult(record, prior){
-    if(!unpack(record))return false;
-    if(!prior)return true;
-    const prevMs=Number(prior.savedAt)||0, newMs=timestamp(record);
-    // Un resultat authentiquement plus recent prime toujours, meme VERT.
-    if(newMs && newMs>prevMs+1000)return true;
-    // Si le moteur n'horodate pas le resultat, on exige une modification
-    // effective de l'un des deux tests pendant cette session.
-    return hasRecentTestUpdate();
+  function hasGenuineRecentTest() {return Date.now()-realTestWriteAt < 2*60*1000 && realTestWriteAt>0;}
+  function commit() {
+    if(!snapshot) return;
+    snapshot.updatedAt=Date.now();
+    writeRaw(SNAPSHOT_KEY,JSON.stringify(snapshot));
+    // Compatibilité avec les modules installés avant V235.
+    const trend=snapshot.records.murLastNeuro;
+    if(valid('murLastNeuro',trend)){
+      writeRaw(LEGACY_KEY,JSON.stringify({zone:zoneName(trend),score:finiteScore(trend)?Number(trend.score):null,savedAt:snapshot.updatedAt,source:'murLastNeuro'}));
+    }
+    if (db) {
+      const record=copy(snapshot);
+      // Queue FIFO : la dernière saisie ne peut pas être écrasée par une écriture ancienne.
+      saveChain=saveChain.catch(()=>{}).then(()=>new Promise(resolve=>{
+        try {const tx=db.transaction(DB_STORE,'readwrite');tx.objectStore(DB_STORE).put(record,DB_KEY);tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve;}catch(_){resolve();}
+      }));
+    }
   }
-  // Attraper uniquement les nouvelles sauvegardes NeuroFlex faites par
-  // le moteur existant. Les autres appels setItem restent inchanges.
-  // Aucune donnee de sante supplementaire : zone et score seulement.
+  function useSnapshot(input, source) {
+    const next=usable(input);
+    if(!next) return false;
+    snapshot=next;
+    restoring=true;
+    const fieldsRestored=[];
+    for(const key of FIELDS){
+      const value=next.records[key];
+      if(!valid(key,value))continue;
+      const cur=readJSON(key);
+      // Ne jamais remplacer un résultat authentiquement saisi dans la session.
+      if (!valid(key,cur) || !hasGenuineRecentTest()) {
+        const desired=JSON.stringify(value);
+        if(getRaw(key)!==desired && writeRaw(key,desired))fieldsRestored.push(key);
+      }
+    }
+    restoring=false;
+    commit();
+    backend=source;
+    if(fieldsRestored.length){
+      const notify=()=>{
+        for(const key of fieldsRestored){
+          try{window.dispatchEvent(new StorageEvent('storage',{key,newValue:getRaw(key),storageArea:localStorage}));}
+          catch(_){window.dispatchEvent(new Event('storage'));}
+        }
+        window.dispatchEvent(new CustomEvent('mur:resultsrestored',{detail:{keys:fieldsRestored,version:235}}));
+        // RAF permet aux cartes conditionnelles d'être montées avant le rafraîchissement.
+        try{window.MUR_V129_REFRESH?.();}catch(_){}
+      };
+      if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',notify,{once:true});
+      else requestAnimationFrame(notify);
+    }
+    return true;
+  }
+  // Restauration immédiate lors d'une réouverture si localStorage existe encore.
+  const remembered=usable(readJSON(SNAPSHOT_KEY));
+  const existing=currentSnapshot();
+  if(remembered){useSnapshot(remembered,'localStorage');}
+  else if(existing){snapshot=existing;commit();}
+
   try{
     Storage.prototype.setItem=function(key,value){
-      const tracked=this===localStorage;
-      let before=null;
-      if(tracked && (key==='murNow'||key==='murKis')){
-        try{before=this.getItem(key);}catch(_){}
+      const isLocal=this===localStorage;
+      const before=isLocal && FIELDS.includes(key)?getRaw(key):null;
+      const result=nativeSet.apply(this,arguments);
+      if(!isLocal||restoring||!FIELDS.includes(key)||before===String(value))return result;
+      let record=null;
+      try{record=JSON.parse(String(value));}catch(_){}
+      if(!valid(key,record))return result;
+      if(!snapshot)snapshot=emptySnapshot();
+      // La tendance calculée au démarrage peut être un vert provisoire.
+      // Une nouvelle tendance n'écrase la copie confirmée que si un test
+      // a été enregistré durant cette session, ou si aucune copie n'existe.
+      if(key==='murLastNeuro' && snapshot.records.murLastNeuro &&
+         zoneName(record)!==zoneName(snapshot.records.murLastNeuro) && !hasGenuineRecentTest()){
+        // Corriger aussi le stockage principal : plusieurs écrans anciens
+        // lisent encore directement murLastNeuro, sans passer par l'API.
+        writeRaw(key,JSON.stringify(snapshot.records.murLastNeuro));
+        return result;
       }
-      const ret=originalSetItem.apply(this,arguments);
-      if(tracked && (key==='murNow'||key==='murKis') && before!==String(value)){
-        let validFirstWrite=false;
-        try{
-          const test=JSON.parse(String(value));
-          validFirstWrite=!!(test && typeof test==='object' && (
-            Number.isFinite(Number(test.score)) && test.score!==null && test.score!==undefined ||
-            typeof test.cardKey==='string' && test.cardKey.length>0 ||
-            Array.isArray(test.answers) && test.answers.length>0));
-        }catch(_){}
-        if(before!==null || validFirstWrite)lastGenuineTestWrite=Date.now();
-      }
-      if(tracked && String(key)===SOURCE_KEY){
-        try{
-          const rec=JSON.parse(String(value));
-          if(isFreshNewResult(rec,backup()))persist(rec);
-        }catch(_){}
-      }
-      return ret;
+      if(key==='murNow'||key==='murKis')realTestWriteAt=Date.now();
+      snapshot.records[key]=copy(record);
+      commit();
+      return result;
     };
-  }catch(_){}
-  function initialize(){
-    const current=safeRead(SOURCE_KEY), previous=backup();
-    if(!previous && unpack(current)){
-      // Migration V233 -> V234 sans refaire les tests, si la donnee est la.
-      persist(current);
-    }else if(previous && !unpack(current)){
-      // Recuperation si l'app ne recharge pas murLastNeuro au lancement.
-      try{originalSetItem.call(localStorage,SOURCE_KEY,JSON.stringify({
-        zone:previous.zone,score:previous.score,restoredFrom:'v234'}));}catch(_){}
-    }
-  }
-  initialize();
-  function resolve(){
-    const saved=safeRead(SOURCE_KEY), prior=backup();
-    // Un vrai resultat dans le stockage principal est prioritaire,
-    // sauf un VERT recree a l'ouverture apres une tendance anterieure.
-    let record=null,source='none';
-    if(prior && unpack(prior)){
-      record=prior;source='backup';
-      const main=unpack(saved);
-      if(main && main.zone===prior.zone && main.score===prior.score){record=saved;source='local';}
-      else if(main && isFreshNewResult(saved,prior) && timestamp(saved)>prior.savedAt+1000){
-        record=saved;source='local-newer';persist(saved);
-      }
-    }else if(unpack(saved)){
-      record=saved;source='local';persist(saved);
-    }else{
-      // Dernier recours : resultat live ; ne JAMAIS persister ici
-      // une valeur de demarrage potentiellement provisoire.
-      try{const live=typeof latestNeuro==='function'?latestNeuro():null;
-        if(unpack(live)){record=live;source='live';}}catch(_){}
-    }
-    const zone=zoneName(record)||'vert';
-    const hex=PALETTE[zone];
-    const rgb=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
-    return {zone,hex,rgb,source,record};
-  }
-  const api=Object.freeze({resolve,hex:()=>resolve().hex,rgb:()=>resolve().rgb,
-    storageKey:BACKUP_KEY,version:'234'});
-  window.MUR_TREND_COLOR_V234=api;
-  // Compatibilite descendante avec les modules V233 deja livres.
-  window.MUR_TREND_COLOR_V233=api;
-  window.addEventListener('storage',e=>{
-    if(e.key===SOURCE_KEY && unpack(safeRead(SOURCE_KEY)) && isFreshNewResult(safeRead(SOURCE_KEY),backup())){
-      persist(safeRead(SOURCE_KEY));
-    }
+  }catch(_){ /* L'app native conserve son fonctionnement standard. */ }
+
+  const openDatabase=()=>new Promise((resolve,reject)=>{
+    if(!('indexedDB' in window))return reject(new Error('IndexedDB indisponible'));
+    try{
+      const request=indexedDB.open(DB_NAME,1);
+      request.onupgradeneeded=()=>{const d=request.result;if(!d.objectStoreNames.contains(DB_STORE))d.createObjectStore(DB_STORE);};
+      request.onsuccess=()=>resolve(request.result);
+      request.onerror=()=>reject(request.error||new Error('IndexedDB inaccessible'));
+      request.onblocked=()=>reject(new Error('IndexedDB bloqué'));
+    }catch(e){reject(e);}
   });
+  async function restoreIndexedDB(){
+    try{
+      db=await openDatabase();
+      const fromDb=await new Promise(resolve=>{
+        try{const tx=db.transaction(DB_STORE,'readonly');const req=tx.objectStore(DB_STORE).get(DB_KEY);req.onsuccess=()=>resolve(usable(req.result));req.onerror=()=>resolve(null);}catch(_){resolve(null);}
+      });
+      const lostNow=!!fromDb?.records?.murNow && !valid('murNow',snapshot?.records?.murNow);
+      const lostKis=!!fromDb?.records?.murKis && !valid('murKis',snapshot?.records?.murKis);
+      const lostNeuro=!!fromDb?.records?.murLastNeuro && !valid('murLastNeuro',snapshot?.records?.murLastNeuro);
+      // La complétude des tests prime l'horodatage : un VERT de démarrage
+      // peut avoir été écrit à l'instant tandis que les tests ont disparu.
+      if(fromDb && (!snapshot || (!hasGenuineRecentTest() && (lostNow||lostKis||lostNeuro)) || fromDb.updatedAt>snapshot.updatedAt+1000)){
+        useSnapshot(fromDb,'IndexedDB');
+      }else if(snapshot){commit();backend='localStorage + IndexedDB';}
+      else backend='IndexedDB prêt — aucun résultat sauvegardé';
+    }catch(_){backend='localStorage seulement — IndexedDB indisponible';}
+  }
+  const ready=restoreIndexedDB();
+
+  function restoreMissing(){
+    if(!snapshot || hasGenuineRecentTest())return;
+    const missing=FIELDS.some(key=>valid(key,snapshot.records[key]) && !valid(key,readJSON(key)));
+    if(missing)useSnapshot(snapshot,backend);
+  }
+  window.addEventListener('pageshow',restoreMissing);
+  window.addEventListener('focus',restoreMissing);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)restoreMissing();});
+  window.addEventListener('storage',e=>{if(FIELDS.includes(e.key))restoreMissing();});
+
+  function resolve(){
+    const last=snapshot?.records.murLastNeuro;
+    const direct=readJSON('murLastNeuro');
+    const record=(hasGenuineRecentTest() && valid('murLastNeuro',direct))?direct:(valid('murLastNeuro',last)?last:(valid('murLastNeuro',direct)?direct:null));
+    const zone=zoneName(record)||'vert',hex=PALETTE[zone];
+    return {zone,hex,rgb:[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)),source:record?'v235-snapshot':'none',record};
+  }
+  const api=Object.freeze({
+    version:'235',resolve,hex:()=>resolve().hex,rgb:()=>resolve().rgb,
+    storageKey:SNAPSHOT_KEY,ready,
+    status:()=>({
+      localStorage:!!getRaw(SNAPSHOT_KEY),
+      indexedDB:!!db,backend,
+      iciEtMaintenant:valid('murNow',snapshot?.records.murNow),
+      kiS:valid('murKis',snapshot?.records.murKis),
+      synthese:valid('murLastNeuro',snapshot?.records.murLastNeuro),
+      zone:resolve().record?resolve().zone:null
+    })
+  });
+  window.MUR_RESULTS_PERSIST_V235=api;
+  window.MUR_TREND_COLOR_V234=api;
+  window.MUR_TREND_COLOR_V233=api;
 })();
 
 /*
