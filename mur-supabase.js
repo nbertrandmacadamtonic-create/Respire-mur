@@ -1,4 +1,4 @@
-/* M.U.R. Supabase v6.0 — synchronisation par compte.
+/* M.U.R. Supabase v6.1 / M.U.R. V237 — synchronisation par compte. Remplacement du seul module cloud.
  * Remplace uniquement mur-supabase.js, sans modifier index.html.
  * La table mur_history est facultative tant que la migration SQL n'est pas lancee.
  * Ne jamais placer de cle secrete/service_role dans ce fichier public.
@@ -15,6 +15,7 @@
   let role = 'visiteur';
   let user = null, busy = false, syncing = false, historyEnabled = true;
   let lastSyncUser = null, authReady = false;
+  let localTestRevision = 0;
   const $ = id => document.getElementById(id);
   const get = id => $(id)?.value;
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
@@ -63,10 +64,50 @@
     if(!Array.isArray(kisAnswers)||kisAnswers.length!==15||kisAnswers.some(v=>v===null))return;
     await insert('mur_kis_results',{answers:[...kisAnswers],profile:profileKey(kisResult.profile)});
   }
-  async function saveNow(answers){
-    if(!user || typeof nowResult==='undefined'||!nowResult)return;
-    if(!Array.isArray(answers)||answers.length!==4||answers.some(v=>v==null||v===''))return;
-    await insert('mur_state_results',{answers:answers.map(Number),score:Number(nowResult.score),zone:zoneKey(nowResult.zone)});
+  // V236 — score calculé sur les quatre réponses VALIDÉES, jamais sur un ancien
+  // nowResult : le choix complémentaire Bleu/Rouge (V129) peut retarder finishNow.
+  const NOW_FIELDS=['nowEnergy','nowBreath','nowMind','nowBody'];
+  function cleanNowAnswers(raw){
+    if(!Array.isArray(raw)||raw.length!==4)return null;
+    const result=raw.map(v=>v===null||v===undefined||v===''?NaN:Number(v));
+    return result.every(v=>Number.isInteger(v)&&v>=0&&v<=4)?result:null;
+  }
+  function scoreFromAnswers(answers){
+    return Math.round(answers.reduce((sum,v)=>sum+(v-2),0)/8*50);
+  }
+  function normalizeCloudNow(row){
+    const answers=cleanNowAnswers(row?.answers);
+    if(!answers)return null;
+    const score=scoreFromAnswers(answers),zone=zoneFor(score).key;
+    // Ne change aucune ligne de Supabase. Une ancienne ligne incohérente est
+    // corrigée uniquement pendant la lecture (voir audit historique).
+    if(Number(row.score)!==score||zoneKey(row.zone)!==zone){
+      console.warn('[MUR Cloud] Ancien score incohérent, recalculé depuis les réponses.',{
+        completed_at:row.completed_at,storedScore:row.score,expectedScore:score,
+        storedZone:row.zone,expectedZone:zone
+      });
+    }
+    return {...row,answers,score,zone};
+  }
+  async function saveNow(rawAnswers){
+    if(!user)return false;
+    const answers=cleanNowAnswers(rawAnswers||NOW_FIELDS.map(get));
+    if(!answers)return false;
+    const score=scoreFromAnswers(answers),zone=zoneFor(score).key;
+    const completed=read('murNow');
+    // Pas d'enregistrement durant le choix supplémentaire Bleu/Rouge :
+    // celui-ci déclenche une fois le vrai calcul terminé.
+    if(!completed||Number(completed.score)!==score||zoneKey(completed.zone)!==zone){
+      console.warn('[MUR Cloud] Envoi ignoré : résultat Ici & Maintenant non validé.');
+      return false;
+    }
+    const synthesised=read('murLastNeuro');
+    if(!read('murKis')||!synthesised||Number(synthesised.nowScore)!==score){
+      console.warn('[MUR Cloud] Envoi ignoré : synthèse NeuroFlex incomplète.');
+      return false;
+    }
+    await insert('mur_state_results',{answers,score,zone});
+    return true;
   }
   async function saveProfile(){
     if(!user)return;
@@ -103,7 +144,12 @@
   }
   function installHooks(){
     wrap('finishKis',()=>Boolean(typeof kisResult!=='undefined'&&kisResult),previous => {if(!previous)return saveKis();});
-    wrap('finishNow',()=>['nowEnergy','nowBreath','nowMind','nowBody'].map(get),saveNow);
+    // Déclencher la sauvegarde seulement lors du calcul effectif du résultat,
+    // pas au clic sur Valider (qui peut simplement ouvrir le choix V129).
+    wrap('calculateNeuro',()=>NOW_FIELDS.map(get),answers=>{
+      localTestRevision++;
+      return saveNow(answers);
+    });
     wrap('saveProfile',null,saveProfile);
     wrap('addHistory',null,()=>saveHistoryEvent(takeHistoryLast()));
   }
@@ -137,6 +183,7 @@
     if(!user||syncing)return;
     syncing=true;
     const currentUser=user.id;
+    const startingLocalRevision=localTestRevision;
     status('Synchronisation des resultats...');
     try{
       const [kisResultQuery,nowResultQuery,profileQuery,historyQuery]=await Promise.all([
@@ -146,6 +193,12 @@
         historyEnabled?client.from('mur_history').select('source_key,occurred_at,event').eq('user_id',currentUser).order('occurred_at',{ascending:false}).limit(400):Promise.resolve({data:[],error:null})
       ]);
       if(user?.id!==currentUser)return;
+      // Ne jamais remplacer une saisie qui vient d'être validée pendant
+      // la requête réseau par un résultat distant potentiellement plus ancien.
+      if(localTestRevision!==startingLocalRevision){
+        status('Nouveau test conservé ; synchronisation reportée.');
+        return;
+      }
       if(kisResultQuery.error)throw kisResultQuery.error;
       if(nowResultQuery.error)throw nowResultQuery.error;
       if(profileQuery.error)throw profileQuery.error;
@@ -153,7 +206,9 @@
         if(['42P01','PGRST205','PGRST116'].includes(historyQuery.error.code))historyEnabled=false;
         else console.warn('[MUR Cloud] Lecture historique :',historyQuery.error.message);
       }
-      const kisRows=kisResultQuery.data||[],stateRows=nowResultQuery.data||[];
+      const kisRows=kisResultQuery.data||[];
+      const rawStateRows=nowResultQuery.data||[];
+      const stateRows=rawStateRows.map(normalizeCloudNow).filter(Boolean);
       const kis=kisRows[0],now=stateRows[0];
       const oldOwner=localStorage.getItem('murCloudOwner');
       // Si les donnees locales proviennent d'un autre compte, on les isole avant toute restauration.
@@ -165,15 +220,20 @@
         const score=kis.answers.reduce((acc,v)=>acc+Number(v||0),0);
         write('murKis',{score,profile:profileLabel(kis.profile,score)});modified=true;
       }else if(oldOwner!==currentUser){localStorage.removeItem('murKis');localStorage.removeItem('murLastNeuro');localStorage.removeItem('murNow');}
-      if(now && kis){
-        const score=Number(now.score);
+      if(now){
+        const score=now.score;
         const nz=zoneFor(score);
-        write('murNow',{score,zone:nz});
-        const kisScore=read('murKis')?.score||0;
-        const neuroScore=Math.max(-50,Math.min(50,score+Math.round(kisScore*1.2)));
-        const neuroZone=zoneFor(neuroScore);
-        write('murLastNeuro',{score:neuroScore,zone:neuroZone,kis:read('murKis').profile,kisScore,nowScore:score});
-        localStorage.setItem('murTestsUnlocked','1');modified=true;
+        const levels={energy:now.answers[0],breath:now.answers[1],mind:now.answers[2],body:now.answers[3]};
+        // Restaurer aussi les 4 réponses pour les fiches Ici & Maintenant.
+        write('murNow',{score,zone:nz,levels,completedAt:now.completed_at});
+        modified=true;
+        if(kis){
+          const kisScore=Number(read('murKis')?.score)||0;
+          const neuroScore=Math.max(-50,Math.min(50,score+Math.round(kisScore*1.2)));
+          const neuroZone=zoneFor(neuroScore);
+          write('murLastNeuro',{score:neuroScore,zone:neuroZone,kis:read('murKis').profile,kisScore,nowScore:score});
+          localStorage.setItem('murTestsUnlocked','1');
+        }
       }else if(kis && oldOwner!==currentUser){
         localStorage.removeItem('murNow');localStorage.removeItem('murLastNeuro');localStorage.removeItem('murTestsUnlocked');
       }
@@ -427,7 +487,7 @@
         const {error}=await client.auth.signInWithPassword({email,password});
         if(error)throw error;
         $('mur-cloud-password').value='';
-        status('Connecté : vos données sont synchronisées.');
+        status('Connexion réussie : récupération de vos résultats en cours.');
         close();
       }catch(e){status('Connexion impossible : '+(e.message||e),true);}
       finally{busy=false;}
