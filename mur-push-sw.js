@@ -1,6 +1,6 @@
-/* M.U.R. V19.3 — Réception push et navigation fiable iPhone.
+/* M.U.R. V19.4 — Fiabilisation du clic des alertes d’inscription.
  * Deux notifications indépendantes : inscription admin / question NeuroFlex.
- * Le versionnement ?v=19-3 force la mise à jour depuis mur-notifications.js.
+ * Même chemin de Service Worker pour éviter de modifier les autres fichiers.
  */
 self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
@@ -45,26 +45,46 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const data = event.notification.data || {};
-  const isAdmin = data.type === 'mur_signup_alert';
-  const target = isAdmin ? (data.url || signupLandingUrl(false)) : data.url || dailyUrl(0);
+  const notification = event.notification;
+  const data = notification.data || {};
+  const tag = String(notification.tag || '');
+  const title = String(notification.title || '').toLowerCase();
+
+  // Rattrape les notifications d'inscription dont le champ data.type est absent
+  // (anciennes versions ou informations de navigation perdues sur iOS).
+  const isAdmin = data.type === 'mur_signup_alert'
+    || tag.startsWith('mur-signup-')
+    || title.includes('nouvelle inscription')
+    || title.includes('test administrateur');
+  const isTest = tag === 'mur-signup-test'
+    || title.includes('test administrateur')
+    || (isAdmin && data.test === true);
+  const q = Number(data.question);
+  const question = Number.isInteger(q) && q >= 0 && q < 4 ? q : 0;
+
+  // Ne pas ouvrir une URL externe transmise par le contenu d'un push.
+  const target = isAdmin ? signupLandingUrl(isTest) : dailyUrl(question);
+
   event.waitUntil((async () => {
     const pages = await self.clients.matchAll({type:'window',includeUncontrolled:true});
-    // Pour les alertes administrateur, privilégier une fenêtre dédiée.
-    // Cela évite qu'une page NeuroFlex déjà ouverte garde son état/routage.
-    if (isAdmin) {
-      const existingLanding = pages.find(p => new URL(p.url).pathname.endsWith('/nouvelle-inscription.html'));
-      if (existingLanding) { await existingLanding.navigate(target); return existingLanding.focus(); }
-      const opened = await self.clients.openWindow(target);
-      if (opened) return opened.focus();
-      // Repli lorsque le système bloque l'ouverture d'une nouvelle fenêtre.
-    }
-    for (const page of pages) {
-      if (page.url.startsWith(self.registration.scope)) {
-        await page.navigate(target);
-        return page.focus();
+    const inScope = pages.filter(page => page.url.startsWith(self.registration.scope));
+    const landing = inScope.find(page => new URL(page.url).pathname.endsWith('/nouvelle-inscription.html'));
+
+    // Si M.U.R. est déjà lancé, naviguer d'abord cette fenêtre vers la page
+    // demandée. Une ouverture directe d'une nouvelle PWA peut revenir à l'accueil.
+    const ordered = isAdmin ? [landing, ...inScope.filter(p => p !== landing)] : inScope;
+    for (const page of ordered) {
+      if (!page) continue;
+      try {
+        const navigated = await page.navigate(target);
+        const focused = await (navigated || page).focus();
+        if (focused) return;
+      } catch (error) {
+        console.warn('[MUR Push] Navigation impossible, nouvel essai :',error);
       }
     }
+
+    // Si l'application est fermée, ouvrir directement la destination.
     return self.clients.openWindow(target);
   })());
 });
