@@ -1,4 +1,6 @@
-/* M.U.R. V20.1 — Rappels multiples + statistiques par réponse, toutes les 15 minutes.
+/* M.U.R. V20.2 — Rappels multiples synchronisés entre appareils + statistiques.
+ * Toutes les heures sont communes aux appareils connectés au même compte.
+ * Chaque appareil garde son abonnement Push et ses permissions propres.
  * Ce fichier conserve les questions « Ici & Maintenant », les réponses rapides
  * et le système d'inscription admin indépendant.
  * Prérequis : migration SQL V20 + Edge Function NeuroFlex V20.
@@ -50,6 +52,7 @@
   }
   function timeLabel(minutes){return `${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;}
   let selectedTimes=initialTimes();
+  let scheduleDirty=false; // Protège les modifications non encore enregistrées.
   function persistTimes(){localStorage.setItem(LOCAL_TIMES,JSON.stringify(selectedTimes));}
   function renderTimes(){
     const list=$('mur-daily-list'),count=$('mur-daily-count');
@@ -63,15 +66,33 @@
       remove.style.cssText='border:1px solid #c0d5df66;background:#263f50;color:#fff;padding:7px 10px;border-radius:9px';
       remove.addEventListener('click',()=>{
         if(selectedTimes.length<=1){notice('Conservez au moins un créneau. Pour tout arrêter, utilisez « Désactiver sur cet appareil ».',true);return;}
-        selectedTimes=selectedTimes.filter(x=>x!==t);renderTimes();notice('Liste modifiée. Appuyez sur « Enregistrer mes rappels ».');
+        selectedTimes=selectedTimes.filter(x=>x!==t);scheduleDirty=true;renderTimes();notice('Liste modifiée. Appuyez sur « Enregistrer mes rappels ».');
       });
       item.append(text,remove);list.appendChild(item);
     });
-    if(count)count.textContent=`${selectedTimes.length} rappel${selectedTimes.length>1?'s':''} par jour sur cet appareil`;
+    if(count)count.textContent=`${selectedTimes.length} rappel${selectedTimes.length>1?'s':''} par jour sur vos appareils`;
   }
   async function currentSubscription(){
     const reg=await navigator.serviceWorker.getRegistration('./');
     return reg?.pushManager?.getSubscription();
+  }
+  // Lire le programme le plus récent du compte, pas seulement celui du terminal.
+  // Le tri par schedule_version assure que les anciens créneaux individuels
+  // de V20.1 ne peuvent pas écraser une programmation plus récente.
+  async function fetchAccountSchedule(){
+    const user=currentUser(),c=client();
+    if(!user||!c)return null;
+    const {data,error}=await c.from('mur_push_subscriptions')
+      .select('reminder_minutes,local_hour,schedule_version')
+      .eq('user_id',user.id)
+      .order('schedule_version',{ascending:false})
+      .limit(1).maybeSingle();
+    if(error)throw error;
+    if(!data)return null;
+    const source=(Array.isArray(data.reminder_minutes)&&data.reminder_minutes.length)
+      ? data.reminder_minutes : [Number(data.local_hour)*60];
+    const times=normalizeTimes(source);
+    return times.length?times:null;
   }
   async function saveSubscription(sub,enabled=true){
     const user=currentUser();
@@ -81,17 +102,33 @@
     const zone=Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris';
     const times=normalizeTimes(selectedTimes);
     if(!times.length)throw Error('Sélectionnez au moins un créneau.');
-    // Nouveau jeton à CHAQUE enregistrement : remet à zéro le suivi d'envoi.
+    // Nouveau programme commun au compte, avec un jeton de réinitialisation
+    // identique pour TOUS les appareils abonnés (la fonction Edge le respecte).
+    const schedule_version=new Date().toISOString();
+    const fields={
+      local_hour:Math.floor(times[0]/60),
+      reminder_minutes:times,
+      schedule_version
+    };
     const record={
       user_id:user.id,endpoint:data.endpoint,p256dh:data.keys?.p256dh,auth:data.keys?.auth,
-      timezone:zone,local_hour:Math.floor(times[0]/60),
-      reminder_minutes:times,schedule_version:new Date().toISOString(),enabled
+      timezone:zone,...fields,enabled
     };
-    const {error}=await client().from('mur_push_subscriptions').upsert(record,{onConflict:'endpoint'});
-    if(error)throw Error('Enregistrement impossible : '+error.message+' (migration SQL V20 à vérifier).');
+    // Garantit qu'un appareil nouvellement activé est bien présent.
+    const {error}=await client().from('mur_push_subscriptions')
+      .upsert(record,{onConflict:'endpoint'});
+    if(error)throw Error('Enregistrement impossible : '+error.message);
+    // Propager le même programme aux autres appareils connectés au compte.
+    // Les colonnes endpoint/p256dh/auth/enabled/timezone restent inchangées.
+    const {data:updated,error:syncError}=await client()
+      .from('mur_push_subscriptions').update(fields)
+      .eq('user_id',user.id).select('endpoint');
+    if(syncError)throw Error('Programme enregistré ici mais synchronisation impossible : '+syncError.message);
+    if(!updated?.length)throw Error('Aucun appareil synchronisé : vérifiez les droits de votre compte Supabase.');
+    scheduleDirty=false;
     persistTimes();
-    // Conserver la clé historique pour les anciennes versions temporairement en cache.
     localStorage.setItem('mur-daily-hour',String(Math.floor(times[0]/60)));
+    return updated.length;
   }
   async function enable(){
     if(!currentUser()){notice('Connectez-vous d’abord à votre compte M.U.R.',true);return;}
@@ -99,13 +136,19 @@
     if(!isInstalledIOS()){notice('Sur iPhone, ouvrez Safari → Partager → Sur l’écran d’accueil, puis lancez M.U.R. depuis son icône.',true);return;}
     try{
       notice('Activation des notifications…');
+      // Une nouvelle installation adopte le programme existant du compte.
+      // Si l'utilisateur a modifié les heures localement, son choix prévaut.
+      if(!scheduleDirty){
+        const remote=await fetchAccountSchedule();
+        if(remote){selectedTimes=remote;renderTimes();}
+      }
       const perm=await Notification.requestPermission();
       if(perm!=='granted'){notice('Autorisation refusée. Vous pouvez la réactiver dans les réglages du téléphone.',true);return;}
       const registration=await navigator.serviceWorker.register(SW,{scope:'./',updateViaCache:'none'});
       let subscription=await registration.pushManager.getSubscription();
       if(!subscription)subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64UrlToUint8(VAPID_PUBLIC_KEY)});
-      await saveSubscription(subscription,true);
-      notice(`Activé : ${selectedTimes.map(timeLabel).join(', ')}. Un nouveau programme remet à zéro le suivi du jour.`);
+      const deviceCount=await saveSubscription(subscription,true);
+      notice(`Activé : ${selectedTimes.map(timeLabel).join(', ')}. Programme commun synchronisé sur ${deviceCount} appareil(s).`);
       updateButtons();
     }catch(e){notice(e.message||String(e),true);}
   }
@@ -131,24 +174,24 @@
     const save=$('mur-daily-save');if(save)save.disabled=!subscribed;
   }
   async function loadRemoteSchedule(){
-    if(!isPushSupported()||!currentUser()||!client())return;
+    if(!currentUser()||!client()||scheduleDirty)return;
     try{
-      const sub=await currentSubscription();if(!sub)return;
-      const {data,error}=await client().from('mur_push_subscriptions')
-        .select('reminder_minutes,local_hour').eq('endpoint',sub.endpoint)
-        .eq('user_id',currentUser().id).maybeSingle();
-      if(error||!data)return;
-      const times=normalizeTimes(data.reminder_minutes?.length?data.reminder_minutes:[Number(data.local_hour)*60]);
-      if(times.length){selectedTimes=times;persistTimes();renderTimes();}
+      const times=await fetchAccountSchedule();
+      if(times){
+        selectedTimes=times;
+        persistTimes();
+        localStorage.setItem('mur-daily-hour',String(Math.floor(times[0]/60)));
+        renderTimes();
+      }
       updateButtons();
-    }catch(e){console.warn('[MUR V20] Lecture horaires :',e);}
+    }catch(e){console.warn('[MUR V20.2] Lecture des horaires du compte :',e);}
   }
   function mountSettings(){
     const settings=$('settings');if(!settings||$('mur-daily-settings'))return;
     const card=document.createElement('section');card.id='mur-daily-settings';card.className='card';
     card.style.cssText='padding:17px;margin:14px 0;border:1px solid #8bcde055;border-radius:18px;background:#0a2031;color:#eef8ff';
     card.innerHTML=`<h2 style="margin:0 0 8px">Rappels NeuroFlex</h2>
-      <p style="font-size:13px;line-height:1.5">Programmez un ou plusieurs rappels « Ici & Maintenant » dans la journée, par tranches de 15 minutes. Les horaires sont propres à cet appareil.</p>
+      <p style="font-size:13px;line-height:1.5">Programmez un ou plusieurs rappels « Ici & Maintenant » dans la journée, par tranches de 15 minutes. Les horaires sont synchronisés entre les appareils connectés à votre compte M.U.R. Chaque appareil doit autoriser les notifications pour les recevoir.</p>
       <label for="mur-daily-hour" style="display:block;margin-bottom:8px">Ajouter un horaire</label>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <select id="mur-daily-hour" style="font-size:16px;min-height:44px;background:#102c42;color:#fff;border:1px solid #8fc0d577;border-radius:9px;padding:6px 10px">
@@ -172,7 +215,7 @@
     $('mur-daily-add').addEventListener('click',()=>{
       const value=Number($('mur-daily-hour').value);
       if(selectedTimes.includes(value)){notice('Cet horaire figure déjà dans la liste.');return;}
-      selectedTimes=normalizeTimes([...selectedTimes,value]);renderTimes();
+      selectedTimes=normalizeTimes([...selectedTimes,value]);scheduleDirty=true;renderTimes();
       notice('Horaire ajouté. Appuyez sur « Enregistrer mes rappels ».');
     });
     $('mur-daily-save').addEventListener('click',async()=>{
@@ -181,8 +224,8 @@
       try{
         const sub=await currentSubscription();
         if(!sub){notice('Activez d’abord les notifications sur cet appareil.',true);return;}
-        await saveSubscription(sub,true);
-        notice(`Programme enregistré : ${selectedTimes.map(timeLabel).join(', ')}. Compteur réinitialisé.`);
+        const deviceCount=await saveSubscription(sub,true);
+        notice(`Programme synchronisé sur ${deviceCount} appareil(s) : ${selectedTimes.map(timeLabel).join(', ')}. Compteurs réinitialisés.`);
       }catch(e){notice(e.message||String(e),true);}
       finally{button.disabled=false;}
     });
@@ -418,8 +461,12 @@
     renderDailyStats();
     setTimeout(loadCloudEvents,850);
     handleDailyOpen();
-    // Lire les horaires enregistrés sur cet appareil dès que la session est chargée.
+    // Lire les horaires communs au compte dès que la session est chargée.
     setTimeout(loadRemoteSchedule, 600);
+    // Au retour depuis un autre appareil, afficher le programme le plus récent.
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadRemoteSchedule();});
+    window.addEventListener('pageshow',loadRemoteSchedule);
+    window.addEventListener('focus',loadRemoteSchedule);
     window.MURCloud?.client?.auth?.onAuthStateChange?.(() => {
       setTimeout(loadRemoteSchedule, 100);
       setTimeout(()=>{renderDailyStats();loadCloudEvents();}, 250);
