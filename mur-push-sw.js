@@ -1,4 +1,4 @@
-/* M.U.R. V19.4 — Fiabilisation du clic des alertes d’inscription.
+/* M.U.R. V20 — Rappels NeuroFlex multiples et alertes d’inscription V19.4.
  * Deux notifications indépendantes : inscription admin / question NeuroFlex.
  * Même chemin de Service Worker pour éviter de modifier les autres fichiers.
  */
@@ -35,9 +35,14 @@ self.addEventListener('push', event => {
   const parsed = Number(payload.question);
   const idx = Number.isInteger(parsed) && parsed >= 0 && parsed < 4 ? parsed : 0;
   const labels = ['Énergie','Respiration','Mental','Corps'];
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(payload.local_day || '') ? payload.local_day : 'daily';
+  const slot = Number(payload.slot_minute);
+  const validSlot = Number.isInteger(slot) && slot >= 0 && slot < 1440 && slot % 15 === 0;
+  const tag = payload.test === true ? 'mur-neuroflex-test-'+Date.now()
+    : 'mur-neuroflex-'+day+'-'+(validSlot ? slot : 'legacy');
   event.waitUntil(self.registration.showNotification('M.U.R. · Ici & Maintenant', {
-    body:'Votre question NeuroFlex du jour : '+labels[idx],
-    tag:'mur-neuroflex-daily',renotify:false,
+    body:(payload.test === true ? 'Test NeuroFlex : ' : 'Votre question NeuroFlex : ')+labels[idx],
+    tag,renotify:true,
     data:{type:'mur_neuroflex_daily',url:dailyUrl(idx),question:idx},
     icon:'./mur-icon-192.png',badge:'./mur-icon-192.png'
   }));
